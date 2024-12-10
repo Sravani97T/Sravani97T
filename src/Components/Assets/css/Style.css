@@ -1,0 +1,70 @@
+/* Sidebar.css */
+.ant-layout-sider {
+    background: linear-gradient(135deg, #4e73df, #1cc88a);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .ant-menu-item {
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+  
+
+  /* For mobile view */
+@media (max-width: 768px) {
+  .ant-layout-sider {
+    width: 80px !important; /* Adjust width for mobile */
+  }
+
+  .ant-menu-inline {
+    display: none; /* Hide inline menu on mobile */
+  }
+}
+.ant-card .ant-card-body {
+  padding: 13px !important;
+}
+
+/* Override Ant Design Layout width */
+:where(.css-dev-only-do-not-override-1wwf28x).ant-layout.ant-layout-has-sider > .ant-layout,
+:where(.css-dev-only-do-not-override-1wwf28x).ant-layout.ant-layout-has-sider > .ant-layout-content {
+    width: 100% !important;  /* Ensure width is not 0px */
+}
+/* Custom scrollbar styles with higher specificity */
+
+
+
+
+
+.custom-scrollbar {
+  scrollbar-width: none; /* Hide scrollbar by default for Firefox */
+}
+
+/* WebKit browsers (Chrome, Safari, Edge) */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px; /* Reduce the scrollbar width */
+  height: 6px; /* Reduce the scrollbar height for horizontal scrolling */
+  display: none; /* Initially hide the scrollbar */
+}
+
+.custom-scrollbar:hover {
+  scrollbar-width: thin; /* Show thin scrollbar for Firefox on hover */
+  scrollbar-color: rgb(218, 227, 250) transparent; /* Grey thumb with transparent track for Firefox */
+}
+
+.custom-scrollbar:hover::-webkit-scrollbar {
+  width: 2px; /* Visible thin scrollbar when hovering */
+  height: 6px; /* Visible thin horizontal scrollbar */
+}
+
+.custom-scrollbar:hover::-webkit-scrollbar-track {
+  background: transparent; /* Transparent track when visible */
+}
+
+.custom-scrollbar:hover::-webkit-scrollbar-thumb {
+  background-color: lightgray; /* Grey thumb color */
+  border-radius: 10px; /* Fully rounded corners for thumb (circle ends) */
+  min-height: 20px; /* Ensure thumb is not too small */
+}
+
+.custom-scrollbar:hover::-webkit-scrollbar-thumb:hover {
+  background-color: lightgray; /* Darker grey on hover */
+}
