@@ -426,7 +426,6 @@ const MainProduct = () => {
         rowKey="key"
         size="small"
         pagination={{ pageSize: 5 }}
-        scroll={{ x: 1000 }} // Allow horizontal scrolling if needed
         style={{
           background: "#fff",
           boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
