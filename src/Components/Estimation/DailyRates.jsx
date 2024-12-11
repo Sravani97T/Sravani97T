@@ -1,37 +1,33 @@
 import React, { useState } from "react";
-import { Breadcrumb, Table, Input, Button, Space ,Row,Col} from "antd";
+import { Breadcrumb, Table, Input, Button, Space, Row, Col } from "antd";
 import { EditOutlined, DeleteOutlined, CheckOutlined, CloseOutlined } from "@ant-design/icons";
 
 const DailyRates = () => {
   const initialData = [
     { key: "1", mainProduct: "Gold", prefix: "G", rate: '' },
-    { key: "2", mainProduct: "Silver", prefix: "S", rate: ''},
-    { key: "3", mainProduct: "Platinum", prefix: "P", rate: ''},
+    { key: "2", mainProduct: "Silver", prefix: "S", rate: '' },
+    { key: "3", mainProduct: "Platinum", prefix: "P", rate: '' },
   ];
 
   const [dataSource, setDataSource] = useState(initialData);
-  const [editingKey, setEditingKey] = useState(null);
-  const [editingRate, setEditingRate] = useState(null);
+  const [editingKeys, setEditingKeys] = useState({});
 
   const handleEdit = (record) => {
-    setEditingKey(record.key);
-    setEditingRate(record.rate);
+    setEditingKeys({ ...editingKeys, [record.key]: record.rate });
   };
 
-  const handleCancel = () => {
-    setEditingKey(null);
-    setEditingRate(null);
+  const handleCancel = (key) => {
+    const updatedEditingKeys = { ...editingKeys };
+    delete updatedEditingKeys[key];
+    setEditingKeys(updatedEditingKeys);
   };
 
   const handleSave = (record) => {
-    const newData = [...dataSource];
-    const index = newData.findIndex((item) => item.key === record.key);
-    if (index > -1) {
-      newData[index] = { ...record, rate: editingRate };
-      setDataSource(newData);
-      setEditingKey(null);
-      setEditingRate(null);
-    }
+    const updatedData = dataSource.map((item) =>
+      item.key === record.key ? { ...item, rate: editingKeys[record.key] } : item
+    );
+    setDataSource(updatedData);
+    handleCancel(record.key);
   };
 
   const handleDelete = (key) => {
@@ -41,7 +37,7 @@ const DailyRates = () => {
 
   const handleSubmit = () => {
     console.log("Updated Rates:", dataSource);
-    // Submit logic can be added here
+    // Additional submit logic can be added here
   };
 
   const columns = [
@@ -56,27 +52,28 @@ const DailyRates = () => {
       key: "prefix",
     },
     {
-        title: "Rate",
-        dataIndex: "rate",
-        key: "rate",
-        render: (text, record) =>
-          editingKey === record.key ? (
-            <Input
-              type="number"
-              value={editingRate}
-              onChange={(e) => setEditingRate(Number(e.target.value))}
-              autoFocus // This will focus the input field when it's in edit mode
-            />
-          ) : (
-            <span>{text}</span>
-          ),
-      },
-      
+      title: "Rate",
+      dataIndex: "rate",
+      key: "rate",
+      render: (text, record) =>
+        editingKeys[record.key] !== undefined ? (
+          <Input
+            type="number"
+            value={editingKeys[record.key]}
+            onChange={(e) =>
+              setEditingKeys({ ...editingKeys, [record.key]: Number(e.target.value) })
+            }
+            autoFocus
+          />
+        ) : (
+          <span>{text}</span>
+        ),
+    },
     {
       title: "Actions",
       key: "actions",
       render: (_, record) =>
-        editingKey === record.key ? (
+        editingKeys[record.key] !== undefined ? (
           <Space>
             <Button
               type="text"
@@ -86,7 +83,7 @@ const DailyRates = () => {
             <Button
               type="text"
               icon={<CloseOutlined style={{ color: "red" }} />}
-              onClick={handleCancel}
+              onClick={() => handleCancel(record.key)}
             />
           </Space>
         ) : (
@@ -110,12 +107,16 @@ const DailyRates = () => {
   return (
     <div>
       <Row justify="start" style={{ marginBottom: "16px" }}>
-                <Col>
-                    <Breadcrumb style={{ fontSize: "16px", fontWeight: "500", color: "#0C1154" }}>
-        <Breadcrumb.Item>Home</Breadcrumb.Item>
-        <Breadcrumb.Item>Daily Rates</Breadcrumb.Item>
-      </Breadcrumb>
-      </Col></Row>
+        <Col>
+          <Breadcrumb
+            style={{ fontSize: "16px", fontWeight: "500", color: "#0C1154" }}
+            items={[
+              { title: "Estimation" },
+              { title: "Daily Rates" },
+            ]}
+          />
+        </Col>
+      </Row>
       <Table
         dataSource={dataSource}
         columns={columns}
@@ -123,7 +124,7 @@ const DailyRates = () => {
         footer={() => (
           <Button
             type="primary"
-            style={{ marginTop: 16 ,float:"right",backgroundColor:"#0C1154"}}
+            style={{ marginTop: 16, float: "right", backgroundColor: "#0C1154" }}
             onClick={handleSubmit}
           >
             Submit Rates

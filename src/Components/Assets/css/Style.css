@@ -68,3 +68,6 @@
 .custom-scrollbar:hover::-webkit-scrollbar-thumb:hover {
   background-color: lightgray; /* Darker grey on hover */
 }
+.ant-form-item {
+  margin-bottom: 0px !important;
+}

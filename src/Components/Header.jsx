@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Avatar, Dropdown, Button, Menu, Space, Typography } from "antd";
+import { Avatar, Dropdown, Button,  Space, Typography } from "antd";
 import { UserOutlined, MenuFoldOutlined, MenuUnfoldOutlined, SettingOutlined, LogoutOutlined, MoreOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 
@@ -31,19 +31,26 @@ const Header = ({ collapsed, toggleSidebar }) => {
     }
   };
 
-  const userMenu = (
-    <Menu onClick={handleMenuClick}>
-      <Menu.Item key="1" icon={<SettingOutlined />}>
-        Settings
-      </Menu.Item>
-      <Menu.Item key="2" icon={<UserOutlined />}>
-        Profile
-      </Menu.Item>
-      <Menu.Item key="3" icon={<LogoutOutlined />}>
-        Logout
-      </Menu.Item>
-    </Menu>
-  );
+  const userMenu = {
+    items: [
+      {
+        key: "1",
+        icon: <SettingOutlined />,
+        label: "Settings",
+      },
+      {
+        key: "2",
+        icon: <UserOutlined />,
+        label: "Profile",
+      },
+      {
+        key: "3",
+        icon: <LogoutOutlined />,
+        label: "Logout",
+      },
+    ],
+    onClick: handleMenuClick,
+  };
 
   return (
     <div
@@ -67,23 +74,16 @@ const Header = ({ collapsed, toggleSidebar }) => {
         onClick={toggleSidebar}
       />
 
-      {/* Conditional rendering based on mobile view */}
-      <div style={{ display: "flex", alignItems: "center" }}>
+<div style={{ display: "flex", alignItems: "center" }}>
         {isMobile ? (
-          // Show vertical dots (MoreOutlined) in mobile view
-          <Dropdown overlay={userMenu} placement="bottomRight">
-            <Button
-              type="text"
-              icon={<MoreOutlined />}
-              style={{ fontSize: "18px" }}
-            />
+          <Dropdown menu={userMenu} placement="bottomRight">
+            <Button type="text" icon={<MoreOutlined />} style={{ fontSize: "18px" }} />
           </Dropdown>
         ) : (
-          // Show avatar and username in desktop view
-          <Dropdown overlay={userMenu} placement="bottomRight">
+          <Dropdown menu={userMenu} placement="bottomRight">
             <Space>
               <Avatar size={30} icon={<UserOutlined />} style={{ cursor: "pointer" }} />
-              <Text strong style={{ marginLeft: "8px" }}>Sravani Reddy</Text> {/* Display username */}
+              <Text strong style={{ marginLeft: "8px" }}>Sravani Reddy</Text>
             </Space>
           </Dropdown>
         )}

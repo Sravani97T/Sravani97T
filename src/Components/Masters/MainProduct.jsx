@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   Form,
   Input,
@@ -7,69 +7,250 @@ import {
   Table,
   Space,
   Popconfirm,
+  message,
   Row,
   Col,
-  Card,
-  message,
   Breadcrumb,
+  Card
 } from "antd";
 import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import axios from "axios";
+import "../Assets/css/Style.css";
 
 const MainProduct = () => {
   const [form] = Form.useForm();
-  const [data, setData] = useState([
-    {
-      key: 1,
-      mainProduct: "Product A",
-      gst: 18,
-      pgst: 9,
-      barcodePrefix: 12345,
-      includingGst: true,
-    },
-    {
-      key: 2,
-      mainProduct: "Product B",
-      gst: 12,
-      pgst: 6,
-      barcodePrefix: 67890,
-      includingGst: false,
-    },
-  ]);
+  const [data, setData] = useState([]);
   const [editingKey, setEditingKey] = useState(null);
   const [searchText, setSearchText] = useState("");
+  const [oldProductName, setOldProductName] = useState("");
 
-  const handleAdd = (values) => {
-    const newData = {
-      key: Date.now(),
-      ...values,
+  const API_BASE_URL = "http://www.jewelerp.timeserasoftware.in/api/Master";
+  const tenantNameHeader = "PmlYjF0yAwEjNohFDKjzn/ExL/LMhjzbRDhwXlvos+0=";
+  const mainprodRef = useRef(null);
+  const gstRef = useRef(null);
+
+  const pgstRef = useRef(null);
+  const barCodeRef = useRef(null);
+  const checkRef = useRef(null);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/MasterMainProductList`, {
+          headers: { tenantName: tenantNameHeader },
+        });
+        if (response.status === 200) {
+          const transformedData = response.data.map((item) => ({
+            key: item.ID || `${item.MNAME}-${Date.now()}`, // Ensure a unique key
+            mainProduct: item.MNAME || "",
+            gst: item.VAT || 0,
+            pgst: item.PTAX || 0,
+            barcodePrefix: item.BarcodePrefix || "",
+            includingGst: item.INCLUDING_GST || false,
+          }));
+
+          setData(transformedData);
+        } else {
+          message.error("Failed to fetch product data.");
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        message.error("An error occurred while fetching data.");
+      }
     };
-    setData([...data, newData]);
-    form.resetFields();
-    message.success("Product added successfully!");
+
+    fetchData();
+  }, []);
+
+
+  const handleAdd = async (values) => {
+    const upperCaseProduct = values.mainProduct.toUpperCase();
+    form.setFieldsValue({ mainProduct: upperCaseProduct });
+
+    try {
+      const searchResponse = await axios.get(
+        `${API_BASE_URL}/MasterMainProductSearch?MName=${upperCaseProduct}`,
+        { headers: { tenantName: tenantNameHeader } }
+      );
+
+      if (searchResponse.data.length > 0) {
+        message.error("Main product already exists!");
+        return;
+      }
+
+      const response = await axios.post(
+        `${API_BASE_URL}/MasterMainProductInsert`,
+        {
+          mname: upperCaseProduct,
+          vat: values.gst,
+          ptax: values.pgst,
+          barcodePrefix: values.barcodePrefix,
+          metaltype: "Gold",
+          includinG_GST: values.includingGst,
+          cloud_upload: true,
+        },
+        { headers: { tenantName: tenantNameHeader } }
+      );
+
+      if (response.status === 200) {
+        const newProduct = {
+          key: response.data.ID || `${upperCaseProduct}-${Date.now()}`,
+          mainProduct: upperCaseProduct,
+          gst: values.gst,
+          pgst: values.pgst,
+          barcodePrefix: values.barcodePrefix,
+          includingGst: values.includingGst,
+        };
+        setData((prevData) => [...prevData, newProduct]);
+        form.resetFields();
+        message.success("Product added successfully!");
+      } else {
+        message.error("Failed to add product.");
+      }
+    } catch (error) {
+      console.error("Error adding product:", error);
+      // message.error("An error occurred while adding the product.");
+    }
   };
 
-  const handleDelete = (key) => {
-    setData(data.filter((item) => item.key !== key));
-    message.success("Product deleted successfully!");
+  const handleDelete = async (key, mainProduct) => {
+    try {
+      const response = await axios.post(
+        `${API_BASE_URL}/MasterMainProductDelete?MName=${mainProduct}`,
+        {},
+        { headers: { tenantName: tenantNameHeader } }
+      );
+
+      if (response.status === 200 && response.data === true) {
+        setData((prevData) => prevData.filter((item) => item.mainProduct !== mainProduct));
+        message.success("Product deleted successfully!");
+      } else {
+        message.error("Failed to delete product.");
+      }
+    } catch (error) {
+      console.error("Error deleting product:", error);
+      message.error("An error occurred while deleting the product.");
+    }
   };
 
-  const handleEdit = (record) => {
-    setEditingKey(record.key);
-    form.setFieldsValue(record);
-    window.scrollTo(0, 0);
+  const handleEdit = (product) => {
+    setOldProductName(product.mainProduct);
+    form.setFieldsValue({
+      mainProduct: product.mainProduct,
+      gst: product.gst,
+      pgst: product.pgst,
+      barcodePrefix: product.barcodePrefix,
+      includingGst: product.includingGst,
+    });
+    setEditingKey(product.key);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const updatedData = form.getFieldsValue();
-    setData((prevData) =>
-      prevData.map((item) =>
-        item.key === editingKey ? { ...item, ...updatedData } : item
-      )
-    );
-    setEditingKey(null);
-    form.resetFields();
-    message.success("Product updated successfully!");
+    const newMainProduct = updatedData.mainProduct.toUpperCase(); // Convert to uppercase
+  
+    // Check if the form values are the same as the original values
+    if (
+      newMainProduct === oldProductName &&
+      updatedData.gst === data.find(item => item.mainProduct === oldProductName).gst &&
+      updatedData.pgst === data.find(item => item.mainProduct === oldProductName).pgst &&
+      updatedData.barcodePrefix === data.find(item => item.mainProduct === oldProductName).barcodePrefix &&
+      updatedData.includingGst === data.find(item => item.mainProduct === oldProductName).includingGst
+    ) {
+      // Instead of showing a "No changes" message, clear the form and switch to Add Product
+      form.resetFields();
+      setEditingKey(null);
+      return; // Stop further processing
+    }
+  
+    try {
+      // Check if the new main product name already exists
+      const searchResponse = await axios.get(
+        `${API_BASE_URL}/MasterMainProductSearch?MName=${newMainProduct}`,
+        { headers: { tenantName: tenantNameHeader } }
+      );
+  
+      if (searchResponse.data.length > 0 && newMainProduct !== oldProductName) {
+        message.error("Main product already exists!");
+        return;
+      }
+  
+      // Delete the old record if the main product name has changed
+      if (newMainProduct !== oldProductName) {
+        await axios.post(
+          `${API_BASE_URL}/MasterMainProductDelete?MName=${oldProductName}`,
+          {},
+          { headers: { tenantName: tenantNameHeader } }
+        );
+      }
+  
+      // Add or update the record
+      const response = await axios.post(
+        `${API_BASE_URL}/MasterMainProductInsert`,
+        {
+          mname: newMainProduct, // Use the uppercase main product name
+          vat: updatedData.gst,
+          ptax: updatedData.pgst,
+          barcodePrefix: updatedData.barcodePrefix,
+          metaltype: "Gold",
+          includinG_GST: updatedData.includingGst,
+          cloud_upload: true,
+        },
+        { headers: { tenantName: tenantNameHeader } }
+      );
+  
+      if (response.status === 200) {
+        const updatedRecord = {
+          key: editingKey, // Ensure the same key is reused
+          mainProduct: newMainProduct, // Use the uppercase main product name
+          gst: updatedData.gst,
+          pgst: updatedData.pgst,
+          barcodePrefix: updatedData.barcodePrefix,
+          includingGst: updatedData.includingGst,
+        };
+  
+        // Replace the record with the same key
+        setData((prevData) =>
+          prevData.map((item) => (item.key === editingKey ? updatedRecord : item))
+        );
+  
+        form.resetFields();
+        setEditingKey(null);
+        message.success("Product updated successfully!");
+      } else {
+        message.error("Failed to update product.");
+      }
+    } catch (error) {
+      console.error("Error updating product:", error);
+      message.error("An error occurred while updating the product.");
+    }
   };
+  
+  const handleMainProductChange = async (e) => {
+    const enteredProduct = e.target.value.toUpperCase(); // Ensure product name is uppercase
+    form.setFieldsValue({ mainProduct: enteredProduct });
+
+    // If the entered product is the same as the current one, no need to check
+    if (enteredProduct === oldProductName) {
+      return; // Exit early, no need to check for duplication
+    }
+
+    try {
+      const searchResponse = await axios.get(
+        `${API_BASE_URL}/MasterMainProductSearch?MName=${enteredProduct}`,
+        { headers: { tenantName: tenantNameHeader } }
+      );
+
+      // Show the message only if the new product name exists
+      if (searchResponse.data.length > 0) {
+        message.error("Main product already exists!");
+      }
+    } catch (error) {
+      console.error("Error checking product existence:", error);
+      // message.error("An error occurred while checking the product.");
+    }
+  };
+
+
 
   const handleCancel = useCallback(() => {
     form.resetFields();
@@ -77,10 +258,7 @@ const MainProduct = () => {
   }, [form]);
 
   const filteredData = data.filter((item) =>
-    Object.values(item)
-      .join(" ")
-      .toLowerCase()
-      .includes(searchText.toLowerCase())
+    Object.values(item).join(" ").toLowerCase().includes(searchText.toLowerCase())
   );
 
   const columns = [
@@ -88,37 +266,21 @@ const MainProduct = () => {
       title: "Main Product",
       dataIndex: "mainProduct",
       key: "mainProduct",
-      sorter: (a, b) => a.mainProduct.localeCompare(b.mainProduct),
-      render: (text) => text.toUpperCase(),
-      filters: [
-        { text: 'Product A', value: 'Product A' },
-        { text: 'Product B', value: 'Product B' },
-      ],
-      onFilter: (value, record) => record.mainProduct.includes(value),
-      responsive: ['xs', 'sm'], // Ensure this column is visible on mobile devices
     },
     {
       title: "GST",
       dataIndex: "gst",
       key: "gst",
-      sorter: (a, b) => a.gst - b.gst,
-      filters: [
-        { text: '18%', value: 18 },
-        { text: '12%', value: 12 },
-      ],
-      onFilter: (value, record) => record.gst === value,
     },
     {
       title: "PGST",
       dataIndex: "pgst",
       key: "pgst",
-      sorter: (a, b) => a.pgst - b.pgst,
     },
     {
       title: "Barcode Prefix",
       dataIndex: "barcodePrefix",
       key: "barcodePrefix",
-      sorter: (a, b) => a.barcodePrefix - b.barcodePrefix,
     },
     {
       title: "Including GST",
@@ -130,7 +292,7 @@ const MainProduct = () => {
       title: "Action",
       key: "action",
       render: (_, record) => (
-        <Space size="middle">
+        <Space>
           <Button
             type="link"
             icon={<EditOutlined />}
@@ -139,7 +301,7 @@ const MainProduct = () => {
           />
           <Popconfirm
             title="Are you sure to delete this record?"
-            onConfirm={() => handleDelete(record.key)}
+            onConfirm={() => handleDelete(record.key, record.mainProduct)}
           >
             <Button type="link" icon={<DeleteOutlined />} danger />
           </Popconfirm>
@@ -147,139 +309,124 @@ const MainProduct = () => {
       ),
     },
   ];
-
   const handleEnterPress = (e, nextFieldRef) => {
     e.preventDefault();
     if (nextFieldRef.current) {
       nextFieldRef.current.focus();
     }
   };
-
-  const gstRef = React.createRef();
-  const pgstRef = React.createRef();
-  const barcodePrefixRef = React.createRef();
-  const includingGstRef = React.createRef();
-
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.altKey && e.key === "s") {
-        e.preventDefault();
-        form.submit();
-      }
-      if (e.altKey && e.key === "c") {
-        e.preventDefault();
-        handleCancel();
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [form, handleCancel]);
-
   return (
-    <div style={{ padding: "5px", backgroundColor: "#f4f6f9" }}>
-      {/* Breadcrumb */}
-      <Row justify="start" style={{ marginBottom: "16px" }}>
+    <div style={{  backgroundColor: "#f4f6f9" }}>
+      <Row justify="start" style={{ marginBottom: "10px" }}>
         <Col>
           <Breadcrumb style={{ fontSize: "16px", fontWeight: "500", color: "#0C1154" }}>
             <Breadcrumb.Item>Masters</Breadcrumb.Item>
-            <Breadcrumb.Item>Main Products</Breadcrumb.Item>
+            <Breadcrumb.Item>Product Master</Breadcrumb.Item>
           </Breadcrumb>
         </Col>
       </Row>
 
-      <Card title={editingKey ? "Edit Product" : "Add Product"} style={{ marginBottom: "20px", borderRadius: "8px", boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)" }}>
-        <Form form={form} layout="vertical" onFinish={editingKey ? handleSave : handleAdd}>
-          <Row gutter={16}>
-            <Col xs={24} sm={12} lg={12}>
+      <Card
+        title={editingKey ? "Edit Product" : "Add Product"}
+        style={{
+          marginBottom: "10px",
+          borderRadius: "8px",
+          boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+        }}
+      >
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={editingKey ? handleSave : handleAdd}
+        >
+          <Row gutter={[16, 16]}>
+            <Col xs={24} sm={12}>
               <Form.Item
                 name="mainProduct"
                 label="Main Product"
-                rules={[{ required: true, message: "Main Product is required" }]}>
+                rules={[{ required: true, message: "Main Product is required" }]}
+              >
                 <Input
-                  placeholder="Enter main product"
+                  placeholder="Main Product"
+                  ref={mainprodRef}
                   onPressEnter={(e) => handleEnterPress(e, gstRef)}
+                  onChange={handleMainProductChange}
+                  onBlur={handleMainProductChange}
                 />
               </Form.Item>
             </Col>
-            <Col xs={24} sm={12} lg={12}>
-              <Form.Item
-                name="gst"
-                label="GST"
-                rules={[{ required: true, message: "GST is required" }]}>
-                <Input
-                  ref={gstRef}
-                  type="number"
-                  placeholder="Enter GST"
-                  onPressEnter={(e) => handleEnterPress(e, pgstRef)}
-                />
+            <Col xs={24} sm={12}>
+              <Form.Item name="gst" label="GST" rules={[{ required: true, }]}
+              >
+                <Input placeholder="GST" type="number" ref={gstRef}
+                  onPressEnter={(e) => handleEnterPress(e, pgstRef)} />
               </Form.Item>
             </Col>
-
-            <Col xs={24} sm={12} lg={12}>
-              <Form.Item
-                name="pgst"
-                label="PGST"
-                rules={[{ required: true, message: "PGST is required" }]}>
-                <Input
+            <Col xs={24} sm={12}>
+              <Form.Item name="pgst" label="PGST" rules={[{ required: true, }]}>
+                <Input placeholder="PGST" type="number"
                   ref={pgstRef}
-                  placeholder="Enter PGST"
-                  type="number"
-                  onPressEnter={(e) => handleEnterPress(e, barcodePrefixRef)}
-                />
+                  onPressEnter={(e) => handleEnterPress(e, barCodeRef)} />
               </Form.Item>
             </Col>
-            <Col xs={24} sm={12} lg={12}>
-              <Form.Item
-                name="barcodePrefix"
-                label="Barcode Prefix"
-                rules={[{ required: true, message: "Barcode Prefix is required" }]}>
-                <Input
-                  ref={barcodePrefixRef}
-                  placeholder="Enter Barcode Prefix"
-                  type="number"
-                  onPressEnter={(e) => handleEnterPress(e, includingGstRef)}
-                />
+            <Col xs={24} sm={12}>
+              <Form.Item name="barcodePrefix" label="Barcode Prefix" rules={[{ required: true, }]}>
+                <Input placeholder="Barcode Prefix" ref={barCodeRef}
+                  onPressEnter={(e) => handleEnterPress(e, checkRef)} />
               </Form.Item>
             </Col>
-
-            <Col xs={24}>
+            <Col xs={24} sm={12}>
               <Form.Item name="includingGst" valuePropName="checked">
-                <Checkbox ref={includingGstRef}>Including GST</Checkbox>
+                <Checkbox ref={checkRef}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault(); // Prevent default behavior
+                      form.submit(); // Submit the form
+                    }
+                  }}>Including GST</Checkbox>
+              </Form.Item>
+            </Col>
+            <Col >
+              <Form.Item>
+              <Button
+              type="primary"
+              htmlType="submit"
+              style={{
+                marginRight: 8,
+                backgroundColor: "#0C1154",
+                borderColor: "#0C1154",
+              }}
+            >
+              {editingKey ? "Save" : "Submit"}
+            </Button>
+            <Button
+              htmlType="button"
+              onClick={handleCancel}
+              style={{ backgroundColor: "#f0f0f0", }}
+            >
+              Cancel
+            </Button>
               </Form.Item>
             </Col>
           </Row>
-
-          <div style={{ textAlign: "left", marginTop: "16px", float: "right" }}>
-            <Button type="primary" htmlType="submit" style={{ marginRight: 8, backgroundColor: "#0C1154", borderColor: "#0C1154" }}>
-              {editingKey ? "Save" : "Submit"}
-            </Button>
-            <Button htmlType="button" onClick={handleCancel} style={{ backgroundColor: "#f0f0f0" }}>
-              Cancel
-            </Button>
-          </div>
+         
         </Form>
       </Card>
-
-      <Row gutter={16}>
-        <Col xs={24} sm={16} lg={12}>
+      <div style={{float:"right"}}>
+        
           <Input.Search
-            placeholder="Search records"
-            style={{ marginBottom: "16px", width: "100%", borderRadius: "4px" }}
+            placeholder="Search"
             onChange={(e) => setSearchText(e.target.value)}
+            style={{width: 300 ,marginBottom:"10px"}}
           />
-        </Col>
-      </Row>
-
+      </div>
       <Table
         columns={columns}
         dataSource={filteredData}
         rowKey="key"
+        size="small"
         pagination={{ pageSize: 5 }}
-        scroll={{ x: 1000 }} // Allow horizontal scrolling
+        scroll={{ x: 1000 }} // Allow horizontal scrolling if needed
         style={{
           background: "#fff",
           boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
