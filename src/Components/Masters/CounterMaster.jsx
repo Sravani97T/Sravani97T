@@ -14,50 +14,210 @@ import {
     Breadcrumb,
 } from "antd";
 import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import axios from "axios";
 
 const { Option } = Select;
 
 const CounterMaster = () => {
     const [form] = Form.useForm();
-    const [data, setData] = useState([
-        { key: 1, counterName: "Gold", counterChart: "Bangles" },
-        { key: 2, counterName: "Silver", counterChart: "Chains" },
-    ]);
-    const [editingKey, setEditingKey] = useState(null);
+    const [data, setData] = useState([]);
+    const [editingKey, setEditingKey] = useState(false);
     const [searchText, setSearchText] = useState("");
+    const [isDuplicate, setIsDuplicate] = useState(false);
     const counterInputRef = useRef(); // Ref for the second input field
-
+    const [rowdata, setRowdata] = useState(null);
     const mainCounterOptions = Array.from({ length: 10 }, (_, i) => `CTN ${i + 1}`);
 
-    const handleAdd = (values) => {
-        const newData = { key: Date.now(), ...values };
-        setData([...data, newData]);
-        form.resetFields();
-        message.success("Counter added successfully!");
-    };
+    const tenantNameHeader = "PmlYjF0yAwEjNohFDKjzn/ExL/LMhjzbRDhwXlvos+0="; // Your tenant header value
 
-    const handleDelete = (key) => {
-        setData(data.filter((item) => item.key !== key));
-        message.success("Counter deleted successfully!");
+    useEffect(() => {
+        GetAllCounters();
+    }, []); 
+    const GetAllCounters = () => {
+
+        // Fetch data from the API when the component is mounted
+        axios.get("http://www.jewelerp.timeserasoftware.in/api/Master/MasterCounterMasterList", {
+            headers: { "tenantName": tenantNameHeader }
+        })
+            .then(response => {
+                setData(response.data);
+            })
+            .catch(error => {
+                console.error("Error fetching data:", error);
+                message.error("Failed to load counter data.");
+            });
+        }
+
+    const handleAdd = (values) => {
+        const upperCaseValues = {
+            ...values,
+            counterName: values.counterName.toUpperCase(),  // Force uppercase for counterName
+        };
+
+        const requestBody = {
+            countername: upperCaseValues.counterName, // Matches "countername" in the API body
+            cntchartdisplay: upperCaseValues.counterChart, // Matches "cntchartdisplay" in the API body
+            cloud_upload: true, // Assuming "cloud_upload" is always true for this request
+        };
+
+        // Check if counter already exists
+        axios
+            .get(
+                `http://www.jewelerp.timeserasoftware.in/api/Master/MasterCounterMasterSearch?CounterName=${upperCaseValues.counterName}`,
+                { headers: { tenantName: tenantNameHeader } }
+            )
+            .then((response) => {
+                if (response.data.length > 0) {
+                    setIsDuplicate(true); // Show duplicate message
+                    message.error("Counter already exists!");
+                } else {
+                    // Send the request to add a new counter
+                    axios
+                        .post(
+                            "http://www.jewelerp.timeserasoftware.in/api/Master/MasterCounterMasterInsert",
+                            requestBody,
+                            { headers: { tenantName: tenantNameHeader } }
+                        )
+                        .then(() => {
+                            form.resetFields();
+                            message.success("Counter added successfully!");
+                            setIsDuplicate(false); // Reset duplicate flag
+
+                            // Fetch the updated list
+                            axios
+                                .get(
+                                    "http://www.jewelerp.timeserasoftware.in/api/Master/MasterCounterMasterList",
+                                    { headers: { tenantName: tenantNameHeader } }
+                                )
+                                .then((response) => {
+                                    setData(response.data); // Update table data with the latest list
+                                })
+                                .catch((error) => {
+                                    console.error("Error fetching updated data:", error);
+                                    message.error("Failed to refresh counter data.");
+                                });
+                        })
+                        .catch((error) => {
+                            console.error("Error adding counter:", error);
+                            message.error("Failed to add counter.");
+                        });
+                }
+            })
+            .catch((error) => {
+                console.error("Error checking counter name:", error);
+            });
     };
 
     const handleEdit = (record) => {
-        setEditingKey(record.key);
-        form.setFieldsValue(record);
-        window.scrollTo(0, 0);
+        setEditingKey(true); // Set the record's unique key
+        setRowdata(record);
+        form.setFieldsValue({
+            counterName: record.COUNTERNAME, // Adjust field names to match API data
+            counterChart: record.CNTCHARTDISPLAY,
+        });
+        window.scrollTo(0, 0); // Scroll to the form for editing
+    };
+    console.log("rowdata", rowdata);
+
+    const handleEditFunction = async (values) => {
+        console.log("values", values);
+    
+        // Convert the new counter name to uppercase
+        const upperCaseValues = {
+            ...values,
+            counterName: values.counterName.toUpperCase(), // Ensure it is uppercase
+        };
+    
+        // Step 1: Compare the updated data with the original (rowdata) to check if there are any changes
+        const updatedData = form.getFieldsValue();
+    
+        if (
+            upperCaseValues.counterName === rowdata.COUNTERNAME &&
+            updatedData.counterChart === rowdata.CNTCHARTDISPLAY // Assuming `counterChart` is a field
+        ) {
+            // If no changes, reset the form and stop processing
+            form.resetFields();
+            setEditingKey(null); // Switch back to Add form
+            return; // Stop further processing
+        }
+    
+        // Step 2: Check if the new counter name already exists
+        try {
+            const searchResponse = await axios.get(
+                `http://www.jewelerp.timeserasoftware.in/api/Master/MasterCounterMasterSearch?CounterName=${upperCaseValues.counterName}`,
+                { headers: { tenantName: tenantNameHeader } }
+            );
+    
+            if (searchResponse.data.length > 0 && upperCaseValues.counterName !== rowdata.COUNTERNAME) {
+                message.error("Counter name already exists!");
+                return; // Stop if a duplicate is found
+            }
+    
+            // Step 3: Delete the old counter if the counter name has changed
+            const deleteResponse = await axios.post(
+                `http://www.jewelerp.timeserasoftware.in/api/Master/MasterCounterMasterDelete?CounterName=${rowdata.COUNTERNAME}`,
+                null, // No request body
+                { headers: { tenantName: tenantNameHeader } }
+            );
+    
+            if (deleteResponse.data === true) {
+                setRowdata(null); // Reset row data
+    
+                // Step 4: Create a new counter after successful deletion
+                const requestBody = {
+                    countername: upperCaseValues.counterName, // New counter name
+                    cntchartdisplay: upperCaseValues.counterChart, // New counter chart
+                    cloud_upload: true, // Assuming it's always true
+                };
+    
+                const createResponse = await axios.post(
+                    "http://www.jewelerp.timeserasoftware.in/api/Master/MasterCounterMasterInsert",
+                    requestBody,
+                    { headers: { tenantName: tenantNameHeader } }
+                );
+    
+                if (createResponse.status === 200) {
+                    message.success("Counter updated successfully!");
+                    form.resetFields();
+                    GetAllCounters(); // Refresh counters list
+                    setEditingKey(null); // Reset to add form
+                } else {
+                    message.error("Failed to create new counter.");
+                }
+            } else {
+                message.error("Failed to delete old counter.");
+            }
+        } catch (error) {
+            console.error("Error during the process:", error);
+            message.error("An error occurred while updating the counter.");
+        }
+    };
+    
+    
+    
+
+
+    const handleDelete = (key, counterName) => {
+        axios
+            .post(
+                `http://www.jewelerp.timeserasoftware.in/api/Master/MasterCounterMasterDelete?CounterName=${counterName}`,
+                null, // No request body is required
+                { headers: { tenantName: tenantNameHeader } }
+            )
+            .then((response) => {
+                if (response.data === true) {
+                    message.success("Counter deleted successfully!");
+                    GetAllCounters()
+                } else {
+                    message.error("Failed to delete the counter.");
+                }
+            })
+            .catch((error) => {
+                console.error("Error deleting counter:", error);
+                message.error("Failed to delete counter.");
+            });
     };
 
-    const handleSave = () => {
-        const updatedData = form.getFieldsValue();
-        setData((prevData) =>
-            prevData.map((item) =>
-                item.key === editingKey ? { ...item, ...updatedData } : item
-            )
-        );
-        setEditingKey(null);
-        form.resetFields();
-        message.success("counter  updated successfully!");
-    };
 
     const handleCancel = useCallback(() => {
         form.resetFields();
@@ -83,14 +243,14 @@ const CounterMaster = () => {
     const columns = [
         {
             title: "Counter Name",
-            dataIndex: "counterName",
-            key: "counterName",
-            sorter: (a, b) => a.counterName.localeCompare(b.counterName),
+            dataIndex: "COUNTERNAME",
+            key: "COUNTERNAME",
+            sorter: (a, b) => a.COUNTERNAME.localeCompare(b.COUNTERNAME),
         },
         {
-            title: "Counter chart",
-            dataIndex: "counterChart",
-            key: "counterChart",
+            title: "Counter Chart",
+            dataIndex: "CNTCHARTDISPLAY",
+            key: "CNTCHARTDISPLAY",
         },
         {
             title: "Action",
@@ -105,7 +265,7 @@ const CounterMaster = () => {
                     />
                     <Popconfirm
                         title="Are you sure to delete this record?"
-                        onConfirm={() => handleDelete(record.key)}
+                        onConfirm={() => handleDelete(record.key, record.COUNTERNAME)}
                     >
                         <Button type="link" icon={<DeleteOutlined />} danger />
                     </Popconfirm>
@@ -113,6 +273,7 @@ const CounterMaster = () => {
             ),
         },
     ];
+
 
     useEffect(() => {
         const handleKeyDown = (e) => {
@@ -146,10 +307,10 @@ const CounterMaster = () => {
             </Row>
 
             <Card
-                title={editingKey ? "Edit Product" : "Add Product"}
+                title={editingKey ? "Edit Counter" : "Add Counter"}
                 style={{ marginBottom: "20px", borderRadius: "8px", boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)" }}
             >
-                <Form form={form} layout="vertical" onFinish={editingKey ? handleSave : handleAdd}>
+                <Form form={form} layout="vertical" onFinish={editingKey ? handleEditFunction : handleAdd}>
                     <Row gutter={16}>
                         <Col xs={24} sm={12} lg={12}>
                             <Form.Item
@@ -159,6 +320,10 @@ const CounterMaster = () => {
                             >
                                 <Input
                                     placeholder="Enter Counter Name"
+                                    onChange={(e) => {
+                                        const upperCaseValue = e.target.value.toUpperCase(); // Convert input to uppercase
+                                        form.setFieldsValue({ counterName: upperCaseValue }); // Update form value with uppercase
+                                    }}
                                     onKeyDown={(e) => handleEnterPress(e, counterInputRef)}
                                 />
                             </Form.Item>
@@ -174,6 +339,7 @@ const CounterMaster = () => {
                                     ref={counterInputRef} // Correctly assign ref here
                                     placeholder="Select"
                                     showSearch
+                                    value={form.getFieldValue("counterChart")} // Ensure this field has a value
                                     filterOption={(input, option) =>
                                         option?.children.toLowerCase().includes(input.toLowerCase())
                                     }
@@ -191,10 +357,7 @@ const CounterMaster = () => {
                                     ))}
                                 </Select>
                             </Form.Item>
-
                         </Col>
-
-
                     </Row>
 
                     <div style={{ textAlign: "left", marginTop: "16px", float: "right" }}>
@@ -210,8 +373,6 @@ const CounterMaster = () => {
                         </Button>
                     </div>
                 </Form>
-
-
             </Card>
 
             <Row gutter={16}>
@@ -229,7 +390,6 @@ const CounterMaster = () => {
                 dataSource={filteredData}
                 rowKey="key"
                 pagination={{ pageSize: 5 }}
-                scroll={{ x: 1000 }}
                 style={{
                     background: "#fff",
                     boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",

@@ -29,20 +29,31 @@ const ProductCategory = () => {
   const [currentPage, setCurrentPage] = useState(1);  // For pagination
   const [pageSize, setPageSize] = useState(10);      // For pagination
   const categoryInputRef = useRef(); // Ref for the second input field
+  const [mainProductOptions, setMainProductOptions] = useState([]);  // State for dynamic main product options
 
-  const mainProductOptions = ["Gold", "Silver", "Platinum", "Diamond"];
 
   useEffect(() => {
+    // Fetch main products from API
+    const fetchMainProducts = async () => {
+      try {
+        const response = await axios.get(`${CREATE_jwel}/api/Master/MasterMainProductList`);
+        const options = response.data.map((item) => item.MNAME);  // Assuming the response contains MNAME
+        setMainProductOptions(options); // Set the main product options
+      } catch (error) {
+        message.error("Failed to fetch main products.");
+      }
+    };
+
+    fetchMainProducts();
+
+    // Fetch product category data
     const fetchData = async () => {
       try {
-        const response = await axios.get(
-          `${CREATE_jwel}/api/Master/MasterProductCategoryList`
-        );
+        const response = await axios.get(`${CREATE_jwel}/api/Master/MasterProductCategoryList`);
         const formattedData = response.data.map((item, index) => ({
           ...item,
           key: index,
         }));
-
         setData(formattedData);
       } catch (error) {
         message.error("Failed to fetch product categories.");
@@ -51,7 +62,6 @@ const ProductCategory = () => {
 
     fetchData();
   }, []);
-
   const checkProductExists = async (mainProduct, category) => {
     try {
       const response = await axios.get(
@@ -202,6 +212,13 @@ const ProductCategory = () => {
       key: "MNAME",
       render: (text) => text.toUpperCase(),
       sorter: (a, b) => a.MNAME.localeCompare(b.MNAME),
+      filters: [
+        ...new Set(data.map(item => item.MNAME)) // Dynamically extract unique MNAME values from the data
+      ].map(item => ({
+        text: item,
+        value: item,
+      })),
+      onFilter: (value, record) => record.MNAME.includes(value),
     },
     {
       title: "Product Category",
@@ -230,6 +247,9 @@ const ProductCategory = () => {
       ),
     },
   ];
+  
+  
+  
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -269,7 +289,7 @@ const ProductCategory = () => {
         <Form form={form} layout="vertical" onFinish={editingKey ? handleSave : handleAdd}>
           <Row gutter={16}>
             <Col xs={24} sm={12} lg={12}>
-              <Form.Item
+            <Form.Item
                 name="mainProduct"
                 label="Main Product"
                 rules={[{ required: true, message: "Main Product is required" }]}

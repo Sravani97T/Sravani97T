@@ -22,48 +22,81 @@ axios.defaults.headers.common['tenantName'] = tenantNameHeader;
 const ProductMaster = () => {
   const [form] = Form.useForm();
   const [data, setData] = useState([]);
-  const [editingKey, setEditingKey] = useState(null);
+  const [editingKey, setEditingKey] = useState(false);
   const [searchText, setSearchText] = useState("");
+  const [mainProductOptions, setMainProductOptions] = useState([]); // State for Main Product options
+  const [mainProductMapping, setMainProductMapping] = useState({});
+  const [filteredProductCategories, setFilteredProductCategories] = useState([]);
+  const [rowdata, setRowdata] = useState(null);
 
   // Refs for form fields to handle focus
-  const productCategoryRef = useRef(null);
+  // const MainProductRef = useRef(null)
+  const ProductCategoryRef = useRef(null)
   const CategoryRef = useRef(null);
 
   const productNameRef = useRef(null);
   const productCodeRef = useRef(null);
   const hsnCodeRef = useRef(null);
   const minQtyRef = useRef(null);
-  const mainProductOptions = ["Gold", "Silver", "Platinum", "Diamond"];
+
+  // Fetch data for dropdowns (Main Product and Product Category)
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchDropdownData = async () => {
       try {
-        const response = await axios.get(
-          `${CREATE_jwel}/api/Master/MasterProductMasterList`
-        );
+        const response = await axios.get(`${CREATE_jwel}/api/Master/MasterProductCategoryList`);
+        const { data } = response;
 
-        // Add key to each record for table usage
-        const formattedData = response.data.map((item, index) => ({
-          ...item,
-          key: index, // Or use a unique identifier if available
-        }));
+        // Create a mapping of main product to product categories
+        const mainProductMapping = data.reduce((acc, item) => {
+          acc[item.MNAME] = acc[item.MNAME] || [];
+          if (!acc[item.MNAME].includes(item.PRODUCTCATEGORY)) {
+            acc[item.MNAME].push(item.PRODUCTCATEGORY);
+          }
+          return acc;
+        }, {});
 
-        setData(formattedData);
+        const mainProductData = Object.keys(mainProductMapping);
+        setMainProductOptions(mainProductData);
+        setMainProductMapping(mainProductMapping); // Store the mapping
       } catch (error) {
         message.error("Failed to fetch product categories.");
       }
     };
 
+    fetchDropdownData();
+  }, []);
+
+  useEffect(() => {
+   
+
     fetchData();
   }, []);
+  const fetchData = async () => {
+    try {
+      const response = await axios.get(
+        `${CREATE_jwel}/api/Master/MasterProductMasterList`
+      );
+
+      // Add key to each record for table usage
+      const formattedData = response.data.map((item, index) => ({
+        ...item,
+        key: index, // Or use a unique identifier if available
+      }));
+
+      setData(formattedData);
+    } catch (error) {
+      message.error("Failed to fetch product categories.");
+    }
+  };
   const checkProductExists = async (productName, productCode, excludeProductCode = null) => {
     try {
       const response = await axios.get(
         `${CREATE_jwel}/api/Master/MasterProductMasterSearch?ProductName=${productName}&ProductCode=${productCode}`
       );
-  
+
       // If excludeProductCode is provided, exclude the current record from the search result
       const existingProduct = response.data.filter(item => item.PRODUCTCODE !== excludeProductCode);
-      
+
       return existingProduct.length > 0; // Return true if product exists
     } catch (error) {
       message.error("Failed to check product existence.");
@@ -76,7 +109,7 @@ const ProductMaster = () => {
       message.warning("This product name and/or code already exists.");
       return;
     }
-  
+
     try {
       // Convert relevant fields to uppercase
       const mainProduct = values.mainProduct;
@@ -85,7 +118,7 @@ const ProductMaster = () => {
       const productCode = values.productCode;
       const categoryName = values.categoryName;
       const hsnCode = values.hsncode; // if applicable
-  
+
       await axios.post(
         `${CREATE_jwel}/api/Master/MasterProductMasterInsert`,
         {
@@ -100,7 +133,7 @@ const ProductMaster = () => {
           prinT_BILL: true,
         }
       );
-  
+
       // Assuming the API returns the inserted product data
       const newProduct = {
         key: Date.now(), // Temporary unique key for the new row
@@ -112,10 +145,10 @@ const ProductMaster = () => {
         HSNCODE: hsnCode,
         MINQTY: values.minqty,
       };
-  
+
       // Update the table data immediately
       setData((prevData) => [...prevData, newProduct]);
-  
+
       // Reset form fields
       form.resetFields();
       message.success("Product added successfully!");
@@ -123,8 +156,8 @@ const ProductMaster = () => {
       message.error("Failed to add product.");
     }
   };
-  
-  
+
+
   const handleDelete = async (key) => {
     const record = data.find((item) => item.key === key);
     try {
@@ -137,9 +170,11 @@ const ProductMaster = () => {
       message.error("Failed to delete product.");
     }
   };
-  
+
   const handleEdit = (record) => {
-    setEditingKey(record.key);
+    setEditingKey(true);
+    setRowdata(record);
+
     form.setFieldsValue({
       mainProduct: record.MNAME,
       productcategory: record.PRODUCTCATEGORY,
@@ -151,87 +186,90 @@ const ProductMaster = () => {
     });
     window.scrollTo(0, 0); // Scroll to the top for form visibility
   };
-  
 
- 
-  
+
+
+
   const handleSave = async () => {
     const updatedData = form.getFieldsValue();
-    const record = data.find((item) => item.key === editingKey);
+    
+    // If there is no row data (edit is not active), return early
+    if (!rowdata) {
+      setEditingKey(null);
+      form.resetFields();
+      return;
+    }
   
-    // Check if the product already exists in the database (for both name and code)
-    const productExists = await checkProductExists(updatedData.productName, updatedData.productCode);
+    // Check if there are any changes between updated data and the existing row data
+    const isUnchanged =
+      updatedData.mainProduct === rowdata.MNAME &&
+      updatedData.productcategory === rowdata.PRODUCTCATEGORY &&
+      updatedData.productName === rowdata.PRODUCTNAME &&
+      updatedData.productCode === rowdata.PRODUCTCODE &&
+      updatedData.hsncode === rowdata.HSNCODE &&
+      updatedData.minqty === rowdata.MINQTY &&
+      updatedData.categoryName === rowdata.CATEGORYNAME;
   
-    if (productExists && (updatedData.productName !== record.PRODUCTNAME || updatedData.productCode !== record.PRODUCTCODE)) {
+    if (isUnchanged) {
+      // No changes detected, reset the form and switch back to add mode
+      message.info("No changes detected.");
+      setEditingKey(null);
+      form.resetFields();
+      return;
+    }
+  
+    // Check for product existence
+    const productExists = await checkProductExists(updatedData.productName, updatedData.productCode, rowdata.PRODUCTCODE);
+    if (productExists) {
       message.warning("This product name and/or code already exists.");
       return;
     }
   
-    // Proceed if no changes or no conflict
-    if (
-      updatedData.mainProduct !== record.MNAME ||
-      updatedData.productcategory !== record.PRODUCTCATEGORY ||
-      updatedData.productName !== record.PRODUCTNAME ||
-      updatedData.productCode !== record.PRODUCTCODE ||
-      updatedData.hsncode !== record.HSNCODE ||
-      updatedData.minqty !== record.MINQTY ||
-      updatedData.categoryName !== record.CATEGORYNAME
-    ) {
-      try {
-        // If the record has changed, delete the old record and add the new one
-        await axios.post(
-          `${CREATE_jwel}/api/Master/MasterProductMasterDelete?ProductName=${record.PRODUCTNAME}&ProductCode=${record.PRODUCTCODE}`
-        );
+    try {
+      // Update product via API
+      await axios.post(`${CREATE_jwel}/api/Master/MasterProductMasterDelete?ProductName=${rowdata.PRODUCTNAME}&ProductCode=${rowdata.PRODUCTCODE}`);
+      await axios.post(`${CREATE_jwel}/api/Master/MasterProductMasterInsert`, {
+        mname: updatedData.mainProduct,
+        productcategory: updatedData.productcategory,
+        productname: updatedData.productName,
+        productcode: updatedData.productCode,
+        categoryname: updatedData.categoryName,
+        minqty: updatedData.minqty,
+        hsncode: updatedData.hsncode,
+        cloud_upload: false,
+        prinT_BILL: true,
+      });
   
-        // Insert the new edited product
-        await axios.post(
-          `${CREATE_jwel}/api/Master/MasterProductMasterInsert`,
-          {
-            mname: updatedData.mainProduct,
-            productcategory: updatedData.productcategory,
-            productname: updatedData.productName,
-            productcode: updatedData.productCode,
-            categoryname: updatedData.categoryName,
-            minqty: updatedData.minqty,
-            hsncode: updatedData.hsncode,
-            cloud_upload: false,
-            prinT_BILL: true,
-          }
-        );
+      // Update the table data
+      setData((prevData) =>
+        prevData.map((item) =>
+          item.key === editingKey
+            ? {
+                ...item,
+                MNAME: updatedData.mainProduct,
+                PRODUCTCATEGORY: updatedData.productcategory,
+                PRODUCTNAME: updatedData.productName,
+                PRODUCTCODE: updatedData.productCode,
+                CATEGORYNAME: updatedData.categoryName,
+                HSNCODE: updatedData.hsncode,
+                MINQTY: updatedData.minqty,
+              }
+            : item
+        )
+      );
   
-        // Update the data table
-        setData((prevData) =>
-          prevData.map((item) =>
-            item.key === editingKey
-              ? {
-                  ...item,
-                  MNAME: updatedData.mainProduct,
-                  PRODUCTCATEGORY: updatedData.productcategory,
-                  PRODUCTNAME: updatedData.productName,
-                  PRODUCTCODE: updatedData.productCode,
-                  CATEGORYNAME: updatedData.categoryName,
-                  HSNCODE: updatedData.hsncode,
-                  MINQTY: updatedData.minqty,
-                }
-              : item
-          )
-        );
-  
-        setEditingKey(null);
-        form.resetFields();
-        message.success("Product updated successfully!");
-      } catch (error) {
-        message.error("Failed to update product.");
-      }
-    } else {
-      // If no changes were made to the product, reset the form
       setEditingKey(null);
       form.resetFields();
+      fetchData();
+      message.success("Product updated successfully!");
+    } catch (error) {
+      message.error("Failed to update product.");
     }
   };
   
-  
-  
+
+
+
 
   const handleCancel = useCallback(() => {
     form.resetFields();
@@ -339,7 +377,7 @@ const ProductMaster = () => {
   }, [form, handleCancel]);
 
   return (
-    <div style={{  backgroundColor: "#f4f6f9" }}>
+    <div style={{ backgroundColor: "#f4f6f9" }}>
       {/* Breadcrumb */}
       <Row justify="start" style={{ marginBottom: "16px" }}>
         <Col>
@@ -365,73 +403,56 @@ const ProductMaster = () => {
         >
           <Row gutter={16}>
             <Col xs={24} sm={12} lg={8}>
-              <Form.Item
-                name="mainProduct"
-                label="Main Product"
-                rules={[{ required: true,  }]}
-              >
+              <Form.Item label="Main Product" name="mainProduct">
                 <Select
-                  placeholder="Select main product"
+                  placeholder="Select Main Product"
                   showSearch
-                  value={form.getFieldValue("mainProduct")} // Keeps the selected value in sync
-                  filterOption={(input, option) =>
-                    option.children.toLowerCase().includes(input.toLowerCase())
-                  }
-                  onDropdownVisibleChange={(open) => {
-                    if (open) {
-                      form.setFieldsValue({ mainProduct: undefined }); // Reset selection when dropdown is reopened
-                    }
-                  }}
                   onChange={(value) => {
-                    form.setFieldsValue({ mainProduct: value }); // Update the selected value
+                    form.setFieldsValue({ productcategory: null }); // Reset Product Category on Main Product change
+                    setFilteredProductCategories(mainProductMapping[value] || []);
                   }}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
-                      e.preventDefault(); // Prevent form submission
-                      if (form.getFieldValue("mainProduct")) {
-                        if (productCategoryRef.current) {
-                          productCategoryRef.current.focus(); // Move focus to the category input
-                        }
+                      e.preventDefault(); // Prevent default behavior
+                      if (ProductCategoryRef.current) {
+                        ProductCategoryRef.current.focus(); // Move to next field
                       }
                     }
                   }}
                 >
-                  {mainProductOptions.map((item) => (
-                    <Option key={item} value={item}>
-                      {item}
+                  {mainProductOptions.map((option, idx) => (
+                    <Option key={idx} value={option}>
+                      {option}
                     </Option>
                   ))}
                 </Select>
               </Form.Item>
+
             </Col>
 
             <Col xs={24} sm={12} lg={8}>
-              <Form.Item
-                name="productcategory"
-                label="Product Category"
-                rules={[{ required: true, message: "Product Category is required" }]}
-              >
+              <Form.Item label="Product Category" name="productcategory">
                 <Select
-                  placeholder="Select product category"
+                  placeholder="Select Product Category"
                   showSearch
-                  optionFilterProp="children"
-                  ref={productCategoryRef}
+                  ref={ProductCategoryRef}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
-                      handleEnterPress(e, productNameRef); // Focus the next input
+                      e.preventDefault(); // Prevent default behavior
+                      if (productNameRef.current) {
+                        productNameRef.current.focus(); // Move to next field
+                      }
                     }
                   }}
-                  onPressEnter={(e) => handleEnterPress(e, productNameRef)}
-                  filterOption={(input, option) =>
-                    option.children.toLowerCase().includes(input.toLowerCase())
-                  }
                 >
-                  <Option value="Bangles">Bangles</Option>
-                  <Option value="Chains">Chains</Option>
-                  <Option value="Necklaces">Necklaces</Option>
-                  <Option value="Earrings">Earrings</Option>
+                  {filteredProductCategories.map((option, idx) => (
+                    <Option key={idx} value={option}>
+                      {option}
+                    </Option>
+                  ))}
                 </Select>
               </Form.Item>
+
             </Col>
 
             <Col xs={24} sm={12} lg={8}>
@@ -522,27 +543,27 @@ const ProductMaster = () => {
           <Row justify="end" >
             <Col>
               <Form.Item>
-              <Button
-              type="primary"
-              htmlType="submit"
-              style={{
-                marginRight: 8,
-                backgroundColor: "#0C1154",
-                borderColor: "#0C1154",
-              }}
-            >
-              {editingKey ? "Save" : "Submit"}
-            </Button>
-            <Button htmlType="button" onClick={handleCancel} style={{ backgroundColor: "#f0f0f0" }}>
-              Cancel
-            </Button>
-            </Form.Item></Col></Row>
-          
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  style={{
+                    marginRight: 8,
+                    backgroundColor: "#0C1154",
+                    borderColor: "#0C1154",
+                  }}
+                >
+                  {editingKey ? "Save" : "Submit"}
+                </Button>
+                <Button htmlType="button" onClick={handleCancel} style={{ backgroundColor: "#f0f0f0" }}>
+                  Cancel
+                </Button>
+              </Form.Item></Col></Row>
+
         </Form>
       </Card>
 
       <Row justify="end" style={{ marginBottom: "10px" }}>
-      <Col span={6}>
+        <Col span={6}>
           <Input.Search
             placeholder="Search..."
             style={{ width: "100%", borderRadius: "4px" }}

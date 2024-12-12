@@ -23,7 +23,6 @@ import JournalEntryMaster from "./Components/Masters/JournalEntryMaster";
 import StateMaster from "./Components/Masters/StateMaster";
 import OnlineMode from "./Components/Masters/OnlineMode";
 import DailyRates from "./Components/Estimation/DailyRates";
-
 const App = () => {
   return (
     <Router>
@@ -38,7 +37,7 @@ const App = () => {
           <Route path="/product-category" element={<ProductCategory />} />
           <Route path="/product-master" element={<ProductMaster />} />
           <Route path="/counter-master" element={<CounterMaster />} />
-          <Route path="/category-master" element={<CategoryMaster />} />
+          <Route path="/category-master" element={<CategoryMaster/>} />
           <Route path="/prefix-master" element={<PrefixMaster />} />
           <Route path="/stone-item-master" element={<StoneItemMaster />} />
           <Route path="/brand-master" element={<BrandMaster />} />
