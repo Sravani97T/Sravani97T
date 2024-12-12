@@ -15,7 +15,7 @@ import {
 } from "antd";
 import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import axios from "axios";
-
+import { CREATE_jwel } from "../../Config/Config";
 const { Option } = Select;
 const tenantNameHeader = "PmlYjF0yAwEjNohFDKjzn/ExL/LMhjzbRDhwXlvos+0="; // Your tenant header value
 axios.defaults.headers.common['tenantName'] = tenantNameHeader;
@@ -26,7 +26,6 @@ const ProductMaster = () => {
   const [searchText, setSearchText] = useState("");
 
   // Refs for form fields to handle focus
-  const mainProductRef = useRef(null);
   const productCategoryRef = useRef(null);
   const CategoryRef = useRef(null);
 
@@ -39,7 +38,7 @@ const ProductMaster = () => {
     const fetchData = async () => {
       try {
         const response = await axios.get(
-          "http://www.jewelerp.timeserasoftware.in/api/Master/MasterProductMasterList"
+          `${CREATE_jwel}/api/Master/MasterProductMasterList`
         );
 
         // Add key to each record for table usage
@@ -59,7 +58,7 @@ const ProductMaster = () => {
   const checkProductExists = async (productName, productCode, excludeProductCode = null) => {
     try {
       const response = await axios.get(
-        `http://www.jewelerp.timeserasoftware.in/api/Master/MasterProductMasterSearch?ProductName=${productName}&ProductCode=${productCode}`
+        `${CREATE_jwel}/api/Master/MasterProductMasterSearch?ProductName=${productName}&ProductCode=${productCode}`
       );
   
       // If excludeProductCode is provided, exclude the current record from the search result
@@ -87,8 +86,8 @@ const ProductMaster = () => {
       const categoryName = values.categoryName;
       const hsnCode = values.hsncode; // if applicable
   
-      const response = await axios.post(
-        "http://www.jewelerp.timeserasoftware.in/api/Master/MasterProductMasterInsert",
+      await axios.post(
+        `${CREATE_jwel}/api/Master/MasterProductMasterInsert`,
         {
           mname: mainProduct,
           productcategory: productCategory,
@@ -130,7 +129,7 @@ const ProductMaster = () => {
     const record = data.find((item) => item.key === key);
     try {
       await axios.post(
-        `http://www.jewelerp.timeserasoftware.in/api/Master/MasterProductMasterDelete?ProductName=${record.PRODUCTNAME}&ProductCode=${record.PRODUCTCODE}`
+        `${CREATE_jwel}/api/Master/MasterProductMasterDelete?ProductName=${record.PRODUCTNAME}&ProductCode=${record.PRODUCTCODE}`
       );
       setData(data.filter((item) => item.key !== key));
       message.success("Product deleted successfully!");
@@ -181,12 +180,12 @@ const ProductMaster = () => {
       try {
         // If the record has changed, delete the old record and add the new one
         await axios.post(
-          `http://www.jewelerp.timeserasoftware.in/api/Master/MasterProductMasterDelete?ProductName=${record.PRODUCTNAME}&ProductCode=${record.PRODUCTCODE}`
+          `${CREATE_jwel}/api/Master/MasterProductMasterDelete?ProductName=${record.PRODUCTNAME}&ProductCode=${record.PRODUCTCODE}`
         );
   
         // Insert the new edited product
         await axios.post(
-          "http://www.jewelerp.timeserasoftware.in/api/Master/MasterProductMasterInsert",
+          `${CREATE_jwel}/api/Master/MasterProductMasterInsert`,
           {
             mname: updatedData.mainProduct,
             productcategory: updatedData.productcategory,
@@ -318,12 +317,6 @@ const ProductMaster = () => {
   };
 
 
-  // Reset the selection when the dropdown is opened
-  const handleDropdownVisibleChange = (open) => {
-    if (open) {
-      form.setFieldsValue({ mainProduct: undefined });
-    }
-  };
   useEffect(() => {
     const handleKeyDown = (e) => {
       // Alt + S: Trigger Submit

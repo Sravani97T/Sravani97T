@@ -3,254 +3,186 @@ import {
   Form,
   Input,
   Button,
-  Checkbox,
+  Select,
   Table,
   Space,
   Popconfirm,
-  message,
   Row,
   Col,
+  Card,
+  message,
   Breadcrumb,
-  Card
 } from "antd";
 import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import axios from "axios";
-import "../Assets/css/Style.css";
+import { CREATE_jwel } from "../../Config/Config";
+const { Option } = Select;
 
-const MainProduct = () => {
+const tenantNameHeader = "PmlYjF0yAwEjNohFDKjzn/ExL/LMhjzbRDhwXlvos+0="; // Your tenant header value
+axios.defaults.headers.common['tenantName'] = tenantNameHeader;
+
+const ProductCategory = () => {
   const [form] = Form.useForm();
   const [data, setData] = useState([]);
   const [editingKey, setEditingKey] = useState(null);
   const [searchText, setSearchText] = useState("");
-  const [oldProductName, setOldProductName] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);  // For pagination
+  const [pageSize, setPageSize] = useState(10);      // For pagination
+  const [mainProductOptions, setMainProductOptions] = useState([]);  // State for dynamic main product options
+  const categoryInputRef = useRef(); // Ref for the second input field
 
-  const API_BASE_URL = "http://www.jewelerp.timeserasoftware.in/api/Master";
-  const tenantNameHeader = "PmlYjF0yAwEjNohFDKjzn/ExL/LMhjzbRDhwXlvos+0=";
-  const mainprodRef = useRef(null);
-  const gstRef = useRef(null);
-
-  const pgstRef = useRef(null);
-  const barCodeRef = useRef(null);
-  const checkRef = useRef(null);
   useEffect(() => {
+    // Fetch main products from API
+    const fetchMainProducts = async () => {
+      try {
+        const response = await axios.get(`${CREATE_jwel}/api/Master/MasterMainProductList`);
+        const options = response.data.map((item) => item.MNAME);  // Assuming the response contains MNAME
+        setMainProductOptions(options); // Set the main product options
+      } catch (error) {
+        message.error("Failed to fetch main products.");
+      }
+    };
+
+    fetchMainProducts();
+
+    // Fetch product category data
     const fetchData = async () => {
       try {
-        const response = await axios.get(`${API_BASE_URL}/MasterMainProductList`, {
-          headers: { tenantName: tenantNameHeader },
-        });
-        if (response.status === 200) {
-          const transformedData = response.data.map((item) => ({
-            key: item.ID || `${item.MNAME}-${Date.now()}`, // Ensure a unique key
-            mainProduct: item.MNAME || "",
-            gst: item.VAT || 0,
-            pgst: item.PTAX || 0,
-            barcodePrefix: item.BarcodePrefix || "",
-            includingGst: item.INCLUDING_GST || false,
-          }));
-
-          setData(transformedData);
-        } else {
-          message.error("Failed to fetch product data.");
-        }
+        const response = await axios.get(`${CREATE_jwel}/api/Master/MasterProductCategoryList`);
+        const formattedData = response.data.map((item, index) => ({
+          ...item,
+          key: index,
+        }));
+        setData(formattedData);
       } catch (error) {
-        console.error("Error fetching data:", error);
-        message.error("An error occurred while fetching data.");
+        message.error("Failed to fetch product categories.");
       }
     };
 
     fetchData();
   }, []);
 
+  const checkProductExists = async (mainProduct, category) => {
+    try {
+      const response = await axios.get(
+        `${CREATE_jwel}/api/Master/MasterProductCategorySearch?MName=${mainProduct}&ProductCategory=${category}`
+      );
+      return response.data.length > 0;
+    } catch (error) {
+      message.error("Failed to check product existence.");
+      return false;
+    }
+  };
 
   const handleAdd = async (values) => {
-    const upperCaseProduct = values.mainProduct.toUpperCase();
-    form.setFieldsValue({ mainProduct: upperCaseProduct });
+    const productExists = await checkProductExists(values.mainProduct, values.category);
+    if (productExists) {
+      message.warning("This product category already exists.");
+      return;
+    }
 
     try {
-      const searchResponse = await axios.get(
-        `${API_BASE_URL}/MasterMainProductSearch?MName=${upperCaseProduct}`,
-        { headers: { tenantName: tenantNameHeader } }
-      );
-
-      if (searchResponse.data.length > 0) {
-        message.error("Main product already exists!");
-        return;
-      }
-
-      const response = await axios.post(
-        `${API_BASE_URL}/MasterMainProductInsert`,
+      await axios.post(
+        `${CREATE_jwel}/api/Master/MasterProductCategoryInsert`,
         {
-          mname: upperCaseProduct,
-          vat: values.gst,
-          ptax: values.pgst,
-          barcodePrefix: values.barcodePrefix,
-          metaltype: "Gold",
-          includinG_GST: values.includingGst,
-          cloud_upload: true,
-        },
-        { headers: { tenantName: tenantNameHeader } }
+          mname: values.mainProduct,
+          productcategory: values.category,
+          minqty: 10,
+          cloud_upload: false,
+        }
       );
 
-      if (response.status === 200) {
-        const newProduct = {
-          key: response.data.ID || `${upperCaseProduct}-${Date.now()}`,
-          mainProduct: upperCaseProduct,
-          gst: values.gst,
-          pgst: values.pgst,
-          barcodePrefix: values.barcodePrefix,
-          includingGst: values.includingGst,
-        };
-        setData((prevData) => [...prevData, newProduct]);
-        form.resetFields();
-        message.success("Product added successfully!");
-      } else {
-        message.error("Failed to add product.");
-      }
+      const newRecord = {
+        key: Date.now(),
+        MNAME: values.mainProduct,
+        PRODUCTCATEGORY: values.category,
+        MINQTY: 10,
+      };
+
+      setData((prevData) => [...prevData, newRecord]);
+
+      form.resetFields();
+      message.success("Product added successfully!");
     } catch (error) {
-      console.error("Error adding product:", error);
-      // message.error("An error occurred while adding the product.");
+      message.error("Failed to add product.");
     }
   };
 
-  const handleDelete = async (key, mainProduct) => {
+  const handleDelete = async (key) => {
+    const record = data.find((item) => item.key === key);
     try {
-      const response = await axios.post(
-        `${API_BASE_URL}/MasterMainProductDelete?MName=${mainProduct}`,
-        {},
-        { headers: { tenantName: tenantNameHeader } }
+      await axios.post(
+        `${CREATE_jwel}/api/Master/MasterProductCategoryDelete?MName=${record.MNAME}&ProductCategory=${record.PRODUCTCATEGORY}`
       );
-
-      if (response.status === 200 && response.data === true) {
-        setData((prevData) => prevData.filter((item) => item.mainProduct !== mainProduct));
-        message.success("Product deleted successfully!");
-      } else {
-        message.error("Failed to delete product.");
-      }
+      setData(data.filter((item) => item.key !== key));
+      message.success("Product deleted successfully!");
     } catch (error) {
-      console.error("Error deleting product:", error);
-      message.error("An error occurred while deleting the product.");
+      message.error("Failed to delete product.");
     }
   };
 
-  const handleEdit = (product) => {
-    setOldProductName(product.mainProduct);
+  const handleEdit = (record) => {
+    setEditingKey(record.key);
     form.setFieldsValue({
-      mainProduct: product.mainProduct,
-      gst: product.gst,
-      pgst: product.pgst,
-      barcodePrefix: product.barcodePrefix,
-      includingGst: product.includingGst,
+      mainProduct: record.MNAME,
+      category: record.PRODUCTCATEGORY,
     });
-    setEditingKey(product.key);
+    window.scrollTo(0, 0);
   };
 
   const handleSave = async () => {
     const updatedData = form.getFieldsValue();
-    const newMainProduct = updatedData.mainProduct.toUpperCase(); // Convert to uppercase
-  
-    // Check if the form values are the same as the original values
-    if (
-      newMainProduct === oldProductName &&
-      updatedData.gst === data.find(item => item.mainProduct === oldProductName).gst &&
-      updatedData.pgst === data.find(item => item.mainProduct === oldProductName).pgst &&
-      updatedData.barcodePrefix === data.find(item => item.mainProduct === oldProductName).barcodePrefix &&
-      updatedData.includingGst === data.find(item => item.mainProduct === oldProductName).includingGst
-    ) {
-      // Instead of showing a "No changes" message, clear the form and switch to Add Product
-      form.resetFields();
-      setEditingKey(null);
-      return; // Stop further processing
-    }
-  
-    try {
-      // Check if the new main product name already exists
-      const searchResponse = await axios.get(
-        `${API_BASE_URL}/MasterMainProductSearch?MName=${newMainProduct}`,
-        { headers: { tenantName: tenantNameHeader } }
-      );
-  
-      if (searchResponse.data.length > 0 && newMainProduct !== oldProductName) {
-        message.error("Main product already exists!");
+    const record = data.find((item) => item.key === editingKey);
+
+    if (updatedData.mainProduct !== record.MNAME || updatedData.category !== record.PRODUCTCATEGORY) {
+      const productExists = await checkProductExists(updatedData.mainProduct, updatedData.category);
+      if (productExists) {
+        message.warning("This product category already exists.");
         return;
       }
-  
-      // Delete the old record if the main product name has changed
-      if (newMainProduct !== oldProductName) {
-        await axios.post(
-          `${API_BASE_URL}/MasterMainProductDelete?MName=${oldProductName}`,
-          {},
-          { headers: { tenantName: tenantNameHeader } }
-        );
-      }
-  
-      // Add or update the record
-      const response = await axios.post(
-        `${API_BASE_URL}/MasterMainProductInsert`,
-        {
-          mname: newMainProduct, // Use the uppercase main product name
-          vat: updatedData.gst,
-          ptax: updatedData.pgst,
-          barcodePrefix: updatedData.barcodePrefix,
-          metaltype: "Gold",
-          includinG_GST: updatedData.includingGst,
-          cloud_upload: true,
-        },
-        { headers: { tenantName: tenantNameHeader } }
-      );
-  
-      if (response.status === 200) {
-        const updatedRecord = {
-          key: editingKey, // Ensure the same key is reused
-          mainProduct: newMainProduct, // Use the uppercase main product name
-          gst: updatedData.gst,
-          pgst: updatedData.pgst,
-          barcodePrefix: updatedData.barcodePrefix,
-          includingGst: updatedData.includingGst,
-        };
-  
-        // Replace the record with the same key
-        setData((prevData) =>
-          prevData.map((item) => (item.key === editingKey ? updatedRecord : item))
-        );
-  
-        form.resetFields();
-        setEditingKey(null);
-        message.success("Product updated successfully!");
-      } else {
-        message.error("Failed to update product.");
-      }
-    } catch (error) {
-      console.error("Error updating product:", error);
-      message.error("An error occurred while updating the product.");
-    }
-  };
-  
-  const handleMainProductChange = async (e) => {
-    const enteredProduct = e.target.value.toUpperCase(); // Ensure product name is uppercase
-    form.setFieldsValue({ mainProduct: enteredProduct });
-
-    // If the entered product is the same as the current one, no need to check
-    if (enteredProduct === oldProductName) {
-      return; // Exit early, no need to check for duplication
     }
 
     try {
-      const searchResponse = await axios.get(
-        `${API_BASE_URL}/MasterMainProductSearch?MName=${enteredProduct}`,
-        { headers: { tenantName: tenantNameHeader } }
+      if (updatedData.mainProduct === record.MNAME && updatedData.category === record.PRODUCTCATEGORY) {
+        setEditingKey(null);
+        form.resetFields();
+        return;
+      }
+
+      await axios.post(
+        `${CREATE_jwel}/api/Master/MasterProductCategoryDelete?MName=${record.MNAME}&ProductCategory=${record.PRODUCTCATEGORY}`
       );
 
-      // Show the message only if the new product name exists
-      if (searchResponse.data.length > 0) {
-        message.error("Main product already exists!");
-      }
+      await axios.post(
+        `${CREATE_jwel}/api/Master/MasterProductCategoryInsert`,
+        {
+          mname: updatedData.mainProduct,
+          productcategory: updatedData.category,
+          minqty: 10,
+          cloud_upload: false,
+        }
+      );
+
+      setData((prevData) =>
+        prevData.map((item) =>
+          item.key === editingKey
+            ? {
+                ...item,
+                MNAME: updatedData.mainProduct,
+                PRODUCTCATEGORY: updatedData.category,
+                MINQTY: 10,
+              }
+            : item
+        )
+      );
+
+      setEditingKey(null);
+      form.resetFields();
+      message.success("Product updated successfully!");
     } catch (error) {
-      console.error("Error checking product existence:", error);
-      // message.error("An error occurred while checking the product.");
+      message.error("Failed to update product.");
     }
   };
-
-
 
   const handleCancel = useCallback(() => {
     form.resetFields();
@@ -258,41 +190,40 @@ const MainProduct = () => {
   }, [form]);
 
   const filteredData = data.filter((item) =>
-    Object.values(item).join(" ").toLowerCase().includes(searchText.toLowerCase())
+    Object.values(item)
+      .join(" ")
+      .toLowerCase()
+      .includes(searchText.toLowerCase())
   );
+
+  const handleSearch = (e) => {
+    setSearchText(e.target.value);
+  };
+
+  const handlePageChange = (page, pageSize) => {
+    setCurrentPage(page);
+    setPageSize(pageSize);
+  };
 
   const columns = [
     {
       title: "Main Product",
-      dataIndex: "mainProduct",
-      key: "mainProduct",
+      dataIndex: "MNAME",
+      key: "MNAME",
+      render: (text) => text.toUpperCase(),
+      sorter: (a, b) => a.MNAME.localeCompare(b.MNAME),
     },
     {
-      title: "GST",
-      dataIndex: "gst",
-      key: "gst",
-    },
-    {
-      title: "PGST",
-      dataIndex: "pgst",
-      key: "pgst",
-    },
-    {
-      title: "Barcode Prefix",
-      dataIndex: "barcodePrefix",
-      key: "barcodePrefix",
-    },
-    {
-      title: "Including GST",
-      dataIndex: "includingGst",
-      key: "includingGst",
-      render: (value) => (value ? "Yes" : "No"),
+      title: "Product Category",
+      dataIndex: "PRODUCTCATEGORY",
+      key: "PRODUCTCATEGORY",
+      render: (text) => text.toUpperCase(),
     },
     {
       title: "Action",
       key: "action",
       render: (_, record) => (
-        <Space>
+        <Space size="middle">
           <Button
             type="link"
             icon={<EditOutlined />}
@@ -301,7 +232,7 @@ const MainProduct = () => {
           />
           <Popconfirm
             title="Are you sure to delete this record?"
-            onConfirm={() => handleDelete(record.key, record.mainProduct)}
+            onConfirm={() => handleDelete(record.key)}
           >
             <Button type="link" icon={<DeleteOutlined />} danger />
           </Popconfirm>
@@ -309,124 +240,146 @@ const MainProduct = () => {
       ),
     },
   ];
-  const handleEnterPress = (e, nextFieldRef) => {
-    e.preventDefault();
-    if (nextFieldRef.current) {
-      nextFieldRef.current.focus();
-    }
-  };
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.altKey && e.key === "s") {
+        e.preventDefault();
+        form.submit();
+      }
+      if (e.altKey && e.key === "c") {
+        e.preventDefault();
+        handleCancel();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [form, handleCancel]);
+
   return (
-    <div style={{  backgroundColor: "#f4f6f9" }}>
-      <Row justify="start" style={{ marginBottom: "10px" }}>
+    <div style={{ backgroundColor: "#f4f6f9" }}>
+      {/* Breadcrumb */}
+      <Row justify="start" style={{ marginBottom: "16px" }}>
         <Col>
           <Breadcrumb style={{ fontSize: "16px", fontWeight: "500", color: "#0C1154" }}>
             <Breadcrumb.Item>Masters</Breadcrumb.Item>
-            <Breadcrumb.Item>Product Master</Breadcrumb.Item>
+            <Breadcrumb.Item>Product Category</Breadcrumb.Item>
           </Breadcrumb>
         </Col>
       </Row>
 
       <Card
         title={editingKey ? "Edit Product" : "Add Product"}
-        style={{
-          marginBottom: "10px",
-          borderRadius: "8px",
-          boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-        }}
+        style={{ marginBottom: "20px", borderRadius: "8px", boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)" }}
       >
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={editingKey ? handleSave : handleAdd}
-        >
-          <Row gutter={[16, 16]}>
-            <Col xs={24} sm={12}>
+        <Form form={form} layout="vertical" onFinish={editingKey ? handleSave : handleAdd}>
+          <Row gutter={16}>
+            <Col xs={24} sm={12} lg={12}>
               <Form.Item
                 name="mainProduct"
                 label="Main Product"
                 rules={[{ required: true, message: "Main Product is required" }]}
               >
+                <Select
+                  placeholder="Select main product"
+                  showSearch
+                  value={form.getFieldValue("mainProduct")}
+                  filterOption={(input, option) =>
+                    option.children.toLowerCase().includes(input.toLowerCase())
+                  }
+                  onDropdownVisibleChange={(open) => {
+                    if (open) {
+                      form.setFieldsValue({ mainProduct: undefined });
+                    }
+                  }}
+                  onChange={(value) => form.setFieldsValue({ mainProduct: value.toUpperCase() })}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      if (form.getFieldValue("mainProduct") && categoryInputRef.current) {
+                        categoryInputRef.current.focus();
+                      }
+                    }
+                  }}
+                >
+                  {mainProductOptions.map((item) => (
+                    <Option key={item} value={item}>
+                      {item}
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+
+            <Col xs={24} sm={12} lg={12}>
+              <Form.Item
+                name="category"
+                label="Product Category"
+                rules={[{ required: true, message: "Product Category is required" }]}
+              >
                 <Input
-                  placeholder="Main Product"
-                  ref={mainprodRef}
-                  onPressEnter={(e) => handleEnterPress(e, gstRef)}
-                  onChange={handleMainProductChange}
-                  onBlur={handleMainProductChange}
+                  placeholder="Enter product category"
+                  ref={categoryInputRef}
+                  onChange={(e) => form.setFieldsValue({ category: e.target.value.toUpperCase() })}
                 />
               </Form.Item>
             </Col>
-            <Col xs={24} sm={12}>
-              <Form.Item name="gst" label="GST" rules={[{ required: true, }]}
-              >
-                <Input placeholder="GST" type="number" ref={gstRef}
-                  onPressEnter={(e) => handleEnterPress(e, pgstRef)} />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={12}>
-              <Form.Item name="pgst" label="PGST" rules={[{ required: true, }]}>
-                <Input placeholder="PGST" type="number"
-                  ref={pgstRef}
-                  onPressEnter={(e) => handleEnterPress(e, barCodeRef)} />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={12}>
-              <Form.Item name="barcodePrefix" label="Barcode Prefix" rules={[{ required: true, }]}>
-                <Input placeholder="Barcode Prefix" ref={barCodeRef}
-                  onPressEnter={(e) => handleEnterPress(e, checkRef)} />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={12}>
-              <Form.Item name="includingGst" valuePropName="checked">
-                <Checkbox ref={checkRef}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault(); // Prevent default behavior
-                      form.submit(); // Submit the form
-                    }
-                  }}>Including GST</Checkbox>
-              </Form.Item>
-            </Col>
-            <Col >
+          </Row>
+          <Row justify="end" style={{ marginTop: "5px" }}>
+            <Col>
               <Form.Item>
-              <Button
-              type="primary"
-              htmlType="submit"
-              style={{
-                marginRight: 8,
-                backgroundColor: "#0C1154",
-                borderColor: "#0C1154",
-              }}
-            >
-              {editingKey ? "Save" : "Submit"}
-            </Button>
-            <Button
-              htmlType="button"
-              onClick={handleCancel}
-              style={{ backgroundColor: "#f0f0f0", }}
-            >
-              Cancel
-            </Button>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  style={{
+                    marginRight: 8,
+                    backgroundColor: "#0C1154",
+                    borderColor: "#0C1154",
+                  }}
+                >
+                  {editingKey ? "Save" : "Submit"}
+                </Button>
+                <Button
+                  htmlType="button"
+                  onClick={handleCancel}
+                  style={{ backgroundColor: "#f0f0f0" }}
+                >
+                  Cancel
+                </Button>
               </Form.Item>
             </Col>
           </Row>
-         
         </Form>
       </Card>
-      <div style={{float:"right"}}>
-        
+
+      {/* Search Box */}
+      <Row justify="end" style={{ marginBottom: "10px" }}>
+        <Col span={6}>
           <Input.Search
-            placeholder="Search"
-            onChange={(e) => setSearchText(e.target.value)}
-            style={{width: 300 ,marginBottom:"10px"}}
+            placeholder="Search..."
+            value={searchText}
+            onChange={handleSearch}
+            style={{ width: "100%" }}
           />
-      </div>
+        </Col>
+      </Row>
+
+      {/* Table with Pagination */}
       <Table
         columns={columns}
         dataSource={filteredData}
-        rowKey="key"
         size="small"
-        pagination={{ pageSize: 5 }}
+        pagination={{
+          current: currentPage,
+          pageSize,
+          onChange: handlePageChange,
+        }}
         style={{
+          marginTop: "10px",
           background: "#fff",
           boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
           borderRadius: "8px",
@@ -436,4 +389,4 @@ const MainProduct = () => {
   );
 };
 
-export default MainProduct;
+export default ProductCategory;

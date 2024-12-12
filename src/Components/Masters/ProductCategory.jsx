@@ -15,7 +15,7 @@ import {
 } from "antd";
 import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import axios from "axios";
-
+import { CREATE_jwel } from "../../Config/Config";
 const { Option } = Select;
 
 const tenantNameHeader = "PmlYjF0yAwEjNohFDKjzn/ExL/LMhjzbRDhwXlvos+0="; // Your tenant header value
@@ -36,7 +36,7 @@ const ProductCategory = () => {
     const fetchData = async () => {
       try {
         const response = await axios.get(
-          "http://www.jewelerp.timeserasoftware.in/api/Master/MasterProductCategoryList"
+          `${CREATE_jwel}/api/Master/MasterProductCategoryList`
         );
         const formattedData = response.data.map((item, index) => ({
           ...item,
@@ -55,7 +55,7 @@ const ProductCategory = () => {
   const checkProductExists = async (mainProduct, category) => {
     try {
       const response = await axios.get(
-        `http://www.jewelerp.timeserasoftware.in/api/Master/MasterProductCategorySearch?MName=${mainProduct}&ProductCategory=${category}`
+        `${CREATE_jwel}/api/Master/MasterProductCategorySearch?MName=${mainProduct}&ProductCategory=${category}`
       );
       return response.data.length > 0;
     } catch (error) {
@@ -73,7 +73,7 @@ const ProductCategory = () => {
 
     try {
       await axios.post(
-        "http://www.jewelerp.timeserasoftware.in/api/Master/MasterProductCategoryInsert",
+        `${CREATE_jwel}/api/Master/MasterProductCategoryInsert`,
         {
           mname: values.mainProduct,
           productcategory: values.category,
@@ -102,7 +102,7 @@ const ProductCategory = () => {
     const record = data.find((item) => item.key === key);
     try {
       await axios.post(
-        `http://www.jewelerp.timeserasoftware.in/api/Master/MasterProductCategoryDelete?MName=${record.MNAME}&ProductCategory=${record.PRODUCTCATEGORY}`
+        `${CREATE_jwel}/api/Master/MasterProductCategoryDelete?MName=${record.MNAME}&ProductCategory=${record.PRODUCTCATEGORY}`
       );
       setData(data.filter((item) => item.key !== key));
       message.success("Product deleted successfully!");
@@ -140,11 +140,11 @@ const ProductCategory = () => {
       }
 
       await axios.post(
-        `http://www.jewelerp.timeserasoftware.in/api/Master/MasterProductCategoryDelete?MName=${record.MNAME}&ProductCategory=${record.PRODUCTCATEGORY}`
+        `${CREATE_jwel}/api/Master/MasterProductCategoryDelete?MName=${record.MNAME}&ProductCategory=${record.PRODUCTCATEGORY}`
       );
 
       await axios.post(
-        "http://www.jewelerp.timeserasoftware.in/api/Master/MasterProductCategoryInsert",
+        `${CREATE_jwel}/api/Master/MasterProductCategoryInsert`,
         {
           mname: updatedData.mainProduct,
           productcategory: updatedData.category,
