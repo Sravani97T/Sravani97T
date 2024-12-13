@@ -255,7 +255,7 @@ const BrandMaster = () => {
     ];
 
     return (
-        <div style={{ padding: "5px", backgroundColor: "#f4f6f9" }}>
+        <div style={{  backgroundColor: "#f4f6f9" }}>
             {/* Breadcrumb */}
             <Row justify="start" style={{ marginBottom: "16px" }}>
                 <Col>
@@ -308,15 +308,14 @@ const BrandMaster = () => {
             </Card>
 
             {/* Search Field */}
-            <Row gutter={16}>
-                <Col xs={24} sm={16} lg={12}>
+            <div style={{float:"right"}}>
+
                     <Input.Search
                         placeholder="Search records"
-                        style={{ marginBottom: "16px", width: "100%", borderRadius: "4px" }}
+                        style={{ marginBottom: "10px", width: "100%", borderRadius: "4px" }}
                         onChange={(e) => setSearchText(e.target.value)}
                     />
-                </Col>
-            </Row>
+              </div>
 
             {/* Table */}
             <Table

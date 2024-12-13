@@ -271,16 +271,22 @@ const MainProduct = () => {
       title: "GST",
       dataIndex: "gst",
       key: "gst",
+      align:"center"
+
     },
     {
       title: "PGST",
       dataIndex: "pgst",
       key: "pgst",
+      align:"center"
+
     },
     {
       title: "Barcode Prefix",
       dataIndex: "barcodePrefix",
       key: "barcodePrefix",
+      align:"center"
+
     },
     {
       title: "Including GST",
@@ -417,7 +423,7 @@ const MainProduct = () => {
           <Input.Search
             placeholder="Search"
             onChange={(e) => setSearchText(e.target.value)}
-            style={{width: 300 ,marginBottom:"10px"}}
+            style={{width: "100%" ,marginBottom:"10px"}}
           />
       </div>
       <Table

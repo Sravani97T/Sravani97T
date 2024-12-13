@@ -38,7 +38,7 @@ const App = () => {
           <Route path="/product-master" element={<ProductMaster />} />
           <Route path="/counter-master" element={<CounterMaster />} />
           <Route path="/category-master" element={<CategoryMaster/>} />
-          <Route path="/prefix-master" element={<PrefixMaster />} />
+          <Route path="/prefix-master" element={<PrefixMaster/>} />
           <Route path="/stone-item-master" element={<StoneItemMaster />} />
           <Route path="/brand-master" element={<BrandMaster />} />
           <Route path="/manufacturer-master" element={<Manufacturer />} />

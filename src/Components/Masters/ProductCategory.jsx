@@ -133,7 +133,7 @@ const ProductCategory = () => {
   const handleSave = async () => {
     const updatedData = form.getFieldsValue();
     const record = data.find((item) => item.key === editingKey);
-
+  
     if (updatedData.mainProduct !== record.MNAME || updatedData.category !== record.PRODUCTCATEGORY) {
       const productExists = await checkProductExists(updatedData.mainProduct, updatedData.category);
       if (productExists) {
@@ -141,18 +141,16 @@ const ProductCategory = () => {
         return;
       }
     }
-
+  
     try {
-      if (updatedData.mainProduct === record.MNAME && updatedData.category === record.PRODUCTCATEGORY) {
-        setEditingKey(null);
-        form.resetFields();
-        return;
+      // Delete the existing record before inserting the new one
+      if (updatedData.mainProduct !== record.MNAME || updatedData.category !== record.PRODUCTCATEGORY) {
+        await axios.post(
+          `${CREATE_jwel}/api/Master/MasterProductCategoryDelete?MName=${record.MNAME}&ProductCategory=${record.PRODUCTCATEGORY}`
+        );
       }
-
-      await axios.post(
-        `${CREATE_jwel}/api/Master/MasterProductCategoryDelete?MName=${record.MNAME}&ProductCategory=${record.PRODUCTCATEGORY}`
-      );
-
+  
+      // Insert the new record
       await axios.post(
         `${CREATE_jwel}/api/Master/MasterProductCategoryInsert`,
         {
@@ -162,7 +160,8 @@ const ProductCategory = () => {
           cloud_upload: false,
         }
       );
-
+  
+      // Update the table data
       setData((prevData) =>
         prevData.map((item) =>
           item.key === editingKey
@@ -175,7 +174,7 @@ const ProductCategory = () => {
             : item
         )
       );
-
+  
       setEditingKey(null);
       form.resetFields();
       message.success("Product updated successfully!");
@@ -183,7 +182,7 @@ const ProductCategory = () => {
       message.error("Failed to update product.");
     }
   };
-
+  
   const handleCancel = useCallback(() => {
     form.resetFields();
     setEditingKey(null);
@@ -367,16 +366,15 @@ const ProductCategory = () => {
       </Card>
 
       {/* Search Box */}
-      <Row justify="end" style={{ marginBottom: "10px" }}>
-        <Col span={6}>
+      <div style={{float:"right"}}>
+
           <Input.Search
             placeholder="Search..."
             value={searchText}
             onChange={handleSearch}
-            style={{ width: "100%" }}
+            style={{ width: "100%",marginBottom:"10px" }}
           />
-        </Col>
-      </Row>
+</div>
 
       {/* Table with Pagination */}
       <Table

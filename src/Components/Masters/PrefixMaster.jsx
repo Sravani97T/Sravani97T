@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   Form,
   Input,
@@ -14,8 +14,10 @@ import {
   Select,
   Checkbox,
 } from "antd";
+import { CREATE_jwel } from "../../Config/Config";
 import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import axios from "axios"; // Import axios for API requests
+const { Option } = Select;
 
 const tenantNameHeader = "PmlYjF0yAwEjNohFDKjzn/ExL/LMhjzbRDhwXlvos+0="; // Your tenant name header
 
@@ -27,30 +29,25 @@ const PrefixMaster = () => {
   const [isPrefixExist, setIsPrefixExist] = useState(false); // State to track if prefix exists
   const [oldPrefix, setOldPrefix] = useState(""); // Store old prefix for edit
   const [mainProductOptions, setMainProductOptions] = useState([]); // Main product options for dropdown
+  const prefixInputRef = useRef(); // Ref for the second input field
 
   // Fetch main product list from API
-  useEffect(() => {
-    axios
-      .get("http://www.jewelerp.timeserasoftware.in/api/Master/MasterMainProductList", {
-        headers: {
-          tenantName: tenantNameHeader,
-        },
-      })
-      .then((response) => {
-        setMainProductOptions(
-          response.data.map((item) => ({
-            value: item.MNAME, // Assuming 'MNAME' is the main product name field
-            label: item.MNAME,
-          }))
-        );
-      })
-      .catch((error) => {
-        message.error("Failed to fetch main products");
-      });
-  }, []);
+
 
   // Fetch data from the API
   useEffect(() => {
+    // Fetch main products from API
+    const fetchMainProducts = async () => {
+      try {
+        const response = await axios.get(`${CREATE_jwel}/api/Master/MasterMainProductList`);
+        const options = response.data.map((item) => item.MNAME);  // Assuming the response contains MNAME
+        setMainProductOptions(options); // Set the main product options
+      } catch (error) {
+        message.error("Failed to fetch main products.");
+      }
+    };
+
+    fetchMainProducts();
     axios
       .get("http://www.jewelerp.timeserasoftware.in/api/Master/MasterPrefixMasterList", {
         headers: {
@@ -96,13 +93,13 @@ const PrefixMaster = () => {
       });
   };
 
-  // Handle adding a new prefix
   const handleAdd = (values) => {
     if (isPrefixExist) {
       message.error("Prefix already exists!");
       return;
     }
-  
+
+    // Proceed to add the new prefix if it does not exist
     axios
       .post(
         "http://www.jewelerp.timeserasoftware.in/api/Master/MasterPrefixMasterInsert",
@@ -119,58 +116,52 @@ const PrefixMaster = () => {
           },
         }
       )
-      .then((response) => {
-        if (response.data.Download) {
-          // Adding the new data to the state immediately
-          const newData = {
-            key: Date.now(),
-            ...values, // Ensure new data is in the correct format
-          };
-          setData((prevData) => [...prevData, newData]); // Update table data
-  
-          form.resetFields();
-          message.success("Prefix added successfully!"); // Show success message
-        }
+      .then(() => {
+        message.success("Prefix added successfully!");
+        setData([
+          ...data,
+          {
+            key: data.length + 1,
+            mainProduct: values.mainProduct,
+            prefix: values.prefix,
+            pure: values.pure,
+            displayOnDailyRates: values.displayOnDailyRates,
+          },
+        ]);
+        form.resetFields(); // Clear form after submission
       })
       .catch((error) => {
         message.error("Failed to add prefix");
       });
   };
-  
-  
+
+
 
   // Handle editing a prefix
   const handleEdit = (record) => {
-    setEditingKey(record.key);
-    setOldPrefix(record.prefix); // Store the old prefix for delete
     form.setFieldsValue({
       mainProduct: record.mainProduct,
       prefix: record.prefix,
       pure: record.pure,
       displayOnDailyRates: record.displayOnDailyRates,
     });
+    setEditingKey(record.key);
+    setOldPrefix(record.prefix); // Store the old prefix for delete
   };
-
-  // Handle saving the edited prefix
-  const handleSave = () => {
-    const updatedData = form.getFieldsValue();
-  
-    // Check if any field is actually changed
-    const isChanged =
-      updatedData.prefix !== oldPrefix ||
-      updatedData.mainProduct !== form.getFieldValue('mainProduct') ||
-      updatedData.pure !== form.getFieldValue('pure') ||
-      updatedData.displayOnDailyRates !== form.getFieldValue('displayOnDailyRates');
-  
-    if (!isChanged) {
-      // No changes made, return early without updating
-      setEditingKey(null);
-      form.resetFields();
+  const handleSave = (values) => {
+    if (isPrefixExist) {
+      message.error("Prefix already exists!");
       return;
     }
-  
-    // If prefix is changed, delete the old one first
-    if (updatedData.prefix !== oldPrefix) {
+    // Check if the record being edited is the same as the existing data
+    if (editingKey && oldPrefix === values.prefix) {
+      setEditingKey(null); // Reset editing mode after no changes
+      form.resetFields(); // Reset form fields after save
+      return;
+    }
+    // Check if the prefix has changed (i.e., oldPrefix !== newPrefix)
+    if (oldPrefix && oldPrefix !== values.prefix) {
+      // Call delete API before updating
       axios
         .post(
           `http://www.jewelerp.timeserasoftware.in/api/Master/MasterPrefixMasterDelete?Prefix=${oldPrefix}`,
@@ -182,77 +173,66 @@ const PrefixMaster = () => {
           }
         )
         .then(() => {
-          // After deleting old prefix, insert the new one
-          axios
-            .post(
-              "http://www.jewelerp.timeserasoftware.in/api/Master/MasterPrefixMasterInsert",
-              {
-                prefix: updatedData.prefix,
-                mainproduct: updatedData.mainProduct,
-                pureornot: updatedData.pure,
-                displaY_DRATES: updatedData.displayOnDailyRates,
-                cloud_upload: true,
-              },
-              {
-                headers: {
-                  tenantName: tenantNameHeader,
-                },
-              }
-            )
-            .then(() => {
-              // Update the table data with the new value
-              setData(
-                data.map((item) =>
-                  item.key === editingKey ? { ...item, ...updatedData } : item
-                )
-              );
-              setEditingKey(null);
-              form.resetFields();
-              message.success("Prefix updated successfully!");
-            })
-            .catch((error) => {
-              message.error("Failed to insert new prefix");
-            });
+          // Proceed with updating the prefix after deletion
+          savePrefix(values);
         })
         .catch((error) => {
           message.error("Failed to delete old prefix");
         });
     } else {
-      // If prefix hasn't changed, just update the existing record
-      axios
-        .post(
-          "http://www.jewelerp.timeserasoftware.in/api/Master/MasterPrefixMasterInsert",
-          {
-            prefix: updatedData.prefix,
-            mainproduct: updatedData.mainProduct,
-            pureornot: updatedData.pure,
-            displaY_DRATES: updatedData.displayOnDailyRates,
-            cloud_upload: true,
-          },
-          {
-            headers: {
-              tenantName: tenantNameHeader,
-            },
-          }
-        )
-        .then(() => {
-          setData(
-            data.map((item) =>
-              item.key === editingKey ? { ...item, ...updatedData } : item
-            )
-          );
-          setEditingKey(null);
-          form.resetFields();
-          message.success("Prefix updated successfully!");
-        })
-        .catch((error) => {
-          message.error("Failed to update prefix");
-        });
+      // If prefix is not changed, directly proceed with saving the new data
+      savePrefix(values);
     }
   };
-  
-  
-  
+  const savePrefix = (values) => {
+    // Post request to add or update prefix
+    axios
+      .post(
+        "http://www.jewelerp.timeserasoftware.in/api/Master/MasterPrefixMasterInsert",
+        {
+          prefix: values.prefix,
+          mainproduct: values.mainProduct,
+          pureornot: values.pure,
+          displaY_DRATES: values.displayOnDailyRates,
+          cloud_upload: true,
+        },
+        {
+          headers: {
+            tenantName: tenantNameHeader,
+          },
+        }
+      )
+      .then(() => {
+        message.success("Prefix saved successfully!");
+        // Update the table data
+        if (editingKey) {
+          setData(
+            data.map((item) =>
+              item.key === editingKey ? { ...item, ...values } : item
+            )
+          );
+        } else {
+          // If it's a new entry
+          setData([
+            ...data,
+            {
+              key: data.length + 1,
+              mainProduct: values.mainProduct,
+              prefix: values.prefix,
+              pure: values.pure,
+              displayOnDailyRates: values.displayOnDailyRates,
+            },
+          ]);
+        }
+        setEditingKey(null); // Reset editing mode
+        form.resetFields(); // Clear form
+      })
+      .catch((error) => {
+        message.error("Failed to save prefix");
+      });
+  };
+
+
   // Handle deleting a prefix
   const handleDelete = (prefix) => {
     axios
@@ -325,9 +305,32 @@ const PrefixMaster = () => {
       ),
     },
   ];
+  const handleCancel = useCallback(() => {
+    form.resetFields(); // Reset form fields
+    setEditingKey(null); // Set editingKey to null to switch to Add mode
+  }, [form]);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.altKey && e.key === "s") {
+        e.preventDefault();
+        form.submit();
+      }
+      if (e.altKey && e.key === "c") {
+        e.preventDefault();
+        handleCancel();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [form, handleCancel]);
 
   return (
-    <div style={{ padding: "5px", backgroundColor: "#f4f6f9" }}>
+    <div style={{ backgroundColor: "#f4f6f9" }}>
       {/* Breadcrumb */}
       <Row justify="start" style={{ marginBottom: "16px" }}>
         <Col>
@@ -356,13 +359,33 @@ const PrefixMaster = () => {
                 rules={[{ required: true, message: "Main product is required" }]}
               >
                 <Select
+                  placeholder="Select main product"
                   showSearch
-                  placeholder="Select Main Product"
-                  options={mainProductOptions}
+                  value={form.getFieldValue("mainProduct")}
                   filterOption={(input, option) =>
-                    option.label.toLowerCase().includes(input.toLowerCase())
+                    option.children.toLowerCase().includes(input.toLowerCase())
                   }
-                />
+                  onDropdownVisibleChange={(open) => {
+                    if (open) {
+                      form.setFieldsValue({ mainProduct: undefined });
+                    }
+                  }}
+                  onChange={(value) => form.setFieldsValue({ mainProduct: value.toUpperCase() })}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      if (form.getFieldValue("mainProduct") && prefixInputRef.current) {
+                        prefixInputRef.current.focus();
+                      }
+                    }
+                  }}
+                >
+                  {mainProductOptions.map((item) => (
+                    <Option key={item} value={item}>
+                      {item}
+                    </Option>
+                  ))}
+                </Select>
               </Form.Item>
             </Col>
 
@@ -374,26 +397,39 @@ const PrefixMaster = () => {
               >
                 <Input
                   placeholder="Enter Prefix"
+                  ref={prefixInputRef}
                   onChange={(e) => {
                     const uppercaseValue = e.target.value.toUpperCase();
                     form.setFieldsValue({ prefix: uppercaseValue });
                     checkDuplicatePrefix(uppercaseValue);
                   }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault(); // Prevent form submission
+                      const nextPureCheckbox = document.getElementById("pureCheckbox");
+                      if (nextPureCheckbox) {
+                        nextPureCheckbox.focus(); // Move focus to Pure checkbox
+                      }
+                    }
+                  }}
                 />
               </Form.Item>
+
             </Col>
           </Row>
 
           <Row gutter={16}>
             <Col xs={24} sm={8}>
               <Form.Item name="pure" valuePropName="checked">
-                <Checkbox>Pure</Checkbox>
+                <Checkbox id="pureCheckbox">Pure</Checkbox>
               </Form.Item>
+
             </Col>
             <Col xs={24} sm={8}>
               <Form.Item name="displayOnDailyRates" valuePropName="checked">
-                <Checkbox>Display on Daily Rates</Checkbox>
+                <Checkbox id="displayOnDailyRatesCheckbox">Display on Daily Rates</Checkbox>
               </Form.Item>
+
             </Col>
           </Row>
 
@@ -411,7 +447,7 @@ const PrefixMaster = () => {
             </Button>
             <Button
               htmlType="button"
-              onClick={() => setEditingKey(null)}
+              onClick={handleCancel} // Call handleCancel to reset form and go back to Add mode
               style={{ backgroundColor: "#f0f0f0" }}
             >
               Cancel
@@ -421,15 +457,14 @@ const PrefixMaster = () => {
       </Card>
 
       {/* Search Field */}
-      <Row gutter={16}>
-        <Col xs={24} sm={16} lg={12}>
-          <Input.Search
-            placeholder="Search records"
-            style={{ marginBottom: "16px", width: "100%", borderRadius: "4px" }}
-            onChange={(e) => setSearchText(e.target.value)}
-          />
-        </Col>
-      </Row>
+      <div style={{ float: "right" }}>
+
+        <Input.Search
+          placeholder="Search records"
+          style={{ width: "100%", borderRadius: "4px", marginBottom: "10px" }}
+          onChange={(e) => setSearchText(e.target.value)}
+        />
+      </div>
 
       {/* Table */}
       <Table

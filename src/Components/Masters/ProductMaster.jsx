@@ -562,16 +562,14 @@ const ProductMaster = () => {
         </Form>
       </Card>
 
-      <Row justify="end" style={{ marginBottom: "10px" }}>
-        <Col span={6}>
+      <div style={{float:"right"}}>
+
           <Input.Search
             placeholder="Search..."
-            style={{ width: "100%", borderRadius: "4px" }}
+            style={{ width: "100%", borderRadius: "4px",marginBottom:"10px" }}
             onChange={(e) => setSearchText(e.target.value)}
-            allowClear
           />
-        </Col>
-      </Row>
+      </div>
 
       <Table
         columns={columns}
