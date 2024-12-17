@@ -49,7 +49,7 @@ const PrefixMaster = () => {
 
     fetchMainProducts();
     axios
-      .get("http://www.jewelerp.timeserasoftware.in/api/Master/MasterPrefixMasterList", {
+      .get(`${CREATE_jwel}/api/Master/MasterPrefixMasterList`, {
         headers: {
           tenantName: tenantNameHeader,
         },
@@ -75,7 +75,7 @@ const PrefixMaster = () => {
     if (!prefix) return; // Prevent making an API request if the prefix is empty
 
     axios
-      .get(`http://www.jewelerp.timeserasoftware.in/api/Master/MasterPrefixMasterSearch?Prefix=${prefix}`, {
+      .get(`${CREATE_jwel}/api/Master/MasterPrefixMasterSearch?Prefix=${prefix}`, {
         headers: {
           tenantName: tenantNameHeader,
         },
@@ -102,7 +102,7 @@ const PrefixMaster = () => {
     // Proceed to add the new prefix if it does not exist
     axios
       .post(
-        "http://www.jewelerp.timeserasoftware.in/api/Master/MasterPrefixMasterInsert",
+        `${CREATE_jwel}/api/Master/MasterPrefixMasterInsert`,
         {
           prefix: values.prefix,
           mainproduct: values.mainProduct,
@@ -164,7 +164,7 @@ const PrefixMaster = () => {
       // Call delete API before updating
       axios
         .post(
-          `http://www.jewelerp.timeserasoftware.in/api/Master/MasterPrefixMasterDelete?Prefix=${oldPrefix}`,
+          `${CREATE_jwel}/api/Master/MasterPrefixMasterDelete?Prefix=${oldPrefix}`,
           null,
           {
             headers: {
@@ -188,7 +188,7 @@ const PrefixMaster = () => {
     // Post request to add or update prefix
     axios
       .post(
-        "http://www.jewelerp.timeserasoftware.in/api/Master/MasterPrefixMasterInsert",
+        `${CREATE_jwel}/api/Master/MasterPrefixMasterInsert`,
         {
           prefix: values.prefix,
           mainproduct: values.mainProduct,
@@ -237,7 +237,7 @@ const PrefixMaster = () => {
   const handleDelete = (prefix) => {
     axios
       .post(
-        `http://www.jewelerp.timeserasoftware.in/api/Master/MasterPrefixMasterDelete?Prefix=${prefix}`,
+        `${CREATE_jwel}/api/Master/MasterPrefixMasterDelete?Prefix=${prefix}`,
         null,
         {
           headers: {
@@ -266,28 +266,38 @@ const PrefixMaster = () => {
       title: "Main Product",
       dataIndex: "mainProduct",
       key: "mainProduct",
+
       sorter: (a, b) => a.mainProduct.localeCompare(b.mainProduct),
     },
     {
       title: "Prefix",
       dataIndex: "prefix",
+      align:'center',
+
       key: "prefix",
     },
     {
       title: "Pure",
       dataIndex: "pure",
       key: "pure",
+      
+      align:'center',
+
       render: (text) => (text ? "Yes" : "No"),
     },
     {
       title: "Display Rates",
       dataIndex: "displayOnDailyRates",
+      align:'center',
+
       key: "displayOnDailyRates",
       render: (text) => (text ? "Yes" : "No"),
     },
     {
       title: "Actions",
       key: "actions",
+      align:'center',
+
       render: (_, record) => (
         <Space>
           <Button
@@ -470,6 +480,7 @@ const PrefixMaster = () => {
       <Table
         columns={columns}
         dataSource={filteredData}
+        size="small"
         rowKey="key"
         pagination={{ pageSize: 5 }}
         style={{

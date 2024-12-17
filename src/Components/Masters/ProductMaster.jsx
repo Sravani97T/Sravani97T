@@ -212,7 +212,6 @@ const ProductMaster = () => {
   
     if (isUnchanged) {
       // No changes detected, reset the form and switch back to add mode
-      message.info("No changes detected.");
       setEditingKey(null);
       form.resetFields();
       return;
@@ -306,18 +305,24 @@ const ProductMaster = () => {
       title: "Product Code",
       dataIndex: "PRODUCTCODE",
       key: "PRODUCTCODE",
+      align:'center',
+
       sorter: (a, b) => a.PRODUCTCODE.localeCompare(b.PRODUCTCODE),
     },
     {
       title: "HSN Code",
       dataIndex: "HSNCODE",
       key: "HSNCODE",
+      align:'center',
+
       sorter: (a, b) => a.HSNCODE.localeCompare(b.HSNCODE),
     },
     {
       title: "Min Qty",
       dataIndex: "MINQTY",
       key: "MINQTY",
+      align:'center',
+
       sorter: (a, b) => a.MINQTY - b.MINQTY,
     },
     {
@@ -329,6 +334,8 @@ const ProductMaster = () => {
     {
       title: "Action",
       key: "action",
+      align:'center',
+
       render: (_, record) => (
         <Space size="middle">
           <Button

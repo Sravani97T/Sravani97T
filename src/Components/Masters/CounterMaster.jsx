@@ -15,7 +15,7 @@ import {
 } from "antd";
 import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import axios from "axios";
-
+import { CREATE_jwel } from "../../Config/Config";
 const { Option } = Select;
 
 const CounterMaster = () => {
@@ -23,7 +23,7 @@ const CounterMaster = () => {
     const [data, setData] = useState([]);
     const [editingKey, setEditingKey] = useState(false);
     const [searchText, setSearchText] = useState("");
-    const [isDuplicate, setIsDuplicate] = useState(false);
+    const [, setIsDuplicate] = useState(false);
     const counterInputRef = useRef(); // Ref for the second input field
     const [rowdata, setRowdata] = useState(null);
     const mainCounterOptions = Array.from({ length: 10 }, (_, i) => `CTN ${i + 1}`);
@@ -36,7 +36,7 @@ const CounterMaster = () => {
     const GetAllCounters = () => {
 
         // Fetch data from the API when the component is mounted
-        axios.get("http://www.jewelerp.timeserasoftware.in/api/Master/MasterCounterMasterList", {
+        axios.get(`${CREATE_jwel}/api/Master/MasterCounterMasterList`, {
             headers: { "tenantName": tenantNameHeader }
         })
             .then(response => {
@@ -63,7 +63,7 @@ const CounterMaster = () => {
         // Check if counter already exists
         axios
             .get(
-                `http://www.jewelerp.timeserasoftware.in/api/Master/MasterCounterMasterSearch?CounterName=${upperCaseValues.counterName}`,
+                `${CREATE_jwel}/api/Master/MasterCounterMasterSearch?CounterName=${upperCaseValues.counterName}`,
                 { headers: { tenantName: tenantNameHeader } }
             )
             .then((response) => {
@@ -74,7 +74,7 @@ const CounterMaster = () => {
                     // Send the request to add a new counter
                     axios
                         .post(
-                            "http://www.jewelerp.timeserasoftware.in/api/Master/MasterCounterMasterInsert",
+                            `${CREATE_jwel}/api/Master/MasterCounterMasterInsert`,
                             requestBody,
                             { headers: { tenantName: tenantNameHeader } }
                         )
@@ -86,7 +86,7 @@ const CounterMaster = () => {
                             // Fetch the updated list
                             axios
                                 .get(
-                                    "http://www.jewelerp.timeserasoftware.in/api/Master/MasterCounterMasterList",
+                                    `${CREATE_jwel}/api/Master/MasterCounterMasterList`,
                                     { headers: { tenantName: tenantNameHeader } }
                                 )
                                 .then((response) => {
@@ -137,14 +137,14 @@ const CounterMaster = () => {
         ) {
             // If no changes, reset the form and stop processing
             form.resetFields();
-            setEditingKey(null); // Switch back to Add form
+            setEditingKey(false); // Switch back to Add form
             return; // Stop further processing
         }
     
         // Step 2: Check if the new counter name already exists
         try {
             const searchResponse = await axios.get(
-                `http://www.jewelerp.timeserasoftware.in/api/Master/MasterCounterMasterSearch?CounterName=${upperCaseValues.counterName}`,
+                `${CREATE_jwel}/api/Master/MasterCounterMasterSearch?CounterName=${upperCaseValues.counterName}`,
                 { headers: { tenantName: tenantNameHeader } }
             );
     
@@ -155,12 +155,12 @@ const CounterMaster = () => {
     
             // Step 3: Delete the old counter if the counter name has changed
             const deleteResponse = await axios.post(
-                `http://www.jewelerp.timeserasoftware.in/api/Master/MasterCounterMasterDelete?CounterName=${rowdata.COUNTERNAME}`,
+                `${CREATE_jwel}/api/Master/MasterCounterMasterDelete?CounterName=${rowdata.COUNTERNAME}`,
                 null, // No request body
                 { headers: { tenantName: tenantNameHeader } }
             );
     
-            if (deleteResponse.data === true) {
+            if (deleteResponse.data) {
                 setRowdata(null); // Reset row data
     
                 // Step 4: Create a new counter after successful deletion
@@ -171,22 +171,20 @@ const CounterMaster = () => {
                 };
     
                 const createResponse = await axios.post(
-                    "http://www.jewelerp.timeserasoftware.in/api/Master/MasterCounterMasterInsert",
+                    `${CREATE_jwel}/api/Master/MasterCounterMasterInsert`,
                     requestBody,
                     { headers: { tenantName: tenantNameHeader } }
                 );
     
-                if (createResponse.status === 200) {
+                if (createResponse.data) {
                     message.success("Counter updated successfully!");
                     form.resetFields();
                     GetAllCounters(); // Refresh counters list
-                    setEditingKey(null); // Reset to add form
+                    setEditingKey(false); // Reset to add form
                 } else {
                     message.error("Failed to create new counter.");
                 }
-            } else {
-                message.error("Failed to delete old counter.");
-            }
+            } 
         } catch (error) {
             console.error("Error during the process:", error);
             message.error("An error occurred while updating the counter.");
@@ -195,19 +193,17 @@ const CounterMaster = () => {
     
     
     
-
-
     const handleDelete = (key, counterName) => {
         axios
             .post(
-                `http://www.jewelerp.timeserasoftware.in/api/Master/MasterCounterMasterDelete?CounterName=${counterName}`,
+                `${CREATE_jwel}/api/Master/MasterCounterMasterDelete?CounterName=${counterName}`,
                 null, // No request body is required
                 { headers: { tenantName: tenantNameHeader } }
             )
             .then((response) => {
-                if (response.data === true) {
+                if (response.data) {  // Check if response contains data, which indicates success
                     message.success("Counter deleted successfully!");
-                    GetAllCounters()
+                    GetAllCounters();  // Refresh counters list
                 } else {
                     message.error("Failed to delete the counter.");
                 }
@@ -217,11 +213,11 @@ const CounterMaster = () => {
                 message.error("Failed to delete counter.");
             });
     };
-
+    
 
     const handleCancel = useCallback(() => {
         form.resetFields();
-        setEditingKey(null);
+        setEditingKey(false);
     }, [form]);
 
     const handleEnterPress = (e, nextRef) => {
@@ -251,10 +247,14 @@ const CounterMaster = () => {
             title: "Counter Chart",
             dataIndex: "CNTCHARTDISPLAY",
             key: "CNTCHARTDISPLAY",
+            align:'center',
+
         },
         {
             title: "Action",
             key: "action",
+            align:'center',
+
             render: (_, record) => (
                 <Space size="middle">
                     <Button
@@ -388,6 +388,7 @@ const CounterMaster = () => {
                 columns={columns}
                 dataSource={filteredData}
                 rowKey="key"
+                size="small"
                 pagination={{ pageSize: 5 }}
                 style={{
                     background: "#fff",

@@ -50,10 +50,10 @@ const menuItems = [
   {
     key: "3",
     icon: <FileDoneOutlined />,
-    label: "Estimation",
+    label: "Inventory",
     children: [
-      { key: "3-1", label: <Link to="/daily-rates">Daily Rates</Link> },
-      { key: "3-2", label: <Link to="/estimation-history">History</Link> },
+      { key: "3-1", label: <Link to="/lot-creation">Lot Creation</Link> },
+      { key: "3-2", label: <Link to="/tag-generation">Tag Genration</Link> },
     ],
   },
   {

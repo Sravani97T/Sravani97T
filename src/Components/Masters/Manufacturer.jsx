@@ -14,7 +14,7 @@ import {
 } from "antd";
 import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import axios from "axios";
-
+import { CREATE_jwel } from "../../Config/Config";
 const Manufacturer = () => {
     const [form] = Form.useForm();
     const [data, setData] = useState([]);
@@ -33,7 +33,7 @@ const Manufacturer = () => {
     const fetchData = async () => {
         try {
             const response = await axios.get(
-                "http://www.jewelerp.timeserasoftware.in/api/Master/MasterManufacturerMasterList",
+                `${CREATE_jwel}/api/Master/MasterManufacturerMasterList`,
                 {
                     headers: {
                         "tenant-name": tenantNameHeader,
@@ -56,7 +56,7 @@ const Manufacturer = () => {
     const handleSearchDuplicate = async (manufacturerName) => {
         try {
             const response = await axios.get(
-                `http://www.jewelerp.timeserasoftware.in/api/Master/MasterManufacturerMasterSearch?Manufacturer=${encodeURIComponent(
+                `${CREATE_jwel}/api/Master/MasterManufacturerMasterSearch?Manufacturer=${encodeURIComponent(
                     manufacturerName.trim()
                 )}`,
                 {
@@ -86,7 +86,7 @@ const Manufacturer = () => {
 
         try {
             const response = await axios.post(
-                "http://www.jewelerp.timeserasoftware.in/api/Master/MasterManufacturerMasterInsert",
+                `${CREATE_jwel}/api/Master/MasterManufacturerMasterInsert`,
                 {
                     manufacturer: values.Manufacturer,
                     cloud_upload: true, // Assuming cloud_upload is true by default
@@ -116,7 +116,7 @@ const Manufacturer = () => {
     const handleDelete = async (manufacturerName) => {
         try {
             const response = await axios.post(
-                `http://www.jewelerp.timeserasoftware.in/api/Master/MasterManufacturerMasterDelete?Manufacturer=${encodeURIComponent(
+                `${CREATE_jwel}/api/Master/MasterManufacturerMasterDelete?Manufacturer=${encodeURIComponent(
                     manufacturerName.trim()
                 )}`,
                 null, // No request body for this API
@@ -159,7 +159,7 @@ const Manufacturer = () => {
         try {
             // 1. Delete the old manufacturer
             const deleteResponse = await axios.post(
-                `http://www.jewelerp.timeserasoftware.in/api/Master/MasterManufacturerMasterDelete?Manufacturer=${encodeURIComponent(
+                `${CREATE_jwel}/api/Master/MasterManufacturerMasterDelete?Manufacturer=${encodeURIComponent(
                     oldManufacturer.trim()
                 )}`,
                 null, // No request body for this API
@@ -173,7 +173,7 @@ const Manufacturer = () => {
             if (deleteResponse.data === true) {
                 // 2. Insert the new manufacturer
                 const insertResponse = await axios.post(
-                    "http://www.jewelerp.timeserasoftware.in/api/Master/MasterManufacturerMasterInsert",
+                    `${CREATE_jwel}/api/Master/MasterManufacturerMasterInsert`,
                     {
                         manufacturer: values.Manufacturer,
                         cloud_upload: true, // Assuming cloud_upload is true by default
@@ -232,11 +232,15 @@ const Manufacturer = () => {
         {
             title: "Cloud Upload",
             dataIndex: "cloudUpload",
+            align:'center',
+
             key: "cloudUpload",
         },
         {
             title: "Action",
             key: "action",
+            align:'center',
+
             render: (_, record) => (
                 <Space size="middle">
                     <Button
@@ -341,6 +345,7 @@ const Manufacturer = () => {
                 columns={columns}
                 dataSource={filteredData}
                 rowKey="key"
+                size="small"
                 pagination={{ pageSize: 5 }}
                 style={{
                     background: "#fff",

@@ -24,12 +24,13 @@ axios.defaults.headers.common['tenantName'] = tenantNameHeader;
 const ProductCategory = () => {
   const [form] = Form.useForm();
   const [data, setData] = useState([]);
-  const [editingKey, setEditingKey] = useState(null);
+  const [editingKey, setEditingKey] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [currentPage, setCurrentPage] = useState(1);  // For pagination
   const [pageSize, setPageSize] = useState(10);      // For pagination
   const categoryInputRef = useRef(); // Ref for the second input field
   const [mainProductOptions, setMainProductOptions] = useState([]);  // State for dynamic main product options
+  const [rowdata, setRowdata] = useState(null);
 
 
   useEffect(() => {
@@ -47,21 +48,22 @@ const ProductCategory = () => {
     fetchMainProducts();
 
     // Fetch product category data
-    const fetchData = async () => {
-      try {
-        const response = await axios.get(`${CREATE_jwel}/api/Master/MasterProductCategoryList`);
-        const formattedData = response.data.map((item, index) => ({
-          ...item,
-          key: index,
-        }));
-        setData(formattedData);
-      } catch (error) {
-        message.error("Failed to fetch product categories.");
-      }
-    };
-
+    
     fetchData();
   }, []);
+  const fetchData = async () => {
+    try {
+      const response = await axios.get(`${CREATE_jwel}/api/Master/MasterProductCategoryList`);
+      const formattedData = response.data.map((item, index) => ({
+        ...item,
+        key: index,
+      }));
+      setData(formattedData);
+    } catch (error) {
+      message.error("Failed to fetch product categories.");
+    }
+  };
+
   const checkProductExists = async (mainProduct, category) => {
     try {
       const response = await axios.get(
@@ -122,7 +124,9 @@ const ProductCategory = () => {
   };
 
   const handleEdit = (record) => {
-    setEditingKey(record.key);
+    setEditingKey(true);
+    setRowdata(record.key);
+
     form.setFieldsValue({
       mainProduct: record.MNAME,
       category: record.PRODUCTCATEGORY,
@@ -132,8 +136,19 @@ const ProductCategory = () => {
 
   const handleSave = async () => {
     const updatedData = form.getFieldsValue();
-    const record = data.find((item) => item.key === editingKey);
+    const record = data.find((item) => item.key === rowdata);
   
+    // Check if there are any changes
+    if (
+      updatedData.mainProduct === record?.MNAME &&
+      updatedData.category === record?.PRODUCTCATEGORY
+    ) {
+      setEditingKey(false);
+      form.resetFields();
+      return;
+    }
+  
+    // Proceed with existing logic
     if (updatedData.mainProduct !== record.MNAME || updatedData.category !== record.PRODUCTCATEGORY) {
       const productExists = await checkProductExists(updatedData.mainProduct, updatedData.category);
       if (productExists) {
@@ -175,17 +190,21 @@ const ProductCategory = () => {
         )
       );
   
-      setEditingKey(null);
+      setEditingKey(false);
       form.resetFields();
       message.success("Product updated successfully!");
+      fetchData();
+
     } catch (error) {
       message.error("Failed to update product.");
     }
   };
   
+  
+  
   const handleCancel = useCallback(() => {
     form.resetFields();
-    setEditingKey(null);
+    setEditingKey(false);
   }, [form]);
 
   const filteredData = data.filter((item) =>
@@ -228,6 +247,8 @@ const ProductCategory = () => {
     {
       title: "Action",
       key: "action",
+      align:'center',
+
       render: (_, record) => (
         <Space size="middle">
           <Button

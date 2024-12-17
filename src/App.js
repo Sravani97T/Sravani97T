@@ -23,6 +23,8 @@ import JournalEntryMaster from "./Components/Masters/JournalEntryMaster";
 import StateMaster from "./Components/Masters/StateMaster";
 import OnlineMode from "./Components/Masters/OnlineMode";
 import DailyRates from "./Components/Estimation/DailyRates";
+import LotCreation from "./Components/Inventory/LotCreation/LotCreation";
+import TagGeneration from "./Components/Inventory/LotCreation/TagGeneration/TagGeneration";
 const App = () => {
   return (
     <Router>
@@ -37,8 +39,8 @@ const App = () => {
           <Route path="/product-category" element={<ProductCategory />} />
           <Route path="/product-master" element={<ProductMaster />} />
           <Route path="/counter-master" element={<CounterMaster />} />
-          <Route path="/category-master" element={<CategoryMaster/>} />
-          <Route path="/prefix-master" element={<PrefixMaster/>} />
+          <Route path="/category-master" element={<CategoryMaster />} />
+          <Route path="/prefix-master" element={<PrefixMaster />} />
           <Route path="/stone-item-master" element={<StoneItemMaster />} />
           <Route path="/brand-master" element={<BrandMaster />} />
           <Route path="/manufacturer-master" element={<Manufacturer />} />
@@ -53,6 +55,9 @@ const App = () => {
           <Route path="/online-mode" element={<OnlineMode />} />
           {/* estimation */}
           <Route path="/daily-rates" element={<DailyRates />} />
+          {/* inventory */}
+          <Route path="/lot-creation" element={<LotCreation />} />
+          <Route path="/tag-generation" element={<TagGeneration/>} />
 
 
 

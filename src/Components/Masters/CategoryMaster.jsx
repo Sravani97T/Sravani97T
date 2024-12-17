@@ -19,7 +19,8 @@ import { CREATE_jwel } from "../../Config/Config";
 const CategoryMaster = () => {
   const [form] = Form.useForm();
   const [data, setData] = useState([]);
-  const [editingKey, setEditingKey] = useState(null);
+  const [editingKey, setEditingKey] = useState(false);
+  const [rowData, setRowData] = useState();
   const [searchText, setSearchText] = useState("");
   const [categoryExists, setCategoryExists] = useState(false);
   const tenantNameHeader = "PmlYjF0yAwEjNohFDKjzn/ExL/LMhjzbRDhwXlvos+0=";
@@ -27,66 +28,75 @@ const CategoryMaster = () => {
 
   // Focus the next input on Enter key press
   const handleKeyDown = (e, fieldName) => {
-    // Check for Enter key or Alt+S to prevent submission
-    if (e.key === "Enter" || (e.altKey && e.key === "s")) {
+    const fieldNames = Object.keys(refs.current);
+    const currentIndex = fieldNames.indexOf(fieldName);
+    const nextFieldName = fieldNames[currentIndex + 1];
+  
+    if (e.key === "Enter") {
       e.preventDefault(); // Prevent default form submission
   
-      // If in editing mode, save the form
-      if (editingKey) {
-        handleSave();
-      } else {
-        // If in Add mode, submit the form
-        form.submit();
-      }
-  
-      // Handle field focus navigation to next field
-      const fieldNames = Object.keys(refs.current);
-      const currentIndex = fieldNames.indexOf(fieldName);
-      const nextFieldName = fieldNames[currentIndex + 1];
-  
-      // Move focus to next field if available
       if (nextFieldName && refs.current[nextFieldName]) {
+        // Navigate to the next field
         refs.current[nextFieldName].focus();
+      } else if (currentIndex === fieldNames.length - 1) {
+        // If on the last field, save or submit
+        if (editingKey) {
+          handleSave(); // Save changes in edit mode
+        } else {
+          form.submit(); // Submit in add mode
+        }
       }
     }
   
-    // Handle cancel when "C" key is pressed
-    if (e.key === "c" || e.key === "C") {
-      handleCancel(); // Trigger cancel action
+    // Alt+S to submit the form
+    if (e.altKey && e.key.toLowerCase() === "s") {
+      e.preventDefault();
+      if (editingKey) {
+        handleSave(); // Save changes in edit mode
+      } else {
+        form.submit(); // Submit in add mode
+      }
+    }
+  
+    // Alt+C to cancel the form
+    if (e.altKey && e.key.toLowerCase() === "c") {
+      e.preventDefault();
+      handleCancel(); // Cancel action
     }
   };
   
   
   
+  
   // Fetch data from API
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axios.get("http://www.jewelerp.timeserasoftware.in/api/Master/MasterCategoryMasterList");
-        const transformedData = response.data.map((item, index) => ({
-          key: index + 1,
-          categoryName: item.categoryname,
-          wastagePercentage: item.wastage,
-          directWastage: item.directwastage,
-          makingChargesPerGram: item.makingcharges,
-          directMakingCharges: item.directmc,
-          includingGst: item.cloud_upload,
-        }));
-        setData(transformedData);
-      } catch (error) {
-        console.error("Error fetching data: ", error);
-        message.error("Failed to load category data!");
-      }
-    };
+  
 
     fetchData();
   }, []);
-
+  const fetchData = async () => {
+    try {
+      const response = await axios.get(`${CREATE_jwel}/api/Master/MasterCategoryMasterList`);
+      const transformedData = response.data.map((item, index) => ({
+        key: index + 1,
+        categoryName: item.categoryname,
+        wastagePercentage: item.wastage,
+        directWastage: item.directwastage,
+        makingChargesPerGram: item.makingcharges,
+        directMakingCharges: item.directmc,
+        includingGst: item.cloud_upload,
+      }));
+      setData(transformedData);
+    } catch (error) {
+      console.error("Error fetching data: ", error);
+      message.error("Failed to load category data!");
+    }
+  };
   // Function to check if category name exists
   const checkCategoryExists = async (categoryName) => {
     try {
       const response = await axios.get(
-        `http://www.jewelerp.timeserasoftware.in/api/Master/MasterCategoryMasterSearch?CategoryName=${categoryName}`
+        `${CREATE_jwel}/api/Master/MasterCategoryMasterSearch?CategoryName=${categoryName}`
       );
       if (response.data && response.data.length > 0) {
         setCategoryExists(true);
@@ -102,28 +112,27 @@ const CategoryMaster = () => {
   const handleAdd = async (values) => {
     // First, check if category name already exists
     await checkCategoryExists(values.categoryName);
-
+  
     if (categoryExists) {
       message.error("Category name already exists!");
       return;
     }
-
+  
     try {
       const response = await axios.post(
-        "http://www.jewelerp.timeserasoftware.in/api/Master/MasterCategoryMasterInsert",
+        `${CREATE_jwel}/api/Master/MasterCategoryMasterInsert`,
         {
           categoryname: values.categoryName,
           wastage: values.wastagePercentage,
           directwastage: values.directWastage,
           makingcharges: values.makingChargesPerGram,
           directmc: values.directMakingCharges,
-          cloud_upload: values.includingGst,
-          cloud_upload: true
+          cloud_upload: true,
         },
         { headers: { tenantName: tenantNameHeader } }
       );
-
-      if (response.status === 200 && response.data === true) {
+  
+      if (response.data) {
         const newData = {
           key: Date.now(),
           ...values,
@@ -131,6 +140,7 @@ const CategoryMaster = () => {
         setData([...data, newData]);
         form.resetFields();
         message.success("Category added successfully!");
+        fetchData()
       } else {
         message.error("Failed to add category!");
       }
@@ -139,7 +149,6 @@ const CategoryMaster = () => {
       message.error("Failed to add category!");
     }
   };
-
   const handleDelete = async (key, categoryName) => {
     try {
       const response = await axios.post(
@@ -147,59 +156,73 @@ const CategoryMaster = () => {
         {},
         { headers: { tenantName: tenantNameHeader } }
       );
-      if (response.status === 200 && response.data === true) {
+  
+      if (response.data) {
         setData((prevData) => prevData.filter((item) => item.key !== key));
-        message.success("Product deleted successfully!");
+        message.success("Category deleted successfully!");
       } else {
-        message.error("Failed to delete product.");
+        message.error("Failed to delete category.");
       }
     } catch (error) {
-      console.error("Error deleting product:", error);
-      message.error("An error occurred while deleting the product.");
+      console.error("Error deleting category:", error);
+      message.error("An error occurred while deleting the category.");
     }
   };
+  
 
   const handleEdit = (record) => {
-    setEditingKey(record.key);
+    setEditingKey(true);
+    setRowData(record.key);
     form.setFieldsValue(record);
     window.scrollTo(0, 0);
   };
 
   const handleSave = async () => {
-    const updatedData = form.getFieldsValue(); // Get updated values from the form
-
-    // Step 1: Delete the old category name
     try {
-      const oldRecord = data.find((item) => item.key === editingKey); // Find the old record
+      const updatedData = form.getFieldsValue(); // Get updated values
+      const oldRecord = data.find((item) => item.key === rowData);
+  
       if (!oldRecord) {
         message.error("Old record not found.");
         return;
       }
-
+  
+      // Check if the new values are the same as the old values
+      const isUnchanged = Object.keys(updatedData).every(
+        (key) => updatedData[key] === oldRecord[key]
+      );
+  
+      if (isUnchanged) {
+        setEditingKey(false);
+        form.resetFields();
+        return;
+      }
+  
+      // Step 1: Delete the old category name
       const deleteResponse = await axios.post(
         `${CREATE_jwel}/api/Master/MasterCategoryMasterDelete?CategoryName=${oldRecord.categoryName}`,
         {},
         { headers: { tenantName: tenantNameHeader } }
       );
-
-      if (!(deleteResponse.status === 200 && deleteResponse.data === true)) {
-        message.error("Failed to delete the old category.");
+  
+      if (!deleteResponse.data) {
+        // message.error("Failed to delete the old category.");
         return;
       }
-
+  
       // Step 2: Check if the new category name exists
       const searchResponse = await axios.get(
-        `http://www.jewelerp.timeserasoftware.in/api/Master/MasterCategoryMasterSearch?CategoryName=${updatedData.categoryName}`
+        `${CREATE_jwel}/api/Master/MasterCategoryMasterSearch?CategoryName=${updatedData.categoryName}`
       );
-
+  
       if (searchResponse.data && searchResponse.data.length > 0) {
-        message.error("New category name already exists!");
+        message.error("Category name already exists!");
         return;
       }
-
+  
       // Step 3: Insert the updated category
       const insertResponse = await axios.post(
-        "http://www.jewelerp.timeserasoftware.in/api/Master/MasterCategoryMasterInsert",
+        `${CREATE_jwel}/api/Master/MasterCategoryMasterInsert`,
         {
           categoryname: updatedData.categoryName,
           wastage: updatedData.wastagePercentage,
@@ -210,16 +233,17 @@ const CategoryMaster = () => {
         },
         { headers: { tenantName: tenantNameHeader } }
       );
-
-      if (insertResponse.status === 200 && insertResponse.data === true) {
+  
+      if (insertResponse.data) {
         setData((prevData) =>
           prevData.map((item) =>
             item.key === editingKey ? { ...item, ...updatedData } : item
           )
         );
-        setEditingKey(null);
-        form.resetFields();
         message.success("Category updated successfully!");
+        form.resetFields();
+        setEditingKey(false);
+        fetchData();
       } else {
         message.error("Failed to update the category.");
       }
@@ -228,11 +252,12 @@ const CategoryMaster = () => {
       message.error("An error occurred while updating the category.");
     }
   };
+  
 
 
   const handleCancel = useCallback(() => {
     form.resetFields();
-    setEditingKey(null);
+    setEditingKey(false);
   }, [form]);
 
   const filteredData = data.filter((item) =>
@@ -254,11 +279,15 @@ const CategoryMaster = () => {
       title: "Wastage %",
       dataIndex: "wastagePercentage",
       key: "wastagePercentage",
+      align:'center',
+
       sorter: (a, b) => a.wastagePercentage - b.wastagePercentage,
     },
     {
       title: "Direct Wastage",
       dataIndex: "directWastage",
+      align:'center',
+
       key: "directWastage",
       sorter: (a, b) => a.directWastage - b.directWastage,
     },
@@ -266,17 +295,23 @@ const CategoryMaster = () => {
       title: "Making Charges / grams",
       dataIndex: "makingChargesPerGram",
       key: "makingChargesPerGram",
+      align:'center',
+
       sorter: (a, b) => a.makingChargesPerGram - b.makingChargesPerGram,
     },
     {
       title: "Direct Making Charges",
       dataIndex: "directMakingCharges",
       key: "directMakingCharges",
+      align:'center',
+
       sorter: (a, b) => a.directMakingCharges - b.directMakingCharges,
     },
     {
       title: "Action",
       key: "action",
+      align:'center',
+
       render: (_, record) => (
         <Space size="middle">
           <Button
@@ -378,17 +413,19 @@ const CategoryMaster = () => {
             </Col>
 
             <Col xs={24} sm={12} lg={12}>
-              <Form.Item
-                name="directMakingCharges"
-                label="Direct Making Charges"
-                rules={[{ required: true, message: "Direct Making Charges is required" }]}
-              >
-                <Input type="number"
-                  ref={(el) => (refs.current["directMakingCharges"] = el)}
-                  onKeyDown={(e) => handleKeyDown(e, "directMakingCharges")}
+            <Form.Item
+  name="directMakingCharges"
+  label="Direct Making Charges"
+  rules={[{ required: true, message: "Direct Making Charges is required" }]}
+>
+  <Input
+    type="number"
+    ref={(el) => (refs.current["directMakingCharges"] = el)}
+    onKeyDown={(e) => handleKeyDown(e, "directMakingCharges")}
+    placeholder="Enter Direct Making Charges"
+  />
+</Form.Item>
 
-                  placeholder="Enter Direct Making Charges" />
-              </Form.Item>
             </Col>
           </Row>
 
@@ -422,6 +459,7 @@ const CategoryMaster = () => {
         columns={columns}
         dataSource={filteredData}
         rowKey="key"
+        size="small"
         pagination={{ pageSize: 5 }}
         style={{
           background: "#fff",

@@ -14,7 +14,7 @@ import {
 } from "antd";
 import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import axios from "axios"; // Import axios for API requests
-
+import { CREATE_jwel } from "../../Config/Config";
 const tenantNameHeader = "PmlYjF0yAwEjNohFDKjzn/ExL/LMhjzbRDhwXlvos+0="; // Your tenant name header
 
 const BrandMaster = () => {
@@ -27,7 +27,7 @@ const BrandMaster = () => {
 
     // Fetch data from the API
     useEffect(() => {
-        axios.get("http://www.jewelerp.timeserasoftware.in/api/Master/MasterBrandMasterList", {
+        axios.get(`${CREATE_jwel}/api/Master/MasterBrandMasterList`, {
             headers: {
                 "tenantName": tenantNameHeader,
             }
@@ -47,7 +47,7 @@ const BrandMaster = () => {
     const handleBrandNameCheck = (brandName) => {
         if (!brandName) return; // Prevent making an API request if the brandName is empty
 
-        axios.get(`http://www.jewelerp.timeserasoftware.in/api/Master/MasterBrandMasterSearch?BrandName=${brandName}`, {
+        axios.get(`${CREATE_jwel}/api/Master/MasterBrandMasterSearch?BrandName=${brandName}`, {
             headers: {
                 "tenantName": tenantNameHeader,
             }
@@ -56,7 +56,7 @@ const BrandMaster = () => {
                 console.log(response.data); // Log the response for debugging
 
                 // Check if the response contains a valid result
-                const brandExists = response.data.some(item => item.MANUFACTURER === brandName);
+                const brandExists = response.data.some(item => item.BrandName === brandName);
 
                 if (brandExists) {
                     setIsBrandNameExist(true);
@@ -78,7 +78,7 @@ const BrandMaster = () => {
             return;
         }
 
-        axios.post("http://www.jewelerp.timeserasoftware.in/api/Master/MasterBrandMasterInsert",
+        axios.post(`${CREATE_jwel}/api/Master/MasterBrandMasterInsert`,
             {
                 brandName: values.counterName,
                 cloud_upload: true
@@ -109,100 +109,82 @@ const BrandMaster = () => {
     };
 
     // Handle saving the edited brand
-    const handleSave = () => {
-        const updatedData = form.getFieldsValue();
+  // Handle saving the edited brand
+  const handleSave = () => {
+    const updatedData = form.getFieldsValue();
 
-        // First, check if the brand name exists
-        axios.get(`http://www.jewelerp.timeserasoftware.in/api/Master/MasterBrandMasterSearch?BrandName=${updatedData.counterName}`, {
-            headers: {
-                "tenantName": tenantNameHeader,
+    // Check if the value is unchanged
+    if (oldBrandName === updatedData.counterName) {
+        setEditingKey(null); // Exit edit mode
+        form.resetFields(); // Reset the form to switch back to Add mode
+        return; // Exit without making an API call
+    }
+
+    // First, check if the brand name exists
+    axios.get(`${CREATE_jwel}/api/Master/MasterBrandMasterSearch?BrandName=${updatedData.counterName}`, {
+        headers: {
+            "tenantName": tenantNameHeader,
+        }
+    })
+        .then(response => {
+            const brandExists = response.data.some(item => item.MANUFACTURER === updatedData.counterName);
+
+            if (brandExists) {
+                message.error("Brand name already exists!");
+                return;
             }
-        })
-            .then(response => {
-                const brandExists = response.data.some(item => item.MANUFACTURER === updatedData.counterName);
 
-                if (brandExists) {
-                    message.error("Brand name already exists!");
-                    return;
-                }
-
-                // If editing, delete the old brand name first
-                if (oldBrandName !== updatedData.counterName) {
-                    axios.post(`http://www.jewelerp.timeserasoftware.in/api/Master/MasterBrandMasterDelete?BrandName=${oldBrandName}`, null, {
-                        headers: {
-                            "tenantName": tenantNameHeader,
+            // If editing, delete the old brand name first
+            if (oldBrandName !== updatedData.counterName) {
+                axios.post(`${CREATE_jwel}/api/Master/MasterBrandMasterDelete?BrandName=${oldBrandName}`, null, {
+                    headers: {
+                        "tenantName": tenantNameHeader,
+                    }
+                })
+                    .then(response => {
+                        if (response.data) {
+                            // Now insert the updated brand name
+                            axios.post(`${CREATE_jwel}/api/Master/MasterBrandMasterInsert`,
+                                {
+                                    brandName: updatedData.counterName,
+                                    cloud_upload: true
+                                },
+                                {
+                                    headers: {
+                                        "tenantName": tenantNameHeader,
+                                    }
+                                })
+                                .then(response => {
+                                    if (response.data) {
+                                        setData(prevData =>
+                                            prevData.map(item =>
+                                                item.key === editingKey ? { ...item, ...updatedData } : item
+                                            )
+                                        );
+                                        setEditingKey(null);
+                                        form.resetFields();
+                                        message.success("Brand updated successfully!");
+                                    }
+                                })
+                                .catch(error => {
+                                    message.error("Failed to update brand");
+                                });
                         }
                     })
-                        .then(response => {
-                            if (response.data) {
-                                // Now insert the updated brand name
-                                axios.post("http://www.jewelerp.timeserasoftware.in/api/Master/MasterBrandMasterInsert",
-                                    {
-                                        brandName: updatedData.counterName,
-                                        cloud_upload: true
-                                    },
-                                    {
-                                        headers: {
-                                            "tenantName": tenantNameHeader,
-                                        }
-                                    })
-                                    .then(response => {
-                                        if (response.data) {
-                                            setData(prevData =>
-                                                prevData.map(item =>
-                                                    item.key === editingKey ? { ...item, ...updatedData } : item
-                                                )
-                                            );
-                                            setEditingKey(null);
-                                            form.resetFields();
-                                            message.success("Brand updated successfully!");
-                                        }
-                                    })
-                                    .catch(error => {
-                                        message.error("Failed to update brand");
-                                    });
-                            }
-                        })
-                        .catch(error => {
-                            message.error("Failed to delete old brand");
-                        });
-                } else {
-                    // If no change in brand name, just save
-                    axios.post("http://www.jewelerp.timeserasoftware.in/api/Master/MasterBrandMasterInsert",
-                        {
-                            brandName: updatedData.counterName,
-                            cloud_upload: true
-                        },
-                        {
-                            headers: {
-                                "tenantName": tenantNameHeader,
-                            }
-                        })
-                        .then(response => {
-                            if (response.data) {
-                                setData(prevData =>
-                                    prevData.map(item =>
-                                        item.key === editingKey ? { ...item, ...updatedData } : item
-                                    )
-                                );
-                                setEditingKey(null);
-                                form.resetFields();
-                                message.success("Brand updated successfully!");
-                            }
-                        })
-                        .catch(error => {
-                            message.error("Failed to update brand");
-                        });
-                }
-            })
-            .catch(error => {
-                message.error("Failed to check brand name");
-            });
-    };
+                    .catch(error => {
+                        message.error("Failed to delete old brand");
+                    });
+            }
+        })
+        .catch(error => {
+            message.error("Failed to check brand name");
+        });
+};
+
 
     // Handle deleting a brand
     const handleDelete = (brandName) => {
-        axios.post(`http://www.jewelerp.timeserasoftware.in/api/Master/MasterBrandMasterDelete?BrandName=${brandName}`, null, {
+        axios.post(`${CREATE_jwel}/api/Master/MasterBrandMasterDelete?BrandName=${brandName}`, null, {
             headers: {
                 "tenantName": tenantNameHeader,
             }
@@ -235,6 +217,8 @@ const BrandMaster = () => {
         {
             title: "Action",
             key: "action",
+            align:'center',
+
             render: (_, record) => (
                 <Space size="middle">
                     <Button
@@ -297,6 +281,7 @@ const BrandMaster = () => {
                             type="primary"
                             htmlType="submit"
                             style={{ marginRight: 8, backgroundColor: "#0C1154", borderColor: "#0C1154" }}
+                            disabled={isBrandNameExist === true}
                         >
                             {editingKey ? "Save" : "Submit"}
                         </Button>
@@ -322,6 +307,7 @@ const BrandMaster = () => {
                 columns={columns}
                 dataSource={filteredData}
                 rowKey="key"
+                size="small"
                 pagination={{ pageSize: 5 }}
                 style={{
                     background: "#fff",
