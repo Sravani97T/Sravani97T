@@ -71,3 +71,97 @@
 .ant-form-item {
   margin-bottom: 0px !important;
 }
+/* taggeneration */
+/* CSS for the responsive card layout */
+
+
+.card-item {
+  display: flex;
+  justify-content: space-between;
+  background-color: #F5F5F5;
+  border-radius: 5px;
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.05);
+  flex: 1;
+  min-width: 120px; /* Ensuring minimum width */
+}
+
+/* Ensure text stays on the same line inside each card-item */
+.card-item .ant-typography {
+  margin: 0 !important; /* Remove default margins */
+}
+
+/* For mobile screens, adjust the flex layout */
+@media (max-width: 767px) {
+  .card-content {
+      flex-wrap: wrap; /* Allow wrapping on smaller screens */
+      justify-content: space-around; /* Adjust space for better alignment */
+  }
+
+  .card-item {
+      flex: 1 1 100%; /* Each item will take full width */
+      min-width: auto; /* No min-width to allow proper wrapping */
+      padding: 2px !important;
+
+  }
+}
+.card-item {
+ 
+  padding: 8px !important;
+
+}
+
+/* For tablets and larger screens, maintain the layout as-is */
+@media (min-width: 768px) {
+  .card-content {
+      flex-wrap: nowrap; /* Keep items in one row */
+  }
+}
+/* product detailes */
+.product-details-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 16px;
+}
+
+@media (max-width: 768px) {
+  .product-details-grid {
+      grid-template-columns: 1fr; /* Stack items in one column for smaller screens */
+      gap: 10px;
+  }
+}
+/* tag genration  */
+/* Global Styles for TagGeneration */
+.tag-generation-columns .card-item {
+  text-align: right;
+  margin-bottom: 10px;
+}
+
+@media (max-width: 1200px) {
+  .tag-generation-columns .card-item {
+      display: block;
+      width: 100%;
+      text-align: left; /* Keep text left aligned in larger screens */
+  }
+}
+
+@media (max-width: 768px) {
+  .tag-generation-columns .card-item {
+      display: block;
+      width: 100%;
+      text-align: left;
+  }
+  .ant-row {
+      margin-left: 0 !important;
+  }
+}
+
+@media (max-width: 576px) {
+  .tag-generation-columns .card-item {
+      display: block;
+      width: 100%;
+      text-align: left;
+  }
+  .ant-row {
+      margin-left: 0 !important;
+  }
+}
