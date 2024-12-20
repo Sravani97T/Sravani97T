@@ -65,18 +65,18 @@ const MainProduct = () => {
   const handleAdd = async (values) => {
     const upperCaseProduct = values.mainProduct.toUpperCase();
     form.setFieldsValue({ mainProduct: upperCaseProduct });
-
+  
     try {
       const searchResponse = await axios.get(
         `${CREATE_jwel}/api/Master/MasterMainProductSearch?MName=${upperCaseProduct}`,
         { headers: { tenantName: tenantNameHeader } }
       );
-
+  
       if (searchResponse.data.length > 0) {
         message.error("Main product already exists!");
         return;
       }
-
+  
       const response = await axios.post(
         `${CREATE_jwel}/api/Master/MasterMainProductInsert`,
         {
@@ -90,8 +90,8 @@ const MainProduct = () => {
         },
         { headers: { tenantName: tenantNameHeader } }
       );
-
-      if (response.status === 200) {
+  
+      if (response.data) {
         const newProduct = {
           key: response.data.ID || `${upperCaseProduct}-${Date.now()}`,
           mainProduct: upperCaseProduct,
@@ -108,9 +108,10 @@ const MainProduct = () => {
       }
     } catch (error) {
       console.error("Error adding product:", error);
-      // message.error("An error occurred while adding the product.");
+      message.error("An error occurred while adding the product.");
     }
   };
+  
 
   const handleDelete = async (key, mainProduct) => {
     try {
@@ -119,8 +120,8 @@ const MainProduct = () => {
         {},
         { headers: { tenantName: tenantNameHeader } }
       );
-
-      if (response.status === 200 && response.data === true) {
+  
+      if (response.data === true) {
         setData((prevData) => prevData.filter((item) => item.mainProduct !== mainProduct));
         message.success("Product deleted successfully!");
       } else {
@@ -131,6 +132,7 @@ const MainProduct = () => {
       message.error("An error occurred while deleting the product.");
     }
   };
+  
 
   const handleEdit = (product) => {
     setOldProductName(product.mainProduct);
@@ -151,19 +153,17 @@ const MainProduct = () => {
     // Check if the form values are the same as the original values
     if (
       newMainProduct === oldProductName &&
-      updatedData.gst === data.find(item => item.mainProduct === oldProductName).gst &&
-      updatedData.pgst === data.find(item => item.mainProduct === oldProductName).pgst &&
-      updatedData.barcodePrefix === data.find(item => item.mainProduct === oldProductName).barcodePrefix &&
-      updatedData.includingGst === data.find(item => item.mainProduct === oldProductName).includingGst
+      updatedData.gst === data.find((item) => item.mainProduct === oldProductName).gst &&
+      updatedData.pgst === data.find((item) => item.mainProduct === oldProductName).pgst &&
+      updatedData.barcodePrefix === data.find((item) => item.mainProduct === oldProductName).barcodePrefix &&
+      updatedData.includingGst === data.find((item) => item.mainProduct === oldProductName).includingGst
     ) {
-      // Instead of showing a "No changes" message, clear the form and switch to Add Product
       form.resetFields();
       setEditingKey(null);
       return; // Stop further processing
     }
   
     try {
-      // Check if the new main product name already exists
       const searchResponse = await axios.get(
         `${CREATE_jwel}/api/Master/MasterMainProductSearch?MName=${newMainProduct}`,
         { headers: { tenantName: tenantNameHeader } }
@@ -174,7 +174,6 @@ const MainProduct = () => {
         return;
       }
   
-      // Delete the old record if the main product name has changed
       if (newMainProduct !== oldProductName) {
         await axios.post(
           `${CREATE_jwel}/api/Master/MasterMainProductDelete?MName=${oldProductName}`,
@@ -183,11 +182,10 @@ const MainProduct = () => {
         );
       }
   
-      // Add or update the record
       const response = await axios.post(
         `${CREATE_jwel}/api/Master/MasterMainProductInsert`,
         {
-          mname: newMainProduct, // Use the uppercase main product name
+          mname: newMainProduct,
           vat: updatedData.gst,
           ptax: updatedData.pgst,
           barcodePrefix: updatedData.barcodePrefix,
@@ -198,17 +196,16 @@ const MainProduct = () => {
         { headers: { tenantName: tenantNameHeader } }
       );
   
-      if (response.status === 200) {
+      if (response.data) {
         const updatedRecord = {
-          key: editingKey, // Ensure the same key is reused
-          mainProduct: newMainProduct, // Use the uppercase main product name
+          key: editingKey,
+          mainProduct: newMainProduct,
           gst: updatedData.gst,
           pgst: updatedData.pgst,
           barcodePrefix: updatedData.barcodePrefix,
           includingGst: updatedData.includingGst,
         };
   
-        // Replace the record with the same key
         setData((prevData) =>
           prevData.map((item) => (item.key === editingKey ? updatedRecord : item))
         );
@@ -224,6 +221,7 @@ const MainProduct = () => {
       message.error("An error occurred while updating the product.");
     }
   };
+  
   
   const handleMainProductChange = async (e) => {
     const enteredProduct = e.target.value.toUpperCase(); // Ensure product name is uppercase
@@ -271,26 +269,38 @@ const MainProduct = () => {
       title: "GST",
       dataIndex: "gst",
       key: "gst",
+      align:'center',
+
+      align:"center"
+
     },
     {
       title: "PGST",
       dataIndex: "pgst",
       key: "pgst",
+      align:"center"
+
     },
     {
       title: "Barcode Prefix",
       dataIndex: "barcodePrefix",
       key: "barcodePrefix",
+      align:"center"
+
     },
     {
       title: "Including GST",
       dataIndex: "includingGst",
       key: "includingGst",
+      align:'center',
+
       render: (value) => (value ? "Yes" : "No"),
     },
     {
       title: "Action",
       key: "action",
+      align:'center',
+
       render: (_, record) => (
         <Space>
           <Button
@@ -417,7 +427,7 @@ const MainProduct = () => {
           <Input.Search
             placeholder="Search"
             onChange={(e) => setSearchText(e.target.value)}
-            style={{width: 300 ,marginBottom:"10px"}}
+            style={{width: "100%" ,marginBottom:"10px"}}
           />
       </div>
       <Table

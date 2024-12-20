@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback,  } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
     Form,
     Input,
@@ -13,45 +13,196 @@ import {
     Breadcrumb,
 } from "antd";
 import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
-
+import axios from "axios";
+import { CREATE_jwel } from "../../Config/Config";
 const Manufacturer = () => {
     const [form] = Form.useForm();
-    const [data, setData] = useState([
-        { key: 1, Manufacturer: "abcd" },
-        { key: 2, Manufacturer: "efgh" },
-    ]);
+    const [data, setData] = useState([]);
     const [editingKey, setEditingKey] = useState(null);
     const [searchText, setSearchText] = useState("");
+    const [isDuplicate, setIsDuplicate] = useState(false);  // State to check duplicate
+    const [loading, setLoading] = useState(false); // State for preventing multiple submissions
+    const [oldManufacturer, setOldManufacturer] = useState(""); // Store the old manufacturer for deletion
 
-    const handleAdd = (values) => {
-        const newData = { key: Date.now(), ...values };
-        setData([...data, newData]);
-        form.resetFields();
-        message.success("Brand added successfully!");
+    const tenantNameHeader = "PmlYjF0yAwEjNohFDKjzn/ExL/LMhjzbRDhwXlvos+0="; // Your tenant name header
+
+    // Fetch data from API and map it to table format
+    useEffect(() => {
+        fetchData();
+    }, []);
+    const fetchData = async () => {
+        try {
+            const response = await axios.get(
+                `${CREATE_jwel}/api/Master/MasterManufacturerMasterList`,
+                {
+                    headers: {
+                        "tenant-name": tenantNameHeader,
+                    },
+                }
+            );
+            // Map response to include key for Table component
+            const mappedData = response.data.map((item, index) => ({
+                key: index + 1, // Assign a unique key
+                Manufacturer: item.MANUFACTURER,
+                cloudUpload: item.cloud_upload ? "Yes" : "No", // Convert boolean to readable value
+            }));
+            setData(mappedData);
+        } catch (error) {
+            message.error("Failed to fetch manufacturer data.");
+        }
     };
 
-    const handleDelete = (key) => {
-        setData(data.filter((item) => item.key !== key));
-        message.success("Brand deleted successfully!");
+    // Check for duplicate manufacturer
+    const handleSearchDuplicate = async (manufacturerName) => {
+        try {
+            const response = await axios.get(
+                `${CREATE_jwel}/api/Master/MasterManufacturerMasterSearch?Manufacturer=${encodeURIComponent(
+                    manufacturerName.trim()
+                )}`,
+                {
+                    headers: {
+                        "tenant-name": tenantNameHeader,
+                    },
+                }
+            );
+            setIsDuplicate(response.data.length > 0); // Set to true if manufacturer already exists
+        } catch (error) {
+            console.error("Error checking for duplicate:", error);
+            message.error("Error checking for duplicate manufacturer.");
+        }
     };
 
+    // Handle Add manufacturer
+    const handleAdd = async (values) => {
+        if (isDuplicate) {
+            message.error("Manufacturer already exists!");
+            return; // Prevent adding if duplicate is found
+        }
+
+        // Prevent multiple submissions
+        if (loading) return;
+
+        setLoading(true);
+
+        try {
+            const response = await axios.post(
+                `${CREATE_jwel}/api/Master/MasterManufacturerMasterInsert`,
+                {
+                    manufacturer: values.Manufacturer,
+                    cloud_upload: true, // Assuming cloud_upload is true by default
+                },
+                {
+                    headers: {
+                        "tenant-name": tenantNameHeader,
+                    },
+                }
+            );
+
+            if (response.data) {
+                message.success("Manufacturer added successfully!");
+                fetchData(); // Re-fetch data after adding
+                form.resetFields(); // Reset form after submission
+            } else {
+                message.error("Failed to add manufacturer.");
+            }
+        } catch (error) {
+            console.error("Error adding manufacturer:", error);
+            message.error("An error occurred while adding the manufacturer.");
+        } finally {
+            setLoading(false); // Reset loading state
+        }
+    };
+
+    const handleDelete = async (manufacturerName) => {
+        try {
+            const response = await axios.post(
+                `${CREATE_jwel}/api/Master/MasterManufacturerMasterDelete?Manufacturer=${encodeURIComponent(
+                    manufacturerName.trim()
+                )}`,
+                null, // No request body for this API
+                {
+                    headers: {
+                        "tenant-name": tenantNameHeader,
+                    },
+                }
+            );
+
+            if (response.data === true) {
+                setData(data.filter((item) => item.Manufacturer !== manufacturerName));
+                message.success("Manufacturer deleted successfully!");
+            } else {
+                message.error("Failed to delete manufacturer.");
+            }
+        } catch (error) {
+            console.error(error);
+            message.error("An error occurred while deleting the manufacturer.");
+        }
+    };
     const handleEdit = (record) => {
+        setOldManufacturer(record.Manufacturer); // Store old manufacturer name for deletion
         setEditingKey(record.key);
         form.setFieldsValue(record);
         window.scrollTo(0, 0);
     };
 
-    const handleSave = () => {
-        const updatedData = form.getFieldsValue();
-        setData((prevData) =>
-            prevData.map((item) =>
-                item.key === editingKey ? { ...item, ...updatedData } : item
-            )
-        );
-        setEditingKey(null);
-        form.resetFields();
-        message.success("Brand updated successfully!");
+    const handleSave = async (values) => {
+        if (isDuplicate) {
+            message.error("Manufacturer already exists!");
+            return; // Prevent saving if duplicate is found
+        }
+
+        // Prevent multiple submissions
+        if (loading) return;
+
+        setLoading(true);
+
+        try {
+            // 1. Delete the old manufacturer
+            const deleteResponse = await axios.post(
+                `${CREATE_jwel}/api/Master/MasterManufacturerMasterDelete?Manufacturer=${encodeURIComponent(
+                    oldManufacturer.trim()
+                )}`,
+                null, // No request body for this API
+                {
+                    headers: {
+                        "tenant-name": tenantNameHeader,
+                    },
+                }
+            );
+
+            if (deleteResponse.data === true) {
+                // 2. Insert the new manufacturer
+                const insertResponse = await axios.post(
+                    `${CREATE_jwel}/api/Master/MasterManufacturerMasterInsert`,
+                    {
+                        manufacturer: values.Manufacturer,
+                        cloud_upload: true, // Assuming cloud_upload is true by default
+                    },
+                    {
+                        headers: {
+                            "tenant-name": tenantNameHeader,
+                        },
+                    }
+                );
+
+                if (insertResponse.data) {
+                    message.success("Manufacturer updated successfully!");
+                    fetchData(); // Re-fetch data after adding
+                    form.resetFields(); // Reset form after submission
+                } else {
+                    message.error("Failed to insert new manufacturer.");
+                }
+            } else {
+                message.error("Failed to delete the old manufacturer.");
+            }
+        } catch (error) {
+            console.error("Error saving manufacturer:", error);
+            message.error("An error occurred while saving the manufacturer.");
+        } finally {
+            setLoading(false); // Reset loading state
+        }
     };
+
 
     const handleCancel = useCallback(() => {
         form.resetFields();
@@ -75,12 +226,21 @@ const Manufacturer = () => {
         {
             title: "Manufacturer",
             dataIndex: "Manufacturer",
-            key: "counterName",
+            key: "Manufacturer",
             sorter: (a, b) => a.Manufacturer.localeCompare(b.Manufacturer),
+        },
+        {
+            title: "Cloud Upload",
+            dataIndex: "cloudUpload",
+            align:'center',
+
+            key: "cloudUpload",
         },
         {
             title: "Action",
             key: "action",
+            align:'center',
+
             render: (_, record) => (
                 <Space size="middle">
                     <Button
@@ -91,7 +251,7 @@ const Manufacturer = () => {
                     />
                     <Popconfirm
                         title="Are you sure to delete this record?"
-                        onConfirm={() => handleDelete(record.key)}
+                        onConfirm={() => handleDelete(record.Manufacturer)} // Pass Manufacturer name
                     >
                         <Button type="link" icon={<DeleteOutlined />} danger />
                     </Popconfirm>
@@ -120,7 +280,7 @@ const Manufacturer = () => {
     }, [form, handleCancel]);
 
     return (
-        <div style={{ padding: "5px", backgroundColor: "#f4f6f9" }}>
+        <div style={{  backgroundColor: "#f4f6f9" }}>
             {/* Breadcrumb */}
             <Row justify="start" style={{ marginBottom: "16px" }}>
                 <Col>
@@ -141,10 +301,11 @@ const Manufacturer = () => {
                             <Form.Item
                                 name="Manufacturer"
                                 label="Manufacturer"
-                                rules={[{ required: true, message: "Manufactureris required" }]}
+                                rules={[{ required: true, message: "Manufacturer is required" }]}
                             >
                                 <Input
                                     placeholder="Enter Manufacturer"
+                                    onChange={(e) => handleSearchDuplicate(e.target.value)} // Check for duplicate on change
                                     onKeyDown={handleEnterPress} // Submit form on Enter key press
                                 />
                             </Form.Item>
@@ -155,7 +316,12 @@ const Manufacturer = () => {
                         <Button
                             type="primary"
                             htmlType="submit"
-                            style={{ marginRight: 8, backgroundColor: "#0C1154", borderColor: "#0C1154" }}
+                            style={{
+                                marginRight: 8,
+                                backgroundColor: "#0C1154",
+                                borderColor: "#0C1154",
+                            }}
+                            disabled={isDuplicate || loading} // Disable button if duplicate or loading
                         >
                             {editingKey ? "Save" : "Submit"}
                         </Button>
@@ -166,22 +332,21 @@ const Manufacturer = () => {
                 </Form>
             </Card>
 
-            <Row gutter={16}>
-                <Col xs={24} sm={16} lg={12}>
+            <div style={{float:"right"}}>
+
                     <Input.Search
                         placeholder="Search records"
-                        style={{ marginBottom: "16px", width: "100%", borderRadius: "4px" }}
+                        style={{ marginBottom: "10px", width: "100%", borderRadius: "4px" }}
                         onChange={(e) => setSearchText(e.target.value)}
                     />
-                </Col>
-            </Row>
+                </div>
 
             <Table
                 columns={columns}
                 dataSource={filteredData}
                 rowKey="key"
+                size="small"
                 pagination={{ pageSize: 5 }}
-                scroll={{ x: 1000 }}
                 style={{
                     background: "#fff",
                     boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",

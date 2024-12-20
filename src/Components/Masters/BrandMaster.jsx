@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback,  } from "react";
+import React, { useState, useEffect } from "react";
 import {
     Form,
     Input,
@@ -13,55 +13,191 @@ import {
     Breadcrumb,
 } from "antd";
 import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import axios from "axios"; // Import axios for API requests
+import { CREATE_jwel } from "../../Config/Config";
+const tenantNameHeader = "PmlYjF0yAwEjNohFDKjzn/ExL/LMhjzbRDhwXlvos+0="; // Your tenant name header
 
 const BrandMaster = () => {
     const [form] = Form.useForm();
-    const [data, setData] = useState([
-        { key: 1, counterName: "Gold" },
-        { key: 2, counterName: "Silver" },
-    ]);
+    const [data, setData] = useState([]);
     const [editingKey, setEditingKey] = useState(null);
     const [searchText, setSearchText] = useState("");
+    const [isBrandNameExist, setIsBrandNameExist] = useState(false);
+    const [oldBrandName, setOldBrandName] = useState(""); // Store old brand name for delete
 
+    // Fetch data from the API
+    useEffect(() => {
+        axios.get(`${CREATE_jwel}/api/Master/MasterBrandMasterList`, {
+            headers: {
+                "tenantName": tenantNameHeader,
+            }
+        })
+            .then(response => {
+                setData(response.data.map((item, index) => ({
+                    key: index + 1,
+                    counterName: item.BrandName,
+                })));
+            })
+            .catch(error => {
+                message.error("Failed to fetch data");
+            });
+    }, []);
+
+    // Check if the brand name exists
+    const handleBrandNameCheck = (brandName) => {
+        if (!brandName) return; // Prevent making an API request if the brandName is empty
+
+        axios.get(`${CREATE_jwel}/api/Master/MasterBrandMasterSearch?BrandName=${brandName}`, {
+            headers: {
+                "tenantName": tenantNameHeader,
+            }
+        })
+            .then(response => {
+                console.log(response.data); // Log the response for debugging
+
+                // Check if the response contains a valid result
+                const brandExists = response.data.some(item => item.BrandName === brandName);
+
+                if (brandExists) {
+                    setIsBrandNameExist(true);
+                    message.error("Brand name already exists!");
+                } else {
+                    setIsBrandNameExist(false);
+                }
+            })
+            .catch(error => {
+                message.error("Failed to check brand name");
+                console.error(error); // Log the error for debugging
+            });
+    };
+
+    // Handle adding a new brand
     const handleAdd = (values) => {
-        const newData = { key: Date.now(), ...values };
-        setData([...data, newData]);
-        form.resetFields();
-        message.success("Brand added successfully!");
+        if (isBrandNameExist) {
+            message.error("Brand name already exists!");
+            return;
+        }
+
+        axios.post(`${CREATE_jwel}/api/Master/MasterBrandMasterInsert`,
+            {
+                brandName: values.counterName,
+                cloud_upload: true
+            },
+            {
+                headers: {
+                    "tenantName": tenantNameHeader,
+                }
+            })
+            .then(response => {
+                if (response.data) {
+                    const newData = { key: Date.now(), counterName: values.counterName };
+                    setData([...data, newData]);
+                    form.resetFields();
+                    message.success("Brand added successfully!");
+                }
+            })
+            .catch(error => {
+                message.error("Failed to add brand");
+            });
     };
 
-    const handleDelete = (key) => {
-        setData(data.filter((item) => item.key !== key));
-        message.success("Brand deleted successfully!");
-    };
-
+    // Handle editing a brand
     const handleEdit = (record) => {
         setEditingKey(record.key);
-        form.setFieldsValue(record);
-        window.scrollTo(0, 0);
+        setOldBrandName(record.counterName); // Store the old brand name for delete
+        form.setFieldsValue({ counterName: record.counterName });
     };
 
-    const handleSave = () => {
-        const updatedData = form.getFieldsValue();
-        setData((prevData) =>
-            prevData.map((item) =>
-                item.key === editingKey ? { ...item, ...updatedData } : item
-            )
-        );
-        setEditingKey(null);
-        form.resetFields();
-        message.success("Brand updated successfully!");
-    };
+    // Handle saving the edited brand
+  // Handle saving the edited brand
+  const handleSave = () => {
+    const updatedData = form.getFieldsValue();
 
-    const handleCancel = useCallback(() => {
-        form.resetFields();
-        setEditingKey(null);
-    }, [form]);
+    // Check if the value is unchanged
+    if (oldBrandName === updatedData.counterName) {
+        setEditingKey(null); // Exit edit mode
+        form.resetFields(); // Reset the form to switch back to Add mode
+        return; // Exit without making an API call
+    }
 
-    const handleEnterPress = (e) => {
-        if (e.key === "Enter") {
-            form.submit(); // Trigger form submission on Enter key press
+    // First, check if the brand name exists
+    axios.get(`${CREATE_jwel}/api/Master/MasterBrandMasterSearch?BrandName=${updatedData.counterName}`, {
+        headers: {
+            "tenantName": tenantNameHeader,
         }
+    })
+        .then(response => {
+            const brandExists = response.data.some(item => item.MANUFACTURER === updatedData.counterName);
+
+            if (brandExists) {
+                message.error("Brand name already exists!");
+                return;
+            }
+
+            // If editing, delete the old brand name first
+            if (oldBrandName !== updatedData.counterName) {
+                axios.post(`${CREATE_jwel}/api/Master/MasterBrandMasterDelete?BrandName=${oldBrandName}`, null, {
+                    headers: {
+                        "tenantName": tenantNameHeader,
+                    }
+                })
+                    .then(response => {
+                        if (response.data) {
+                            // Now insert the updated brand name
+                            axios.post(`${CREATE_jwel}/api/Master/MasterBrandMasterInsert`,
+                                {
+                                    brandName: updatedData.counterName,
+                                    cloud_upload: true
+                                },
+                                {
+                                    headers: {
+                                        "tenantName": tenantNameHeader,
+                                    }
+                                })
+                                .then(response => {
+                                    if (response.data) {
+                                        setData(prevData =>
+                                            prevData.map(item =>
+                                                item.key === editingKey ? { ...item, ...updatedData } : item
+                                            )
+                                        );
+                                        setEditingKey(null);
+                                        form.resetFields();
+                                        message.success("Brand updated successfully!");
+                                    }
+                                })
+                                .catch(error => {
+                                    message.error("Failed to update brand");
+                                });
+                        }
+                    })
+                    .catch(error => {
+                        message.error("Failed to delete old brand");
+                    });
+            }
+        })
+        .catch(error => {
+            message.error("Failed to check brand name");
+        });
+};
+
+
+    // Handle deleting a brand
+    const handleDelete = (brandName) => {
+        axios.post(`${CREATE_jwel}/api/Master/MasterBrandMasterDelete?BrandName=${brandName}`, null, {
+            headers: {
+                "tenantName": tenantNameHeader,
+            }
+        })
+            .then(response => {
+                if (response.data) {
+                    setData(data.filter((item) => item.counterName !== brandName));
+                    message.success("Brand deleted successfully!");
+                }
+            })
+            .catch(error => {
+                message.error("Failed to delete brand");
+            });
     };
 
     const filteredData = data.filter((item) =>
@@ -81,6 +217,8 @@ const BrandMaster = () => {
         {
             title: "Action",
             key: "action",
+            align:'center',
+
             render: (_, record) => (
                 <Space size="middle">
                     <Button
@@ -91,7 +229,7 @@ const BrandMaster = () => {
                     />
                     <Popconfirm
                         title="Are you sure to delete this record?"
-                        onConfirm={() => handleDelete(record.key)}
+                        onConfirm={() => handleDelete(record.counterName)} // Pass brand name to delete
                     >
                         <Button type="link" icon={<DeleteOutlined />} danger />
                     </Popconfirm>
@@ -100,27 +238,8 @@ const BrandMaster = () => {
         },
     ];
 
-    useEffect(() => {
-        const handleKeyDown = (e) => {
-            if (e.altKey && e.key === "s") {
-                e.preventDefault();
-                form.submit(); // Trigger form submission
-            }
-            if (e.altKey && e.key === "c") {
-                e.preventDefault();
-                handleCancel(); // Reset the form
-            }
-        };
-
-        window.addEventListener("keydown", handleKeyDown);
-
-        return () => {
-            window.removeEventListener("keydown", handleKeyDown);
-        };
-    }, [form, handleCancel]);
-
     return (
-        <div style={{ padding: "5px", backgroundColor: "#f4f6f9" }}>
+        <div style={{  backgroundColor: "#f4f6f9" }}>
             {/* Breadcrumb */}
             <Row justify="start" style={{ marginBottom: "16px" }}>
                 <Col>
@@ -131,6 +250,7 @@ const BrandMaster = () => {
                 </Col>
             </Row>
 
+            {/* Add/Edit Form */}
             <Card
                 title={editingKey ? "Edit Brand" : "Add Brand"}
                 style={{ marginBottom: "20px", borderRadius: "8px", boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)" }}
@@ -145,9 +265,14 @@ const BrandMaster = () => {
                             >
                                 <Input
                                     placeholder="Enter Brand Name"
-                                    onKeyDown={handleEnterPress} // Submit form on Enter key press
+                                    onChange={(e) => {
+                                        const uppercaseValue = e.target.value.toUpperCase();  // Convert to uppercase
+                                        form.setFieldsValue({ counterName: uppercaseValue });  // Set the transformed value back to the form field
+                                        handleBrandNameCheck(uppercaseValue);  // Check brand name with uppercase value
+                                    }}
                                 />
                             </Form.Item>
+
                         </Col>
                     </Row>
 
@@ -156,32 +281,34 @@ const BrandMaster = () => {
                             type="primary"
                             htmlType="submit"
                             style={{ marginRight: 8, backgroundColor: "#0C1154", borderColor: "#0C1154" }}
+                            disabled={isBrandNameExist === true}
                         >
                             {editingKey ? "Save" : "Submit"}
                         </Button>
-                        <Button htmlType="button" onClick={handleCancel} style={{ backgroundColor: "#f0f0f0" }}>
+                        <Button htmlType="button" onClick={() => setEditingKey(null)} style={{ backgroundColor: "#f0f0f0" }}>
                             Cancel
                         </Button>
                     </div>
                 </Form>
             </Card>
 
-            <Row gutter={16}>
-                <Col xs={24} sm={16} lg={12}>
+            {/* Search Field */}
+            <div style={{float:"right"}}>
+
                     <Input.Search
                         placeholder="Search records"
-                        style={{ marginBottom: "16px", width: "100%", borderRadius: "4px" }}
+                        style={{ marginBottom: "10px", width: "100%", borderRadius: "4px" }}
                         onChange={(e) => setSearchText(e.target.value)}
                     />
-                </Col>
-            </Row>
+              </div>
 
+            {/* Table */}
             <Table
                 columns={columns}
                 dataSource={filteredData}
                 rowKey="key"
+                size="small"
                 pagination={{ pageSize: 5 }}
-                scroll={{ x: 1000 }}
                 style={{
                     background: "#fff",
                     boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
