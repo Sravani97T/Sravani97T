@@ -97,7 +97,7 @@ const TagDetailsForm = () => {
     const totalNwt = dataSource.reduce((sum, item) => sum + item.nwt, 0);
     const totalLessWeight = dataSource.reduce((sum, item) => sum + item.lessWeight, 0);
     return (
-        <div>
+        <>
 
             <Row gutter={[16, 16]} justify="center">
                 {/* Card 1 */}
@@ -107,9 +107,10 @@ const TagDetailsForm = () => {
                             {/* Purity and Manufacturer Row */}
                             <Row gutter={[8, 16]}>
                                 <Col xs={24} sm={8}>  {/* Reduced the width of Purity column */}
+                                    <label style={{ fontSize: "12px" }}>Counter</label>
                                     <Form.Item
-                                        label="Purity"
                                         name="purity"
+
                                         rules={[{ message: 'Please select purity' }]}>
                                         <Select >
                                             <Option value="22k">22k</Option>
@@ -117,22 +118,27 @@ const TagDetailsForm = () => {
                                         </Select>
                                     </Form.Item>
                                 </Col>
-                                <Col xs={24} sm={8}>  {/* Adjusted width for Manufacturer */}
+                                <Col xs={24} sm={8}>  {/* Reduced the width of Purity column */}
+                                    <label style={{ fontSize: "12px" }}>Purity</label>
+
                                     <Form.Item
-                                        label="Manufacturer"
+                                        name="purity"
+                                        rules={[{ message: 'Please select purity' }]}>
+                                        <Select >
+                                            <Option value="2">2</Option>
+                                            <Option value="3">3</Option>
+                                        </Select>
+                                    </Form.Item>
+                                </Col>
+                                <Col xs={24} sm={8}>  {/* Adjusted width for Manufacturer */}
+                                    <label style={{ fontSize: "12px" }}>Manufacturer</label>
+
+                                    <Form.Item
                                         name="manufacturer"
                                         rules={[{ message: 'Please select manufacturer' }]}>
                                         <Select >
                                             <Option value="manufacturer1">Manufacturer 1</Option>
                                             <Option value="manufacturer2">Manufacturer 2</Option>
-                                        </Select>
-                                    </Form.Item>
-                                </Col>
-                                <Col xs={12} sm={8}>
-                                    <Form.Item label="Dealer Name" name="dealerName">
-                                        <Select >
-                                            <Option value="dealer1">Dealer 1</Option>
-                                            <Option value="dealer2">Dealer 2</Option>
                                         </Select>
                                     </Form.Item>
                                 </Col>
@@ -142,18 +148,28 @@ const TagDetailsForm = () => {
 
                             {/* Certificate No., HUID and Dealer Name Row */}
                             <Row gutter={[8, 16]}>
-                                <Col xs={24} sm={8}>
-                                    <Form.Item label="Counter" name="Counter">
-                                        <Input />
+                                <Col xs={12} sm={8}>
+                                    <label style={{ fontSize: "12px" }}>Dealer Name</label>
+
+                                    <Form.Item name="dealerName">
+                                        <Select >
+                                            <Option value="dealer1">Dealer 1</Option>
+                                            <Option value="dealer2">Dealer 2</Option>
+                                        </Select>
                                     </Form.Item>
                                 </Col>
+
                                 <Col xs={12} sm={8}>
-                                    <Form.Item label="HUID" name="huid">
+                                    <label style={{ fontSize: "12px" }}>HUID</label>
+
+                                    <Form.Item name="huid">
                                         <Input />
                                     </Form.Item>
                                 </Col>
                                 <Col xs={24} sm={8}>  {/* Reduced the width of Size column */}
-                                    <Form.Item label="Size" name="size">
+                                    <label style={{ fontSize: "12px" }}>Size</label>
+
+                                    <Form.Item name="size">
                                         <Input />
                                     </Form.Item>
                                 </Col>
@@ -161,20 +177,25 @@ const TagDetailsForm = () => {
 
                             {/* Description Row */}
                             <Row gutter={[8, 16]}>
-                            <Col xs={24} sm={8}>
-                                    <Form.Item label="Certificate No." name="certificateNo">
+                                <Col xs={24} sm={8}>
+                                    <label style={{ fontSize: "12px" }}>Certificate No.</label>
+
+                                    <Form.Item name="certificateNo">
                                         <Input />
                                     </Form.Item>
                                 </Col>
                                 <Col xs={24} sm={8}>
-                                    <Form.Item label="Description" name="description">
+                                    <label style={{ fontSize: "12px" }}>Description</label>
+
+                                    <Form.Item name="description">
                                         <TextArea rows={1} />
                                     </Form.Item>
                                 </Col>
                                 <Col xs={24} sm={8}>
+
                                     <Form.Item style={{ marginTop: "30px" }}>
                                         <Checkbox>
-                                            <span style={{ marginLeft: '8px' }}>Lab Report</span>
+                                            <span style={{  fontSize: "10px" }}>Lab Report</span>
                                         </Checkbox>
                                     </Form.Item>
                                 </Col>
@@ -191,34 +212,46 @@ const TagDetailsForm = () => {
                             {/* First Section: GWT, LES, NWT, Cost, MC/G, MC/Amount */}
                             <Row gutter={[8, 16]}>
                                 <Col xs={8}>
-                                    <Form.Item label="GWT" name="gwt">
+                                    <label style={{ fontSize: "12px" }}>GWT</label>
+
+                                    <Form.Item name="gwt">
                                         <Input size="small" />
                                     </Form.Item>
                                 </Col>
                                 <Col xs={8}>
-                                    <Form.Item label="LES" name="les">
+                                    <label style={{ fontSize: "12px" }}>LES</label>
+
+                                    <Form.Item name="les">
                                         <Input size="small" />
                                     </Form.Item>
                                 </Col>
                                 <Col xs={8}>
-                                    <Form.Item label="NWT" name="nwt">
+                                    <label style={{ fontSize: "12px" }}>NWT</label>
+
+                                    <Form.Item name="nwt">
                                         <Input size="small" />
                                     </Form.Item>
                                 </Col>
                             </Row>
                             <Row gutter={[8, 16]}>
                                 <Col xs={8}>
-                                    <Form.Item label="Cost" name="cost">
+                                    <label style={{ fontSize: "12px" }}>Cost</label>
+
+                                    <Form.Item name="cost">
                                         <Input size="small" />
                                     </Form.Item>
                                 </Col>
                                 <Col xs={8}>
-                                    <Form.Item label="MC/G" name="mcg">
+                                    <label style={{ fontSize: "12px" }}>MC/G</label>
+
+                                    <Form.Item name="mcg">
                                         <Input size="small" />
                                     </Form.Item>
                                 </Col>
                                 <Col xs={8}>
-                                    <Form.Item label="MC/Amount" name="mcAmount">
+                                    <label style={{ fontSize: "12px" }}>MC/Amount</label>
+
+                                    <Form.Item name="mcAmount">
                                         <Input size="small" />
                                     </Form.Item>
                                 </Col>
@@ -267,54 +300,41 @@ const TagDetailsForm = () => {
                     </Card>
                 </Col>
             </Row>
-            <div>
-                <Row gutter={[16, 16]} justify="center">
-                    <Col xs={24}>
-                        <div style={{
-                            marginTop: '5px', backgroundColor: "#fff", padding: '6px', boxShadow: "0px 4px 12px rgba(243, 238, 238, 0.91)",
-                        }}>
-                            {/* Summary Section */}
-                            <Row gutter={[16, 16]} align="middle" justify="end" style={{ marginBottom: '10px' }}>
-                                <Col>
-                                    <Tag color="lightgreen">Total G.Wt: {totalGwt} g</Tag>
-                                </Col>
-                                <Col>
-                                    <Tag color='cyan-inverse'>Total N.Wt: {totalNwt} g</Tag>
-                                </Col>
-                                <Col>
-                                    <Tag color="gold-inverse">Total Less Weight: {totalLessWeight} g</Tag>
-                                </Col>
-                                <Col>
-                                    <Tag color="geekblue">Total Purity: 22k</Tag>
-                                </Col>
-                                <Col>
-                                    <Input
-                                        placeholder="Search Product"
-                                        style={{
-                                            width: '200px',
-                                            borderRadius: '8px',
-                                            border: '1px solid #d9d9d9',
-                                            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-                                        }}
-                                        onChange={(e) => setSearchText(e.target.value)}
-                                    />
-                                </Col>
-                            </Row>
 
-                            {/* Table */}
-                            <Table
-                                dataSource={filteredData}
-                                columns={columns}
-                                size="small"
-                                pagination={{ pageSize: 5 }}
-                                style={{ marginTop: '5px' }}
-                            />
-                        </div>
-                    </Col>
-                </Row>
+            <Row justify="space-between" align="middle" style={{ marginBottom: '10px',marginTop:"5px" }}>
+                <Col>
+                    <div>
+                        <strong>Total: </strong><Tag color="cyan-inverse"> GWT: {totalGwt}</Tag><Tag color="lime-inverse"> NWT: {totalNwt}</Tag><Tag color="volcano-inverse"> Less Wt: {totalLessWeight}</Tag>
+                    </div>
+                </Col>
+                <Col>
+                    <Input
+                        placeholder="Search Product"
+                        value={searchText}
+                        onChange={(e) => setSearchText(e.target.value)}
+                    />
+                </Col>
+            </Row>
+            {/* Table */}
+            <Row gutter={[16, 16]}>
 
-            </div>
-        </div>
+                <Col xs={24}>
+                    <div style={{ overflowX: 'auto' }}>
+                        <Table
+                            dataSource={filteredData}
+                            columns={columns}
+                            size="small"
+                            pagination={{
+                                pageSize: 5,
+                                responsive: true,
+                            }}
+                        />
+                    </div>
+                </Col>
+            </Row>
+
+        </>
+
     );
 };
 
