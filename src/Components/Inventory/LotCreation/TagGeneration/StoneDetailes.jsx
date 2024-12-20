@@ -1,11 +1,11 @@
 import React, { useState } from "react";
-import { Row, Col, Typography, Input, Select, Button, Modal, Divider, Tag } from "antd";
+import { Row, Col, Typography, Input, Select, Button, Modal, Divider,  } from "antd";
 
 const { Text } = Typography;
 const { Option } = Select;
 
 const StoneDetails = () => {
-    const [stoneData, setStoneData] = useState([]);
+    const [stoneData, ] = useState([]);
     const [modal2Open, setModal2Open] = useState(false);
 
     return (
