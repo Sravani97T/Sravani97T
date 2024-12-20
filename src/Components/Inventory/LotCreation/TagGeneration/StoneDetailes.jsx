@@ -69,54 +69,53 @@ const StoneDetails = () => {
                         borderRadius: "8px",
                     }}
                 >
-                <Row gutter={[8, 8]}>
-    <Col xs={24} sm={12} md={6} lg={4}>
-        <Text>Stone Item</Text>
-        <Select placeholder="Select Item" style={{ width: "100%", marginTop: "4px" }}>
-            <Option value="Diamond">Diamond</Option>
-            <Option value="Emerald">Emerald</Option>
-            <Option value="Ruby">Ruby</Option>
-        </Select>
-    </Col>
-    <Col xs={24} sm={12} md={6} lg={4}>
-        <Text>Clarity</Text>
-        <Input placeholder="Enter Clarity" style={{ marginTop: "4px" }} />
-    </Col>
-    <Col xs={24} sm={12} md={6} lg={4}>
-        <Text>Color</Text>
-        <Input placeholder="Enter Color" style={{ marginTop: "4px" }} />
-    </Col>
-    <Col xs={24} sm={12} md={6} lg={4}>
-        <Text>Cut</Text>
-        <Input placeholder="Enter Cut" style={{ marginTop: "4px" }} />
-    </Col>
-    <Col xs={24} sm={12} md={6} lg={4}>
-        <Text>No. Pcs</Text>
-        <Input placeholder="Enter No. Pcs" style={{ marginTop: "4px" }} />
-    </Col>
-</Row>
-<Row gutter={[8, 8]}>
-    <Col xs={24} sm={12} md={6} lg={4}>
-        <Text>Pcs</Text>
-        <Input placeholder="Enter Pcs" style={{ marginTop: "4px" }} />
-    </Col>
-    <Col xs={24} sm={12} md={6} lg={4}>
-        <Text>Cts</Text>
-        <Input placeholder="Enter Cts" style={{ marginTop: "4px" }} />
-    </Col>
-    <Col xs={24} sm={12} md={6} lg={4}>
-        <Text>Grams</Text>
-        <Input placeholder="Enter Grams" style={{ marginTop: "4px" }} />
-    </Col>
-    <Col xs={24} sm={12} md={6} lg={4}>
-        <Text>Rate</Text>
-        <Input placeholder="Enter Rate" style={{ marginTop: "4px" }} />
-    </Col>
-    <Col xs={24} sm={12} md={6} lg={4}>
-        <Text>Amount</Text>
-        <Input placeholder="Enter Amount" style={{ marginTop: "4px" }} />
-    </Col>
-</Row>
+                    <Row gutter={[8, 8]}>
+                        <Col xs={24} sm={12} md={6} lg={4}>
+                            <Text>Stone Item</Text>
+                            <Select placeholder="Select Item" style={{ width: "100%", marginTop: "4px" }}>
+                                <Option value="Diamond">Diamond</Option>
+                                <Option value="Ruby">Ruby</Option>
+                            </Select>
+                        </Col>
+                        <Col xs={24} sm={12} md={6} lg={4}>
+                            <Text>Clarity</Text>
+                            <Input placeholder="Enter Clarity" style={{ marginTop: "4px" }} />
+                        </Col>
+                        <Col xs={24} sm={12} md={6} lg={4}>
+                            <Text>Color</Text>
+                            <Input placeholder="Enter Color" style={{ marginTop: "4px" }} />
+                        </Col>
+                        <Col xs={24} sm={12} md={6} lg={4}>
+                            <Text>Cut</Text>
+                            <Input placeholder="Enter Cut" style={{ marginTop: "4px" }} />
+                        </Col>
+                        <Col xs={24} sm={12} md={6} lg={4}>
+                            <Text>No. Pcs</Text>
+                            <Input placeholder="Enter No. Pcs" style={{ marginTop: "4px" }} />
+                        </Col>
+                    </Row>
+                    <Row gutter={[8, 8]}>
+                        <Col xs={24} sm={12} md={6} lg={4}>
+                            <Text>Pcs</Text>
+                            <Input placeholder="Enter Pcs" style={{ marginTop: "4px" }} />
+                        </Col>
+                        <Col xs={24} sm={12} md={6} lg={4}>
+                            <Text>Cts</Text>
+                            <Input placeholder="Enter Cts" style={{ marginTop: "4px" }} />
+                        </Col>
+                        <Col xs={24} sm={12} md={6} lg={4}>
+                            <Text>Grams</Text>
+                            <Input placeholder="Enter Grams" style={{ marginTop: "4px" }} />
+                        </Col>
+                        <Col xs={24} sm={12} md={6} lg={4}>
+                            <Text>Rate</Text>
+                            <Input placeholder="Enter Rate" style={{ marginTop: "4px" }} />
+                        </Col>
+                        <Col xs={24} sm={12} md={6} lg={4}>
+                            <Text>Amount</Text>
+                            <Input placeholder="Enter Amount" style={{ marginTop: "4px" }} />
+                        </Col>
+                    </Row>
 
                 </Card>
 
