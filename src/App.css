@@ -7,7 +7,3 @@
 .App-sidebar {
   background: #f0f2f5;
 }
-:where(.css-dev-only-do-not-override-1wwf28x).ant-layout.ant-layout-has-sider > .ant-layout,
-:where(.css-dev-only-do-not-override-1wwf28x).ant-layout.ant-layout-has-sider > .ant-layout-content {
-    width: 100% !important;  /* Ensure width is not 0px */
-}

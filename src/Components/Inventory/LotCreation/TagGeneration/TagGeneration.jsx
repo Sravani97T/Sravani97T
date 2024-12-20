@@ -1,7 +1,9 @@
 import React from "react";
-import { Row, Col, Typography, Select } from "antd";
+import { Row, Col, Typography, Select,    Breadcrumb,
+} from "antd";
 import ProductDetails from "../TagGeneration/ProductDetailes";
 import WastageDetails from "../TagGeneration/WastageDetailes";
+import TagDetailsForm from "./TagDetailesform";
 
 const { Text } = Typography;
 const { Option } = Select;
@@ -9,6 +11,14 @@ const { Option } = Select;
 const TagGeneration = () => {
     return (
         <div>
+              <Row justify="start" style={{ marginBottom: "10px" }}>
+                <Col>
+                    <Breadcrumb style={{ fontSize: "16px", fontWeight: "500", color: "#0C1154" }}>
+                        <Breadcrumb.Item>Masters</Breadcrumb.Item>
+                        <Breadcrumb.Item>Tag Generation</Breadcrumb.Item>
+                    </Breadcrumb>
+                </Col>
+            </Row>
             {/* Combined Lot No and Main Product Card */}
             <Row gutter={[16, 16]} justify="space-between">
                 <Col span={24}>
@@ -57,11 +67,12 @@ const TagGeneration = () => {
                                                     color: "#8c8c8c",
                                                     display: "block",
                                                     marginBottom: "5px",
+                                                    fontSize:"12px"
                                                 }}
                                             >
                                                 M Product:
                                             </Text>
-                                            <Text strong>Gold</Text>
+                                            <Text strong style={{fontSize:"12px"}}>Gold</Text>
                                         </div>
                                         <div className="card-item" style={{ textAlign: "right" }}>
                                             <Text
@@ -69,11 +80,12 @@ const TagGeneration = () => {
                                                     color: "#8c8c8c",
                                                     display: "block",
                                                     marginBottom: "5px",
+                                                    fontSize:"12px"
                                                 }}
                                             >
                                                 Dealer:
                                             </Text>
-                                            <Text strong>Sravani Reddy</Text>
+                                            <Text style={{fontSize:"12px"}} strong>Sravani Reddy</Text>
                                         </div>
                                     </Col>
 
@@ -85,11 +97,12 @@ const TagGeneration = () => {
                                                     color: "#8c8c8c",
                                                     display: "block",
                                                     marginBottom: "5px",
+                                                    fontSize:"12px"
                                                 }}
                                             >
                                                 Lot Pcs:
                                             </Text>
-                                            <Text strong>12</Text>
+                                            <Text style={{fontSize:"12px"}} strong>12</Text>
                                         </div>
                                         <div className="card-item" style={{ textAlign: "right" }}>
                                             <Text
@@ -97,11 +110,12 @@ const TagGeneration = () => {
                                                     color: "#8c8c8c",
                                                     display: "block",
                                                     marginBottom: "5px",
+                                                    fontSize:"12px"
                                                 }}
                                             >
                                                 Lot Weight:
                                             </Text>
-                                            <Text strong>15</Text>
+                                            <Text style={{fontSize:"12px"}} strong>15</Text>
                                         </div>
                                     </Col>
 
@@ -113,11 +127,12 @@ const TagGeneration = () => {
                                                     color: "#8c8c8c",
                                                     display: "block",
                                                     marginBottom: "5px",
+                                                    fontSize:"12px"
                                                 }}
                                             >
                                                 Balance Pcs:
                                             </Text>
-                                            <Text strong>1255</Text>
+                                            <Text style={{fontSize:"12px"}} strong>1255</Text>
                                         </div>
                                         <div className="card-item" style={{ textAlign: "right" }}>
                                             <Text
@@ -125,11 +140,12 @@ const TagGeneration = () => {
                                                     color: "#8c8c8c",
                                                     display: "block",
                                                     marginBottom: "5px",
+                                                    fontSize:"12px"
                                                 }}
                                             >
                                                 Balance Weight:
                                             </Text>
-                                            <Text strong>15</Text>
+                                            <Text style={{fontSize:"12px"}} strong>15</Text>
                                         </div>
                                     </Col>
 
@@ -141,11 +157,12 @@ const TagGeneration = () => {
                                                     color: "#8c8c8c",
                                                     display: "block",
                                                     marginBottom: "5px",
+                                                    fontSize:"12px"
                                                 }}
                                             >
                                                 Tag Pcs:
                                             </Text>
-                                            <Text strong>15</Text>
+                                            <Text style={{fontSize:"12px"}} strong>15</Text>
                                         </div>
                                         <div className="card-item" style={{ textAlign: "right" }}>
                                             <Text
@@ -153,11 +170,12 @@ const TagGeneration = () => {
                                                     color: "#8c8c8c",
                                                     display: "block",
                                                     marginBottom: "5px",
+                                                    fontSize:"12px"
                                                 }}
                                             >
                                                 Tag Weight:
                                             </Text>
-                                            <Text strong>12</Text>
+                                            <Text style={{fontSize:"12px"}} strong>12</Text>
                                         </div>
                                     </Col>
                                 </Row>
@@ -175,6 +193,10 @@ const TagGeneration = () => {
             {/* Wastage and Making Charges Section */}
             <div>
                 <WastageDetails />
+            </div>
+            {/* tag detailes */}
+            <div >
+                <TagDetailsForm/>
             </div>
         </div>
     );
