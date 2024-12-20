@@ -30,28 +30,16 @@ const WastageDetails = () => {
             {/* Wastage Section */}
             <Row gutter={16}>
                 {/* First Column: Wastage & Making */}
-                <Col xs={24} sm={4}>
-                    <div
-                        style={{
-                            backgroundColor: "#e6f7ff", // Light blue background color for header
-                            width: "100%",
-                            borderRadius: "10px",
-                            marginTop: "5px",
-                            marginBottom: "5px",
-                            boxShadow: "0px 4px 12px rgba(243, 238, 238, 0.91)",
-                            padding: "5px",
-                            textAlign: "center",
-                        }}
-                    >
-                        <Text style={{ fontSize: "16px", color: "#1890ff" }}>
-                            Wastage & Making
-                        </Text>
-                    </div>
+                <Col xs={24} sm={4} style={{
+                    marginTop: "33px",
+                }}>
+
                     <div
                         style={{
                             borderRadius: "10px",
                             padding: "10px",
                             backgroundColor: "#fff",
+
                             boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.1)",
                         }}
                     >
@@ -63,8 +51,8 @@ const WastageDetails = () => {
                                 textAlign: "center",
                             }}
                         >
-                            <Text style={{ textAlign: "center" }}>
-                                Wastage & Making
+                            <Text style={{ textAlign: "center", fontSize: "12px" }}>
+                                Category
                             </Text>
                             <Select
                                 value={wastageData[0].percentage}
@@ -88,6 +76,7 @@ const WastageDetails = () => {
                     </div>
                 </Col>
 
+
                 {/* Second Column: Wastage */}
                 <Col xs={24} sm={8}>
                     <div
@@ -98,11 +87,10 @@ const WastageDetails = () => {
                             marginTop: "5px",
                             marginBottom: "5px",
                             boxShadow: "0px 4px 12px rgba(243, 238, 238, 0.91)",
-                            padding: "5px",
                             textAlign: "center",
                         }}
                     >
-                        <Text style={{ fontSize: "16px", color: "#1890ff" }}>
+                        <Text style={{ fontSize: "12px", color: "#1890ff" }}>
                             Wastage
                         </Text>
                     </div>
@@ -123,7 +111,7 @@ const WastageDetails = () => {
                             }}
                         >
                             {["%", "Direct", "Total"].map((header) => (
-                                <Text key={header} style={{ textAlign: "center" }}>
+                                <Text key={header} style={{ textAlign: "center", fontSize: "12px" }}>
                                     {header}
                                 </Text>
                             ))}
@@ -177,11 +165,10 @@ const WastageDetails = () => {
                             marginTop: "5px",
                             marginBottom: "5px",
                             boxShadow: "0px 4px 12px rgba(243, 238, 238, 0.91)",
-                            padding: "5px",
                             textAlign: "center",
                         }}
                     >
-                        <Text style={{ fontSize: "16px", color: "#1890ff" }}>
+                        <Text style={{ fontSize: "12px", color: "#1890ff" }}>
                             Making Charges
                         </Text>
                     </div>
@@ -202,7 +189,7 @@ const WastageDetails = () => {
                             }}
                         >
                             {["Gram", "Direct", "Total"].map((header) => (
-                                <Text key={header} style={{ textAlign: "center" }}>
+                                <Text key={header} style={{ textAlign: "center", fontSize: "12px" }}>
                                     {header}
                                 </Text>
                             ))}
@@ -259,12 +246,11 @@ const WastageDetails = () => {
                             borderRadius: "10px",
                             marginTop: "5px",
                             marginBottom: "5px",
-                            boxShadow: "0px 4px 12px rgba(226, 222, 222, 0.91)",
-                            padding: "5px",
+                            boxShadow: "0px 4px 12px rgba(243, 238, 238, 0.91)",
                             textAlign: "center",
                         }}
                     >
-                        <Text style={{ fontSize: "16px", color: "#1890ff" }}>
+                        <Text style={{ fontSize: "12px", color: "#1890ff" }}>
                             Stone Details
                         </Text>
                     </div>
@@ -277,7 +263,7 @@ const WastageDetails = () => {
                         }}
                     >
                         <StoneDetails />
-                        <div>Total: 10</div>
+                        <div>Stones: 10</div>
                     </div>
                 </Col>
             </Row>
