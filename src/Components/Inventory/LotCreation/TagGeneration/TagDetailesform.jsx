@@ -50,26 +50,27 @@ const TagDetailsForm = () => {
 
         },
         {
-            title: 'G.Wt',
+            title: 'Gross.Wt',
             dataIndex: 'gwt',
             key: 'gwt',
             align: "center"
 
         },
         {
-            title: 'N.Wt',
-            dataIndex: 'nwt',
-            key: 'nwt',
-            align: "center"
-
-        },
-        {
-            title: 'Less Weight',
+            title: 'Less Wt',
             dataIndex: 'lessWeight',
             key: 'lessWeight',
             align: "center"
 
         },
+        {
+            title: 'Net.Wt',
+            dataIndex: 'nwt',
+            key: 'nwt',
+            align: "center"
+
+        },
+      
         {
             title: 'Dealer Name',
             dataIndex: 'dealerName',
