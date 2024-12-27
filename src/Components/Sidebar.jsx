@@ -45,6 +45,8 @@ const menuItems = [
       { key: "2-19", label: <Link to="/state-master">State Master</Link> },
       { key: "2-20", label: <Link to="/diamond-rate-fix">Diamond Rate Fix</Link> },
       { key: "2-21", label: <Link to="/online-mode">Online Mode</Link> },
+      { key: "2-22", label: <Link to="/masters-report">Reports</Link> },
+
     ],
   },
   {

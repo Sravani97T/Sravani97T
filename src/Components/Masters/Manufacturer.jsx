@@ -282,7 +282,7 @@ const Manufacturer = () => {
     return (
         <div style={{  backgroundColor: "#f4f6f9" }}>
             {/* Breadcrumb */}
-            <Row justify="start" style={{ marginBottom: "16px" }}>
+            <Row justify="start" style={{ marginBottom: "10px" }}>
                 <Col>
                     <Breadcrumb style={{ fontSize: "16px", fontWeight: "500", color: "#0C1154" }}>
                         <Breadcrumb.Item>Masters</Breadcrumb.Item>
@@ -332,27 +332,46 @@ const Manufacturer = () => {
                 </Form>
             </Card>
 
-            <div style={{float:"right"}}>
+          
+            <div
+                    className="table-responsive scroll-horizontal"
+                    style={{
+                        overflowY: "auto",
+                        maxHeight: "calc(97vh - 193.33px)",
 
-                    <Input.Search
-                        placeholder="Search records"
-                        style={{ marginBottom: "10px", width: "100%", borderRadius: "4px" }}
-                        onChange={(e) => setSearchText(e.target.value)}
-                    />
-                </div>
+                        overflowX: "auto",
 
+                    }}
+                >
+                      <div style={{ float: "right" }}>
+                <Input.Search
+                    placeholder="Search records"
+                    style={{ marginBottom: "10px", width: "100%", borderRadius: "4px" }}
+                    onChange={(e) => setSearchText(e.target.value)}
+                />
+            </div>
             <Table
                 columns={columns}
                 dataSource={filteredData}
                 rowKey="key"
                 size="small"
-                pagination={{ pageSize: 5 }}
+                pagination={{
+                    pageSize: 5,
+                    showSizeChanger: true,
+                    pageSizeOptions: ["5", "10", "20", "50"],
+                    showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
+                    position: ["topRight"], // Show pagination only at the top right
+                    style: { margin: "5px" } // Add margin to pagination
+                }}
                 style={{
                     background: "#fff",
                     boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
                     borderRadius: "8px",
+                    marginTop:"20px"
+
                 }}
             />
+            </div>
         </div>
     );
 };

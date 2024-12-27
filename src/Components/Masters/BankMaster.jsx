@@ -416,7 +416,7 @@ const BankMaster = () => {
         </Form>
       </Card>
 
-      <Table columns={columns} dataSource={filteredData} pagination={{ pageSize: 5 }} />
+      <Table columns={columns} dataSource={filteredData} pagination={{ pageSize: 5 }} size="small"/>
     </div>
   );
 };

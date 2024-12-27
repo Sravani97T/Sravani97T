@@ -25,6 +25,8 @@ import OnlineMode from "./Components/Masters/OnlineMode";
 import DailyRates from "./Components/Estimation/DailyRates";
 import LotCreation from "./Components/Inventory/LotCreation/LotCreation";
 import TagGeneration from "./Components/Inventory/LotCreation/TagGeneration/TagGeneration";
+import MasterReports from "./Components/Reports/MastersReports";
+import ProductTable from "./Components/Reports/MastersReports";
 const App = () => {
   return (
     <Router>
@@ -58,8 +60,7 @@ const App = () => {
           {/* inventory */}
           <Route path="/lot-creation" element={<LotCreation />} />
           <Route path="/tag-generation" element={<TagGeneration/>} />
-
-
+          <Route path="/masters-report" element={<ProductTable/>} />
 
         </Routes>
       </DashboardLayout>

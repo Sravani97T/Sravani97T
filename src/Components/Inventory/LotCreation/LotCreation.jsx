@@ -34,7 +34,8 @@ const LotCreation = () => {
             message.success("Record updated successfully!");
         } else {
             setData([...data, newRecord]);
-            message.success("Record added successfully!");
+            message.success("Lot added successfully!");
+            fetchData();
         }
         setEditingKey(null);
         setCurrentRecord(null);

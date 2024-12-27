@@ -1,3 +1,5 @@
+/* eslint-disable no-unused-vars */
+/* eslint-disable react/prop-types */
 import React, { useState, useEffect, useCallback } from "react";
 import {
     Form,
@@ -183,7 +185,7 @@ const OnlineMode = () => {
                                 label="Payment Mode"
                                 rules={[{ required: true, message: "Payment Mode is required" }]}
                             >
-                                                               <Input placeholder="Enter Payment Mode" />
+                                <Input placeholder="Enter Payment Mode" />
 
                             </Form.Item>
                         </Col>

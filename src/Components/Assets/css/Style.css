@@ -188,3 +188,132 @@
 .ant-table-wrapper .ant-table.ant-table-small .ant-table-tbody>tr>td{
   padding: 1px 8px !important;
 }
+.ant-upload-wrapper.ant-upload-picture-card-wrapper .ant-upload-list.ant-upload-list-picture-card .ant-upload-list-item
+{
+  height: 66% !important;
+}
+/* table reports */
+
+.filter-container {
+  padding: 16px;
+  background: linear-gradient(135deg, #96bbf6, #4e73df);
+  border-radius: 8px;
+}
+
+.filter-section {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.filter-section .ant-select,
+.filter-section .ant-input-number,
+.filter-section .ant-picker {
+  flex: 1 1 calc(33.333% - 16px);
+  min-width: 120px;
+}
+
+.filter-section .ant-select:hover,
+.filter-section .ant-input-number:hover,
+.filter-section .ant-picker:hover {
+  border-color: #40a9ff;
+}
+
+.custom-table .ant-table-thead > tr > th,
+.custom-table .ant-table-tbody > tr > td {
+  font-size: 12px;
+}
+
+.custom-table .ant-table-thead > tr > th {
+  background-color: #fafafa;
+  font-weight: bold;
+}
+
+/* .custom-table .ant-table-tbody > tr > td {
+  padding: 8px;
+} */
+
+.custom-table .ant-table-tbody > tr:hover > td {
+  background-color: #e6f7ff;
+}
+
+.custom-table .ant-table {
+  border-radius: 8px;
+}
+
+.custom-table .ant-table-wrapper {
+  overflow-x: auto;
+}
+
+.custom-table .ant-table-wrapper::-webkit-scrollbar {
+  height: 2px; /* Decreased height of the scrollbar */
+}
+
+.custom-table .ant-table-wrapper::-webkit-scrollbar-thumb {
+  background-color: #d9d9d9;
+  border-radius: 2px;
+}
+
+.custom-table .ant-table-wrapper::-webkit-scrollbar-thumb:hover {
+  background-color: #bfbfbf;
+}
+.table-responsive {
+  overflow: auto;
+  scrollbar-width: none; /* Hide scrollbar by default for Firefox */
+}
+
+.table-responsive::-webkit-scrollbar {
+  width: 7px;
+  height: 7px; /* Ensure scrollbar is hidden initially */
+  display: none; /* Initially hide the scrollbar */
+}
+
+.table-responsive:hover {
+  scrollbar-width: thin; /* Show thin scrollbar for Firefox on hover */
+  scrollbar-color: #888 #f1f1f1; /* Thumb and track color for Firefox */
+}
+
+.table-responsive:hover::-webkit-scrollbar {
+  display: block; /* Show scrollbar on hover */
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+  background-color: #c4c4c4;
+  border-radius: 10px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+  background-color: #f1f1f1;
+}
+
+.scroll-horizontal {
+  overflow-x: auto;
+  overflow-y: auto;
+  white-space: nowrap;
+  margin: 0 auto;
+  scrollbar-width: none; /* Hide scrollbar by default for Firefox */
+}
+
+.scroll-horizontal::-webkit-scrollbar {
+  height: 4px;
+  display: none; /* Initially hide the scrollbar */
+}
+
+.scroll-horizontal:hover {
+  scrollbar-width: thin; /* Show thin scrollbar for Firefox on hover */
+  scrollbar-color: #d1cdcd #f1f1f1; /* Thumb and track color for Firefox */
+}
+
+.scroll-horizontal:hover::-webkit-scrollbar {
+  display: block; /* Show scrollbar on hover */
+}
+
+.scroll-horizontal::-webkit-scrollbar-thumb {
+  background-color: #888;
+  border-radius: 10px;
+}
+
+.scroll-horizontal::-webkit-scrollbar-track {
+  background-color: #f1f1f1;
+}

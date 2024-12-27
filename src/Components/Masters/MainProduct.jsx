@@ -271,8 +271,6 @@ const MainProduct = () => {
       key: "gst",
       align:'center',
 
-      align:"center"
-
     },
     {
       title: "PGST",
