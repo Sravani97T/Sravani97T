@@ -165,7 +165,7 @@ const ProductTable = () => {
 
         // Apply styles
         worksheet.getRow(1).font = { bold: true };
-        worksheet.eachRow((row, rowNumber) => {
+        worksheet.eachRow((row) => {
             row.eachCell((cell) => {
                 cell.border = {
                     top: { style: 'thin' },
@@ -173,13 +173,6 @@ const ProductTable = () => {
                     bottom: { style: 'thin' },
                     right: { style: 'thin' }
                 };
-                if (rowNumber === 1) {
-                    cell.fill = {
-                        type: 'pattern',
-                        pattern: 'solid',
-                        fgColor: { argb: 'FFFF00' }
-                    };
-                }
             });
         });
 
