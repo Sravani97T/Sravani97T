@@ -8,7 +8,6 @@ import 'jspdf-autotable';
 import { saveAs } from 'file-saver';
 
 const { Option } = Select;
-const { RangePicker } = DatePicker;
 
 const ProductTable = () => {
     const [filters, setFilters] = useState({
@@ -35,7 +34,7 @@ const ProductTable = () => {
         if (printContent) {
             const printWindow = window.open('', '', 'height=600,width=800');
             printWindow.document.write('<html><head><title>Print</title>');
-            printWindow.document.write('<style>table { width: 100%; border-collapse: collapse; } th, td { border: 1px solid black; padding: 8px; text-align: left; } .ant-pagination { display: none; }</style>');
+            printWindow.document.write('<style>table { width: 100%; border-collapse: collapse; font-size: 8px; } th, td { border: 1px solid black; padding: 4px; text-align: left; } .ant-pagination { display: none; }</style>');
             printWindow.document.write('</head><body>');
             printWindow.document.write(printContent.innerHTML);
             printWindow.document.write('</body></html>');
@@ -45,44 +44,45 @@ const ProductTable = () => {
             console.error('Printable content not found');
         }
     };
+    
     const handlePDFWithPreview = () => {
         const doc = new jsPDF('landscape');
         doc.autoTable({
-            head: [['S.No', 'Tag No', 'Product Name', 'PCS', 'Purity', 'Gross Wt', 'Less', 'Net Wt', 'Dia Cts', 'Dia Amt', 'ST Cost', 'Counter Name', 'Brand Name', 'Brand Amt', 'Dealer Name', 'HUID', 'HSN Code', 'Tag Size', 'Date']],
+            head: [['S.No', 'Tag No', 'Product Name', 'PCS', 'Purity', 'Gross Wt', 'Less Wt', 'Net Wt', 'Dia Cts', 'Dia Amt', 'ST Cost', 'Counter Name', 'Brand Name', 'Brand Amt', 'Dealer Name', 'HUID', 'HSN Code', 'Tag Size', 'Date']],
             body: filteredData.map((item, index) => [
                 index + 1,
                 item.TAGNO,
                 item.PRODUCTNAME,
-                item.PIECES,
+                item.PIECES || '',
                 item.PREFIX,
-                item.GWT,
-                item.COST_LESS,
-                item.NWT,
-                item.diacts,
-                item.Diamond_Amount,
-                item.ITEM_TOTAMT,
+                formatWeight(item.GWT),
+                formatWeight(item.COST_LESS),
+                formatWeight(item.NWT),
+                formatValue(item.diacts),
+                formatValue(item.Diamond_Amount),
+                item.ITEM_TOTAMT || '',
                 item.COUNTERNAME,
                 item.BRANDNAME,
-                item.BRANDAMT,
+                item.BRANDAMT || '',
                 item.DEALERNAME,
                 item.HUID,
                 item.HSNCODE,
                 item.TAGSIZE,
                 moment(item.TAGDATE).format('DD/MM/YYYY')
             ]),
-            foot: [['Total', '', '', sums.PCS, '', sums.GWT.toFixed(2), '', sums.NWT.toFixed(2), sums.diacts.toFixed(2), sums.Diamond_Amount.toFixed(2), '', '', '', '', '', '', '', '']],
-            styles: { cellPadding: 2, fontSize: 6, lineColor: [200, 200, 200], lineWidth: 0.1 },
-            headStyles: { fillColor: [255, 255, 255], textColor: [0, 0, 0], fontSize: 6, fontStyle: 'normal' },
+            foot: [['Total', '', '', sums.PCS || '', '', formatWeight(sums.GWT), formatWeight(sums.COST_LESS), formatWeight(sums.NWT), sums.diacts ? sums.diacts.toFixed(2) : '', sums.Diamond_Amount ? sums.Diamond_Amount.toFixed(2) : '', '', '', '', '', '', '', '', '']],
+            styles: { cellPadding: 1, fontSize: 5, lineColor: [200, 200, 200], lineWidth: 0.1, fillColor: [255, 255, 255], textColor: [0, 0, 0] },
+            headStyles: { fillColor: [255, 255, 255], textColor: [0, 0, 0], fontSize: 5, fontStyle: 'normal' },
             footStyles: { fillColor: [255, 255, 255], textColor: [0, 0, 0], lineWidth: 0.1, lineColor: [200, 200, 200], fontStyle: 'normal' },
             margin: { top: 5, bottom: 5 },
             columnStyles: {
                 0: { cellWidth: 11 },
-                1: { cellWidth: 11}, 2: { cellWidth: 30 },      3: { cellWidth: 8 }, 4: { cellWidth: 12 }, 5: { cellWidth: 13 }, 6: { cellWidth: 12 },  
-                   7: { cellWidth: 13 }, 8: { cellWidth: 12 },9: { cellWidth: 13 },
-                10: { cellWidth: 13 },11: { cellWidth: 14 },
-                12: { cellWidth: 24 },13: { cellWidth: 15 },
+                1: { cellWidth: 11 }, 2: { cellWidth: 30 }, 3: { cellWidth: 8 }, 4: { cellWidth: 12 }, 5: { cellWidth: 13 }, 6: { cellWidth: 12 },
+                7: { cellWidth: 13 }, 8: { cellWidth: 12 }, 9: { cellWidth: 13 },
+                10: { cellWidth: 13 }, 11: { cellWidth: 14 },
+                12: { cellWidth: 24 }, 13: { cellWidth: 15 },
                 14: { cellWidth: 25 },
-                15: { cellWidth: 13 },  16: { cellWidth: 13 },  17: { cellWidth: 12 },  18: { cellWidth: 15 }
+                15: { cellWidth: 13 }, 16: { cellWidth: 13 }, 17: { cellWidth: 12 }, 18: { cellWidth: 15 }
             }
         });
         const pdfBlob = doc.output('blob');
@@ -99,12 +99,12 @@ const ProductTable = () => {
             };
         };
     };
+    
     const handleExcel = async () => {
         const ExcelJS = await import('exceljs');
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet('Product Data');
-
-        // Define header row
+    
         worksheet.columns = [
             { header: 'S.No', key: 'sno', width: 5 },
             { header: 'Tag No', key: 'TAGNO', width: 15 },
@@ -112,7 +112,7 @@ const ProductTable = () => {
             { header: 'Pieces', key: 'PIECES', width: 10 },
             { header: 'Purity', key: 'PREFIX', width: 10 },
             { header: 'Gross Wt', key: 'GWT', width: 10 },
-            { header: 'Less', key: 'COST_LESS', width: 10 },
+            { header: 'Less Wt', key: 'COST_LESS', width: 10 },
             { header: 'Net Wt', key: 'NWT', width: 10 },
             { header: 'Dia Cts', key: 'diacts', width: 10 },
             { header: 'Dia Amt', key: 'Diamond_Amount', width: 15 },
@@ -126,24 +126,23 @@ const ProductTable = () => {
             { header: 'Tag Size', key: 'TAGSIZE', width: 10 },
             { header: 'Date', key: 'TAGDATE', width: 15 }
         ];
-
-        // Add data rows
+    
         filteredData.forEach((item, index) => {
             worksheet.addRow({
                 sno: index + 1,
                 TAGNO: item.TAGNO,
                 PRODUCTNAME: item.PRODUCTNAME,
-                PIECES: item.PIECES,
+                PIECES: item.PIECES || '',
                 PREFIX: item.PREFIX,
-                GWT: item.GWT,
-                COST_LESS: item.COST_LESS,
-                NWT: item.NWT,
-                diacts: item.diacts,
-                Diamond_Amount: item.Diamond_Amount,
-                ITEM_TOTAMT: item.ITEM_TOTAMT,
+                GWT: formatWeight(item.GWT),
+                COST_LESS: formatWeight(item.COST_LESS),
+                NWT: formatWeight(item.NWT),
+                diacts: formatValue(item.diacts),
+                Diamond_Amount: formatValue(item.Diamond_Amount),
+                ITEM_TOTAMT: item.ITEM_TOTAMT || '',
                 COUNTERNAME: item.COUNTERNAME,
                 BRANDNAME: item.BRANDNAME,
-                BRANDAMT: item.BRANDAMT,
+                BRANDAMT: item.BRANDAMT || '',
                 DEALERNAME: item.DEALERNAME,
                 HUID: item.HUID,
                 HSNCODE: item.HSNCODE,
@@ -151,20 +150,19 @@ const ProductTable = () => {
                 TAGDATE: moment(item.TAGDATE).format('DD/MM/YYYY')
             });
         });
-
-        // Add footer row for totals
+    
         worksheet.addRow({});
         worksheet.addRow({
             sno: 'Total',
-            PIECES: sums.PCS,
-            GWT: sums.GWT.toFixed(2),
-            NWT: sums.NWT.toFixed(2),
-            diacts: sums.diacts.toFixed(2),
-            Diamond_Amount: sums.Diamond_Amount.toFixed(2)
+            PIECES: sums.PCS || '',
+            GWT: formatWeight(sums.GWT),
+            COST_LESS: formatWeight(sums.COST_LESS),
+            NWT: formatWeight(sums.NWT),
+            diacts: sums.diacts ? sums.diacts.toFixed(2) : '',
+            Diamond_Amount: sums.Diamond_Amount ? sums.Diamond_Amount.toFixed(2) : ''
         });
-
-        // Apply styles
-        worksheet.getRow(1).font = { bold: true };
+    
+        worksheet.getRow(1).font = { bold: true, size: 7 };
         worksheet.eachRow((row, rowNumber) => {
             row.eachCell((cell) => {
                 cell.border = {
@@ -177,13 +175,13 @@ const ProductTable = () => {
                     cell.fill = {
                         type: 'pattern',
                         pattern: 'solid',
-                        fgColor: { argb: 'FFFF00' }
+                        fgColor: { argb: 'D3D3D3' } // Light grey color
                     };
                 }
+                cell.font = { size: 8 };
             });
         });
-
-        // Save the workbook
+    
         const buffer = await workbook.xlsx.writeBuffer();
         saveAs(new Blob([buffer]), 'ProductData.xlsx');
     };
@@ -287,21 +285,31 @@ const ProductTable = () => {
     };
 
     const sums = calculateSums(filteredData);
+ 
+    
+    const formatValue = (value) => {
+        return value ? value.toFixed(2) : '';
+    };
+    
+    const formatWeight = (value) => {
+        return value ? value.toFixed(3) : '';
+    };
+    
     const columns = [
         { title: 'S.No', dataIndex: 'sno', key: 'sno', render: (text, record, index) => index + 1 },
         { title: 'Tag No', dataIndex: 'TAGNO', key: 'TAGNO' },
-        { title: 'Product Name', dataIndex: 'PRODUCTNAME', key: 'PRODUCTNAME', minWidth: 200 }, // Increased minWidth
-        { title: 'Pieces', dataIndex: 'PIECES', align: "center", key: 'PIECES' },
+        { title: 'Product Name', dataIndex: 'PRODUCTNAME', key: 'PRODUCTNAME' },
+        { title: 'Pieces', dataIndex: 'PIECES', align: "right", key: 'PIECES', render: (value) => value || '' },
         { title: 'Purity', dataIndex: 'PREFIX', align: "center", key: 'PREFIX' },
-        { title: 'Gross Wt', dataIndex: 'GWT', align: "right", key: 'GWT' },
-        { title: 'Less', dataIndex: 'COST_LESS', align: "right", key: 'COST_LESS' },
-        { title: 'Net Wt', dataIndex: 'NWT', align: "right", key: 'NWT' },
-        { title: 'Dia Cts', dataIndex: 'diacts', align: "right", key: 'diacts' },
-        { title: 'Dia Amt', dataIndex: 'Diamond_Amount', align: "right", key: 'Diamond_Amount' },
-        { title: 'ST Cost', dataIndex: 'ITEM_TOTAMT', align: "right", key: 'ITEM_TOTAMTT' },
+        { title: 'Gross Wt', dataIndex: 'GWT', align: "right", key: 'GWT', render: formatWeight },
+        { title: 'Less Wt', dataIndex: 'COST_LESS', align: "right", key: 'COST_LESS', render: formatWeight },
+        { title: 'Net Wt', dataIndex: 'NWT', align: "right", key: 'NWT', render: formatWeight },
+        { title: 'Dia Cts', dataIndex: 'diacts', align: "right", key: 'diacts', render: formatValue },
+        { title: 'Dia Amt', dataIndex: 'Diamond_Amount', align: "right", key: 'Diamond_Amount', render: formatValue },
+        { title: 'ST Cost', dataIndex: 'ITEM_TOTAMT', align: "right", key: 'ITEM_TOTAMTT', render: (value) => value || '' },
         { title: 'Counter Name', dataIndex: 'COUNTERNAME', key: 'COUNTERNAME' },
         { title: 'Brand Name', dataIndex: 'BRANDNAME', key: 'BRANDNAME' },
-        { title: 'Brand Amt', dataIndex: 'BRANDAMT', align: "right", key: 'BRANDAMT' },
+        { title: 'Brand Amt', dataIndex: 'BRANDAMT', align: "right", key: 'BRANDAMT', render: (value) => value || '' },
         { title: 'Dealer Name', dataIndex: 'DEALERNAME', key: 'DEALERNAME' },
         { title: 'HUID', dataIndex: 'HUID', key: 'HUID' },
         { title: 'HSN Code', dataIndex: 'HSNCODE', key: 'HSNCODE' },
@@ -479,15 +487,31 @@ const ProductTable = () => {
                 />
             </Col>
             <Col xs={24} sm={12} md={8}>
-                <RangePicker
-                    placeholder={["Tag Date From", "Tag Date To"]}
-                    style={{ width: '100%' }}
-                    format="YYYY-MM-DD"
-                    value={tempFilters.tagDate.length === 2 ? [moment(tempFilters.tagDate[0]), moment(tempFilters.tagDate[1])] : []}
-                    onChange={(dates) => {
-                        const formattedDates = dates ? [dates[0].format('YYYY-MM-DD'), dates[1].format('YYYY-MM-DD')] : [];
-                        handleTempFilterChange('tagDate', formattedDates);
+                <DatePicker
+                    placeholderText="Tag Date From"
+                    selected={tempFilters.tagDate[0] ? new Date(tempFilters.tagDate[0]) : null}
+                    onChange={(date) => {
+                        const newDates = [...tempFilters.tagDate];
+                        newDates[0] = date ? date.toISOString() : null;
+                        handleTempFilterChange('tagDate', newDates);
                     }}
+                    dateFormat="yyyy-MM-dd"
+                    className="ant-input"
+                    style={{ width: '100%' }}
+                />
+            </Col>
+            <Col xs={24} sm={12} md={8}>
+                <DatePicker
+                    placeholderText="Tag Date To"
+                    selected={tempFilters.tagDate[1] ? new Date(tempFilters.tagDate[1]) : null}
+                    onChange={(date) => {
+                        const newDates = [...tempFilters.tagDate];
+                        newDates[1] = date ? date.toISOString() : null;
+                        handleTempFilterChange('tagDate', newDates);
+                    }}
+                    dateFormat="yyyy-MM-dd"
+                    className="ant-input"
+                    style={{ width: '100%' }}
                 />
             </Col>
             <Col xs={24} sm={24} md={24}>
@@ -538,36 +562,38 @@ const ProductTable = () => {
         borderRadius: '8px'
     }}
 >
-    <Table
-        size="small"
-        columns={columns}
-        dataSource={isFilterApplied ? filteredData : []}
-        rowKey="TAGNO"
-        pagination={{
-            pageSize: 5,
-            showSizeChanger: true,
-            pageSizeOptions: ["5", "10", "20", "50"],
-            showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
-            position: ["topRight"],
-            style: { margin: "5px" }
-        }}
-        rowClassName={(record, index) => (index % 2 === 0 ? 'table-row-light' : 'table-row-dark')}
-        summary={() => isFilterApplied && (
-            <Table.Summary fixed >
-                <Table.Summary.Row style={{backgroundColor:"#D5D8DC"}}>
-                    <Table.Summary.Cell index={0} colSpan={3}>Total</Table.Summary.Cell>
-                    <Table.Summary.Cell index={3} align="center">{sums.PCS}</Table.Summary.Cell>
-                    <Table.Summary.Cell index={4}></Table.Summary.Cell>
-                    <Table.Summary.Cell index={5} align="right">{sums.GWT.toFixed(2)}</Table.Summary.Cell>
-                    <Table.Summary.Cell index={6}></Table.Summary.Cell>
-                    <Table.Summary.Cell index={7} align="right">{sums.NWT.toFixed(2)}</Table.Summary.Cell>
-                    <Table.Summary.Cell index={8} align="right">{sums.diacts.toFixed(2)}</Table.Summary.Cell>
-                    <Table.Summary.Cell index={9} align="right">{sums.Diamond_Amount.toFixed(2)}</Table.Summary.Cell>
-                    <Table.Summary.Cell index={10} colSpan={9}></Table.Summary.Cell>
-                </Table.Summary.Row>
-            </Table.Summary>
-        )}
-    />
+<Table
+    size="small"
+    columns={columns}
+    dataSource={isFilterApplied ? filteredData : []}
+    rowKey="TAGNO"
+    pagination={{
+        pageSize: 5,
+        showSizeChanger: true,
+        pageSizeOptions: ["5", "10", "20", "50"],
+        showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
+        position: ["topRight"],
+        style: { margin: "5px" }
+    }}
+    rowClassName={(record, index) => (index % 2 === 0 ? 'table-row-light' : 'table-row-dark')}
+    summary={() => isFilterApplied && (
+        <Table.Summary fixed>
+            <Table.Summary.Row style={{ backgroundColor: "#D5D8DC" }}>
+                <Table.Summary.Cell index={0} colSpan={3}>Total</Table.Summary.Cell>
+                <Table.Summary.Cell index={3} align="right">{sums.PCS || ''}</Table.Summary.Cell>
+                <Table.Summary.Cell index={4}></Table.Summary.Cell>
+                <Table.Summary.Cell index={5} align="right">{formatWeight(sums.GWT)}</Table.Summary.Cell>
+                <Table.Summary.Cell index={6}></Table.Summary.Cell>
+                <Table.Summary.Cell index={7} align="right">{formatWeight(sums.NWT)}</Table.Summary.Cell>
+                <Table.Summary.Cell index={8} align="right">{sums.diacts ? sums.diacts.toFixed(2) : ''}</Table.Summary.Cell>
+                <Table.Summary.Cell index={9} align="right">{sums.Diamond_Amount ? sums.Diamond_Amount.toFixed(2) : ''}</Table.Summary.Cell>
+                <Table.Summary.Cell index={10} colSpan={9}></Table.Summary.Cell>
+                <Table.Summary.Cell index={11} colSpan={9}></Table.Summary.Cell>
+
+            </Table.Summary.Row>
+        </Table.Summary>
+    )}
+/>
 </div>
                 <style jsx>{`
                     .table-row-light {
