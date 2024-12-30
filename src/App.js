@@ -25,8 +25,10 @@ import OnlineMode from "./Components/Masters/OnlineMode";
 import DailyRates from "./Components/Estimation/DailyRates";
 import LotCreation from "./Components/Inventory/LotCreation/LotCreation";
 import TagGeneration from "./Components/Inventory/LotCreation/TagGeneration/TagGeneration";
-import MasterReports from "./Components/Reports/MastersReports";
+import DailyRatesReports from "./Components/Reports/DailyRatesReports";
+import BankStatementReport from "./Components/Reports/BankStatementReport";
 import ProductTable from "./Components/Reports/MastersReports";
+import BillMasterReport from "./Components/Reports/BillMasterReport";
 const App = () => {
   return (
     <Router>
@@ -61,7 +63,13 @@ const App = () => {
           <Route path="/lot-creation" element={<LotCreation />} />
           <Route path="/tag-generation" element={<TagGeneration/>} />
           <Route path="/masters-report" element={<ProductTable/>} />
+          <Route path="/dailyrates-report" element={<DailyRatesReports/>} />
+          <Route path="/bankstatement-report" element={<BankStatementReport/>} />
+          <Route path="/billmaster-report" element={<BillMasterReport/>} />
 
+          
+
+          
         </Routes>
       </DashboardLayout>
     </Router>

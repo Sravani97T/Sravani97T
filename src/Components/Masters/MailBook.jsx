@@ -170,7 +170,7 @@ const MailBook = () => {
   };
   const handleDelete = async (record) => {
     try {
-      const url = `http://www.jewelerp.timeserasoftware.in/api/Master/MasterDealerMasterDelete?CustType=${encodeURIComponent(record.category)}&DealerName=${encodeURIComponent(record.name)}`;
+      const url = `http://www.jewelerp.timeserasoftware.in/api/Master/MasterDealerMasterDelete?CustType=${encodeURIComponent(record.CustType)}&DealerName=${encodeURIComponent(record.Dealername)}`;
 
       const response = await axios.post(url);
 
@@ -211,20 +211,93 @@ const MailBook = () => {
     });
     window.scrollTo(0, 0);
   };
-  
-  // Ensure that the DatePicker values are set correctly as well
-  const handleSave = () => {
+
+  const handleSave = async (values) => {
     const updatedData = form.getFieldsValue();
-    setData((prevData) =>
-      prevData.map((item) =>
-        item.key === editingKey ? { ...item, ...updatedData } : item
-      )
-    );
-    setEditingKey(null);
-    form.resetFields();
-    message.success("Bank details updated successfully!");
+    const category = updatedData.category;
+    const dealerName = updatedData.dealername;
+
+    // Check for duplicate
+    handleBrandNameCheck(category, dealerName);
+
+    if (isBrandNameExist) {
+      message.error("Record already exists!");
+      return;
+    }
+
+    // Prevent multiple submissions
+    if (loading) return;
+
+    setLoading(true);
+
+    try {
+      // Delete the old record
+      const deleteUrl = `http://www.jewelerp.timeserasoftware.in/api/Master/MasterDealerMasterDelete?CustType=${encodeURIComponent(category)}&DealerName=${encodeURIComponent(dealerName)}`;
+      const deleteResponse = await axios.post(deleteUrl);
+
+      if (deleteResponse.data === true) {
+        // Insert the new record
+        const requestBody = {
+          custType: updatedData.category,
+          street: updatedData.address1 || "-",
+          dealername: updatedData.dealername,
+          address1: updatedData.address1,
+          address2: updatedData.address2 || "-",
+          address3: updatedData.address3 || "-",
+          address4: updatedData.address4 || "-",
+          cityName: updatedData.cityName,
+          phonenum: updatedData.phonenum || "-",
+          mobilenum: updatedData.mobilenum || "111111111111",
+          mobileNum2: updatedData.mobileNum2 || "-",
+          card: updatedData.card,
+          cardno: updatedData.cardno,
+          state: updatedData.state,
+          district: updatedData.district || "ffff",
+          pinCode: updatedData.pinCode,
+          education: updatedData.education || "-",
+          eMail: updatedData.eMail,
+          dob: updatedData.dob ? updatedData.dob.format("YYYY-MM-DD") : "",
+          annversary: updatedData.anniversary ? updatedData.anniversary.format("YYYY-MM-DD") : "",
+          gender: updatedData.gender || "female",
+          website: updatedData.website || "https://johndoe.com",
+          fax: updatedData.fax || "11",
+          tinNo: updatedData.tinNo,
+          cst: updatedData.cst || "11",
+          bcouponno: updatedData.bcouponno || "11",
+          acouponno: updatedData.acouponno || "11",
+          entrydate: new Date().toISOString().split("T")[0],
+          statecode: updatedData.statecode || "-",
+          station: updatedData.station || "-",
+          clouD_UPLOAD: true,
+          entryno: updatedData.entryno || "1",
+        };
+
+        const insertUrl = "http://www.jewelerp.timeserasoftware.in/api/Master/MasterDealerMasterInsert";
+        const insertResponse = await axios.post(insertUrl, requestBody);
+
+        if (insertResponse.data) {
+          message.success("Record updated successfully!");
+          setData((prevData) =>
+            prevData.map((item) =>
+              item.key === editingKey ? { ...item, ...updatedData } : item
+            )
+          );
+          setEditingKey(null);
+          form.resetFields();
+          fetchData(); // Refresh data
+        } else {
+          message.error("Failed to insert new record.");
+        }
+      } else {
+        message.error("Failed to delete the old record.");
+      }
+    } catch (error) {
+      console.error("Error updating record:", error);
+      message.error("An error occurred while updating the record.");
+    } finally {
+      setLoading(false); // Reset loading state
+    }
   };
-  
 
 
   const handleCancel = useCallback(() => {
@@ -321,7 +394,6 @@ const MailBook = () => {
                   onChange={(value) => {
                     const uppercaseValue = value.toUpperCase();
                     form.setFieldsValue({ category: uppercaseValue });
-                    const category = form.getFieldValue("category");
                     const dealername = form.getFieldValue("dealername"); // Get dealer name
                     handleBrandNameCheck(uppercaseValue, dealername); // Call API with category and dealer name
                   }}
@@ -352,130 +424,130 @@ const MailBook = () => {
                     const dealername = form.getFieldValue("dealername");
                     const category = form.getFieldValue("category"); // Get category
                     handleBrandNameCheck(category, dealername); // Call API with category and dealer name
-                  }}
-                  onPressEnter={(e) => handleEnterPress(e, refs.mobileNo1Ref)}
-                />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={12}>
-              <Form.Item
-                name="mobilenum"
-                label="Mobile No. 1"
-                rules={[
-                  { required: true, message: "Mobile Number 1 is required" },
-                  {
+                    }}
+                    onPressEnter={(e) => handleEnterPress(e, refs.mobileNo1Ref)}
+                  />
+                  </Form.Item>
+                </Col>
+                <Col xs={24} sm={12}>
+                  <Form.Item
+                  name="mobilenum"
+                  label="Mobile No. 1"
+                  rules={[
+                    { required: true, message: "Mobile Number 1 is required" },
+                    {
                     pattern: /^[0-9]{10}$/,
                     message: "Enter a valid 10-digit mobile number",
-                  },
-                ]}              >
-                <Input
-                  placeholder="Enter Mobile No. 1"
-                  ref={refs.mobileNo1Ref}
-                  type="phone"
-                  maxLength={10}
-                  onPressEnter={(e) => handleEnterPress(e, refs.eMailRef)}
-                />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={12}>
+                    },
+                  ]}              >
+                  <Input
+                    placeholder="Enter Mobile No. 1"
+                    ref={refs.mobileNo1Ref}
+                    type="phone"
+                    maxLength={10}
+                    onPressEnter={(e) => handleEnterPress(e, refs.eMailRef)}
+                  />
+                  </Form.Item>
+                </Col>
+                <Col xs={24} sm={12}>
 
-              <Form.Item
-                name="eMail"
-                label="Email"
-                rules={[
-                  { required: true, message: "Email is required" },
-                  { type: "email", message: "Enter a valid email" },
-                ]}
-              >
-                <Input
-                  placeholder="Enter Email"
-                  ref={refs.eMailRef}
-                  onPressEnter={(e) => handleEnterPress(e, refs.mobileNo2Ref)}
-                />
-              </Form.Item></Col>
+                  <Form.Item
+                  name="eMail"
+                  label="Email"
+                  rules={[
+                    { required: true, message: "Email is required" },
+                    { type: "email", message: "Enter a valid email" },
+                  ]}
+                  >
+                  <Input
+                    placeholder="Enter Email"
+                    ref={refs.eMailRef}
+                    onPressEnter={(e) => handleEnterPress(e, refs.mobileNo2Ref)}
+                  />
+                  </Form.Item></Col>
 
-            <Col xs={24} sm={12}>
-              <Form.Item
-                name="mobileNum2"
-                label="Mobile No. 2"
-                rules={[
-                  {
+                <Col xs={24} sm={12}>
+                  <Form.Item
+                  name="mobileNum2"
+                  label="Mobile No. 2"
+                  rules={[
+                    {
                     pattern: /^[0-9]{10}$/,
                     message: "Enter a valid 10-digit mobile number",
-                  },
-                ]}              >
-                <Input
-                  placeholder="Enter Mobile No. 2"
-                  ref={refs.mobileNo2Ref}
-                  type="phone"
-                  maxLength={10}
-                  onPressEnter={(e) => handleEnterPress(e, refs.cityRef)}
-                />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={12}>
-              <Form.Item
-                name="cityName"
-                label="City"
-                rules={[{ required: true, message: "City is required" }]}
-              >
-                <Select
-                  showSearch
-                  placeholder="Select City"
-                  ref={refs.cityRef}
-                  onKeyDown={(e) =>
+                    },
+                  ]}              >
+                  <Input
+                    placeholder="Enter Mobile No. 2"
+                    ref={refs.mobileNo2Ref}
+                    type="phone"
+                    maxLength={10}
+                    onPressEnter={(e) => handleEnterPress(e, refs.cityRef)}
+                  />
+                  </Form.Item>
+                </Col>
+                <Col xs={24} sm={12}>
+                  <Form.Item
+                  name="cityName"
+                  label="City"
+                  rules={[{ required: true, message: "City is required" }]}
+                  >
+                  <Select
+                    showSearch
+                    placeholder="Select City"
+                    ref={refs.cityRef}
+                    onKeyDown={(e) =>
                     e.key === "Enter" && refs.addressRef.current?.focus()
-                  }
-                >
-                  <Option value="NELLORE">NELLORE</Option>
-                  <Option value="YANAM">YANAM</Option>
-                </Select>
-              </Form.Item>
-            </Col>
-            <Col xs={24}>
-              <Form.Item
-                name="address1"
-                label="Address"
-                rules={[{ required: true, message: "Address is required" }]}
-              >
-                <Input.TextArea rows={1}
-                  placeholder="Enter Address"
-                  ref={refs.addressRef}
-                  onPressEnter={(e) => handleEnterPress(e, refs.stateRef)}
-                />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={12}>
-              <Form.Item
-                name="state"
-                label="State"
-                rules={[{ required: true, message: "State is required" }]}
-              >
+                    }
+                  >
+                    <Option value="NELLORE">NELLORE</Option>
+                    <Option value="YANAM">YANAM</Option>
+                  </Select>
+                  </Form.Item>
+                </Col>
+                <Col xs={24}>
+                  <Form.Item
+                  name="address1"
+                  label="Address"
+                  rules={[{ required: true, message: "Address is required" }]}
+                  >
+                  <Input.TextArea rows={1}
+                    placeholder="Enter Address"
+                    ref={refs.addressRef}
+                    onPressEnter={(e) => handleEnterPress(e, refs.stateRef)}
+                  />
+                  </Form.Item>
+                </Col>
+                <Col xs={24} sm={12}>
+                  <Form.Item
+                  name="state"
+                  label="State"
+                  rules={[{ required: true, message: "State is required" }]}
+                  >
 
-                <Select
-                  showSearch
-                  placeholder="Select State"
-                  ref={refs.stateRef}
-                  onKeyDown={(e) =>
+                  <Select
+                    showSearch
+                    placeholder="Select State"
+                    ref={refs.stateRef}
+                    onKeyDown={(e) =>
                     e.key === "Enter" && refs.stateCodeRef.current?.focus()
-                  }
-                >
-                  <Option value="AP">AP</Option>
-                  <Option value="TS">TS</Option>
-                </Select>
-              </Form.Item>
-            </Col>
+                    }
+                  >
+                    <Option value="AP">AP</Option>
+                    <Option value="TS">TS</Option>
+                  </Select>
+                  </Form.Item>
+                </Col>
 
-            <Col xs={24} sm={6}>
-              <Form.Item
-                name="statecode"
-                label="State Code"
-                rules={[{ required: true, message: "State Code is required" }]}
-              >
-                <Input
-                  placeholder="Enter State Code"
-                  ref={refs.stateCodeRef}
-                  style={{ width: "120px" }} // Smaller input box for state code
+                <Col xs={24} sm={6}>
+                  <Form.Item
+                  name="statecode"
+                  label="State Code"
+                  rules={[{ required: true, message: "State Code is required" }]}
+                  >
+                  <Input
+                    placeholder="Enter State Code"
+                    ref={refs.stateCodeRef}
+                    style={{ width: "120px" }} // Smaller input box for state code
                   onPressEnter={(e) => handleEnterPress(e, refs.pinCodeRef)}
                 />
               </Form.Item>

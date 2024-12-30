@@ -73,7 +73,11 @@ const menuItems = [
     label: "Accounts",
     children: [
       { key: "5-1", label: <Link to="/accounts-overview">Overview</Link> },
-      { key: "5-2", label: <Link to="/accounts-reports">Reports</Link> },
+      { key: "5-2", label: <Link to="/dailyrates-report">Reports</Link> },
+      { key: "5-3", label: <Link to="/bankstatement-report">Bank Report</Link> },
+      { key: "5-4", label: <Link to="/billmaster-report">Bill Report</Link> },
+
+
     ],
   },
   {
