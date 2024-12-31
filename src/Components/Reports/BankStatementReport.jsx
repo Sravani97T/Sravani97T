@@ -43,27 +43,36 @@ const BankStatementReport = () => {
         const doc = new jsPDF('landscape');
         doc.autoTable({
             head: [['S.No', 'VNO', 'Date', 'Trans Type', 'Pay Mode', 'Particulars', 'Party Name', 'Debit', 'Credit', 'Closing Balance']],
-            body: filteredData.map((item, index) => [
-                index + 1,
-                item.RecNo,
-                moment(item.DEPDATE).format('DD/MM/YYYY'),
-                item.TRANSTYPE,
-                item.mode,
-                item.DESCR,
-                item.CustName,
-                item.Debit ? item.Debit.toFixed(2) : '',
-                item.Credit ? item.Credit.toFixed(2) : '',
-                item.currbal ? item.currbal.toFixed(2) : ''
-            ]),
+            body: [
+                ...filteredData.map((item, index) => [
+                    index + 1,
+                    item.RecNo,
+                    moment(item.DEPDATE).format('DD/MM/YYYY'),
+                    item.TRANSTYPE,
+                    item.mode,
+                    item.DESCR,
+                    item.CustName,
+                    item.Debit ? item.Debit.toFixed(2) : '',
+                    item.Credit ? item.Credit.toFixed(2) : '',
+                    item.currbal ? item.currbal.toFixed(2) : ''
+                ]),
+                [
+                    'Total',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    sums.Debit ? sums.Debit.toFixed(2) : '',
+                    sums.Credit ? sums.Credit.toFixed(2) : '',
+                    sums.currbal ? sums.currbal.toFixed(2) : ''
+                ]
+            ],
             styles: { cellPadding: 1, fontSize: 5, lineColor: [200, 200, 200], lineWidth: 0.1, fillColor: [255, 255, 255], textColor: [0, 0, 0] },
             headStyles: { fillColor: [255, 255, 255], textColor: [0, 0, 0], fontSize: 5, fontStyle: 'normal' },
             footStyles: { fillColor: [255, 255, 255], textColor: [0, 0, 0], lineWidth: 0.1, lineColor: [200, 200, 200], fontStyle: 'normal' },
-            margin: { top: 5, bottom: 5 },
-            columnStyles: {
-                0: { cellWidth: 11 },
-                1: { cellWidth: 11 }, 2: { cellWidth: 30 }, 3: { cellWidth: 8 }, 4: { cellWidth: 12 }, 5: { cellWidth: 13 }, 6: { cellWidth: 12 },
-                7: { cellWidth: 13 }, 8: { cellWidth: 12 }, 9: { cellWidth: 13 }
-            }
+            margin: { top: 5, bottom: 5 }
         });
         const pdfBlob = doc.output('blob');
         const pdfUrl = URL.createObjectURL(pdfBlob);

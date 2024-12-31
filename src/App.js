@@ -29,6 +29,16 @@ import DailyRatesReports from "./Components/Reports/DailyRatesReports";
 import BankStatementReport from "./Components/Reports/BankStatementReport";
 import ProductTable from "./Components/Reports/MastersReports";
 import BillMasterReport from "./Components/Reports/BillMasterReport";
+import StockBalanceReport from "./Components/Reports/StockBalenceReport";
+import StockSummryReport from "./Components/Reports/StockSummryReport";
+import ProductCategorySummary from "./Components/Reports/ProductCategorySummry";
+import CategoryNetSummary from "./Components/Reports/CategoryNetSummery";
+import DealerWiseStockSummry from "./Components/Reports/DealerWiseStockSummry";
+import DealerWiseStockDetailes from "./Components/Reports/DealerWiseStockDetailes";
+import PrifixNetSummry from "./Components/Reports/PrifixNetSummry";
+import CounterNetSummry from "./Components/Reports/CounterNetSummry";
+import DealerNetSummry from "./Components/Reports/DealerNetSummry";
+import DiamondStockDetails from "./Components/Reports/DaimondStockDetailes";
 const App = () => {
   return (
     <Router>
@@ -66,6 +76,19 @@ const App = () => {
           <Route path="/dailyrates-report" element={<DailyRatesReports/>} />
           <Route path="/bankstatement-report" element={<BankStatementReport/>} />
           <Route path="/billmaster-report" element={<BillMasterReport/>} />
+          <Route path="/stockBalence-report" element={<StockBalanceReport/>} />
+          <Route path="/stocksummry-report" element={<StockSummryReport/>} />
+          <Route path="/productcategory-report" element={<ProductCategorySummary/>} />
+          <Route path="/categorynet-report" element={<CategoryNetSummary/>} />
+
+          <Route path="/DealerwisestockSummry-report" element={<DealerWiseStockSummry/>} />
+          <Route path="/Dealerwisestockdetailes-report" element={<DealerWiseStockDetailes/>} />
+
+          <Route path="/prifixnetsummry-report" element={<PrifixNetSummry/>} />
+          <Route path="/counternetsummry-report" element={<CounterNetSummry/>} />
+          <Route path="/dealernetsummry-report" element={<DealerNetSummry/>} />
+          <Route path="/daimondstockdetailes-report" element={<DiamondStockDetails/>} />
+
 
           
 

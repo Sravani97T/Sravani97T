@@ -76,6 +76,19 @@ const menuItems = [
       { key: "5-2", label: <Link to="/dailyrates-report">Reports</Link> },
       { key: "5-3", label: <Link to="/bankstatement-report">Bank Report</Link> },
       { key: "5-4", label: <Link to="/billmaster-report">Bill Report</Link> },
+      { key: "5-5", label: <Link to="/stockBalence-report">Stock Balence</Link> },
+      { key: "5-6", label: <Link to="/stocksummry-report">Stock Summry</Link> },
+      { key: "5-7", label: <Link to="/productcategory-report">Product Category</Link> },
+
+      { key: "5-8", label: <Link to="/categorynet-report">Category Net</Link> },
+
+      { key: "5-9", label: <Link to="/DealerwisestockSummry-report">Dealer Summry</Link> },
+
+      { key: "5-10", label: <Link to="/Dealerwisestockdetailes-report">Dealer Detailes</Link> },
+      { key: "5-11", label: <Link to="/prifixnetsummry-report">Prifix Summry</Link> },
+      { key: "5-12", label: <Link to="/counternetsummry-report">Counter Summry</Link> },
+      { key: "5-13", label: <Link to="/dealernetsummry-report">Dealer Summry</Link> },
+      { key: "5-14", label: <Link to="/daimondstockdetailes-report">Daimond detailes</Link> },
 
 
     ],

@@ -52,13 +52,13 @@ const BillMasterReport = () => {
                 item.TotPieces,
                 formatValue(item.TotGwt),
                 formatValue(item.TotNwt),
-                formatValue(item.TotAmt),
-                formatValue(item.DisAmt),
-                formatValue(item.BillAmt),
-                formatValue(item.CGST),
-                formatValue(item.SGST),
-                formatValue(item.IGST),
-                formatValue(item.NetAmt)
+                formatValue1(item.TotAmt),
+                formatValue1(item.DisAmt),
+                formatValue1(item.BillAmt),
+                formatValue1(item.CGST),
+                formatValue1(item.SGST),
+                formatValue1(item.IGST),
+                formatValue1(item.NetAmt)
             ]),
             styles: { cellPadding: 1, fontSize: 5, lineColor: [200, 200, 200], lineWidth: 0.1, fillColor: [255, 255, 255], textColor: [0, 0, 0] },
             headStyles: { fillColor: [255, 255, 255], textColor: [0, 0, 0], fontSize: 5, fontStyle: 'normal' },
@@ -130,13 +130,13 @@ const BillMasterReport = () => {
                 TotPieces: item.TotPieces,
                 TotGwt: formatValue(item.TotGwt),
                 TotNwt: formatValue(item.TotNwt),
-                TotAmt: formatValue(item.TotAmt),
-                DisAmt: formatValue(item.DisAmt),
-                BillAmt: formatValue(item.BillAmt),
-                CGST: formatValue(item.CGST),
-                SGST: formatValue(item.SGST),
-                IGST: formatValue(item.IGST),
-                NetAmt: formatValue(item.NetAmt)
+                TotAmt: formatValue1(item.TotAmt),
+                DisAmt: formatValue1(item.DisAmt),
+                BillAmt: formatValue1(item.BillAmt),
+                CGST: formatValue1(item.CGST),
+                SGST: formatValue1(item.SGST),
+                IGST: formatValue1(item.IGST),
+                NetAmt: formatValue1(item.NetAmt)
             });
         });
 
@@ -224,6 +224,7 @@ const BillMasterReport = () => {
         setFilters(clearedFilters);
     };
     const formatValue = (value) => value.toFixed(3);
+    const formatValue1 = (value) => value.toFixed(2);
 
     const columns = [
         { title: 'S.No', dataIndex: 'sno', key: 'sno', render: (text, record, index) => index + 1 },
@@ -234,13 +235,13 @@ const BillMasterReport = () => {
         { title: 'Pieces', dataIndex: 'TotPieces', key: 'TotPieces', align: 'right' },
         { title: 'Gross WT', dataIndex: 'TotGwt', key: 'TotGwt', align: 'right', render: formatValue },
         { title: 'Net WT', dataIndex: 'TotNwt', key: 'TotNwt', align: 'right', render: formatValue },
-        { title: 'Total Amount', dataIndex: 'TotAmt', key: 'TotAmt', align: 'right', render: formatValue },
-        { title: 'Discount', dataIndex: 'DisAmt', key: 'DisAmt', align: 'right', render: formatValue },
-        { title: 'Gross Amount', dataIndex: 'BillAmt', key: 'BillAmt', align: 'right', render: formatValue },
-        { title: 'CGST', dataIndex: 'CGST', key: 'CGST', align: 'right', render: formatValue },
-        { title: 'SGST', dataIndex: 'SGST', key: 'SGST', align: 'right', render: formatValue },
-        { title: 'IGST', dataIndex: 'IGST', key: 'IGST', align: 'right', render: formatValue },
-        { title: 'Net Amount', dataIndex: 'NetAmt', key: 'NetAmt', align: 'right', render: formatValue }
+        { title: 'Total Amount', dataIndex: 'TotAmt', key: 'TotAmt', align: 'right', render: formatValue1 },
+        { title: 'Discount', dataIndex: 'DisAmt', key: 'DisAmt', align: 'right', render: formatValue1 },
+        { title: 'Gross Amount', dataIndex: 'BillAmt', key: 'BillAmt', align: 'right', render: formatValue1 },
+        { title: 'CGST', dataIndex: 'CGST', key: 'CGST', align: 'right', render: formatValue1 },
+        { title: 'SGST', dataIndex: 'SGST', key: 'SGST', align: 'right', render: formatValue1 },
+        { title: 'IGST', dataIndex: 'IGST', key: 'IGST', align: 'right', render: formatValue1 },
+        { title: 'Net Amount', dataIndex: 'NetAmt', key: 'NetAmt', align: 'right', render: formatValue1 }
     ];
 
     const uniqueJewelTypes = [...new Set(data.map(item => item.JewelType))];
@@ -415,13 +416,13 @@ const BillMasterReport = () => {
                                 <Table.Summary.Cell index={1} align="right">{totals.TotPieces}</Table.Summary.Cell>
                                 <Table.Summary.Cell index={2} align="right">{formatValue(totals.TotGwt)}</Table.Summary.Cell>
                                 <Table.Summary.Cell index={3} align="right">{formatValue(totals.TotNwt)}</Table.Summary.Cell>
-                                <Table.Summary.Cell index={4} align="right">{formatValue(totals.TotAmt)}</Table.Summary.Cell>
-                                <Table.Summary.Cell index={5} align="right">{formatValue(totals.DisAmt)}</Table.Summary.Cell>
-                                <Table.Summary.Cell index={6} align="right">{formatValue(totals.BillAmt)}</Table.Summary.Cell>
-                                <Table.Summary.Cell index={7} align="right">{formatValue(totals.CGST)}</Table.Summary.Cell>
-                                <Table.Summary.Cell index={8} align="right">{formatValue(totals.SGST)}</Table.Summary.Cell>
-                                <Table.Summary.Cell index={9} align="right">{formatValue(totals.IGST)}</Table.Summary.Cell>
-                                <Table.Summary.Cell index={10} align="right">{formatValue(totals.NetAmt)}</Table.Summary.Cell>
+                                <Table.Summary.Cell index={4} align="right">{formatValue1(totals.TotAmt)}</Table.Summary.Cell>
+                                <Table.Summary.Cell index={5} align="right">{formatValue1(totals.DisAmt)}</Table.Summary.Cell>
+                                <Table.Summary.Cell index={6} align="right">{formatValue1(totals.BillAmt)}</Table.Summary.Cell>
+                                <Table.Summary.Cell index={7} align="right">{formatValue1(totals.CGST)}</Table.Summary.Cell>
+                                <Table.Summary.Cell index={8} align="right">{formatValue1(totals.SGST)}</Table.Summary.Cell>
+                                <Table.Summary.Cell index={9} align="right">{formatValue1(totals.IGST)}</Table.Summary.Cell>
+                                <Table.Summary.Cell index={10} align="right">{formatValue1(totals.NetAmt)}</Table.Summary.Cell>
                             </Table.Summary.Row>
                         )}
                     />
