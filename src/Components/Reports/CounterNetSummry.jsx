@@ -34,17 +34,13 @@ const CounterNetSummry = () => {
             });
     }, [mName]);  // Re-fetch when MNAME is changed
 
-    const formatValue = (value) => {
-        return value ? value.toFixed(3) : '0.000';  // Format to 3 decimal places
-    };
-
     const columns = [
         { title: 'Counter Name', dataIndex: 'CounterName', key: 'CounterName' },
         { title: 'Pieces', align: "right", dataIndex: 'Pieces', key: 'Pieces' },
-        { title: 'Gross Wt', align: "right", dataIndex: 'Gwt', key: 'Gwt', render: formatValue },
-        { title: 'Net Wt', align: "right", dataIndex: 'Nwt', key: 'Nwt', render: formatValue },
-        { title: 'Diamond Counts', align: "right", dataIndex: 'DIACTS', key: 'DIACTS', render: formatValue },
-        { title: 'Diamond Amount', align: "right", dataIndex: 'DIAAMT', key: 'DIAAMT', render: formatValue },
+        { title: 'Gross Wt', align: "right", dataIndex: 'Gwt', key: 'Gwt', render: value => Number(value).toFixed(3) },
+        { title: 'Net Wt', align: "right", dataIndex: 'Nwt', key: 'Nwt', render: value => Number(value).toFixed(3) },
+        { title: 'Diamond Counts', align: "right", dataIndex: 'DIACTS', key: 'DIACTS', render: value => Number(value).toFixed(2) },
+        { title: 'Diamond Amount', align: "right", dataIndex: 'DIAAMT', key: 'DIAAMT', render: value => Number(value).toFixed(2) },
     ];
 
     const getTotals = () => {
@@ -54,11 +50,11 @@ const CounterNetSummry = () => {
         const totalDiaCts = filteredData.reduce((sum, item) => sum + item.DIACTS, 0);
         const totalDiaAmt = filteredData.reduce((sum, item) => sum + item.DIAAMT, 0);
         return {
-            totalNwt: formatValue(totalNwt),
+            totalNwt: Number(totalNwt).toFixed(3),
             totalPieces: totalPieces,
-            totalGwt: formatValue(totalGwt),
-            totalDiaCts: formatValue(totalDiaCts),
-            totalDiaAmt: formatValue(totalDiaAmt),
+            totalGwt: Number(totalGwt).toFixed(3),
+            totalDiaCts: Number(totalDiaCts).toFixed(2),
+            totalDiaAmt: Number(totalDiaAmt).toFixed(2),
         };
     };
 
@@ -67,10 +63,10 @@ const CounterNetSummry = () => {
     const formattedData = [
         ...filteredData.map(item => ({
             ...item,
-            Gwt: formatValue(item.Gwt),
-            Nwt: formatValue(item.Nwt),
-            DIACTS: formatValue(item.DIACTS),
-            DIAAMT: formatValue(item.DIAAMT),
+            Gwt: Number(item.Gwt).toFixed(3),
+            Nwt: Number(item.Nwt).toFixed(3),
+            DIACTS: Number(item.DIACTS).toFixed(2),
+            DIAAMT: Number(item.DIAAMT).toFixed(2),
         })),
         {
             CounterName: 'Total',

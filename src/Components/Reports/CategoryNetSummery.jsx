@@ -34,15 +34,12 @@ const CategoryNetSummary = () => {
             });
     }, [mName]);  // Re-fetch when MNAME is changed
 
-    const formatValue = (value) => {
-        return value ? value.toFixed(3) : '0.000';  // Format to 3 decimal places
-    };
-
     const columns = [
+        { title: 'S.No', dataIndex: 'sno', key: 'sno' },
         { title: 'Category', dataIndex: 'CATEGORYNAME', key: 'CATEGORYNAME' },
         { title: 'Pieces', align: "right", dataIndex: 'Pieces', key: 'Pieces' },
-        { title: 'Net Wt', align: "right", dataIndex: 'Nwt', key: 'Nwt', render: formatValue },
-        { title: 'Gross Wt', align: "right", dataIndex: 'Gwt', key: 'Gwt', render: formatValue },
+        { title: 'Net Wt', align: "right", dataIndex: 'Nwt', key: 'Nwt', render: value => Number(value).toFixed(3) },
+        { title: 'Gross Wt', align: "right", dataIndex: 'Gwt', key: 'Gwt', render: value => Number(value).toFixed(3) },
     ];
 
     const getTotals = () => {
@@ -50,27 +47,20 @@ const CategoryNetSummary = () => {
         const totalPCS = filteredData.reduce((sum, item) => sum + item.Pieces, 0);
         const totalGWT = filteredData.reduce((sum, item) => sum + item.Gwt, 0);
         return {
-            totalNWT: formatValue(totalNWT),
+            totalNWT: Number(totalNWT).toFixed(3),
             totalPCS: totalPCS,
-            totalGWT: formatValue(totalGWT),
+            totalGWT: Number(totalGWT).toFixed(3),
         };
     };
 
     const { totalNWT, totalPCS, totalGWT } = getTotals();
 
-    const formattedData = [
-        ...filteredData.map(item => ({
-            ...item,
-            Gwt: formatValue(item.Gwt),
-            Nwt: formatValue(item.Nwt),
-        })),
-        {
-            CATEGORYNAME: 'Total',
-            Pieces: totalPCS,
-            Gwt: totalGWT,
-            Nwt: totalNWT,
-        }
-    ];
+    const formattedData = filteredData.map((item, index) => ({
+        ...item,
+        sno: index + 1,
+        Gwt: Number(item.Gwt).toFixed(3),
+        Nwt: Number(item.Nwt).toFixed(3),
+    }));
 
     return (
         <>
@@ -104,7 +94,7 @@ const CategoryNetSummary = () => {
                 <Table
                     size="small"
                     columns={columns}
-                    dataSource={filteredData}
+                    dataSource={formattedData}
                     rowKey="CATEGORYNAME"
                     pagination={{
                         pageSize: 5,
@@ -116,7 +106,7 @@ const CategoryNetSummary = () => {
                     rowClassName="table-row"
                     summary={() => (
                         <Table.Summary.Row>
-                            <Table.Summary.Cell colSpan={1}>Total</Table.Summary.Cell>
+                            <Table.Summary.Cell colSpan={2}>Total</Table.Summary.Cell>
                             <Table.Summary.Cell align='right'>{totalPCS}</Table.Summary.Cell>
                             <Table.Summary.Cell align='right'>{totalGWT}</Table.Summary.Cell>
                             <Table.Summary.Cell align='right'>{totalNWT}</Table.Summary.Cell>

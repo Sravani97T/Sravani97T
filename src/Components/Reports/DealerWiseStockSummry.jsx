@@ -45,18 +45,15 @@ const DealerWiseStockSummary = () => {
         }
     };
 
-    const formatValue = (value, decimals = 3) => {
-        return value ? value.toFixed(decimals) : '0.000';  // Format to specified
-    };
-
     const columns = [
+        { title: 'S.No', dataIndex: 'sno', key: 'sno' },
         { title: 'Dealer Name', dataIndex: 'DEALERNAME', key: 'DEALERNAME' },
         { title: 'Product Name', dataIndex: 'PRODUCTNAME', key: 'PRODUCTNAME' },
         { title: 'Pieces', dataIndex: 'PIECES', key: 'PIECES', align: 'right' },
-        { title: 'Gross Weight', dataIndex: 'GWT', key: 'GWT', align: 'right', render: formatValue },
-        { title: 'Net Weight', dataIndex: 'NWT', key: 'NWT', align: 'right', render: formatValue },
-        { title: 'Diamond Carats', dataIndex: 'DIACTS', key: 'DIACTS', align: 'right', render: formatValue },
-        { title: 'Diamond Amount', dataIndex: 'DIAAMT', key: 'DIAAMT', align: 'right', render: formatValue },
+        { title: 'Gross Weight', dataIndex: 'GWT', key: 'GWT', align: 'right', render: value => Number(value).toFixed(3) },
+        { title: 'Net Weight', dataIndex: 'NWT', key: 'NWT', align: 'right', render: value => Number(value).toFixed(3) },
+        { title: 'Diamond Carats', dataIndex: 'DIACTS', key: 'DIACTS', align: 'right', render: value => Number(value).toFixed(2) },
+        { title: 'Diamond Amount', dataIndex: 'DIAAMT', key: 'DIAAMT', align: 'right', render: value => Number(value).toFixed(2) },
     ];
 
     const getTotals = () => {
@@ -68,32 +65,23 @@ const DealerWiseStockSummary = () => {
 
         return {
             totalPieces: totalPieces,
-            totalGWT: formatValue(totalGWT),
-            totalNWT: formatValue(totalNWT),
-            totalDIACTS: formatValue(totalDIACTS),
-            totalDIAAMT: formatValue(totalDIAAMT),
+            totalGWT: Number(totalGWT).toFixed(3),
+            totalNWT: Number(totalNWT).toFixed(3),
+            totalDIACTS: Number(totalDIACTS).toFixed(2),
+            totalDIAAMT: Number(totalDIAAMT).toFixed(2),
         };
     };
 
     const { totalPieces, totalGWT, totalNWT, totalDIACTS, totalDIAAMT } = getTotals();
 
-    const formattedData = [
-        ...filteredData.map(item => ({
-            ...item,
-            GWT: formatValue(item.GWT),
-            NWT: formatValue(item.NWT),
-            DIACTS: formatValue(item.DIACTS),
-            DIAAMT: formatValue(item.DIAAMT),
-        })),
-        {
-            DEALERNAME: 'Total',
-            PIECES: totalPieces,
-            GWT: totalGWT,
-            NWT: totalNWT,
-            DIACTS: totalDIACTS,
-            DIAAMT: totalDIAAMT,
-        }
-    ];
+    const formattedData = filteredData.map((item, index) => ({
+        ...item,
+        sno: index + 1,
+        GWT: Number(item.GWT).toFixed(3),
+        NWT: Number(item.NWT).toFixed(3),
+        DIACTS: Number(item.DIACTS).toFixed(2),
+        DIAAMT: Number(item.DIAAMT).toFixed(2),
+    }));
 
     return (
         <>
@@ -128,7 +116,7 @@ const DealerWiseStockSummary = () => {
                 <Table
                     size="small"
                     columns={columns}
-                    dataSource={filteredData}
+                    dataSource={formattedData}
                     rowKey="PRODUCTNAME"
                     pagination={{
                         pageSize: 5,
@@ -140,7 +128,7 @@ const DealerWiseStockSummary = () => {
                     rowClassName="table-row"
                     summary={() => (
                         <Table.Summary.Row>
-                            <Table.Summary.Cell colSpan={2}>Total</Table.Summary.Cell>
+                            <Table.Summary.Cell colSpan={3}>Total</Table.Summary.Cell>
                             <Table.Summary.Cell align='right'>{totalPieces}</Table.Summary.Cell>
                             <Table.Summary.Cell align='right'>{totalGWT}</Table.Summary.Cell>
                             <Table.Summary.Cell align='right'>{totalNWT}</Table.Summary.Cell>

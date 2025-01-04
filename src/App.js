@@ -39,6 +39,16 @@ import PrifixNetSummry from "./Components/Reports/PrifixNetSummry";
 import CounterNetSummry from "./Components/Reports/CounterNetSummry";
 import DealerNetSummry from "./Components/Reports/DealerNetSummry";
 import DiamondStockDetails from "./Components/Reports/DaimondStockDetailes";
+import CashBookReports from "./Components/POSReports/CashBookReports";
+
+import SalesReportsMain from "./Components/POSReports/SalesReportsMain";
+import ProductWiseSaleDetailes from "./Components/POSReports/ProductWiseSaleDetailes";
+import NewOrnamentReport from "./Components/POSReports/NewOrnamentReport";
+import GS11Reports from "./Components/POSReports/GS11";
+import GS12 from "./Components/POSReports/GS12";
+import OutstandingCustomers from "./Components/POSReports/OutstandingCustmers";
+import OutstandingDealers from "./Components/POSReports/OutstandingDealer";
+import OldGoldBookOpening from "./Components/POSReports/OldGoldbookOpening";
 const App = () => {
   return (
     <Router>
@@ -89,8 +99,20 @@ const App = () => {
           <Route path="/dealernetsummry-report" element={<DealerNetSummry/>} />
           <Route path="/daimondstockdetailes-report" element={<DiamondStockDetails/>} />
 
+          <Route path="/cash-book" element={<CashBookReports/>} />
+          <Route path="/sale-reports" element={<SalesReportsMain/>} />
+          <Route path="/product-wise-detailes" element={<ProductWiseSaleDetailes/>} />
+
+          <Route path="/new-ornament-purchase-register" element={<NewOrnamentReport/>} />
+
+          <Route path="/gs11-report" element={<GS11Reports/>} />
+          <Route path="/gs12-report" element={<GS12/>} />
+          <Route path="/outstandingcustomers-report" element={<OutstandingCustomers/>} />
+          <Route path="/outstandingdealers-report" element={<OutstandingDealers/>} />
+          <Route path="/oldgoldbook-report" element={<OldGoldBookOpening/>} />
 
           
+
 
           
         </Routes>

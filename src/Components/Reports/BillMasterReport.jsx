@@ -177,7 +177,7 @@ const BillMasterReport = () => {
     useEffect(() => {
         let filtered = data;
         if (filters.billNo) {
-            filtered = filtered.filter(item => item.BillNo === filters.billNo);
+            filtered = filtered.filter(item => item.BillNo.toString().includes(filters.billNo));
         }
         if (filters.jewelType) {
             filtered = filtered.filter(item => item.JewelType === filters.jewelType);
@@ -227,7 +227,7 @@ const BillMasterReport = () => {
     const formatValue1 = (value) => value.toFixed(2);
 
     const columns = [
-        { title: 'S.No', dataIndex: 'sno', key: 'sno', render: (text, record, index) => index + 1 },
+        { title: 'S.No', dataIndex: 'sno', key: 'sno', render: (_, __, index) => index + 1 },
         { title: 'Bill Date', dataIndex: 'BillDate', key: 'BillDate', render: (text) => moment(text).format('DD/MM/YYYY') },
         { title: 'Jewel Type', dataIndex: 'JewelType', key: 'JewelType' },
         { title: 'Bill No', dataIndex: 'BillNo', key: 'BillNo' },

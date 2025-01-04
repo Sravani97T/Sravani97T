@@ -317,3 +317,50 @@
 .scroll-horizontal::-webkit-scrollbar-track {
   background-color: #f1f1f1;
 }
+/* datepickers */
+.date-picker {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid lightgrey;
+  border-radius: 4px;
+  font-size: 14px;
+  color: #0C1154;
+}
+
+.date-picker:focus {
+  border-color: #0C1154;
+  box-shadow: 0 0 5px rgba(12, 17, 84, 0.5);
+}
+
+.date-picker-container {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.date-picker-label {
+  font-weight: 600;
+  color: #0C1154;
+}
+.react-datepicker__month {
+  margin: 0 !important;
+}
+/* sidebar colur */
+.ant-menu-light .ant-menu-item {
+  color: #c1c1c1 !important;
+
+}
+.ant-menu-item-selected {
+  background-color: #52BD91 !important;
+}
+.icon-circle {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: #f0f0f0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+/* dashboard */
+

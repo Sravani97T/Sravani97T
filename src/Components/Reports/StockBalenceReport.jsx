@@ -18,15 +18,12 @@ const StockBalanceReport = () => {
             });
     }, []);
 
-    const formatValue = (value) => {
-        return value ? value.toFixed(3) : '0.000';  // Format to 3 decimal places
-    };
-
     const columns = [
+        { title: 'S.No', dataIndex: 'sno', key: 'sno' },
         { title: 'Material Name', dataIndex: 'MNAME', key: 'MNAME' },
         { title: 'Pieces', dataIndex: 'PCS', key: 'PCS', align: "right" },
-        { title: 'Gross Wt', dataIndex: 'GWT', key: 'GWT', align: "right", render: formatValue },
-        { title: 'Net Wt', dataIndex: 'NWT', key: 'NWT', align: "right", render: formatValue },
+        { title: 'Gross Wt', dataIndex: 'GWT', key: 'GWT', align: "right", render: value => Number(value).toFixed(3) },
+        { title: 'Net Wt', dataIndex: 'NWT', key: 'NWT', align: "right", render: value => Number(value).toFixed(3) },
     ];
 
     const getTotals = () => {
@@ -36,26 +33,19 @@ const StockBalanceReport = () => {
 
         return {
             totalPCS: totalPCS,
-            totalGWT: formatValue(totalGWT),
-            totalNWT: formatValue(totalNWT),
+            totalGWT: Number(totalGWT).toFixed(3),
+            totalNWT: Number(totalNWT).toFixed(3),
         };
     };
 
     const { totalNWT, totalPCS, totalGWT } = getTotals();
 
-    const formattedData = [
-        ...filteredData.map(item => ({
-            ...item,
-            GWT: formatValue(item.GWT),
-            NWT: formatValue(item.NWT),
-        })),
-        {
-            MNAME: 'Total',
-            PCS: totalPCS,
-            GWT: totalGWT,
-            NWT: totalNWT,
-        }
-    ];
+    const formattedData = filteredData.map((item, index) => ({
+        ...item,
+        sno: index + 1,
+        GWT: Number(item.GWT).toFixed(3),
+        NWT: Number(item.NWT).toFixed(3),
+    }));
 
     return (
         <>
@@ -78,7 +68,7 @@ const StockBalanceReport = () => {
                 <Table
                     size="small"
                     columns={columns}
-                    dataSource={filteredData}
+                    dataSource={formattedData}
                     rowKey="MNAME"
                     pagination={{
                         pageSize: 5,
@@ -90,10 +80,10 @@ const StockBalanceReport = () => {
                     rowClassName="table-row"
                     summary={() => (
                         <Table.Summary.Row>
-                            <Table.Summary.Cell colSpan={1}>Total</Table.Summary.Cell>
-                            <Table.Summary.Cell align="right">{totalPCS}</Table.Summary.Cell>
-                            <Table.Summary.Cell align="right">{totalGWT}</Table.Summary.Cell>
-                            <Table.Summary.Cell align="right">{totalNWT}</Table.Summary.Cell>
+                            <Table.Summary.Cell index={0} colSpan={2}>Total</Table.Summary.Cell>
+                            <Table.Summary.Cell index={1} align="right">{totalPCS}</Table.Summary.Cell>
+                            <Table.Summary.Cell index={2} align="right">{totalGWT}</Table.Summary.Cell>
+                            <Table.Summary.Cell index={3} align="right">{totalNWT}</Table.Summary.Cell>
                         </Table.Summary.Row>
                     )}
                 />

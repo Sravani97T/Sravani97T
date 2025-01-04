@@ -34,16 +34,13 @@ const DealerWiseStockDetailes = () => {
             });
     }, [mName]);  // Re-fetch when MNAME is changed
 
-    const formatValue = (value) => {
-        return value ? value.toFixed(3) : '0.000';  // Format to 3 decimal places
-    };
-
     const columns = [
+        { title: 'S.No', dataIndex: 'sno', key: 'sno' },
         { title: 'Tag No', dataIndex: 'TAGNO', key: 'TAGNO' },
         { title: 'Product', dataIndex: 'PRODUCTNAME', key: 'PRODUCTNAME' },
         { title: 'Pieces', align: "right", dataIndex: 'PIECES', key: 'PIECES' },
-        { title: 'Gross Wt', align: "right", dataIndex: 'GWT', key: 'GWT', render: formatValue },
-        { title: 'Net Wt', align: "right", dataIndex: 'NWT', key: 'NWT', render: formatValue },
+        { title: 'Gross Wt', align: "right", dataIndex: 'GWT', key: 'GWT', render: value => Number(value).toFixed(3) },
+        { title: 'Net Wt', align: "right", dataIndex: 'NWT', key: 'NWT', render: value => Number(value).toFixed(3) },
         { title: 'Prefix', dataIndex: 'PREFIX', key: 'PREFIX' },
         { title: 'Counter', dataIndex: 'COUNTERNAME', key: 'COUNTERNAME' },
         { title: 'Tag Date', dataIndex: 'TAGDATE', key: 'TAGDATE' },
@@ -54,31 +51,20 @@ const DealerWiseStockDetailes = () => {
         const totalPCS = filteredData.reduce((sum, item) => sum + item.PIECES, 0);
         const totalGWT = filteredData.reduce((sum, item) => sum + item.GWT, 0);
         return {
-            totalNWT: formatValue(totalNWT),
+            totalNWT: totalNWT.toFixed(3),
             totalPCS: totalPCS,
-            totalGWT: formatValue(totalGWT),
+            totalGWT: totalGWT.toFixed(3),
         };
     };
 
     const { totalNWT, totalPCS, totalGWT } = getTotals();
 
-    const formattedData = [
-        ...filteredData.map(item => ({
-            ...item,
-            GWT: formatValue(item.GWT),
-            NWT: formatValue(item.NWT),
-        })),
-        {
-            TAGNO: 'Total',
-            PRODUCTNAME: '',
-            PIECES: totalPCS,
-            GWT: totalGWT,
-            NWT: totalNWT,
-            PREFIX: '',
-            COUNTERNAME: '',
-            TAGDATE: '',
-        }
-    ];
+    const formattedData = filteredData.map((item, index) => ({
+        ...item,
+        sno: index + 1,
+        GWT: Number(item.GWT).toFixed(3),
+        NWT: Number(item.NWT).toFixed(3),
+    }));
 
     return (
         <>
@@ -112,7 +98,7 @@ const DealerWiseStockDetailes = () => {
                 <Table
                     size="small"
                     columns={columns}
-                    dataSource={filteredData}
+                    dataSource={formattedData}
                     rowKey="TAGNO"
                     pagination={{
                         pageSize: 5,
@@ -124,10 +110,11 @@ const DealerWiseStockDetailes = () => {
                     rowClassName="table-row"
                     summary={() => (
                         <Table.Summary.Row>
-                            <Table.Summary.Cell colSpan={2}>Total</Table.Summary.Cell>
-                            <Table.Summary.Cell align='right'>{totalPCS}</Table.Summary.Cell>
-                            <Table.Summary.Cell align='right'>{totalGWT}</Table.Summary.Cell>
-                            <Table.Summary.Cell align='right'>{totalNWT}</Table.Summary.Cell>
+                            <Table.Summary.Cell index={0} colSpan={3}>Total</Table.Summary.Cell>
+                            <Table.Summary.Cell index={1} align='right'>{totalPCS}</Table.Summary.Cell>
+                            <Table.Summary.Cell index={2} align='right'>{totalGWT}</Table.Summary.Cell>
+                            <Table.Summary.Cell index={3} align='right'>{totalNWT}</Table.Summary.Cell>
+                            <Table.Summary.Cell index={4} colSpan={4}></Table.Summary.Cell>
                         </Table.Summary.Row>
                     )}
                 />
