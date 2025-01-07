@@ -120,16 +120,7 @@ const CounterNetSummry = () => {
                         style: { margin: "5px" }
                     }}
                     rowClassName="table-row"
-                    summary={() => (
-                        <Table.Summary.Row>
-                            <Table.Summary.Cell colSpan={1}>Total</Table.Summary.Cell>
-                            <Table.Summary.Cell align="right">{totalPieces}</Table.Summary.Cell>
-                            <Table.Summary.Cell align="right">{totalGwt}</Table.Summary.Cell>
-                            <Table.Summary.Cell align="right">{totalNwt}</Table.Summary.Cell>
-                            <Table.Summary.Cell align="right">{totalDiaCts}</Table.Summary.Cell>
-                            <Table.Summary.Cell align="right">{totalDiaAmt}</Table.Summary.Cell>
-                        </Table.Summary.Row>
-                    )}
+                  
                 />
             </div>
         </>

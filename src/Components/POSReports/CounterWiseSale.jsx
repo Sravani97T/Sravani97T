@@ -1,10 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import { Table, Row, Col,  } from 'antd';
+import React, { useState, useEffect, forwardRef } from 'react';
+import { Table, Row, Col } from 'antd';
 import axios from 'axios';
 import moment from 'moment';
 import PdfExcelPrint from '../Utiles/PdfExcelPrint'; // Adjust the import path as necessary
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+import { FaCalendarAlt } from 'react-icons/fa';
+
+const CustomInput = forwardRef(({ value, onClick, placeholder }, ref) => (
+    <div className="custom-date-input" onClick={onClick} ref={ref}>
+        <input value={value} placeholder={placeholder} readOnly />
+        <FaCalendarAlt className="calendar-icon" />
+    </div>
+));
 
 const CounterWiseSale = () => {
     const [filteredData, setFilteredData] = useState([]);
@@ -93,10 +101,7 @@ const CounterWiseSale = () => {
                                 startDate={dates[0]}
                                 endDate={dates[1]}
                                 placeholderText="Start Date"
-                                className="date-picker"
-                                showIcon
-                                icon="fa fa-calendar"
-                                style={{ width: '100%', borderColor: 'lightgrey', align: "center" }}
+                                customInput={<CustomInput />}
                             />
                         </Col>
                         <Col>
@@ -107,10 +112,7 @@ const CounterWiseSale = () => {
                                 startDate={dates[0]}
                                 endDate={dates[1]}
                                 placeholderText="End Date"
-                                className="date-picker"
-                                showIcon
-                                icon="fa fa-calendar"
-                                style={{ width: '100%', borderColor: 'lightgrey' }}
+                                customInput={<CustomInput />}
                             />
                         </Col>
                     </Row>

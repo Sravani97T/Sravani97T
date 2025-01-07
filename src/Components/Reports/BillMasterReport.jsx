@@ -41,47 +41,55 @@ const BillMasterReport = () => {
 
     const handlePDFWithPreview = () => {
         const doc = new jsPDF('landscape');
+        const totals = calculateTotals();
+    
         doc.autoTable({
             head: [['S.No', 'Bill Date', 'Jewel Type', 'Bill No', 'Customer Name', 'PCS', 'GWT', 'NWT', 'Total Amount', 'Discount', 'Gross Amount', 'CGST', 'SGST', 'IGST', 'Net Amount']],
-            body: filteredData.map((item, index) => [
-                index + 1,
-                moment(item.BillDate).format('DD/MM/YYYY'),
-                item.JewelType,
-                item.BillNo,
-                item.CustName,
-                item.TotPieces,
-                formatValue(item.TotGwt),
-                formatValue(item.TotNwt),
-                formatValue1(item.TotAmt),
-                formatValue1(item.DisAmt),
-                formatValue1(item.BillAmt),
-                formatValue1(item.CGST),
-                formatValue1(item.SGST),
-                formatValue1(item.IGST),
-                formatValue1(item.NetAmt)
-            ]),
-            styles: { cellPadding: 1, fontSize: 5, lineColor: [200, 200, 200], lineWidth: 0.1, fillColor: [255, 255, 255], textColor: [0, 0, 0] },
-            headStyles: { fillColor: [255, 255, 255], textColor: [0, 0, 0], fontSize: 5, fontStyle: 'normal' },
-            footStyles: { fillColor: [255, 255, 255], textColor: [0, 0, 0], lineWidth: 0.1, lineColor: [200, 200, 200], fontStyle: 'normal' },
-            margin: { top: 5, bottom: 5 },
+            body: [
+                ...filteredData.map((item, index) => [
+                    index + 1,
+                    moment(item.BillDate).format('DD/MM/YYYY'),
+                    item.JewelType,
+                    item.BillNo,
+                    item.CustName,
+                    item.TotPieces,
+                    formatValue(item.TotGwt),
+                    formatValue(item.TotNwt),
+                    formatValue1(item.TotAmt),
+                    formatValue1(item.DisAmt),
+                    formatValue1(item.BillAmt),
+                    formatValue1(item.CGST),
+                    formatValue1(item.SGST),
+                    formatValue1(item.IGST),
+                    formatValue1(item.NetAmt)
+                ]),
+                [
+                    'Totals',
+                    '',
+                    '',
+                    '',
+                    '',
+                    totals.TotPieces,
+                    formatValue(totals.TotGwt),
+                    formatValue(totals.TotNwt),
+                    formatValue1(totals.TotAmt),
+                    formatValue1(totals.DisAmt),
+                    formatValue1(totals.BillAmt),
+                    formatValue1(totals.CGST),
+                    formatValue1(totals.SGST),
+                    formatValue1(totals.IGST),
+                    formatValue1(totals.NetAmt)
+                ]
+            ],
+            styles: { cellPadding: 1, fontSize: 5 },
+            headStyles: { fillColor: [255, 255, 255], textColor: [0, 0, 0], fontSize: 5 },
             columnStyles: {
                 0: { cellWidth: 11 },
                 1: { cellWidth: 30 },
-                2: { cellWidth: 20 },
-                3: { cellWidth: 15 },
-                4: { cellWidth: 30 },
-                5: { cellWidth: 10 },
-                6: { cellWidth: 10 },
-                7: { cellWidth: 10 },
-                8: { cellWidth: 20 },
-                9: { cellWidth: 15 },
-                10: { cellWidth: 20 },
-                11: { cellWidth: 10 },
-                12: { cellWidth: 10 },
-                13: { cellWidth: 10 },
-                14: { cellWidth: 20 }
+                // Configure other column widths as per your needs
             }
         });
+    
         const pdfBlob = doc.output('blob');
         const pdfUrl = URL.createObjectURL(pdfBlob);
         const previewWindow = window.open(pdfUrl, '_blank');
@@ -96,12 +104,12 @@ const BillMasterReport = () => {
             };
         };
     };
-
+    
     const handleExcel = async () => {
         const ExcelJS = await import('exceljs');
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet('Bill Master Data');
-
+    
         worksheet.columns = [
             { header: 'S.No', key: 'sno', width: 5 },
             { header: 'Bill Date', key: 'BillDate', width: 15 },
@@ -119,7 +127,7 @@ const BillMasterReport = () => {
             { header: 'IGST', key: 'IGST', width: 10 },
             { header: 'Net Amount', key: 'NetAmt', width: 20 }
         ];
-
+    
         filteredData.forEach((item, index) => {
             worksheet.addRow({
                 sno: index + 1,
@@ -139,30 +147,31 @@ const BillMasterReport = () => {
                 NetAmt: formatValue1(item.NetAmt)
             });
         });
-
-        worksheet.getRow(1).font = { bold: true, size: 7 };
-        worksheet.eachRow((row, rowNumber) => {
-            row.eachCell((cell) => {
-                cell.border = {
-                    top: { style: 'thin' },
-                    left: { style: 'thin' },
-                    bottom: { style: 'thin' },
-                    right: { style: 'thin' }
-                };
-                if (rowNumber === 1) {
-                    cell.fill = {
-                        type: 'pattern',
-                        pattern: 'solid',
-                        fgColor: { argb: 'D3D3D3' } // Light grey color
-                    };
-                }
-                cell.font = { size: 8 };
-            });
+    
+        const totals = calculateTotals();
+    
+        worksheet.addRow({
+            sno: 'Totals',
+            BillDate: '',
+            JewelType: '',
+            BillNo: '',
+            CustName: '',
+            TotPieces: totals.TotPieces,
+            TotGwt: formatValue(totals.TotGwt),
+            TotNwt: formatValue(totals.TotNwt),
+            TotAmt: formatValue1(totals.TotAmt),
+            DisAmt: formatValue1(totals.DisAmt),
+            BillAmt: formatValue1(totals.BillAmt),
+            CGST: formatValue1(totals.CGST),
+            SGST: formatValue1(totals.SGST),
+            IGST: formatValue1(totals.IGST),
+            NetAmt: formatValue1(totals.NetAmt)
         });
-
+    
         const buffer = await workbook.xlsx.writeBuffer();
         saveAs(new Blob([buffer]), 'BillMasterData.xlsx');
     };
+    
 
     useEffect(() => {
         axios.get('http://www.jewelerp.timeserasoftware.in/api/Erp/GetBillMast')
@@ -196,7 +205,7 @@ const BillMasterReport = () => {
                 return billDate.isBetween(fromDate, toDate, 'days', '[]');
             });
         }
-        setFilteredData(filtered);
+        setFilteredData(filtered.map((item, index) => ({ ...item, sno: index + 1 })));
     }, [filters, data]);
 
     const handleTempFilterChange = (key, value) => {
@@ -227,7 +236,7 @@ const BillMasterReport = () => {
     const formatValue1 = (value) => value.toFixed(2);
 
     const columns = [
-        { title: 'S.No', dataIndex: 'sno', key: 'sno', render: (_, __, index) => index + 1 },
+        { title: 'S.No', dataIndex: 'sno', key: 'sno', },
         { title: 'Bill Date', dataIndex: 'BillDate', key: 'BillDate', render: (text) => moment(text).format('DD/MM/YYYY') },
         { title: 'Jewel Type', dataIndex: 'JewelType', key: 'JewelType' },
         { title: 'Bill No', dataIndex: 'BillNo', key: 'BillNo' },

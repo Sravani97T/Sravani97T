@@ -5,7 +5,7 @@ import PdfExcelPrint from '../Utiles/PdfExcelPrint'; // Adjust the import path a
 
 const { Option } = Select;
 
-const DealerWiseStockDetailes = () => {
+const CounterChart = () => {
     const [data, setData] = useState([]);
     const [filteredData, setFilteredData] = useState([]);
     const [mName, setMName] = useState('GOLD'); // Default to 'GOLD'
@@ -24,60 +24,42 @@ const DealerWiseStockDetailes = () => {
     }, []);
 
     useEffect(() => {
-        // Fetch the dealer wise stock detail based on the selected MNAME
-        axios.get(`http://www.jewelerp.timeserasoftware.in/api/InventoryReports/GetDealerWiseStockDetail?mName=${mName}&suspennce=NO`)
+        // Fetch the counter chart data based on the selected MNAME
+        axios.get(`http://www.jewelerp.timeserasoftware.in/api/InventoryReports/GetCounterChart?mName=${mName}&suspennce=NO`)
             .then(response => {
-                setFilteredData(response.data);  // Set the dealer wise stock data
+                setFilteredData(response.data);  // Set the counter chart data
             })
             .catch(error => {
-                console.error('Error fetching dealer wise stock detail data:', error);
+                console.error('Error fetching counter chart data:', error);
             });
     }, [mName]);  // Re-fetch when MNAME is changed
 
     const columns = [
         { title: 'S.No', dataIndex: 'sno', key: 'sno' },
-        { title: 'Tag No', dataIndex: 'TAGNO', key: 'TAGNO' },
-        { title: 'Product', dataIndex: 'PRODUCTNAME', key: 'PRODUCTNAME' },
-        { title: 'Pieces', align: "right", dataIndex: 'PIECES', key: 'PIECES' },
-        { title: 'Gross Wt', align: "right", dataIndex: 'GWT', key: 'GWT', render: value => Number(value).toFixed(3) },
-        { title: 'Net Wt', align: "right", dataIndex: 'NWT', key: 'NWT', render: value => Number(value).toFixed(3) },
-        { title: 'Prefix', dataIndex: 'PREFIX', key: 'PREFIX' },
-        { title: 'Counter', dataIndex: 'COUNTERNAME', key: 'COUNTERNAME' },
-        { title: 'Tag Date', dataIndex: 'TAGDATE', key: 'TAGDATE' },
+        { title: 'Product Name', dataIndex: 'PRODUCTNAME', key: 'PRODUCTNAME' },
+        { title: 'Pieces', align: "right", dataIndex: 'PCS', key: 'PCS' },
     ];
 
     const getTotals = () => {
-        const totalNWT = filteredData.reduce((sum, item) => sum + item.NWT, 0);
-        const totalPCS = filteredData.reduce((sum, item) => sum + item.PIECES, 0);
-        const totalGWT = filteredData.reduce((sum, item) => sum + item.GWT, 0);
+        const totalPCS = filteredData.reduce((sum, item) => sum + item.PCS, 0);
         return {
-            totalNWT: totalNWT.toFixed(3),
             totalPCS: totalPCS,
-            totalGWT: totalGWT.toFixed(3),
         };
     };
 
-    const { totalNWT, totalPCS, totalGWT } = getTotals();
+    const { totalPCS } = getTotals();
 
-    const formattedData = [
-        ...filteredData.map((item, index) => ({
-            ...item,
-            sno: index + 1,
-            GWT: Number(item.GWT).toFixed(3),
-            NWT: Number(item.NWT).toFixed(3),
-        })),
-        {
-            sno: 'Total',
-            TAGNO: '',
-            PRODUCTNAME: '',
-            PIECES: totalPCS,
-            GWT: totalGWT,
-            NWT: totalNWT,
-            PREFIX: '',
-            COUNTERNAME: '',
-            TAGDATE: '',
-        }
-    ];
+    const formattedData = filteredData.map((item, index) => ({
+        ...item,
+        sno: index + 1,
+    }));
+
+    // Add totals row
+    formattedData.push({
+        sno: 'Total',
+        PRODUCTNAME: '',
+        PCS: totalPCS,
+    });
 
     return (
         <>
@@ -85,7 +67,7 @@ const DealerWiseStockDetailes = () => {
                 <Col>
                     <Breadcrumb style={{ fontSize: '16px', fontWeight: '500', color: '#0C1154' }}>
                         <Breadcrumb.Item>Reports</Breadcrumb.Item>
-                        <Breadcrumb.Item>Dealer Wise Stock Detail</Breadcrumb.Item>
+                        <Breadcrumb.Item>Counter Chart</Breadcrumb.Item>
                     </Breadcrumb>
                 </Col>
                 <Col>
@@ -103,7 +85,7 @@ const DealerWiseStockDetailes = () => {
                     <PdfExcelPrint
                         data={formattedData}
                         columns={columns}
-                        fileName="DealerWiseStockDetailReport"
+                        fileName="CounterChartReport"
                     />
                 </Col>
             </Row>
@@ -112,7 +94,7 @@ const DealerWiseStockDetailes = () => {
                     size="small"
                     columns={columns}
                     dataSource={formattedData}
-                    rowKey="TAGNO"
+                    rowKey="PRODUCTNAME"
                     pagination={{
                         pageSize: 5,
                         pageSizeOptions: ["5", "10", "20", "50"],
@@ -121,11 +103,10 @@ const DealerWiseStockDetailes = () => {
                         style: { margin: "5px" }
                     }}
                     rowClassName="table-row"
-                   
                 />
             </div>
         </>
     );
 };
 
-export default DealerWiseStockDetailes;
+export default CounterChart;

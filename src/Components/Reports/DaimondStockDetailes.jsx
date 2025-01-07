@@ -23,21 +23,24 @@ const DiamondStockDetails = () => {
     };
 
     const columns = [
+        { title: 'S.No', dataIndex: 'sno', key: 'sno', align: 'center' },
         { title: 'Material Name', dataIndex: 'MNAME', key: 'MNAME' },
+
         { title: 'Product Category', dataIndex: 'PRODUCTCATEGORY', key: 'PRODUCTCATEGORY' },
         { title: 'Product Code', dataIndex: 'PRODUCTCODE', key: 'PRODUCTCODE' },
         { title: 'Product Name', dataIndex: 'PRODUCTNAME', key: 'PRODUCTNAME' },
         { title: 'Tag No', dataIndex: 'TAGNO', key: 'TAGNO', align: 'right' },
         { title: 'Item Name', dataIndex: 'ITEMNAME', key: 'ITEMNAME' },
         { title: 'Pieces', dataIndex: 'PIECES', key: 'PIECES', align: 'right' },
-        { title: 'Grams', dataIndex: 'GRMS', align: 'right', key: 'GRMS', render: formatValue },
-        { title: 'Carats', dataIndex: 'CTS', align: 'right', key: 'CTS', render: formatValue },
-        { title: 'Rate', dataIndex: 'RATE', align: 'right', key: 'RATE', render: formatValue },
-        { title: 'Amount', dataIndex: 'AMOUNT', align: 'right', key: 'AMOUNT', render: formatValue },
+        { title: 'Grams', dataIndex: 'GRMS', align: 'right', key: 'GRMS', render: value => Number(value).toFixed(3) },
+        { title: 'Carats', dataIndex: 'CTS', align: 'right', key: 'CTS', render: value => Number(value).toFixed(3) },
+        { title: 'Rate', dataIndex: 'RATE', align: 'right', key: 'RATE', render: value => Number(value).toFixed(3) },
+        { title: 'Amount', dataIndex: 'AMOUNT', align: 'right', key: 'AMOUNT', render: value => Number(value).toFixed(3) },
         { title: 'Colour', dataIndex: 'COLOUR', key: 'COLOUR' },
         { title: 'Cut', dataIndex: 'CUT', key: 'CUT' },
         { title: 'Clarity', dataIndex: 'CLARITY', key: 'CLARITY' },
     ];
+
 
     const getTotals = () => {
         const totalPieces = filteredData.reduce((sum, item) => sum + item.PIECES, 0);
@@ -59,15 +62,17 @@ const DiamondStockDetails = () => {
     const { totalPieces, totalGrams, totalCarats, totalAmount, averageRate } = getTotals();
 
     const formattedData = [
-        ...filteredData.map(item => ({
+        ...filteredData.map((item, index) => ({
             ...item,
+            sno: index + 1,
             GRMS: formatValue(item.GRMS),
             CTS: formatValue(item.CTS),
             RATE: formatValue(item.RATE),
             AMOUNT: formatValue(item.AMOUNT),
         })),
         {
-            MNAME: 'Total',
+            sno: 'Total',
+            MNAME: '',
             PIECES: totalPieces,
             GRMS: totalGrams,
             CTS: totalCarats,
@@ -93,32 +98,36 @@ const DiamondStockDetails = () => {
                     />
                 </Col>
             </Row>
-            <div style={{ marginTop: 16 }}>
-                <Table
-                    size="small"
-                    columns={columns}
-                    dataSource={filteredData}
-                    rowKey="TAGNO"
-                    pagination={{
-                        pageSize: 5,
-                        pageSizeOptions: ["5", "10", "20", "50"],
-                        showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
-                        position: ["topRight"],
-                        style: { margin: "5px" }
+            <div style={{ marginTop: 16, boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}>
+
+                <div
+                    className="table-responsive scroll-horizontal"
+                    style={{
+                        maxHeight: "calc(99vh - 193.33px)",
+                        overflowY: "auto",
+                        overflowX: "auto",
+                        marginTop: "20px",
+                        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+                        backgroundColor: '#fff',
+                        borderRadius: '8px'
                     }}
-                    rowClassName="table-row"
-                    summary={() => (
-                        <Table.Summary.Row>
-                            <Table.Summary.Cell colSpan={6}>Total</Table.Summary.Cell>
-                            <Table.Summary.Cell align='right'>{totalPieces}</Table.Summary.Cell>
-                            <Table.Summary.Cell align='right'>{totalGrams}</Table.Summary.Cell>
-                            <Table.Summary.Cell align='right'>{totalCarats}</Table.Summary.Cell>
-                            <Table.Summary.Cell align='right'>{averageRate}</Table.Summary.Cell>
-                            <Table.Summary.Cell align='right'>{totalAmount}</Table.Summary.Cell>
-                            <Table.Summary.Cell colSpan={3}></Table.Summary.Cell>
-                        </Table.Summary.Row>
-                    )}
-                />
+                >
+                    <Table
+                        size="small"
+                        columns={columns}
+                        dataSource={formattedData}
+                        rowKey="TAGNO"
+                        pagination={{
+                            pageSize: 5,
+                            pageSizeOptions: ["5", "10", "20", "50"],
+                            showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
+                            position: ["topRight"],
+                            style: { margin: "5px" }
+                        }}
+                        rowClassName="table-row"
+
+                    />
+                </div>
             </div>
         </>
     );

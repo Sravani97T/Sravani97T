@@ -61,14 +61,25 @@ const DealerNetSummry = () => {
 
     const { totalNwt, totalPieces, totalGwt, totalDiaCts, totalDiaAmt } = getTotals();
 
-    const formattedData = filteredData.map((item, index) => ({
-        ...item,
-        sno: index + 1,
-        Gwt: Number(item.Gwt).toFixed(3),
-        Nwt: Number(item.Nwt).toFixed(3),
-        DIACTS: Number(item.DIACTS).toFixed(2),
-        DIAAMT: Number(item.DIAAMT).toFixed(2),
-    }));
+    const formattedData = [
+        ...filteredData.map((item, index) => ({
+            ...item,
+            sno: index + 1,
+            Gwt: Number(item.Gwt).toFixed(3),
+            Nwt: Number(item.Nwt).toFixed(3),
+            DIACTS: Number(item.DIACTS).toFixed(2),
+            DIAAMT: Number(item.DIAAMT).toFixed(2),
+        })),
+        {
+            sno: 'Total',
+            DEALERNAME: '',
+            Pieces: totalPieces,
+            Gwt: totalGwt,
+            Nwt: totalNwt,
+            DIACTS: totalDiaCts,
+            DIAAMT: totalDiaAmt,
+        }
+    ];
 
     return (
         <>
@@ -112,16 +123,7 @@ const DealerNetSummry = () => {
                         style: { margin: "5px" }
                     }}
                     rowClassName="table-row"
-                    summary={() => (
-                        <Table.Summary.Row>
-                            <Table.Summary.Cell index={0} colSpan={2}>Total</Table.Summary.Cell>
-                            <Table.Summary.Cell index={2} align='right'>{totalPieces}</Table.Summary.Cell>
-                            <Table.Summary.Cell index={3} align='right'>{totalGwt}</Table.Summary.Cell>
-                            <Table.Summary.Cell index={4} align='right'>{totalNwt}</Table.Summary.Cell>
-                            <Table.Summary.Cell index={5} align='right'>{totalDiaCts}</Table.Summary.Cell>
-                            <Table.Summary.Cell index={6} align='right'>{totalDiaAmt}</Table.Summary.Cell>
-                        </Table.Summary.Row>
-                    )}
+                  
                 />
             </div>
         </>

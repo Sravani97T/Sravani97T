@@ -9,8 +9,7 @@ const DealerWiseStockSummary = () => {
     const [data, setData] = useState([]);
     const [filteredData, setFilteredData] = useState([]);
     const [mName, setMName] = useState('GOLD'); // Default to 'GOLD'
-    const [dealers, setDealers] = useState([]);
-    const [selectedDealer, setSelectedDealer] = useState('');
+    const [, setDealers] = useState([]);
 
     useEffect(() => {
         // Fetch the MNAME options from the StockBalances API
@@ -36,14 +35,7 @@ const DealerWiseStockSummary = () => {
             });
     }, [mName]);
 
-    const handleDealerChange = (value) => {
-        setSelectedDealer(value);
-        if (value) {
-            setFilteredData(dealers.filter(item => item.DEALERNAME === value));
-        } else {
-            setFilteredData(dealers);  // Reset to all data if no filter is selected
-        }
-    };
+    
 
     const columns = [
         { title: 'S.No', dataIndex: 'sno', key: 'sno' },
@@ -74,14 +66,26 @@ const DealerWiseStockSummary = () => {
 
     const { totalPieces, totalGWT, totalNWT, totalDIACTS, totalDIAAMT } = getTotals();
 
-    const formattedData = filteredData.map((item, index) => ({
-        ...item,
-        sno: index + 1,
-        GWT: Number(item.GWT).toFixed(3),
-        NWT: Number(item.NWT).toFixed(3),
-        DIACTS: Number(item.DIACTS).toFixed(2),
-        DIAAMT: Number(item.DIAAMT).toFixed(2),
-    }));
+    const formattedData = [
+        ...filteredData.map((item, index) => ({
+            ...item,
+            sno: index + 1,
+            GWT: Number(item.GWT).toFixed(3),
+            NWT: Number(item.NWT).toFixed(3),
+            DIACTS: Number(item.DIACTS).toFixed(2),
+            DIAAMT: Number(item.DIAAMT).toFixed(2),
+        })),
+        {
+            sno: 'Total',
+            DEALERNAME: '',
+            PRODUCTNAME: '',
+            PIECES: totalPieces,
+            GWT: totalGWT,
+            NWT: totalNWT,
+            DIACTS: totalDIACTS,
+            DIAAMT: totalDIAAMT,
+        }
+    ];
 
     return (
         <>
@@ -126,16 +130,7 @@ const DealerWiseStockSummary = () => {
                         style: { margin: "5px" }
                     }}
                     rowClassName="table-row"
-                    summary={() => (
-                        <Table.Summary.Row>
-                            <Table.Summary.Cell colSpan={3}>Total</Table.Summary.Cell>
-                            <Table.Summary.Cell align='right'>{totalPieces}</Table.Summary.Cell>
-                            <Table.Summary.Cell align='right'>{totalGWT}</Table.Summary.Cell>
-                            <Table.Summary.Cell align='right'>{totalNWT}</Table.Summary.Cell>
-                            <Table.Summary.Cell align='right'>{totalDIACTS}</Table.Summary.Cell>
-                            <Table.Summary.Cell align='right'>{totalDIAAMT}</Table.Summary.Cell>
-                        </Table.Summary.Row>
-                    )}
+                   
                 />
             </div>
         </>

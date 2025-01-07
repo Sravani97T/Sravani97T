@@ -9,6 +9,8 @@ const PrifixNetSummry = () => {
     const [data, setData] = useState([]);
     const [filteredData, setFilteredData] = useState([]);
     const [mName, setMName] = useState('GOLD'); // Default to 'GOLD'
+    const [prefix, setPrefix] = useState(''); // State for selected PREFIX
+    const [prefixOptions, setPrefixOptions] = useState([]); // State for PREFIX options
 
     useEffect(() => {
         // Fetch the MNAME options from the StockBalances API
@@ -28,6 +30,8 @@ const PrifixNetSummry = () => {
         axios.get(`http://www.jewelerp.timeserasoftware.in/api/InventoryReports/GetPrefixNetSummary?mName=${mName}&suspennce=NO`)
             .then(response => {
                 setFilteredData(response.data);  // Set the filtered data based on the new API
+                const uniquePrefixes = [...new Set(response.data.map(item => item.PREFIX))];
+                setPrefixOptions(uniquePrefixes); // Set unique PREFIX options
             })
             .catch(error => {
                 console.error('Error fetching Prefix Net Summary data:', error);
@@ -59,9 +63,26 @@ const PrifixNetSummry = () => {
         };
     };
 
-    const { totalNwt, totalPieces, totalGwt, totalDiaCts, totalDiaAmt } = getTotals();
+    const filteredByPrefix = filteredData.filter(item => !prefix || item.PREFIX === prefix); // Filter by PREFIX
 
-    const formattedData = filteredData.map((item, index) => ({
+    const getFilteredTotals = () => {
+        const totalNwt = filteredByPrefix.reduce((sum, item) => sum + item.Nwt, 0);
+        const totalPieces = filteredByPrefix.reduce((sum, item) => sum + item.Pieces, 0);
+        const totalGwt = filteredByPrefix.reduce((sum, item) => sum + item.Gwt, 0);
+        const totalDiaCts = filteredByPrefix.reduce((sum, item) => sum + item.DIACTS, 0);
+        const totalDiaAmt = filteredByPrefix.reduce((sum, item) => sum + item.DIAAMT, 0);
+        return {
+            totalNwt: totalNwt.toFixed(3),
+            totalPieces: totalPieces,
+            totalGwt: totalGwt.toFixed(3),
+            totalDiaCts: totalDiaCts.toFixed(2),
+            totalDiaAmt: totalDiaAmt.toFixed(2),
+        };
+    };
+
+    const { totalNwt, totalPieces, totalGwt, totalDiaCts, totalDiaAmt } = getFilteredTotals();
+
+    const formattedData = filteredByPrefix.map((item, index) => ({
         ...item,
         sno: index + 1,
         Gwt: Number(item.Gwt).toFixed(3),
@@ -69,6 +90,17 @@ const PrifixNetSummry = () => {
         DIACTS: Number(item.DIACTS).toFixed(2),
         DIAAMT: Number(item.DIAAMT).toFixed(2),
     }));
+
+    // Add totals row
+    formattedData.push({
+        sno: 'Total',
+        PREFIX: '',
+        Pieces: totalPieces,
+        Nwt: totalNwt,
+        Gwt: totalGwt,
+        DIACTS: totalDiaCts,
+        DIAAMT: totalDiaAmt,
+    });
 
     return (
         <>
@@ -86,6 +118,18 @@ const PrifixNetSummry = () => {
                         onChange={(value) => setMName(value)}
                     >
                         {data.map((item) => (
+                            <Option key={item} value={item}>
+                                {item}
+                            </Option>
+                        ))}
+                    </Select>
+                    <Select
+                        placeholder="Select Prefix"
+                        style={{ width: 150, marginRight: '10px' }}
+                        onChange={(value) => setPrefix(value)}
+                        allowClear
+                    >
+                        {prefixOptions.map((item) => (
                             <Option key={item} value={item}>
                                 {item}
                             </Option>
@@ -112,16 +156,6 @@ const PrifixNetSummry = () => {
                         style: { margin: "5px" }
                     }}
                     rowClassName="table-row"
-                    summary={() => (
-                        <Table.Summary.Row>
-                            <Table.Summary.Cell colSpan={2}>Total</Table.Summary.Cell>
-                            <Table.Summary.Cell align="right">{totalPieces}</Table.Summary.Cell>
-                            <Table.Summary.Cell align="right">{totalGwt}</Table.Summary.Cell>
-                            <Table.Summary.Cell align="right">{totalNwt}</Table.Summary.Cell>
-                            <Table.Summary.Cell align="right">{totalDiaCts}</Table.Summary.Cell>
-                            <Table.Summary.Cell align="right">{totalDiaAmt}</Table.Summary.Cell>
-                        </Table.Summary.Row>
-                    )}
                 />
             </div>
         </>

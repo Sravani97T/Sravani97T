@@ -3,12 +3,12 @@ import { Table, Row, Col, Breadcrumb } from 'antd';
 import axios from 'axios';
 import PdfExcelPrint from '../Utiles/PdfExcelPrint'; // Adjust the import path as necessary
 
-const StockBalanceReport = () => {
+const TraySummary = () => {
     const [, setData] = useState([]);
     const [filteredData, setFilteredData] = useState([]);
 
     useEffect(() => {
-        axios.get('http://www.jewelerp.timeserasoftware.in/api/InventoryReports/GetStockBalances?suspennce=NO')
+        axios.get('http://www.jewelerp.timeserasoftware.in/api/InventoryReports/GetTraySummary?tray=1&suspennce=NO')
             .then(response => {
                 setData(response.data);
                 setFilteredData(response.data);  // Initially no filters, all data is shown
@@ -20,7 +20,8 @@ const StockBalanceReport = () => {
 
     const columns = [
         { title: 'S.No', dataIndex: 'sno', key: 'sno' },
-        { title: 'Material Name', dataIndex: 'MNAME', key: 'MNAME' },
+        { title: 'Tag No', dataIndex: 'TAGNO', key: 'TAGNO' },
+        { title: 'Product Name', dataIndex: 'PRODUCTNAME', key: 'PRODUCTNAME' },
         { title: 'Pieces', dataIndex: 'PCS', key: 'PCS', align: "right" },
         { title: 'Gross Wt', dataIndex: 'GWT', key: 'GWT', align: "right", render: value => Number(value).toFixed(3) },
         { title: 'Net Wt', dataIndex: 'NWT', key: 'NWT', align: "right", render: value => Number(value).toFixed(3) },
@@ -48,21 +49,14 @@ const StockBalanceReport = () => {
             sno: index + 1,
             GWT: formatValue(item.GWT),
             NWT: formatValue(item.NWT),
-            GRMS: formatValue(item.GRMS),
-            CTS: formatValue(item.CTS),
-            RATE: formatValue(item.RATE),
-            AMOUNT: formatValue(item.AMOUNT),
         })),
         {
             sno: 'Total', // Empty S.No for the total row
-            MNAME: '', // Set Material Name to an empty string
+            TAGNO: '', // Set Tag No to an empty string
+            PRODUCTNAME: '', // Set Product Name to an empty string
             PCS: totalPCS,
             GWT: totalGWT,
             NWT: totalNWT,
-            GRMS: formatValue(filteredData.reduce((sum, item) => sum + item.GRMS, 0)),
-            CTS: formatValue(filteredData.reduce((sum, item) => sum + item.CTS, 0)),
-            RATE: formatValue(filteredData.reduce((sum, item) => sum + item.RATE, 0) / filteredData.length),
-            AMOUNT: formatValue(filteredData.reduce((sum, item) => sum + item.AMOUNT, 0)),
         }
     ];
 
@@ -72,14 +66,14 @@ const StockBalanceReport = () => {
                 <Col>
                     <Breadcrumb style={{ fontSize: '16px', fontWeight: '500', color: '#0C1154' }}>
                         <Breadcrumb.Item>Reports</Breadcrumb.Item>
-                        <Breadcrumb.Item>Stock Balance</Breadcrumb.Item>
+                        <Breadcrumb.Item>Tray Summary</Breadcrumb.Item>
                     </Breadcrumb>
                 </Col>
                 <Col>
                     <PdfExcelPrint
                         data={formattedData}
                         columns={columns}
-                        fileName="StockBalanceReport"
+                        fileName="TraySummaryReport"
                         totals={{ totalPCS, totalGWT, totalNWT }} // Pass totals as props
                     />
                 </Col>
@@ -89,7 +83,7 @@ const StockBalanceReport = () => {
                     size="small"
                     columns={columns}
                     dataSource={formattedData}
-                    rowKey="MNAME"
+                    rowKey="TAGNO"
                     pagination={{
                         pageSize: 5,
                         pageSizeOptions: ["5", "10", "20", "50"],
@@ -104,4 +98,4 @@ const StockBalanceReport = () => {
     );
 };
 
-export default StockBalanceReport;
+export default TraySummary;

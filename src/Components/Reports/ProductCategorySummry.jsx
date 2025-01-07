@@ -55,10 +55,19 @@ const ProductCategorySummary = () => {
 
     const { totalNWT, totalPCS, totalGWT } = getTotals();
 
-    const formattedData = filteredData.map((item, index) => ({
-        ...item,
-        serialNumber: index + 1,
-    }));
+    const formattedData = [
+        ...filteredData.map((item, index) => ({
+            ...item,
+            serialNumber: index + 1,
+        })),
+        {
+            serialNumber: 'Total',
+            PRODUCTNAME: '',
+            PIECES: totalPCS,
+            GWT: totalGWT,
+            NWT: totalNWT,
+        }
+    ];
 
     return (
         <>
@@ -101,14 +110,7 @@ const ProductCategorySummary = () => {
                         position: ["topRight"],
                         style: { margin: "5px" }
                     }}                    rowClassName="table-row"
-                    summary={() => (
-                        <Table.Summary.Row>
-                            <Table.Summary.Cell colSpan={2}>Total</Table.Summary.Cell>
-                            <Table.Summary.Cell align='right'>{totalPCS}</Table.Summary.Cell>
-                            <Table.Summary.Cell align='right'>{totalGWT}</Table.Summary.Cell>
-                            <Table.Summary.Cell align='right'>{totalNWT}</Table.Summary.Cell>
-                        </Table.Summary.Row>
-                    )}
+                   
                 />
             </div>
         </>

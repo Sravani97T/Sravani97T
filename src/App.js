@@ -49,6 +49,9 @@ import GS12 from "./Components/POSReports/GS12";
 import OutstandingCustomers from "./Components/POSReports/OutstandingCustmers";
 import OutstandingDealers from "./Components/POSReports/OutstandingDealer";
 import OldGoldBookOpening from "./Components/POSReports/OldGoldbookOpening";
+import TraySummary from "./Components/Reports/TraySummary";
+import CounterChart from "./Components/Reports/CounterChart";
+import StoneDetails from "./Components/Reports/StoneDetailes";
 const App = () => {
   return (
     <Router>
@@ -110,6 +113,9 @@ const App = () => {
           <Route path="/outstandingcustomers-report" element={<OutstandingCustomers/>} />
           <Route path="/outstandingdealers-report" element={<OutstandingDealers/>} />
           <Route path="/oldgoldbook-report" element={<OldGoldBookOpening/>} />
+          <Route path="/traysummery-report" element={<TraySummary/>} />
+          <Route path="/counterchart-report" element={<CounterChart/>} />
+          <Route path="/stonedetailes-report" element={<StoneDetails/>} />
 
           
 

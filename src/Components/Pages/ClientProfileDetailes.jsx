@@ -1,5 +1,4 @@
 import React from "react";
-import { Card } from "antd";
 import { CalendarOutlined, PercentageOutlined, FileTextOutlined, FileDoneOutlined } from "@ant-design/icons";
 
 const FirstColumn = () => {
@@ -8,9 +7,9 @@ const FirstColumn = () => {
       style={{
         borderRadius: "10px",
         boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-        padding: "20px",
-        backgroundColor: "#ffffff",
-        marginBottom: "20px",
+        padding: "10px",
+        backgroundColor: "#f9f9f9",
+        marginBottom: "7px",
       }}
     >
       <div>
@@ -20,30 +19,31 @@ const FirstColumn = () => {
             style={{
               fontSize: "20px",
               fontWeight: "bold",
-              color: "#3a86ff",
+              color: "#5a9",
               margin: "0",
             }}
           >
             Sravani Jewelries
           </h3>
-          <div style={{ fontSize: "14px", color: "#6c757d", margin: "0" }}>
+          <div style={{ fontSize: "14px", color: "#7d8a99", margin: "0" }}>
             Hyderabad
           </div>
-          <div style={{ fontSize: "14px", color: "#6c757d", margin: "0" }}>
+          <div style={{ fontSize: "14px", color: "#7d8a99", margin: "0" }}>
             Kukatpally
           </div>
         </div>
         {/* Icons with square border and circular top */}
-        <div style={{ display: "flex", justifyContent: "space-between", gap: "10px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", gap: "10px", flexWrap: "wrap" }}>
           <div
             style={{
               position: "relative",
-              width: "120px",
-              height: "80px",
-              border: "2px solid #28a745",
+              width: "80px",
+              height: "69px",
+              border: "2px solid #aad5aa",
               borderRadius: "10px",
-              backgroundColor: "#d4edda",
+              backgroundColor: "#eaf8ea",
               textAlign: "center",
+              marginBottom: "10px",
             }}
           >
             <div
@@ -52,15 +52,15 @@ const FirstColumn = () => {
                 top: "-20px",
                 left: "50%",
                 transform: "translateX(-50%)",
-                width: "40px",
-                height: "40px",
+                width: "35px",
+                height: "35px",
                 borderRadius: "50%",
-                backgroundColor: "#28a745",
+                backgroundColor: "#76c776",
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
                 color: "#fff",
-                fontSize: "20px",
+                fontSize: "16px",
               }}
             >
               <CalendarOutlined />
@@ -91,12 +91,13 @@ const FirstColumn = () => {
           <div
             style={{
               position: "relative",
-              width: "120px",
-              height: "80px",
-              border: "2px solid #ffc107",
+              width: "80px",
+              height: "69px",
+              border: "2px solid #ffd59b",
               borderRadius: "10px",
-              backgroundColor: "#fff3cd",
+              backgroundColor: "#fff9e6",
               textAlign: "center",
+              marginBottom: "10px",
             }}
           >
             <div
@@ -105,15 +106,15 @@ const FirstColumn = () => {
                 top: "-20px",
                 left: "50%",
                 transform: "translateX(-50%)",
-                width: "40px",
-                height: "40px",
+                width: "35px",
+                height: "35px",
                 borderRadius: "50%",
-                backgroundColor: "#ffc107",
+                backgroundColor: "#ffb84d",
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
                 color: "#fff",
-                fontSize: "20px",
+                fontSize: "16px",
               }}
             >
               <PercentageOutlined />
@@ -144,12 +145,13 @@ const FirstColumn = () => {
           <div
             style={{
               position: "relative",
-              width: "120px",
-              height: "80px",
-              border: "2px solid #007bff",
+              width: "80px",
+              height: "69px",
+              border: "2px solid #a4d4f4",
               borderRadius: "10px",
-              backgroundColor: "#cce5ff",
+              backgroundColor: "#e3f5fc",
               textAlign: "center",
+              marginBottom: "10px",
             }}
           >
             <div
@@ -158,15 +160,15 @@ const FirstColumn = () => {
                 top: "-20px",
                 left: "50%",
                 transform: "translateX(-50%)",
-                width: "40px",
-                height: "40px",
+                width: "35px",
+                height: "35px",
                 borderRadius: "50%",
-                backgroundColor: "#007bff",
+                backgroundColor: "#64b7f7",
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
                 color: "#fff",
-                fontSize: "20px",
+                fontSize: "16px",
               }}
             >
               <FileTextOutlined />
@@ -197,12 +199,13 @@ const FirstColumn = () => {
           <div
             style={{
               position: "relative",
-              width: "120px",
-              height: "80px",
-              border: "2px solid #dc3545",
+              width: "80px",
+              height: "69px",
+              border: "2px solid #f6a5a5",
               borderRadius: "10px",
-              backgroundColor: "#f8d7da",
+              backgroundColor: "#fdecec",
               textAlign: "center",
+              marginBottom: "10px",
             }}
           >
             <div
@@ -211,15 +214,15 @@ const FirstColumn = () => {
                 top: "-20px",
                 left: "50%",
                 transform: "translateX(-50%)",
-                width: "40px",
-                height: "40px",
+                width: "35px",
+                height: "35px",
                 borderRadius: "50%",
-                backgroundColor: "#dc3545",
+                backgroundColor: "#f47174",
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
                 color: "#fff",
-                fontSize: "20px",
+                fontSize: "16px",
               }}
             >
               <FileDoneOutlined />

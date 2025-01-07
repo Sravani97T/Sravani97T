@@ -95,7 +95,7 @@ const DashboardLayout = ({ children }) => {
       {/* Main Content */}
       <Layout>
         <Header collapsed={collapsed} toggleSidebar={toggleSidebar} />
-        <Content style={{ margin: "16px" }}>
+        <Content style={{ margin: "16px" ,}}>
           {children}
         </Content>
       </Layout>

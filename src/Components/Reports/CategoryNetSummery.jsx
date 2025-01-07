@@ -62,6 +62,15 @@ const CategoryNetSummary = () => {
         Nwt: Number(item.Nwt).toFixed(3),
     }));
 
+    // Add totals row
+    formattedData.push({
+        sno: 'Total',
+        CATEGORYNAME: '',
+        Pieces: totalPCS,
+        Nwt: totalNWT,
+        Gwt: totalGWT,
+    });
+
     return (
         <>
             <Row justify="space-between" align="middle">
@@ -104,14 +113,6 @@ const CategoryNetSummary = () => {
                         style: { margin: "5px" }
                     }}
                     rowClassName="table-row"
-                    summary={() => (
-                        <Table.Summary.Row>
-                            <Table.Summary.Cell colSpan={2}>Total</Table.Summary.Cell>
-                            <Table.Summary.Cell align='right'>{totalPCS}</Table.Summary.Cell>
-                            <Table.Summary.Cell align='right'>{totalGWT}</Table.Summary.Cell>
-                            <Table.Summary.Cell align='right'>{totalNWT}</Table.Summary.Cell>
-                        </Table.Summary.Row>
-                    )}
                 />
             </div>
         </>

@@ -62,6 +62,18 @@ const StockSummaryReport = () => {
         NWT: Number(item.NWT).toFixed(3),
     }));
 
+    // Add totals row to formattedData
+    const formattedDataWithTotals = [
+        ...formattedData,
+        {
+            sno: 'Total',
+            PRODUCTNAME: '',
+            PIECES: totalPCS,
+            GWT: totalGWT,
+            NWT: totalNWT,
+        }
+    ];
+
     return (
         <>
             <Row justify="space-between" align="middle">
@@ -84,9 +96,10 @@ const StockSummaryReport = () => {
                         ))}
                     </Select>
                     <PdfExcelPrint
-                        data={formattedData}
+                        data={formattedDataWithTotals}
                         columns={columns}
                         fileName="StockSummaryReport"
+                        alignRightColumns={['PIECES', 'GWT', 'NWT']} // Add this prop to align right
                     />
                 </Col>
             </Row>
@@ -106,7 +119,8 @@ const StockSummaryReport = () => {
                     rowClassName="table-row"
                     summary={() => (
                         <Table.Summary.Row>
-                            <Table.Summary.Cell colSpan={2}>Total</Table.Summary.Cell>
+                            <Table.Summary.Cell>Total</Table.Summary.Cell>
+                            <Table.Summary.Cell />
                             <Table.Summary.Cell align='right'>{totalPCS}</Table.Summary.Cell>
                             <Table.Summary.Cell align='right'>{totalGWT}</Table.Summary.Cell>
                             <Table.Summary.Cell align='right'>{totalNWT}</Table.Summary.Cell>
