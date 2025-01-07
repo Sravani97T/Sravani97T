@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Layout } from "antd";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
-import logo from "../Components/Assets/SARADA.png"; // Regular logo
+import logo from "../Components/Assets/textLogo.png"; // Regular logo
 import logo1 from "../Components/Assets/tlogo.png"; // Collapsed logo
 
 const { Sider, Content } = Layout;
@@ -45,11 +45,11 @@ const DashboardLayout = ({ children }) => {
   }, [isMobile]);
 
   // Styles for logos
-  const expandedLogoStyle = { width: "100%", height: "50px" };
-  const collapsedLogoStyle = { width: "35px", height: "35px" };
+  const expandedLogoStyle = { width: "160px", height: "25px" };
+  const collapsedLogoStyle = { width: "35px", height: "25px" };
 
   return (
-    <Layout style={{ minHeight: "100vh" }}>
+    <Layout  style={{ minHeight: "100vh" }}>
       {/* Sidebar */}
       <Sider
         collapsible
@@ -58,7 +58,10 @@ const DashboardLayout = ({ children }) => {
         style={{
           backgroundColor: "#fff",
           width: collapsed ? "80px" : "200px",
+          
           position: "relative", // Make sure sidebar itself doesn't interfere with sticky positioning
+          borderTopLeftRadius: "10px", // Add border radius to the top-left corner
+
         }}
         ref={sidebarRef} // Attach the reference to sidebar
       >
@@ -69,14 +72,22 @@ const DashboardLayout = ({ children }) => {
             position: "sticky", // Make logo sticky at the top of the sidebar
             top: 0, // Stick it to the top
             zIndex: 100, // Ensure logo stays on top of other content
-            backgroundColor: "#fff", // Optional: ensure it has a solid background while sticky
+            backgroundColor: "#150A4E", 
+            borderTopLeftRadius: "30px",
           }}
         >
           <img
-            src={collapsed ? logo1 : logo}
-            alt="Logo"
-            style={collapsed ? collapsedLogoStyle : expandedLogoStyle}
+            src={logo1}
+            alt="Collapsed Logo"
+            style={collapsedLogoStyle}
           />
+          {!collapsed && (
+            <img
+              src={logo}
+              alt="Expanded Logo"
+              style={expandedLogoStyle}
+            />
+          )}
         </div>
         <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
       </Sider>
@@ -84,7 +95,7 @@ const DashboardLayout = ({ children }) => {
       {/* Main Content */}
       <Layout>
         <Header collapsed={collapsed} toggleSidebar={toggleSidebar} />
-        <Content style={{ margin: "16px",  }}>
+        <Content style={{ margin: "16px" ,}}>
           {children}
         </Content>
       </Layout>

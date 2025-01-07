@@ -317,3 +317,92 @@
 .scroll-horizontal::-webkit-scrollbar-track {
   background-color: #f1f1f1;
 }
+/* datepickers */
+.date-picker {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid lightgrey;
+  border-radius: 4px;
+  font-size: 14px;
+  color: #0C1154;
+}
+
+.date-picker:focus {
+  border-color: #0C1154;
+  box-shadow: 0 0 5px rgba(12, 17, 84, 0.5);
+}
+
+.date-picker-container {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.date-picker-label {
+  font-weight: 600;
+  color: #0C1154;
+}
+.react-datepicker__month {
+  margin: 0 !important;
+}
+/* sidebar colur */
+.ant-menu-light .ant-menu-item {
+  color: #acc4e2 !important;
+
+}
+.ant-menu-item-selected {
+  background-color: #52BD91 !important;
+}
+.icon-circle {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: #f0f0f0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+/* dashboard */
+
+/* Style.css */
+
+.custom-scrollbar .ant-menu-submenu-title {
+  font-size: 12px; /* Reduce font size */
+  padding-left: 10px !important; /* Align from start */
+}
+
+.custom-scrollbar .ant-menu-item {
+  font-size: 12px; /* Reduce font size */
+  padding-left: 10px !important; /* Align from start */
+}
+.ant-menu-submenu-popup .ant-menu-vertical.ant-menu{
+  background-color: #150A4E;
+}
+.custom-date-input {
+    display: flex;
+    align-items: center;
+    border: 1px solid #d9d9d9;
+    border-radius: 6px;
+    padding: 5px 10px;
+    background-color: #fff;
+    cursor: pointer;
+    transition: border-color 0.3s;
+}
+
+.custom-date-input:hover {
+    border-color: #40a9ff;
+}
+
+.custom-date-input input {
+    border: none;
+    outline: none;
+    width: 100%;
+    padding: 5px;
+    font-size: 14px;
+    background-color: transparent;
+}
+
+.calendar-icon {
+    margin-left: 8px;
+    color: #a3ccf2;
+}

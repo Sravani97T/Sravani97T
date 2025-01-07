@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Table, Select, Input, Breadcrumb, Row, Col, DatePicker, Popover, Button } from 'antd';
 import axios from 'axios';
 import moment from 'moment';
-import { PrinterOutlined, FilePdfOutlined, FileExcelOutlined,FilterOutlined } from '@ant-design/icons';
+import { PrinterOutlined, FilePdfOutlined, FileExcelOutlined, FilterOutlined } from '@ant-design/icons';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { saveAs } from 'file-saver';
@@ -44,7 +44,7 @@ const ProductTable = () => {
             console.error('Printable content not found');
         }
     };
-    
+
     const handlePDFWithPreview = () => {
         const doc = new jsPDF('landscape');
         doc.autoTable({
@@ -99,12 +99,12 @@ const ProductTable = () => {
             };
         };
     };
-    
+
     const handleExcel = async () => {
         const ExcelJS = await import('exceljs');
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet('Product Data');
-    
+
         worksheet.columns = [
             { header: 'S.No', key: 'sno', width: 5 },
             { header: 'Tag No', key: 'TAGNO', width: 15 },
@@ -126,7 +126,7 @@ const ProductTable = () => {
             { header: 'Tag Size', key: 'TAGSIZE', width: 10 },
             { header: 'Date', key: 'TAGDATE', width: 15 }
         ];
-    
+
         filteredData.forEach((item, index) => {
             worksheet.addRow({
                 sno: index + 1,
@@ -150,7 +150,7 @@ const ProductTable = () => {
                 TAGDATE: moment(item.TAGDATE).format('DD/MM/YYYY')
             });
         });
-    
+
         worksheet.addRow({});
         worksheet.addRow({
             sno: 'Total',
@@ -161,7 +161,7 @@ const ProductTable = () => {
             diacts: sums.diacts ? sums.diacts.toFixed(2) : '',
             Diamond_Amount: sums.Diamond_Amount ? sums.Diamond_Amount.toFixed(2) : ''
         });
-    
+
         worksheet.getRow(1).font = { bold: true, size: 7 };
         worksheet.eachRow((row, rowNumber) => {
             row.eachCell((cell) => {
@@ -181,10 +181,11 @@ const ProductTable = () => {
                 cell.font = { size: 8 };
             });
         });
-    
+
         const buffer = await workbook.xlsx.writeBuffer();
         saveAs(new Blob([buffer]), 'ProductData.xlsx');
     };
+
     useEffect(() => {
         axios.get('http://www.jewelerp.timeserasoftware.in/api/Erp/GetTagGenerationDetailsList')
             .then(response => {
@@ -238,7 +239,7 @@ const ProductTable = () => {
                 return tagDate.isBetween(fromDate, toDate, 'days', '[]');
             });
         }
-        setFilteredData(filtered);
+        setFilteredData(filtered.map((item, index) => ({ ...item, sno: index + 1 })));
     }, [filters, data]);
 
     const handleTempFilterChange = (key, value) => {
@@ -285,18 +286,18 @@ const ProductTable = () => {
     };
 
     const sums = calculateSums(filteredData);
- 
-    
+
+
     const formatValue = (value) => {
         return value ? value.toFixed(2) : '';
     };
-    
+
     const formatWeight = (value) => {
         return value ? value.toFixed(3) : '';
     };
-    
+
     const columns = [
-        { title: 'S.No', dataIndex: 'sno', key: 'sno', render: (text, record, index) => index + 1 },
+        { title: 'S.No', dataIndex: 'sno', key: 'sno', },
         { title: 'Tag No', dataIndex: 'TAGNO', key: 'TAGNO' },
         { title: 'Product Name', dataIndex: 'PRODUCTNAME', key: 'PRODUCTNAME' },
         { title: 'Pieces', dataIndex: 'PIECES', align: "right", key: 'PIECES', render: (value) => value || '' },
@@ -317,7 +318,7 @@ const ProductTable = () => {
         { title: 'Tag Size', dataIndex: 'TAGSIZE', align: "center", key: 'TAGSIZE' },
         { title: 'Date', dataIndex: 'TAGDATE', key: 'TAGDATE', align: "center", render: (text) => moment(text).format('DD/MM/YYYY') },
     ];
-    
+
     const uniqueMainProducts = [...new Set(data.map(item => item.MNAME))];
     const uniqueProductCategories = tempFilters.mainProduct
         ? [...new Set(data.filter(item => item.MNAME === tempFilters.mainProduct).map(item => item.PRODUCTCATEGORY))]
@@ -531,70 +532,70 @@ const ProductTable = () => {
                     </Breadcrumb>
                 </Col>
                 <Col>
-                <Button icon={<PrinterOutlined />} onClick={handlePrint} style={{ marginRight: 8 }}>Print</Button>
-        <Button icon={<FilePdfOutlined />} onClick={handlePDFWithPreview} style={{ marginRight: 8 }}>PDF</Button>
-        <Button icon={<FileExcelOutlined />} onClick={handleExcel} style={{ marginRight: 8 }}>Excel</Button>
-        <Popover
-            content={filterContent}
-            title="Filters"
-            trigger="click"
-            open={popoverVisible}
-            onOpenChange={setPopoverVisible}
-            placement="bottomLeft"
-            overlayStyle={{ width: '500px' }}
-        >
-            <Button icon={<FilterOutlined />} type="primary">Filter</Button>
-        </Popover>
-    </Col>
+                    <Button icon={<PrinterOutlined />} onClick={handlePrint} style={{ marginRight: 8 }}>Print</Button>
+                    <Button icon={<FilePdfOutlined />} onClick={handlePDFWithPreview} style={{ marginRight: 8 }}>PDF</Button>
+                    <Button icon={<FileExcelOutlined />} onClick={handleExcel} style={{ marginRight: 8 }}>Excel</Button>
+                    <Popover
+                        content={filterContent}
+                        title="Filters"
+                        trigger="click"
+                        open={popoverVisible}
+                        onOpenChange={setPopoverVisible}
+                        placement="bottomLeft"
+                        overlayStyle={{ width: '500px' }}
+                    >
+                        <Button icon={<FilterOutlined />} type="primary">Filter</Button>
+                    </Popover>
+                </Col>
             </Row>
             <div style={{ marginTop: 16, boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}>
-           
-            <div
-    id="printableTable"
-    className="table-responsive scroll-horizontal"
-    style={{
-        maxHeight: "calc(99vh - 193.33px)",
-        overflowY: "auto",
-        overflowX: "auto",
-        marginTop: "20px",
-        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
-        backgroundColor: '#fff',
-        borderRadius: '8px'
-    }}
->
-<Table
-    size="small"
-    columns={columns}
-    dataSource={isFilterApplied ? filteredData : []}
-    rowKey="TAGNO"
-    pagination={{
-        pageSize: 5,
-        showSizeChanger: true,
-        pageSizeOptions: ["5", "10", "20", "50"],
-        showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
-        position: ["topRight"],
-        style: { margin: "5px" }
-    }}
-    rowClassName={(record, index) => (index % 2 === 0 ? 'table-row-light' : 'table-row-dark')}
-    summary={() => isFilterApplied && (
-        <Table.Summary fixed>
-            <Table.Summary.Row style={{ backgroundColor: "#D5D8DC" }}>
-                <Table.Summary.Cell index={0} colSpan={3}>Total</Table.Summary.Cell>
-                <Table.Summary.Cell index={3} align="right">{sums.PCS || ''}</Table.Summary.Cell>
-                <Table.Summary.Cell index={4}></Table.Summary.Cell>
-                <Table.Summary.Cell index={5} align="right">{formatWeight(sums.GWT)}</Table.Summary.Cell>
-                <Table.Summary.Cell index={6}></Table.Summary.Cell>
-                <Table.Summary.Cell index={7} align="right">{formatWeight(sums.NWT)}</Table.Summary.Cell>
-                <Table.Summary.Cell index={8} align="right">{sums.diacts ? sums.diacts.toFixed(2) : ''}</Table.Summary.Cell>
-                <Table.Summary.Cell index={9} align="right">{sums.Diamond_Amount ? sums.Diamond_Amount.toFixed(2) : ''}</Table.Summary.Cell>
-                <Table.Summary.Cell index={10} colSpan={9}></Table.Summary.Cell>
-                <Table.Summary.Cell index={11} colSpan={9}></Table.Summary.Cell>
 
-            </Table.Summary.Row>
-        </Table.Summary>
-    )}
-/>
-</div>
+                <div
+                    id="printableTable"
+                    className="table-responsive scroll-horizontal"
+                    style={{
+                        maxHeight: "calc(99vh - 193.33px)",
+                        overflowY: "auto",
+                        overflowX: "auto",
+                        marginTop: "20px",
+                        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+                        backgroundColor: '#fff',
+                        borderRadius: '8px'
+                    }}
+                >
+                    <Table
+                        size="small"
+                        columns={columns}
+                        dataSource={isFilterApplied ? filteredData : []}
+                        rowKey="TAGNO"
+                        pagination={{
+                            pageSize: 5,
+                            showSizeChanger: true,
+                            pageSizeOptions: ["5", "10", "20", "50"],
+                            showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
+                            position: ["topRight"],
+                            style: { margin: "5px" }
+                        }}
+                        rowClassName={(record, index) => (index % 2 === 0 ? 'table-row-light' : 'table-row-dark')}
+                        summary={() => isFilterApplied && (
+                            <Table.Summary fixed>
+                                <Table.Summary.Row style={{ backgroundColor: "#D5D8DC" }}>
+                                    <Table.Summary.Cell index={0} colSpan={3}>Total</Table.Summary.Cell>
+                                    <Table.Summary.Cell index={3} align="right">{sums.PCS || ''}</Table.Summary.Cell>
+                                    <Table.Summary.Cell index={4}></Table.Summary.Cell>
+                                    <Table.Summary.Cell index={5} align="right">{formatWeight(sums.GWT)}</Table.Summary.Cell>
+                                    <Table.Summary.Cell index={6}></Table.Summary.Cell>
+                                    <Table.Summary.Cell index={7} align="right">{formatWeight(sums.NWT)}</Table.Summary.Cell>
+                                    <Table.Summary.Cell index={8} align="right">{sums.diacts ? sums.diacts.toFixed(2) : ''}</Table.Summary.Cell>
+                                    <Table.Summary.Cell index={9} align="right">{sums.Diamond_Amount ? sums.Diamond_Amount.toFixed(2) : ''}</Table.Summary.Cell>
+                                    <Table.Summary.Cell index={10} colSpan={9}></Table.Summary.Cell>
+                                    <Table.Summary.Cell index={11} colSpan={9}></Table.Summary.Cell>
+
+                                </Table.Summary.Row>
+                            </Table.Summary>
+                        )}
+                    />
+                </div>
                 <style jsx>{`
                     .table-row-light {
                         background-color: #f0f0f0;
