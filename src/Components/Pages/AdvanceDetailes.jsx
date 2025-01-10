@@ -64,9 +64,9 @@ const AdvancedDetailsCard = () => {
       <Row gutter={[16, 16]}>
         <Col span={8}>
           <div
-            style={cardStyle("#D1E4FF")}
+            style={cardStyle("#EAF2F8")}
             onMouseEnter={(e) => Object.assign(e.currentTarget.style, hoverStyle)}
-            onMouseLeave={(e) => Object.assign(e.currentTarget.style, cardStyle("#D1E4FF"))}
+            onMouseLeave={(e) => Object.assign(e.currentTarget.style, cardStyle("#EAF2F8"))}
           >
             <div>
               <div
@@ -82,9 +82,9 @@ const AdvancedDetailsCard = () => {
 
         <Col span={8}>
           <div
-            style={cardStyle("#E4F5D6")}
+            style={cardStyle("#F4ECF7")}
             onMouseEnter={(e) => Object.assign(e.currentTarget.style, hoverStyle)}
-            onMouseLeave={(e) => Object.assign(e.currentTarget.style, cardStyle("#E4F5D6"))}
+            onMouseLeave={(e) => Object.assign(e.currentTarget.style, cardStyle("#F4ECF7"))}
           >
             <div>
               <div
@@ -100,9 +100,9 @@ const AdvancedDetailsCard = () => {
 
         <Col span={8}>
           <div
-            style={cardStyle("#FFF4D1")}
+            style={cardStyle("#EAFAF1")}
             onMouseEnter={(e) => Object.assign(e.currentTarget.style, hoverStyle)}
-            onMouseLeave={(e) => Object.assign(e.currentTarget.style, cardStyle("#FFF4D1"))}
+            onMouseLeave={(e) => Object.assign(e.currentTarget.style, cardStyle("#EAFAF1"))}
           >
             <div>
               <div
@@ -118,9 +118,9 @@ const AdvancedDetailsCard = () => {
 
         <Col span={8}>
           <div
-            style={cardStyle("#F1E6FF")}
+            style={cardStyle("#FDEDEC")}
             onMouseEnter={(e) => Object.assign(e.currentTarget.style, hoverStyle)}
-            onMouseLeave={(e) => Object.assign(e.currentTarget.style, cardStyle("#F1E6FF"))}
+            onMouseLeave={(e) => Object.assign(e.currentTarget.style, cardStyle("#FDEDEC"))}
           >
             <div>
               <div
@@ -136,9 +136,9 @@ const AdvancedDetailsCard = () => {
 
         <Col span={8}>
           <div
-            style={cardStyle("#FFEBE6")}
+            style={cardStyle("#F2F4F4")}
             onMouseEnter={(e) => Object.assign(e.currentTarget.style, hoverStyle)}
-            onMouseLeave={(e) => Object.assign(e.currentTarget.style, cardStyle("#FFEBE6"))}
+            onMouseLeave={(e) => Object.assign(e.currentTarget.style, cardStyle("#F2F4F4"))}
           >
             <div>
               <div
@@ -154,9 +154,9 @@ const AdvancedDetailsCard = () => {
 
         <Col span={8}>
           <div
-            style={cardStyle("#E1F5FF")}
+            style={cardStyle("#FDF2E9")}
             onMouseEnter={(e) => Object.assign(e.currentTarget.style, hoverStyle)}
-            onMouseLeave={(e) => Object.assign(e.currentTarget.style, cardStyle("#E1F5FF"))}
+            onMouseLeave={(e) => Object.assign(e.currentTarget.style, cardStyle("#FDF2E9"))}
           >
             <div>
               <div

@@ -52,6 +52,7 @@ import OldGoldBookOpening from "./Components/POSReports/OldGoldbookOpening";
 import TraySummary from "./Components/Reports/TraySummary";
 import CounterChart from "./Components/Reports/CounterChart";
 import StoneDetails from "./Components/Reports/StoneDetailes";
+import DayGlance from "./Components/POSReports/DayGlance";
 const App = () => {
   return (
     <Router>
@@ -116,6 +117,8 @@ const App = () => {
           <Route path="/traysummery-report" element={<TraySummary/>} />
           <Route path="/counterchart-report" element={<CounterChart/>} />
           <Route path="/stonedetailes-report" element={<StoneDetails/>} />
+          <Route path="/day-glance" element={<DayGlance/>}/>
+
 
           
 

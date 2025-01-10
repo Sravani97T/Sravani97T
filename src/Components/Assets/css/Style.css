@@ -406,3 +406,35 @@
     margin-left: 8px;
     color: #a3ccf2;
 }
+@media print {
+  .print-friendly {
+      overflow: visible !important;
+      max-height: unset !important;
+      box-shadow: none !important;
+  }
+
+  table {
+      border-collapse: collapse;
+      width: 100%;
+  }
+
+  table th, table td {
+      border: 1px solid #ddd;
+      padding: 8px;
+  }
+
+  table th {
+      background-color: #f2f2f2;
+      color: black;
+      text-align: left;
+  }
+}
+.sub-row .ant-table-cell {
+    border-top: none;
+    border-bottom: none;
+}
+
+.sub-row:first-child .ant-table-cell {
+    border-top: 1px solid #d9d9d9; 
+ 
+}

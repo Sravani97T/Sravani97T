@@ -1,10 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Row, Col, Breadcrumb } from 'antd';
+import { Table, Row, Col, Breadcrumb, Input, Select, Pagination } from 'antd';
 import axios from 'axios';
 import PdfExcelPrint from '../Utiles/PdfExcelPrint'; // Adjust the import path as necessary
 
+const { Option } = Select;
+
 const OutstandingCustomers = () => {
     const [filteredData, setFilteredData] = useState([]);
+    const [cityFilter, setCityFilter] = useState('');
+    const [mobileFilter, setMobileFilter] = useState('');
+    const [customerNameFilter, setCustomerNameFilter] = useState('');
+    const [cityOptions, setCityOptions] = useState([]);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(6);
 
     useEffect(() => {
         axios.get('http://www.jewelerp.timeserasoftware.in/api/POSReports/GetOutStandingCustomers?cityName=%&custName=%&saleCode=1&mobileNo=%')
@@ -16,11 +24,38 @@ const OutstandingCustomers = () => {
                     balance: item.debit - item.credit,
                 }));
                 setFilteredData(data);
+
+                // Extract unique city names
+                const uniqueCities = [...new Set(data.map(item => item.CityName))];
+                setCityOptions(uniqueCities);
             })
             .catch(error => {
                 console.error('Error fetching outstanding customers:', error);
             });
     }, []);
+
+    const handleCityChange = (value) => {
+        setCityFilter(value);
+    };
+
+    const handleMobileChange = (event) => {
+        setMobileFilter(event.target.value);
+    };
+
+    const handleCustomerNameChange = (event) => {
+        setCustomerNameFilter(event.target.value);
+    };
+
+    const handlePageChange = (page, pageSize) => {
+        setCurrentPage(page);
+        setPageSize(pageSize);
+    };
+
+    const filteredResults = filteredData.filter(item => 
+        (cityFilter ? item.CityName.includes(cityFilter) : true) &&
+        (mobileFilter ? item.MobileNum.includes(mobileFilter) : true) &&
+        (customerNameFilter ? item.CustName.toLowerCase().includes(customerNameFilter.toLowerCase()) : true)
+    );
 
     const columns = [
         { title: 'S.No', dataIndex: 'serialNo', key: 'serialNo' },
@@ -33,8 +68,8 @@ const OutstandingCustomers = () => {
     ];
 
     const getTotals = () => {
-        const totalDebit = filteredData.reduce((sum, item) => sum + item.debit, 0);
-        const totalCredit = filteredData.reduce((sum, item) => sum + item.credit, 0);
+        const totalDebit = filteredResults.reduce((sum, item) => sum + item.debit, 0);
+        const totalCredit = filteredResults.reduce((sum, item) => sum + item.credit, 0);
         const totalBalance = totalDebit - totalCredit;
 
         return {
@@ -47,7 +82,7 @@ const OutstandingCustomers = () => {
     const { totalDebit, totalCredit, totalBalance } = getTotals();
 
     const formattedData = [
-        ...filteredData,
+        ...filteredResults,
         {
             serialNo: 'Total',
             CityName: '',
@@ -61,9 +96,9 @@ const OutstandingCustomers = () => {
 
     return (
         <>
-            <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
+            <Row justify="space-between" align="middle" style={{ marginBottom: 8 }}>
                 <Col>
-                    <Breadcrumb style={{ fontSize: '18px', fontWeight: '600', color: '#0C1154' }}>
+                    <Breadcrumb style={{ fontSize: '16px', fontWeight: '600', color: '#0C1154' }}>
                         <Breadcrumb.Item>Reports</Breadcrumb.Item>
                         <Breadcrumb.Item>Outstanding Customers</Breadcrumb.Item>
                     </Breadcrumb>
@@ -76,21 +111,59 @@ const OutstandingCustomers = () => {
                     />
                 </Col>
             </Row>
-            <div style={{ marginTop: "10px" }}>
+            <Row gutter={8} style={{ marginBottom: 8 }} align="middle">
+                <Col>
+                    <Select
+                        placeholder="Select City"
+                        onChange={handleCityChange}
+                        style={{ width: 180 }}
+                        size="mediam"
+                    >
+                        <Option value="">All Cities</Option>
+                        {cityOptions.map(city => (
+                            <Option key={city} value={city}>{city}</Option>
+                        ))}
+                    </Select>
+                </Col>
+                <Col>
+                    <Input
+                        placeholder="Search Mobile Number"
+                        onChange={handleMobileChange}
+                        style={{ width: 180 }}
+                        size="mediam"
+                    />
+                </Col>
+                <Col>
+                    <Input
+                        placeholder="Search Customer Name"
+                        onChange={handleCustomerNameChange}
+                        style={{ width: 180 }}
+                        size="mediam"
+                    />
+                </Col>
+                <Col flex="auto" />
+                <Col>
+                    <Pagination
+                        current={currentPage}
+                        pageSize={pageSize}
+                        total={filteredResults.length}
+                        onChange={handlePageChange}
+                        pageSizeOptions={["6", "10", "20", "50", "100"]}
+                        showSizeChanger
+                        showTotal={(total, range) => `${range[0]}-${range[1]} of ${total} items`}
+                        size="small"
+                    />
+                </Col>
+            </Row>
+            <div style={{ marginTop: "8px" }}>
                 <Table
                     size="small"
                     columns={columns}
-                    dataSource={filteredData}
+                    dataSource={filteredResults.slice((currentPage - 1) * pageSize, currentPage * pageSize)}
                     rowKey="key"
-                    pagination={{
-                        pageSize: 6,
-                        pageSizeOptions: ["10", "20", "50", "100"],
-                        showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
-                        position: ["topRight"],
-                        style: { margin: "16px 0" }
-                    }}
+                    pagination={false}
                     rowClassName="table-row"
-                    summary={() => filteredData.length > 0 && (
+                    summary={() => filteredResults.length > 0 && (
                         <Table.Summary.Row>
                             <Table.Summary.Cell>Total</Table.Summary.Cell>
                             <Table.Summary.Cell colSpan={3} />

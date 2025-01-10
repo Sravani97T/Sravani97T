@@ -1,15 +1,25 @@
-import React, { useState, useEffect } from 'react';
-import { Table, Row, Col, Breadcrumb, Select, DatePicker } from 'antd';
+import React, { useState, useEffect, forwardRef } from 'react';
+import { Table, Row, Col, Breadcrumb, Select } from 'antd';
 import axios from 'axios';
 import moment from 'moment';
 import PdfExcelPrint from '../Utiles/PdfExcelPrint'; // Adjust the import path as necessary
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import { FaCalendarAlt } from 'react-icons/fa';
+
+const CustomInput = forwardRef(({ value, onClick, placeholder }, ref) => (
+    <div className="custom-date-input" onClick={onClick} ref={ref}>
+        <input value={value} placeholder={placeholder} readOnly />
+        <FaCalendarAlt className="calendar-icon" />
+    </div>
+));
 
 const { Option } = Select;
 
 const GS11Reports = () => {
     const [filteredData, setFilteredData] = useState([]);
     const [openingCash, setOpeningCash] = useState(0);
-    const [dates, setDates] = useState([null, null]);
+    const [dates, setDates] = useState([moment().startOf('day').toDate(), moment().endOf('day').toDate()]);
     const [particulars, setParticulars] = useState('GOLD');
     const [particularsList, setParticularsList] = useState([]);
 
@@ -25,8 +35,8 @@ const GS11Reports = () => {
 
     useEffect(() => {
         if (dates[0] && dates[1]) {
-            const fromDate = dates[0].format('YYYY/MM/DD');
-            const toDate = dates[1].format('YYYY/MM/DD');
+            const fromDate = moment(dates[0]).format('YYYY/MM/DD');
+            const toDate = moment(dates[1]).format('YYYY/MM/DD');
 
             axios.get(`http://www.jewelerp.timeserasoftware.in/api/POSReports/GetGS11Opening?entryDate=${toDate}&particulars=${particulars}`)
                 .then(response => {
@@ -103,7 +113,6 @@ const GS11Reports = () => {
             BALANCE: totalBalance,
         }
     ];
-    
 
     return (
         <>
@@ -127,20 +136,24 @@ const GS11Reports = () => {
                     <Row gutter={16} justify="center">
                         <Col>
                             <DatePicker
-                                value={dates[0]}
+                                selected={dates[0]}
                                 onChange={(date) => setDates([date, dates[1]])}
-                                placeholder="Start Date"
-                                style={{ width: '100%' }}
-                                format="YYYY/MM/DD"
+                                selectsStart
+                                startDate={dates[0]}
+                                endDate={dates[1]}
+                                placeholderText="Start Date"
+                                customInput={<CustomInput />}
                             />
                         </Col>
                         <Col>
                             <DatePicker
-                                value={dates[1]}
+                                selected={dates[1]}
                                 onChange={(date) => setDates([dates[0], date])}
-                                placeholder="End Date"
-                                style={{ width: '100%' }}
-                                format="YYYY/MM/DD"
+                                selectsEnd
+                                startDate={dates[0]}
+                                endDate={dates[1]}
+                                placeholderText="End Date"
+                                customInput={<CustomInput />}
                             />
                         </Col>
                     </Row>

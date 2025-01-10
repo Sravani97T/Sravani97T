@@ -58,7 +58,7 @@ const menuItems = [
     icon: <ShopOutlined style={{ color: "#fff" }} />,
     label: <span style={{ color: "#fff" }}>Point of Sale</span>,
     children: [
-      { key: "4-1", label: <Link to="/pos-overview" style={{ color: "#fff" }}>POS Overview</Link> },
+      { key: "4-1", label: <Link to="/day-glance" style={{ color: "#fff" }}>Day Glance</Link> },
       { key: "4-2", label: <Link to="/pos-sales" style={{ color: "#fff" }}>Sales</Link> },
     ],
   },
