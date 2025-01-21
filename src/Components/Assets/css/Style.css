@@ -160,7 +160,7 @@
   }
 }
 .ant-table-thead > tr > th {
-  background-color: #e9e9e9 !important;
+  background-color: #4FBE91 !important;
 }
 /* Custom scrollbar for the table */
 .custom-scroll .ant-table-body {
@@ -217,7 +217,7 @@
 .filter-section .ant-select:hover,
 .filter-section .ant-input-number:hover,
 .filter-section .ant-picker:hover {
-  border-color: #40a9ff;
+  border-color: #c1c0f4;
 }
 
 .custom-table .ant-table-thead > tr > th,
@@ -390,7 +390,7 @@
 }
 
 .custom-date-input:hover {
-    border-color: #40a9ff;
+    border-color: #9fc8ea;
 }
 
 .custom-date-input input {
@@ -406,35 +406,91 @@
     margin-left: 8px;
     color: #a3ccf2;
 }
-@media print {
-  .print-friendly {
-      overflow: visible !important;
-      max-height: unset !important;
-      box-shadow: none !important;
-  }
-
-  table {
-      border-collapse: collapse;
-      width: 100%;
-  }
-
-  table th, table td {
-      border: 1px solid #ddd;
-      padding: 8px;
-  }
-
-  table th {
-      background-color: #f2f2f2;
-      color: black;
-      text-align: left;
-  }
-}
-.sub-row .ant-table-cell {
-    border-top: none;
-    border-bottom: none;
+/* Basic table styling */
+.sidebar-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: #1e266d;
+  color: #fff;
 }
 
-.sub-row:first-child .ant-table-cell {
-    border-top: 1px solid #d9d9d9; 
- 
+.logo-section {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  background: #18204d;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  margin-right: 0.5rem;
+}
+
+.logo-text {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #fff;
+}
+
+.custom-menu {
+  flex-grow: 1;
+  background: #ebecf0;
+  
+}
+
+.custom-menu .ant-menu-item-selected {
+  background: #7574a1 !important;
+}
+
+.menu-item-with-badge {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.menu-item-with-badge .badge {
+  background: #605cfd;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: bold;
+  padding: 0.1rem 0.5rem;
+  border-radius: 12px;
+}
+
+.sidebar-footer {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  background: #18204d;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.profile-pic {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin-right: 0.5rem;
+}
+
+.profile-info {
+  color: #fff;
+}
+
+.profile-name {
+  font-weight: bold;
+}
+
+.profile-role {
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+/* Style.css */
+.ant-layout-sider .ant-layout-sider-children {
+  background: linear-gradient(180deg, #150A4E 0%, #150A4E 100%);
+
+
 }

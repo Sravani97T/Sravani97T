@@ -1,5 +1,10 @@
-import React, { useState } from "react";
-import { Row, Col, Table, DatePicker, Input, Select } from "antd";
+import React, { useState, useEffect, forwardRef } from "react";
+import { Row, Col, Table, Input, Select } from "antd";
+import axios from "axios";
+import moment from "moment";
+import { FaCalendarAlt } from 'react-icons/fa';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 import FirstColumn from "../Pages/ClientProfileDetailes"; // assuming FirstColumn is a custom component
 import BirthdayAnniversaryCard from "../Pages/BirthdaySection"; // import the BirthdayAnniversaryCard component
 import LatestDues from "../Pages/LatestDues";
@@ -10,139 +15,171 @@ import PaymentOverview from "./PaymentOverview";
 
 const { Option } = Select;
 
+const CustomInput = forwardRef(({ value, onClick, placeholder }, ref) => (
+  <div className="custom-date-input" onClick={onClick} ref={ref}>
+    <input value={value} placeholder={placeholder} readOnly />
+    <FaCalendarAlt className="calendar-icon" />
+  </div>
+));
+
 const Dashboard = () => {
   const [filters, setFilters] = useState({
-    fromDate: null,
-    toDate: null,
+    fromDate: new Date(),
+    toDate: new Date(),
     billNo: "",
-    jewelType: "",
+    jewelType: ""
   });
 
+  const [tableData, setTableData] = useState([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const fromDate = moment(filters.fromDate).format('YYYY-MM-DD');
+        const toDate = moment(filters.toDate).format('YYYY-MM-DD');
+        
+        // Log filters for debugging
+        console.log("Fetching data with filters:", { fromDate, toDate, ...filters });
+  
+        const response = await axios.get(`http://www.jewelerp.timeserasoftware.in/api/Erp/GetBillMast`, {
+          params: {
+            fromDate,
+            toDate,
+            billNo: filters.billNo || "", // Ensure empty strings are sent instead of undefined
+            jewelType: filters.jewelType || "",
+          },
+        });
+  
+        // Ensure response is valid
+        if (response.data) {
+          const data = response.data
+            .map(item => ({
+              ...item,
+              BillDate: moment(item.BillDate).format('YYYY-MM-DD'),
+            }))
+            .filter(item => {
+              const billDate = moment(item.BillDate);
+              return billDate.isBetween(fromDate, toDate, null, '[]');
+            });
+          setTableData(data);
+        } else {
+          console.error("No data returned from API");
+          setTableData([]); // Reset table data if no data
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        setTableData([]); // Reset table data on error
+      }
+    };
+  
+    fetchData(); // Call the function immediately
+  
+  }, [filters]); // Fetch data when filters change
+
   const handleFilterChange = (key, value) => {
-    setFilters({ ...filters, [key]: value });
+    setFilters(prevFilters => ({
+      ...prevFilters,
+      [key]: value
+    }));
   };
 
-  // Sample data for the table
-  const tableData = [
-    {
-      key: "1",
-      billDate: "2025-01-05",
-      jewelType: "Gold",
-      billNo: "B001",
-      customerName: "John Doe",
-      pcs: 3,
-      gwt: 150.5,
-      nwt: 148.2,
-      totalAmount: 50000,
-      discount: 5000,
-      grossAmt: 45000,
-      cgst: 900,
-      sgst: 900,
-      igst: 0,
-      netAmount: 46400,
-    },
-    {
-      key: "2",
-      billDate: "2025-01-04",
-      jewelType: "Silver",
-      billNo: "B002",
-      customerName: "Jane Smith",
-      pcs: 5,
-      gwt: 200.0,
-      nwt: 195.0,
-      totalAmount: 25000,
-      discount: 2000,
-      grossAmt: 23000,
-      cgst: 460,
-      sgst: 460,
-      igst: 0,
-      netAmount: 23580,
-    },
-    // Add more rows as necessary
-  ];
-
-  // Columns for the table
   const columns = [
     {
       title: "S.No",
-      dataIndex: "key",
-      key: "key",
-      render: (text) => <>{text}</>,
+      dataIndex: "BillNo",
+      key: "BillNo",
+      render: (text, record, index) => <>{index + 1}</>,
     },
     {
       title: "Bill Date",
-      dataIndex: "billDate",
-      key: "billDate",
+      dataIndex: "BillDate",
+      key: "BillDate",
+      render: (date) => moment(date).format('DD/MM/YYYY'),
     },
     {
       title: "Jewel Type",
-      dataIndex: "jewelType",
-      key: "jewelType",
+      dataIndex: "JewelType",
+      key: "JewelType",
     },
     {
       title: "Bill No",
-      dataIndex: "billNo",
-      key: "billNo",
+      dataIndex: "BillNo",
+      key: "BillNo",
+      align: 'center',
     },
     {
       title: "Customer Name",
-      dataIndex: "customerName",
-      key: "customerName",
+      dataIndex: "CustName",
+      key: "CustName",
     },
     {
       title: "Pcs",
-      dataIndex: "pcs",
-      key: "pcs",
+      dataIndex: "TotPieces",
+      key: "TotPieces",
+      align: 'right',
     },
     {
       title: "Gwt",
-      dataIndex: "gwt",
-      key: "gwt",
+      dataIndex: "TotGwt",
+      key: "TotGwt",
+      align: 'right',
+      render: (value) => value.toFixed(3),
     },
     {
       title: "Nwt",
-      dataIndex: "nwt",
-      key: "nwt",
+      dataIndex: "TotNwt",
+      key: "TotNwt",
+      align: 'right',
+      render: (value) => value.toFixed(3),
     },
     {
       title: "Total Amount",
-      dataIndex: "totalAmount",
-      key: "totalAmount",
+      dataIndex: "TotAmt",
+      key: "TotAmt",
+      align: 'right',
     },
     {
       title: "Discount",
-      dataIndex: "discount",
-      key: "discount",
+      dataIndex: "DisAmt",
+      key: "DisAmt",
+      align: 'right',
     },
     {
       title: "Gross Amt",
-      dataIndex: "grossAmt",
-      key: "grossAmt",
+      dataIndex: "BillAmt",
+      key: "BillAmt",
+      align: 'right',
+      render: (value) => value.toFixed(2),
     },
     {
       title: "CGST",
-      dataIndex: "cgst",
-      key: "cgst",
+      dataIndex: "CGST",
+      key: "CGST",
+      align: 'right',
     },
     {
       title: "SGST",
-      dataIndex: "sgst",
-      key: "sgst",
+      dataIndex: "SGST",
+      key: "SGST",
+      align: 'right',
     },
     {
       title: "IGST",
-      dataIndex: "igst",
-      key: "igst",
+      dataIndex: "IGST",
+      key: "IGST",
+      align: 'right',
     },
     {
       title: "Net Amount",
-      dataIndex: "netAmount",
-      key: "netAmount",
+      dataIndex: "NetAmt",
+      key: "NetAmt",
+      align: 'right',
+      render: (value) => value.toFixed(2),
     },
   ];
 
   return (
-    <div style={{ backgroundColor: "#f0f2f5",  }}>
+    <div style={{ backgroundColor: "#f0f2f5" }}>
       <Row gutter={[16, 16]}>
         {/* First Row */}
         <Col xs={24} lg={9}>
@@ -177,19 +214,22 @@ const Dashboard = () => {
         </Col>
       </Row>
 
-      <Row gutter={[16, 16]} style={{ marginTop: "10px" }}>
-        <Col xs={24} sm={12} md={6} lg={3}>
+      {/* Filter Row */}
+      <Row gutter={[16, 16]} style={{ marginTop: "15px" }}>
+      <Col xs={24} sm={12} md={6} lg={6}>
           <DatePicker
-            placeholder="From Date"
+            selected={filters.fromDate}
             onChange={(date) => handleFilterChange("fromDate", date)}
-            style={{ width: "100%" }}
+            customInput={<CustomInput placeholder="From Date" />}
+            dateFormat="dd/MM/yyyy"
           />
         </Col>
-        <Col xs={24} sm={12} md={6} lg={3}>
+        <Col xs={24} sm={12} md={6} lg={6}>
           <DatePicker
-            placeholder="To Date"
+            selected={filters.toDate}
             onChange={(date) => handleFilterChange("toDate", date)}
-            style={{ width: "100%" }}
+            customInput={<CustomInput placeholder="To Date" />}
+            dateFormat="dd/MM/yyyy"
           />
         </Col>
         <Col xs={24} sm={12} md={6} lg={6}>
@@ -210,20 +250,59 @@ const Dashboard = () => {
             {/* Add more options as necessary */}
           </Select>
         </Col>
+       
       </Row>
 
       {/* Ant Design Table */}
-      <Row gutter={[16, 16]} style={{ marginTop: "20px" }}>
+      <Row gutter={[16, 16]} style={{ marginTop: "5px" }}>
         <Col span={24}>
-          <Table
-            columns={columns}
-            dataSource={tableData}
-            pagination={false}
-            scroll={{ x: "max-content" }}
-            size="small"
-          />
+          <div
+            className="table-responsive scroll-horizontal"
+            style={{
+              maxHeight: "calc(99vh - 250px)",
+              overflowY: "auto",
+              overflowX: "auto",
+              boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+              backgroundColor: '#fff',
+              borderRadius: '8px'
+            }}
+          >
+            <Table
+              columns={columns}
+              dataSource={tableData}
+              pagination={false}
+              size="small"
+              rowClassName={(record, index) =>
+                index % 2 === 0 ? "table-row-light" : "table-row-dark"
+              }
+            />
+          </div>
         </Col>
       </Row>
+
+      <style jsx>{`
+        .table-row-light {
+          background-color: #fafafa;
+        }
+        .table-row-dark {
+          background-color: rgb(223, 230, 246);
+        }
+        .ant-table-tbody > tr:hover > td {
+          background: unset !important;
+        }
+        .custom-date-input {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          border: 1px solid #d9d9d9;
+          padding: 4px 11px;
+          border-radius: 4px;
+          cursor: pointer;
+        }
+        .calendar-icon {
+          margin-left: 8px;
+        }
+      `}</style>
     </div>
   );
 };

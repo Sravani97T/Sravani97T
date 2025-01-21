@@ -45,11 +45,12 @@ const DashboardLayout = ({ children }) => {
   }, [isMobile]);
 
   // Styles for logos
-  const expandedLogoStyle = { width: "160px", height: "25px" };
-  const collapsedLogoStyle = { width: "35px", height: "25px" };
+  const expandedLogoStyle = { width: "165px", height: "40px" };
+  const collapsedLogoStyle = { width: "30px", height: "30px" };
 
   return (
-    <Layout  style={{ minHeight: "100vh" }}>
+    <Layout style={{ minHeight: "100vh",    
+    }}>
       {/* Sidebar */}
       <Sider
         collapsible
@@ -58,7 +59,6 @@ const DashboardLayout = ({ children }) => {
         style={{
           backgroundColor: "#fff",
           width: collapsed ? "80px" : "200px",
-          
           position: "relative", // Make sure sidebar itself doesn't interfere with sticky positioning
           borderTopLeftRadius: "10px", // Add border radius to the top-left corner
 
@@ -67,37 +67,31 @@ const DashboardLayout = ({ children }) => {
       >
         <div
           style={{
-            padding: "16px",
+            padding: "10px",
             textAlign: "center",
             position: "sticky", // Make logo sticky at the top of the sidebar
             top: 0, // Stick it to the top
             zIndex: 100, // Ensure logo stays on top of other content
-            backgroundColor: "#150A4E", 
-            borderTopLeftRadius: "30px",
+            backgroundColor: "#150A4E",
+            borderTopLeftRadius: "10px",
+
           }}
         >
-          <img
-            src={logo1}
-            alt="Collapsed Logo"
-            style={collapsedLogoStyle}
-          />
-          {!collapsed && (
-            <img
-              src={logo}
-              alt="Expanded Logo"
-              style={expandedLogoStyle}
-            />
-          )}
+          <img src={logo1} alt="Collapsed Logo" style={collapsedLogoStyle} />
+          {!collapsed && <img src={logo} alt="Expanded Logo" style={expandedLogoStyle} />}
+
         </div>
+                  {/* <hr style={{ border: "0.5px solid  #4FBE91", }} /> */}
+
         <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
+
       </Sider>
 
       {/* Main Content */}
       <Layout>
         <Header collapsed={collapsed} toggleSidebar={toggleSidebar} />
-        <Content style={{ margin: "16px" ,}}>
-          {children}
-        </Content>
+        <Content style={{ margin: "16px" }}>{children}</Content>
+
       </Layout>
     </Layout>
   );

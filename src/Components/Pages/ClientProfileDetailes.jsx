@@ -1,15 +1,38 @@
-import React from "react";
-import { CalendarOutlined, PercentageOutlined, FileTextOutlined, FileDoneOutlined } from "@ant-design/icons";
+import React, { useEffect, useState } from "react";
+import { CalendarOutlined, FileTextOutlined, FileDoneOutlined, PercentageOutlined } from "@ant-design/icons";
 
 const FirstColumn = () => {
+  const [firmData, setFirmData] = useState(null);
+  const [totalInvoice, setTotalInvoice] = useState(0);
+  const tenantNameHeader = "PmlYjF0yAwEjNohFDKjzn/ExL/LMhjzbRDhwXlvos+0=";
+
+  useEffect(() => {
+    fetch("http://www.jewelerp.timeserasoftware.in/api/Erp/GetFirmConfihure", {
+      headers: { "tenantName": tenantNameHeader }
+    })
+      .then((response) => response.json())
+      .then((data) => setFirmData(data[0]))
+      .catch((error) => console.error("Error fetching firm data:", error));
+  }, []);
+
+  useEffect(() => {
+    fetch("http://www.jewelerp.timeserasoftware.in/api/DashBoard/GetTotalBills?fYear=2425&saleCode=1", {
+      headers: { "tenantName": tenantNameHeader }
+    })
+      .then((response) => response.json())
+      .then((data) => setTotalInvoice(data[0]?.BillCount || 0))
+      .catch((error) => console.error("Error fetching total invoice data:", error));
+  }, []);
+
   return (
     <div
       style={{
         borderRadius: "10px",
         boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-        padding: "10px",
+        padding: "8px",
         backgroundColor: "#f9f9f9",
         marginBottom: "7px",
+        border: "1px solid #ddd",
       }}
     >
       <div>
@@ -23,27 +46,38 @@ const FirstColumn = () => {
               margin: "0",
             }}
           >
-            Sravani Jewelries
+            {firmData?.FIRMNAME}
           </h3>
           <div style={{ fontSize: "14px", color: "#7d8a99", margin: "0" }}>
-            Hyderabad
+            CITY : {firmData?.CITY}
           </div>
-          <div style={{ fontSize: "14px", color: "#7d8a99", margin: "0" }}>
-            Kukatpally
+          <div style={{ fontSize: "16px", color: "#12246A", margin: "0" }}>
+            {firmData?.TINNO}
           </div>
         </div>
-        {/* Icons with square border and circular top */}
+        {/* Icons with card style */}
         <div style={{ display: "flex", justifyContent: "space-between", gap: "10px", flexWrap: "wrap" }}>
           <div
             style={{
               position: "relative",
               width: "80px",
               height: "69px",
-              border: "2px solid #aad5aa",
               borderRadius: "10px",
-              backgroundColor: "#eaf8ea",
+              backgroundColor: "#fff",
               textAlign: "center",
               marginBottom: "10px",
+              boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+              transition: "transform 0.3s, box-shadow 0.3s",
+              cursor: "pointer",
+              border: "1px solid #aad5aa",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "translateY(-5px)";
+              e.currentTarget.style.boxShadow = "0 8px 16px rgba(0, 0, 0, 0.2)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.1)";
             }}
           >
             <div
@@ -52,15 +86,16 @@ const FirstColumn = () => {
                 top: "-20px",
                 left: "50%",
                 transform: "translateX(-50%)",
-                width: "35px",
-                height: "35px",
+                width: "30px",
+                height: "30px",
                 borderRadius: "50%",
-                backgroundColor: "#76c776",
+                backgroundColor: "#F8F9F9",
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
-                color: "#fff",
-                fontSize: "16px",
+                color: "#aad5aa",
+                fontSize: "15px",
+                boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
               }}
             >
               <CalendarOutlined />
@@ -85,7 +120,7 @@ const FirstColumn = () => {
                 color: "#666",
               }}
             >
-              2024
+              {firmData?.FYEAR}
             </div>
           </div>
           <div
@@ -95,9 +130,17 @@ const FirstColumn = () => {
               height: "69px",
               border: "2px solid #ffd59b",
               borderRadius: "10px",
-              backgroundColor: "#fff9e6",
+              backgroundColor: "#fff",
               textAlign: "center",
               marginBottom: "10px",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "translateY(-5px)";
+              e.currentTarget.style.boxShadow = "0 8px 16px rgba(0, 0, 0, 0.2)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.1)";
             }}
           >
             <div
@@ -106,15 +149,16 @@ const FirstColumn = () => {
                 top: "-20px",
                 left: "50%",
                 transform: "translateX(-50%)",
-                width: "35px",
-                height: "35px",
+                width: "30px",
+                height: "30px",
                 borderRadius: "50%",
-                backgroundColor: "#ffb84d",
+                backgroundColor: "#fff",
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
-                color: "#fff",
-                fontSize: "16px",
+                color: "#ffd59b",
+                fontSize: "15px",
+                boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
               }}
             >
               <PercentageOutlined />
@@ -147,11 +191,22 @@ const FirstColumn = () => {
               position: "relative",
               width: "80px",
               height: "69px",
-              border: "2px solid #a4d4f4",
               borderRadius: "10px",
-              backgroundColor: "#e3f5fc",
+              backgroundColor: "#fff",
               textAlign: "center",
               marginBottom: "10px",
+              boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+              transition: "transform 0.3s, box-shadow 0.3s",
+              cursor: "pointer",
+              border: "1px solid #a4d4f4",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "translateY(-5px)";
+              e.currentTarget.style.boxShadow = "0 8px 16px rgba(0, 0, 0, 0.2)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.1)";
             }}
           >
             <div
@@ -160,15 +215,16 @@ const FirstColumn = () => {
                 top: "-20px",
                 left: "50%",
                 transform: "translateX(-50%)",
-                width: "35px",
-                height: "35px",
+                width: "30px",
+                height: "30px",
                 borderRadius: "50%",
-                backgroundColor: "#64b7f7",
+                backgroundColor: "#fff",
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
-                color: "#fff",
-                fontSize: "16px",
+                color: "#a4d4f4",
+                fontSize: "15px",
+                boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
               }}
             >
               <FileTextOutlined />
@@ -201,11 +257,22 @@ const FirstColumn = () => {
               position: "relative",
               width: "80px",
               height: "69px",
-              border: "2px solid #f6a5a5",
               borderRadius: "10px",
-              backgroundColor: "#fdecec",
+              backgroundColor: "#fff",
               textAlign: "center",
               marginBottom: "10px",
+              boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+              transition: "transform 0.3s, box-shadow 0.3s",
+              cursor: "pointer",
+              border: "1px solid #f6a5a5",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "translateY(-5px)";
+              e.currentTarget.style.boxShadow = "0 8px 16px rgba(0, 0, 0, 0.2)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.1)";
             }}
           >
             <div
@@ -214,15 +281,16 @@ const FirstColumn = () => {
                 top: "-20px",
                 left: "50%",
                 transform: "translateX(-50%)",
-                width: "35px",
-                height: "35px",
+                width: "30px",
+                height: "30px",
                 borderRadius: "50%",
-                backgroundColor: "#f47174",
+                backgroundColor: "#fff",
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
-                color: "#fff",
-                fontSize: "16px",
+                color: "#f6a5a5",
+                fontSize: "15px",
+                boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
               }}
             >
               <FileDoneOutlined />
@@ -247,7 +315,7 @@ const FirstColumn = () => {
                 color: "#666",
               }}
             >
-              50
+              {totalInvoice}
             </div>
           </div>
         </div>

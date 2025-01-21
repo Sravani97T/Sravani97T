@@ -1,16 +1,48 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, Popover, Button } from "antd";
-import {  HeartOutlined } from "@ant-design/icons";
-import { FaBirthdayCake } from "react-icons/fa"; 
+import { HeartOutlined } from "@ant-design/icons";
+import { FaBirthdayCake } from "react-icons/fa";
+import axios from "axios";
+
 const BirthdayAnniversaryCard = () => {
-  const [birthdayCount] = useState(5); // Example count for birthdays
-  const [anniversaryCount] = useState(3); // Example count for anniversaries
+  const [birthdayCount, setBirthdayCount] = useState(0);
+  const [anniversaryCount, setAnniversaryCount] = useState(0);
+  const [birthdayList, setBirthdayList] = useState([]);
+  const [anniversaryList, setAnniversaryList] = useState([]);
   const [openBirthdayPopover, setOpenBirthdayPopover] = useState(false);
   const [openAnniversaryPopover, setOpenAnniversaryPopover] = useState(false);
 
-  // Example list of birthdays and anniversaries today
-  const birthdayList = ["John Doe", "Jane Smith", "Alice Johnson"];
-  const anniversaryList = ["Tom & Mary", "Jack & Lily"];
+  useEffect(() => {
+    const tenantNameHeader = "PmlYjF0yAwEjNohFDKjzn/ExL/LMhjzbRDhwXlvos+0=";
+    const currentDate = new Date().toLocaleDateString("en-US");
+
+    const fetchBirthdayData = axios.get(
+      `http://www.jewelerp.timeserasoftware.in/api/DashBoard/GetBirthDayWishBoxDetails?date=${encodeURIComponent(currentDate)}`,
+      { headers: { tenantName: tenantNameHeader } }
+    );
+
+    const fetchAnniversaryData = axios.get(
+      `http://www.jewelerp.timeserasoftware.in/api/DashBoard/GetAnniversaryWishBoxDetails?date=${encodeURIComponent(currentDate)}`,
+      { headers: { tenantName: tenantNameHeader } }
+    );
+
+    Promise.all([fetchBirthdayData, fetchAnniversaryData])
+      .then(([birthdayResponse, anniversaryResponse]) => {
+        const birthdayData = birthdayResponse.data;
+        const anniversaryData = anniversaryResponse.data;
+
+        const birthdays = birthdayData.filter((item) => item.dob);
+        const anniversaries = anniversaryData.filter((item) => item.ANNVERSARY);
+
+        setBirthdayCount(birthdays.length);
+        setAnniversaryCount(anniversaries.length);
+        setBirthdayList(birthdays.map((item) => item.Dealername));
+        setAnniversaryList(anniversaries.map((item) => item.Dealername));
+      })
+      .catch((error) => {
+        console.error("Error fetching data:", error);
+      });
+  }, []);
 
   const birthdayContent = (
     <div>
@@ -38,8 +70,8 @@ const BirthdayAnniversaryCard = () => {
         width: "35px",
         height: "35px",
         borderRadius: "50%",
-        backgroundColor: "#f0f0f0", // Subtle background color
-        color: "#555", // Less intense text color
+        backgroundColor: "#f0f0f0",
+        color: "#555",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -61,15 +93,15 @@ const BirthdayAnniversaryCard = () => {
     >
       <div style={{ display: "flex", justifyContent: "space-between" }}>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flex: "1 1 45%" }}>
-          <div style={{ fontSize: "14px", color: "#6c757d", marginBottom: "10px",fontWeight:"bold" }}>Birthdays</div>
+          <div style={{ fontSize: "14px", color: "#6c757d", marginBottom: "10px", fontWeight: "bold" }}>Birthdays</div>
           <FaBirthdayCake
             style={{
               fontSize: "30px",
               color: "#ff69b4",
               marginBottom: "10px",
             }}
-          />          <Circle count={birthdayCount} />
-          
+          />
+          <Circle count={birthdayCount} />
           <Popover
             content={birthdayContent}
             title="Today's Birthdays"
@@ -83,8 +115,8 @@ const BirthdayAnniversaryCard = () => {
                 backgroundColor: openBirthdayPopover ? "#28a745" : "#28a745",
                 color: "white",
                 marginBottom: "20px",
-                borderRadius:"10px",
-                marginTop:"7px"
+                borderRadius: "10px",
+                marginTop: "7px",
               }}
             >
               Check
@@ -93,10 +125,9 @@ const BirthdayAnniversaryCard = () => {
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flex: "1 1 45%" }}>
-          <div style={{ fontSize: "14px", color: "#6c757d", marginBottom: "10px" ,fontWeight:"bold"}}>Anniversaries</div>
+          <div style={{ fontSize: "14px", color: "#6c757d", marginBottom: "10px", fontWeight: "bold" }}>Anniversaries</div>
           <HeartOutlined style={{ fontSize: "30px", color: "#ff6347", marginBottom: "10px" }} />
           <Circle count={anniversaryCount} />
-          
           <Popover
             content={anniversaryContent}
             title="Today's Anniversaries"
@@ -110,9 +141,8 @@ const BirthdayAnniversaryCard = () => {
                 backgroundColor: openAnniversaryPopover ? "#28a745" : "#28a745",
                 color: "white",
                 marginBottom: "15px",
-                borderRadius:"10px",
-                marginTop:"7px"
-
+                borderRadius: "10px",
+                marginTop: "7px",
               }}
             >
               Check

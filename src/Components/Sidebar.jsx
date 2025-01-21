@@ -12,15 +12,26 @@ import {
 } from "@ant-design/icons";
 import "../Components/Assets/css/Style.css";
 
+const iconStyle = {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  width: "24px",
+  height: "24px",
+  borderRadius: "5px",
+  backgroundColor: "#f0f0f0",
+  color: "#150A4E",
+};
+
 const menuItems = [
   {
     key: "1",
-    icon: <HomeOutlined style={{ color: "#fff" }} />,
+    icon: <div style={iconStyle}><HomeOutlined /></div>,
     label: <Link to="/" style={{ color: "#fff" }}>Dashboard</Link>,
   },
   {
     key: "2",
-    icon: <AppstoreOutlined style={{ color: "#fff" }} />,
+    icon: <div style={iconStyle}><AppstoreOutlined /></div>,
     label: <span style={{ color: "#fff" }}>Masters</span>,
     children: [
       { key: "2-1", label: <Link to="/main-product" style={{ color: "#fff" }}>Main Product</Link> },
@@ -46,7 +57,7 @@ const menuItems = [
   },
   {
     key: "3",
-    icon: <FileDoneOutlined style={{ color: "#fff" }} />,
+    icon: <div style={iconStyle}><FileDoneOutlined /></div>,
     label: <span style={{ color: "#fff" }}>Inventory</span>,
     children: [
       { key: "3-1", label: <Link to="/lot-creation" style={{ color: "#fff" }}>Lot Creation</Link> },
@@ -55,7 +66,7 @@ const menuItems = [
   },
   {
     key: "4",
-    icon: <ShopOutlined style={{ color: "#fff" }} />,
+    icon: <div style={iconStyle}><ShopOutlined /></div>,
     label: <span style={{ color: "#fff" }}>Point of Sale</span>,
     children: [
       { key: "4-1", label: <Link to="/day-glance" style={{ color: "#fff" }}>Day Glance</Link> },
@@ -64,11 +75,9 @@ const menuItems = [
   },
   {
     key: "5",
-    icon: <DollarOutlined style={{ color: "#fff" }} />,
+    icon: <div style={iconStyle}><DollarOutlined /></div>,
     label: <span style={{ color: "#fff" }}>Accounts</span>,
     children: [
-      // { key: "5-1", label: <Link to="/accounts-overview" style={{ color: "#fff" }}>Overview</Link> },
-      // { key: "5-2", label: <Link to="/dailyrates-report" style={{ color: "#fff" }}>Reports</Link> },
       { key: "5-3", label: <Link to="/bankstatement-report" style={{ color: "#fff" }}>Bank Report</Link> },
       { key: "5-4", label: <Link to="/billmaster-report" style={{ color: "#fff" }}>Bill Report</Link> },
       { key: "5-5", label: <Link to="/stockBalence-report" style={{ color: "#fff" }}>Stock Balance</Link> },
@@ -76,7 +85,6 @@ const menuItems = [
       { key: "5-15", label: <Link to="/traysummery-report" style={{ color: "#fff" }}>Tray Summary</Link> },
       { key: "5-16", label: <Link to="/counterchart-report" style={{ color: "#fff" }}>Counter Chart</Link> },
       { key: "5-17", label: <Link to="/stonedetailes-report" style={{ color: "#fff" }}> Stone Detailes</Link> },
-
       { key: "5-7", label: <Link to="/productcategory-report" style={{ color: "#fff" }}>Product Category</Link> },
       { key: "5-8", label: <Link to="/categorynet-report" style={{ color: "#fff" }}>Category Net</Link> },
       { key: "5-9", label: <Link to="/DealerwisestockSummry-report" style={{ color: "#fff" }}>Dealer Summary</Link> },
@@ -89,10 +97,9 @@ const menuItems = [
   },
   {
     key: "6",
-    icon: <TeamOutlined style={{ color: "#fff" }} />,
+    icon: <div style={iconStyle}><TeamOutlined /></div>,
     label: <span style={{ color: "#fff" }}>CRM</span>,
     children: [
-   
       { key: "6-3", label: <Link to="/cash-book" style={{ color: "#fff" }}>Cash Book</Link> },
       { key: "6-4", label: <Link to="/sale-reports" style={{ color: "#fff" }}>Sales Reports</Link> },
       { key: "6-5", label: <Link to="/product-wise-detailes" style={{ color: "#fff" }}>Product Details</Link> },
@@ -106,7 +113,7 @@ const menuItems = [
   },
   {
     key: "7",
-    icon: <LineChartOutlined style={{ color: "#fff" }} />,
+    icon: <div style={iconStyle}><LineChartOutlined /></div>,
     label: <span style={{ color: "#fff" }}>Analysis</span>,
     children: [
       { key: "7-1", label: <Link to="/analysis-sales" style={{ color: "#fff" }}>Sales Analysis</Link> },
@@ -152,26 +159,32 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
   };
 
   return (
-    <Menu
-    theme="light"
-    mode="inline"
-    items={menuItems}
-    selectedKeys={selectedKeys}
-    openKeys={openKeys}
-    onOpenChange={onOpenChange}
-    onClick={handleMenuItemClick}
-    className="custom-scrollbar sidebar-menu white-text custom-menu no-padding-left"
-    style={{
-      height: "100%",
-      background: "#150A4E",
-      position: "sticky",
-      top: 0,
-      left: 0,
-      zIndex: 100,
-      maxHeight: "100vh",
-      overflowY: "auto",
-    }}
-  />
+    <div style={{ display: "flex", flexDirection: "column", height: "100vh" ,           
+    }}>
+      <Menu
+        theme="light"
+        mode="inline"
+        items={menuItems}
+        selectedKeys={selectedKeys}
+        openKeys={openKeys}
+        onOpenChange={onOpenChange}
+        onClick={handleMenuItemClick}
+        className="custom-scrollbar sidebar-menu white-text custom-menu no-padding-left"
+        style={{
+          flex: 1,
+          background: "#150A4E",
+          overflowY: "auto",
+          boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+
+        }}
+      />
+      <div style={{  textAlign: "center", position: "sticky", bottom: 0 }}>
+        <hr style={{ border: "0.2px solid rgb(129, 129, 129)",  }} />
+        <div style={{ color: "#B0B0B0", fontSize: "12px" }}>
+          © TimeseraERP Pvt. Ltd. V - 1.0
+        </div>
+      </div>
+    </div>
   );
 };
 

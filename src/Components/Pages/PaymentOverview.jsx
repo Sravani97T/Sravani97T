@@ -1,71 +1,122 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 import { FaMoneyBillWave } from "react-icons/fa"; // Icon for Cash
 import { AiOutlineCreditCard } from "react-icons/ai"; // Icon for Card
 import { MdOutlineQrCodeScanner } from "react-icons/md"; // Icon for UPI
 import { HiOutlineGlobeAlt } from "react-icons/hi"; // Icon for Online
 
 const PaymentOverview = () => {
-  const data = [
-    {
-      title: "Cash",
-      amount: "₹ 30,038.00",
-      icon: <FaMoneyBillWave color="#4CAF50" size={20} />, // Green for Cash
-    },
-    {
-      title: "Card",
-      amount: "₹ 94,139.00",
-      icon: <AiOutlineCreditCard color="#FF9800" size={20} />, // Orange for Card
-    },
-    {
-      title: "UPI",
-      amount: "₹ 54,175.00",
-      icon: <MdOutlineQrCodeScanner color="#3F51B5" size={20} />, // Blue for UPI
-    },
-    {
-      title: "Online",
-      amount: "₹ 1,67,024.00",
-      icon: <HiOutlineGlobeAlt color="#2196F3" size={20} />, // Bright blue for Online
-    },
-  ];
+  const [data, setData] = useState([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const today = new Date();
+        const formattedDate = `${today.getMonth() + 1}/${today.getDate()}/${today.getFullYear()}`;
+        
+        // Fetch bank transaction summary
+        const bankTransResponse = await axios.get(
+          `http://www.jewelerp.timeserasoftware.in/api/DashBoard/GetBankTransSummary?date=${formattedDate}`
+        );
+
+        // Fetch cash book credit/debit
+        const cashBookResponse = await axios.get(
+          `http://www.jewelerp.timeserasoftware.in/api/DashBoard/GetCashBookCreditDebit?fromDate=${formattedDate}&toDate=${formattedDate}&saleCode=1`
+        );
+
+        const cashAmount = cashBookResponse.data[0]?.AMT || 0;
+
+        const apiData = bankTransResponse.data.map((item) => {
+          let icon;
+          let color;
+          switch (item.MODE) {
+            case "CARD":
+              icon = <AiOutlineCreditCard />;
+              color = "#FF9800";
+              break;
+            case "CHEQUE":
+              icon = <FaMoneyBillWave />;
+              color = "#4CAF50";
+              break;
+            case "UPI":
+              icon = <MdOutlineQrCodeScanner />;
+              color = "#3F51B5";
+              break;
+            case "ONLINE":
+              icon = <HiOutlineGlobeAlt />;
+              color = "#2196F3";
+              break;
+            case "CASH":
+              icon = <FaMoneyBillWave />;
+              color = "#FFD700";
+              break;
+            default:
+              icon = <HiOutlineGlobeAlt />;
+              color = "#9E9E9E"; // Default gray for unknown modes
+          }
+          return {
+            title: item.MODE,
+            amount: `₹ ${item.AMT.toLocaleString()}`,
+            icon: React.cloneElement(icon, { color, size: 20 }),
+          };
+        });
+
+        // Add cash amount to the beginning of the data
+        apiData.unshift({
+          title: "CASH",
+          amount: `₹ ${cashAmount.toLocaleString()}`,
+          icon: React.cloneElement(<FaMoneyBillWave />, { color: "#FFD700", size: 20}),
+        });
+
+        setData(apiData);
+      } catch (error) {
+        console.error("Error fetching payment data:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const cardStyle = {
     background: "#ffffff",
     borderRadius: "8px",
-    padding: "4px",
+    padding: "8px",
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: "10px", // Slightly larger gap for better readability
+    marginBottom: "8px",
     boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)",
     transition: "transform 0.3s, box-shadow 0.3s",
-    
   };
 
   const iconContainerStyle = {
-    width: "25px",
-    height: "25px",
+    width: "20px",
+    height: "20px",
     borderRadius: "50%",
-    backgroundColor: "#f9f9f9", // Very light background color
+    backgroundColor: "#f9f9f9",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    marginRight: "15px", // Space between icon and text
+    marginRight: "10px",
   };
 
   const textContainerStyle = {
     display: "flex",
-    flexDirection: "column", // Align text vertically
-    alignItems: "flex-start", // Align text to the start
+    alignItems: "center",
+    justifyContent: "space-between",
+    width: "100%",
+    paddingLeft: "8px",
+    paddingRight: "8px",
   };
 
   const titleStyle = {
-    fontSize: "14px",
+    fontSize: "12px",
     color: "#555",
-    marginBottom: "5px", // Space between title and amount
+    marginRight: "auto",
   };
 
   const amountStyle = {
-    fontSize: "14px",
+    fontSize: "12px",
     fontWeight: "bold",
     color: "#333",
   };
@@ -81,7 +132,7 @@ const PaymentOverview = () => {
   };
 
   return (
-    <div style={{ maxWidth: "400px", margin: "auto" ,marginTop:"6px"}}>
+    <div style={{  margin: "auto", marginTop: "10px",}}>
       {data.map((item, index) => (
         <div
           key={index}

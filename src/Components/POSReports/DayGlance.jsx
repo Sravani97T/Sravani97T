@@ -1,12 +1,15 @@
 import React, { useState, useEffect, forwardRef } from 'react';
-import { Row, Col, Breadcrumb, Card, Button, Table ,Tag} from 'antd';
+import { Row, Col, Breadcrumb, Card, Button } from 'antd';
 import axios from 'axios';
 import moment from 'moment';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { FaCalendarAlt } from 'react-icons/fa';
-import { jsPDF } from 'jspdf';
+import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import ExcelJS from 'exceljs';
+import { saveAs } from 'file-saver';
+import "./TableStyles.css";
 
 const CustomInput = forwardRef(({ value, onClick, placeholder }, ref) => (
     <div className="custom-date-input" onClick={onClick} ref={ref}>
@@ -18,7 +21,134 @@ const CustomInput = forwardRef(({ value, onClick, placeholder }, ref) => (
 const DayGlance = () => {
     const [groupedData, setGroupedData] = useState([]);
     const [dates, setDates] = useState([null, null]);
+    const handlePrint = () => {
+        const printWindow = window.open('', '', 'height=700,width=900');
+        const currentDate = new Date().toLocaleDateString();
 
+        printWindow.document.write('<html><head><title>Day Glance Report</title><style>');
+        
+        // Your custom print styles
+        printWindow.document.write(`
+            body {
+                font-family: Arial, sans-serif;
+                margin: 20px;
+            }
+            .header {
+                text-align: center;
+                margin-bottom: 20px;
+            }
+            .header h1 {
+                margin: 0;
+                font-size: 18px;
+            }
+            .header .date {
+                font-size: 12px;
+                margin-top: 5px;
+            }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                overflow-x: auto;
+            }
+            th, td {
+                padding: 3px 3px;
+                text-align: left;
+                border: 1px solid #3b3b3b;
+                width: 100px;
+                font-size: 10px;
+            }
+            th {
+                background-color: #f4f4f4;
+                font-weight: bold;
+            }
+            td {
+                background-color: #f4f4f4;
+                font-weight: bold;
+                height: 10px;
+            }
+            td.description {
+                text-align: center;
+            }
+            td:last-child, th:last-child {
+                border-right: 1px solid #000;
+            }
+            .group-header {
+                text-align: center;
+                font-size: 14px;
+                font-weight: bold;
+                margin-top: 20px;
+                margin-bottom: 10px;
+            }
+            .table-container {
+                margin-top: 10px;
+            }
+        `);
+
+        printWindow.document.write('</style></head><body>');
+        
+        // Header with report title and date
+        printWindow.document.write(`
+            <div class="header">
+                <h1>Day Glance Report</h1>
+                <p class="date">Date: ${currentDate}</p>
+            </div>
+        `);
+
+        // Iterate over each key in groupedData (e.g., groupedData["DESCRIPTION-TRANSTYPE"])
+        Object.keys(groupedData).forEach((key) => {
+            const [DESCRIPTION, TRANSTYPE] = key.split('-');
+            
+            // Create a header for each group
+            printWindow.document.write(`<div class="group-header">${DESCRIPTION} - ${TRANSTYPE}</div>`);
+            
+            // Start the table for the current group
+            printWindow.document.write('<div class="table-container"><table>');
+            
+            // Add the table headers
+            printWindow.document.write(`
+                <thead>
+                    <tr>
+                        <th>BNO</th><th>PCS</th><th>G.WT</th><th>N.WT</th><th>TOT AMT</th>
+                        <th>CGST</th><th>SGST</th><th>IGST</th><th>NET AMT</th><th>DIA CTS</th>
+                        <th>OLD GOLD</th><th>OLD SILVER</th><th>SALE RTN</th><th>UPI</th>
+                        <th>CUST ADV</th><th>CHEQUE</th><th>CARD</th><th>CASH</th><th>SCHEME</th>
+                        <th>BALANCE</th><th>ONLINE</th>
+                    </tr>
+                </thead>
+                <tbody>
+            `);
+
+            // Check if the grouped data has rows for this key
+            if (groupedData[key] && Array.isArray(groupedData[key])) {
+                // Iterate over the rows for the current group
+                groupedData[key].forEach(item => {
+                    printWindow.document.write(`
+                        <tr>
+                            <td>${item.BNO || ''}</td><td>${item.PCS || ''}</td><td>${item.GWT || ''}</td><td>${item.NWT || ''}</td><td>${item.TOTAMT || ''}</td>
+                            <td>${item.CGST || ''}</td><td>${item.SGST || ''}</td><td>${item.IGST || ''}</td><td>${item.NETAMT || ''}</td><td>${item.DIACTS || ''}</td>
+                            <td>${item.OLDGOLD || ''}</td><td>${item.OLDSILVER || ''}</td><td>${item.SALERTN || ''}</td><td>${item.UPI || ''}</td>
+                            <td>${item.CUSTADV || ''}</td><td>${item.CHEQUE || ''}</td><td>${item.CARD || ''}</td><td>${item.CASH || ''}</td><td>${item.SCHEME || ''}</td>
+                            <td>${item.BALANCE || ''}</td><td>${item.ONLINE || ''}</td>
+                        </tr>
+                        <tr>
+                            <td colSpan="1" className="empty-border">${item.DATE ? moment(item.DATE).format('MM/DD/YYYY') : ''}</td>
+                            <td colSpan="8" className="description">${item.PARTICULARS || ''}</td>
+                            <td colSpan="12" className="empty-border"></td>
+                        </tr>
+                    `);
+                });
+            }
+
+            // Close the table for the current group
+            printWindow.document.write('</tbody></table></div><br>');
+        });
+
+        printWindow.document.write('</body></html>');
+        printWindow.document.close();
+        printWindow.print();
+    };
+    
+   
     useEffect(() => {
         if (dates[0] && dates[1]) {
             const fromDate = moment(dates[0]).format('MM/DD/YYYY');
@@ -43,54 +173,23 @@ const DayGlance = () => {
         }
     }, [dates]);
 
+ 
 
-    const columns = [
-        { title: 'S. No', dataIndex: 'index', key: 'index', render: (text, record) => (
-            <div>
-                <div>{text}</div>
-                <div><Tag color="purple">{moment(record.BDATE).format('DD/MM/YYYY')}</Tag></div>
-            </div>
-        ) },
-        { title: 'BNO', dataIndex: 'BNO', key: 'BNO', render: (text, record) => (
-            <div>
-                <div>{text}</div>
-                <div><Tag color="geekblue">{record.PARTICULARS}</Tag></div>
-            </div>
-        ) },
-        { title: 'PCS', dataIndex: 'PCS', key: 'PCS' },
-        { title: 'GWT', dataIndex: 'GWT', key: 'GWT' },
-        { title: 'NWT', dataIndex: 'NWT', key: 'NWT' },
-        { title: 'TOTAL AMT', dataIndex: 'TOTAMT', key: 'TOTAMT' },
-        { title: 'CGST', dataIndex: 'CGST', key: 'CGST' },
-        { title: 'SGST', dataIndex: 'SGST', key: 'SGST' },
-        { title: 'IGST', dataIndex: 'IGST', key: 'IGST' },
-        { title: 'NET AMT', dataIndex: 'NETAMT', key: 'NETAMT' },
-        { title: 'DIA CTS', dataIndex: 'DIACTS', key: 'DIACTS' },
-        { title: 'OLD GOLD', dataIndex: 'OLDGOLD', key: 'OLDGOLD' },
-        { title: 'OLD SILVER', dataIndex: 'OLDSILVER', key: 'OLDSILVER' },
-        { title: 'SALERTN', dataIndex: 'SALERTN', key: 'SALERTN' },
-        { title: 'UPI', dataIndex: 'UPI', key: 'UPI' },
-        { title: 'CUS ADV', dataIndex: 'CUSADV', key: 'CUSADV' },
-        { title: 'CHEQUE', dataIndex: 'CHEQUE', key: 'CHEQUE' },
-        { title: 'CARD', dataIndex: 'CARD', key: 'CARD' },
-        { title: 'CASH', dataIndex: 'CASH', key: 'CASH' },
-        { title: 'SCHEME', dataIndex: 'SCHEME', key: 'SCHEME' },
-        { title: 'BALANCE', dataIndex: 'BALANCE', key: 'BALANCE' },
-        { title: 'ONLINE', dataIndex: 'ONLINE', key: 'ONLINE' }
-    ];
-  
-  
+
+
     return (
-        <div id="printableArea" style={{ backgroundColor: '#f9f9f9', padding: '20px', borderRadius: '8px' }}>
-            <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
+        <div id="printableArea" style={{ backgroundColor: '#f9f9f9', borderRadius: '8px' }}>
+            <Row justify="space-between" align="middle" style={{ marginBottom: 10 }}>
                 <Col>
                     <Breadcrumb style={{ fontSize: '18px', fontWeight: '600', color: '#0C1154' }}>
                         <Breadcrumb.Item>Reports</Breadcrumb.Item>
                         <Breadcrumb.Item>Day Glance</Breadcrumb.Item>
                     </Breadcrumb>
                 </Col>
+               
             </Row>
-            <Card
+
+                   <Card
                 className="day-glance-card"
                 style={{
                     position: 'relative', // For positioning the triangular and diamond designs
@@ -105,8 +204,7 @@ const DayGlance = () => {
                 <div
                     style={{
                         position: 'absolute',
-                        top: '-50px',
-                        left: '-50px',
+                      
                         width: '0',
                         height: '0',
                         borderLeft: '75px solid transparent',
@@ -169,10 +267,11 @@ const DayGlance = () => {
                 </Row>
                 <Row justify="center" style={{ marginBottom: 16 }}>
                     <Col>
-                        <Button type="primary">
+                        <Button onClick={handlePrint} type="primary">
                             Print
                         </Button>
                         <Button
+                            // onClick={handlePDF}
                             style={{
                                 marginLeft: 8,
                                 backgroundColor: '#0052cc',
@@ -186,106 +285,149 @@ const DayGlance = () => {
                 </Row>
             </Card>
 
-            {Object.keys(groupedData).map((key, index) => (
-                <div key={index} style={{ marginBottom: 16 }}>
-                    <h3>{`TCODE: ${key.split('-')[0]},  ${key.split('-')[1]}, ${key.split('-')[2]}`}</h3>
-                    <div style={{ marginTop: 16, boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', backgroundColor: '#ffffff', borderRadius: '8px' }}>
-                        <div
-                            className="table-responsive scroll-horizontal print-friendly"
-                            style={{
-                                maxHeight: "calc(99vh - 193.33px)",
-                                overflowY: "auto",
-                                overflowX: "auto",
-                                marginTop: "20px",
-                                boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
-                                backgroundColor: '#fff',
-                                borderRadius: '8px',
-                            }}
-                        >
-                            <Table
-                                size="small"
-                                columns={columns}
-                                dataSource={groupedData[key].map((item, idx) => ({ ...item, index: idx + 1 }))}
-                                pagination={false}
-                                bordered
-                                rowKey={(record) => record.BNO + record.BDATE}
-                                summary={() => {
-                                    const totals = groupedData[key].reduce((acc, item) => {
-                                        acc.PCS += item.PCS || 0;
-                                        acc.GWT += item.GWT || 0;
-                                        acc.NWT += item.NWT || 0;
-                                        acc.TOTAMT += item.TOTAMT || 0;
-                                        acc.CGST += item.CGST || 0;
-                                        acc.SGST += item.SGST || 0;
-                                        acc.IGST += item.IGST || 0;
-                                        acc.NETAMT += item.NETAMT || 0;
-                                        acc.DIACTS += item.DIACTS || 0;
-                                        acc.OLDGOLD += item.OLDGOLD || 0;
-                                        acc.OLDSILVER += item.OLDSILVER || 0;
-                                        acc.SALERTN += item.SALERTN || 0;
-                                        acc.UPI += item.UPI || 0;
-                                        acc.CUSADV += item.CUSADV || 0;
-                                        acc.CHEQUE += item.CHEQUE || 0;
-                                        acc.CARD += item.CARD || 0;
-                                        acc.CASH += item.CASH || 0;
-                                        acc.SCHEME += item.SCHEME || 0;
-                                        acc.BALANCE += item.BALANCE || 0;
-                                        acc.ONLINE += item.ONLINE || 0;
-                                        return acc;
-                                    }, {
-                                        PCS: 0,
-                                        GWT: 0,
-                                        NWT: 0,
-                                        TOTAMT: 0,
-                                        CGST: 0,
-                                        SGST: 0,
-                                        IGST: 0,
-                                        NETAMT: 0,
-                                        DIACTS: 0,
-                                        OLDGOLD: 0,
-                                        OLDSILVER: 0,
-                                        SALERTN: 0,
-                                        UPI: 0,
-                                        CUSADV: 0,
-                                        CHEQUE: 0,
-                                        CARD: 0,
-                                        CASH: 0,
-                                        SCHEME: 0,
-                                        BALANCE: 0,
-                                        ONLINE: 0
-                                    });
-
-                                    return (
-                                        <Table.Summary.Row>
-                                            <Table.Summary.Cell index={0} colSpan={2}>Total</Table.Summary.Cell>
-                                            <Table.Summary.Cell index={1}>{totals.PCS}</Table.Summary.Cell>
-                                            <Table.Summary.Cell index={2}>{totals.GWT}</Table.Summary.Cell>
-                                            <Table.Summary.Cell index={3}>{totals.NWT}</Table.Summary.Cell>
-                                            <Table.Summary.Cell index={4}>{totals.TOTAMT}</Table.Summary.Cell>
-                                            <Table.Summary.Cell index={5}>{totals.CGST}</Table.Summary.Cell>
-                                            <Table.Summary.Cell index={6}>{totals.SGST}</Table.Summary.Cell>
-                                            <Table.Summary.Cell index={7}>{totals.IGST}</Table.Summary.Cell>
-                                            <Table.Summary.Cell index={8}>{totals.NETAMT}</Table.Summary.Cell>
-                                            <Table.Summary.Cell index={9}>{totals.DIACTS}</Table.Summary.Cell>
-                                            <Table.Summary.Cell index={10}>{totals.OLDGOLD}</Table.Summary.Cell>
-                                            <Table.Summary.Cell index={11}>{totals.OLDSILVER}</Table.Summary.Cell>
-                                            <Table.Summary.Cell index={12}>{totals.SALERTN}</Table.Summary.Cell>
-                                            <Table.Summary.Cell index={13}>{totals.UPI}</Table.Summary.Cell>
-                                            <Table.Summary.Cell index={14}>{totals.CUSADV}</Table.Summary.Cell>
-                                            <Table.Summary.Cell index={15}>{totals.CHEQUE}</Table.Summary.Cell>
-                                            <Table.Summary.Cell index={16}>{totals.CARD}</Table.Summary.Cell>
-                                            <Table.Summary.Cell index={17}>{totals.CASH}</Table.Summary.Cell>
-                                            <Table.Summary.Cell index={18}>{totals.SCHEME}</Table.Summary.Cell>
-                                            <Table.Summary.Cell index={19}>{totals.BALANCE}</Table.Summary.Cell>
-                                            <Table.Summary.Cell index={20}>{totals.ONLINE}</Table.Summary.Cell>
-                                        </Table.Summary.Row>
-                                    );
-                                }}
-                            />
-                        </div>
+            {Object.keys(groupedData).map((key, index) => {
+                const [ DESCRIPTION, TRANSTYPE] = key.split('-');
+                return (
+                    <div key={index} className="table-container">
+                        <h3>{`${DESCRIPTION} - ${TRANSTYPE}`}</h3>
+                        <table className="responsive-table">
+                            <thead>
+                                <tr>
+                                    <th>BNO</th>
+                                    <th>PCS</th>
+                                    <th>G.WT</th>
+                                    <th>N.WT</th>
+                                    <th>TOT AMT</th>
+                                    <th>CGST</th>
+                                    <th>SGST</th>
+                                    <th>IGST</th>
+                                    <th>NET AMT</th>
+                                    <th>DIA CTS</th>
+                                    <th>OLD GOLD</th>
+                                    <th>OLD SILVER</th>
+                                    <th>SALE RTN</th>
+                                    <th>UPI</th>
+                                    <th>CUST ADV</th>
+                                    <th>CHEQUE</th>
+                                    <th>CARD</th>
+                                    <th>CASH</th>
+                                    <th>SCHEME</th>
+                                    <th>BALANCE</th>
+                                    <th>ONLINE</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {groupedData[key].map((item, idx) => (
+                                    <React.Fragment key={idx}>
+                                        <tr>
+                                            <td>{item.BNO}</td>
+                                            <td>{item.PCS}</td>
+                                            <td>{item.GWT}</td>
+                                            <td>{item.NWT}</td>
+                                            <td>{item.TOTAMT}</td>
+                                            <td>{item.CGST}</td>
+                                            <td>{item.SGST}</td>
+                                            <td>{item.IGST}</td>
+                                            <td>{item.NETAMT}</td>
+                                            <td>{item.DIACTS}</td>
+                                            <td>{item.OLDGOLD}</td>
+                                            <td>{item.OLDSILVER}</td>
+                                            <td>{item.SALERTN}</td>
+                                            <td>{item.UPI}</td>
+                                            <td>{item.CUSTADV}</td>
+                                            <td>{item.CHEQUE}</td>
+                                            <td>{item.CARD}</td>
+                                            <td>{item.CASH}</td>
+                                            <td>{item.SCHEME}</td>
+                                            <td>{item.BALANCE}</td>
+                                            <td>{item.ONLINE}</td>
+                                        </tr>
+                                        <tr>
+                                            <td colSpan="1" className="empty-border">{moment(item.DATE).format('MM/DD/YYYY')}</td>
+                                            <td colSpan="8" className="description">{item.PARTICULARS}</td>
+                                            <td colSpan="12" className="empty-border"></td>
+                                        </tr>
+                                    </React.Fragment>
+                                ))}
+                            </tbody>
+                        </table>
                     </div>
-                </div>
-            ))}
+                );
+            })}
+            <style jsx>{`
+                /* Basic table styling */
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    overflow-x: auto;
+                    display: block; 
+                }
+
+                /* Table headers and data cells */
+                th, td {
+                    padding: 3px 3px; 
+                    text-align: left;
+                    border: 1px solid #3b3b3b;
+                    width: 100px;
+                    font-size: 10px;
+                }
+
+                /* Table header styling */
+                th {
+                    background-color: #f4f4f4;
+                    font-weight: bold;
+                }
+                td {
+                  background-color: #f4f4f4;
+                  font-weight: bold;
+                  height: 10px; 
+                }
+                /* Remove left border for BNO column */
+                td:first-child, th:first-child {
+                    border-bottom: none; 
+                }
+
+                /* Add a left border to all columns except the first */
+                td:not(:first-child), th:not(:first-child) {
+                    border-left: 1px solid #2b2a2a; 
+                }
+
+                /* Make the description row have no border */
+                /* td.empty-border {
+                    border: none;
+                } */
+
+                /* Styling for the description text */
+                td.description {
+                    border-left: 1px solid #151313; 
+                    text-align: center;
+                }
+
+                /* Optional: Add a right border for the last column */
+                td:last-child, th:last-child {
+                    border-right: 1px solid #000;
+                }
+
+                /* Ensures horizontal scrolling if there are more columns */
+                .table-container {
+                    overflow-x: auto; 
+                    -webkit-overflow-scrolling: touch;
+                }
+
+                /* For responsive design: */a
+                @media (max-width: 768px) {
+                    table {
+                        font-size: 12px; 
+                    }
+                    th, td {
+                        padding: 6px; 
+                    }
+                    .table-container {
+                        max-width: 100%;
+                        overflow-x: scroll;
+                    }
+                }
+            `}</style>
         </div>
     );
 };
