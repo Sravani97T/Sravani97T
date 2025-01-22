@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Card, Tag, Popover, Table, Input, Button } from "antd";
 import axios from "axios";
-
+import { CREATE_jwel } from "../../Config/Config";
 const TodaysRates = () => {
   const [goldRate, setGoldRate] = useState({ prefix: "18K", rate: 0 });
   const [silverRate, setSilverRate] = useState(0);
@@ -11,31 +11,31 @@ const TodaysRates = () => {
 
   const prefixes = React.useMemo(() => ["18K", "22K", "24K"], []);
 
-  useEffect(() => {
-    const fetchRates = async () => {
-      try {
-        const response = await axios.get("http://www.jewelerp.timeserasoftware.in/api/Erp/GetDailyRatesList");
-        const data = response.data;
-        const today = new Date().toISOString().split("T")[0];
+  const fetchRates = async () => {
+    try {
+      const response = await axios.get(`${CREATE_jwel}/api/Erp/GetDailyRatesList`);
+      const data = response.data;
+      const today = new Date().toISOString().split("T")[0];
 
-        const goldRates = data.filter(item => item.RDATE.split("T")[0] === today && item.MAINPRODUCT === "GOLD");
-        const silverRates = data.filter(item => item.RDATE.split("T")[0] === today && item.MAINPRODUCT === "SILVER");
+      const goldRates = data.filter(item => item.RDATE.split("T")[0] === today && item.MAINPRODUCT === "GOLD");
+      const silverRates = data.filter(item => item.RDATE.split("T")[0] === today && item.MAINPRODUCT === "SILVER");
 
-        if (goldRates.length > 0) {
-          setGoldRate({ prefix: goldRates[0].PREFIX, rate: goldRates[0].RATE });
-        }
-
-        if (silverRates.length > 0) {
-          setSilverRate(silverRates[0].RATE);
-        }
-
-        const todayRates = data.filter(item => item.RDATE.split("T")[0] === today);
-        setRatesData(todayRates);
-      } catch (error) {
-        console.error("Error fetching rates:", error);
+      if (goldRates.length > 0) {
+        setGoldRate({ prefix: goldRates[0].PREFIX, rate: goldRates[0].RATE });
       }
-    };
 
+      if (silverRates.length > 0) {
+        setSilverRate(silverRates[0].RATE);
+      }
+
+      const todayRates = data.filter(item => item.RDATE.split("T")[0] === today);
+      setRatesData(todayRates);
+    } catch (error) {
+      console.error("Error fetching rates:", error);
+    }
+  };
+
+  useEffect(() => {
     fetchRates();
 
     const interval = setInterval(() => {
@@ -46,9 +46,9 @@ const TodaysRates = () => {
   }, [prefixes.length]);
 
   useEffect(() => {
-    const fetchRates = async () => {
+    const fetchRatesByPrefix = async () => {
       try {
-        const response = await axios.get("http://www.jewelerp.timeserasoftware.in/api/Erp/GetDailyRatesList");
+        const response = await axios.get(`${CREATE_jwel}/api/Erp/GetDailyRatesList`);
         const data = response.data;
         const today = new Date().toISOString().split("T")[0];
 
@@ -62,7 +62,7 @@ const TodaysRates = () => {
       }
     };
 
-    fetchRates();
+    fetchRatesByPrefix();
   }, [currentPrefixIndex, prefixes]);
 
   const handleVisibleChange = visible => {
@@ -80,27 +80,26 @@ const TodaysRates = () => {
       dataIndex: 'PREFIX',
       key: 'PREFIX',
     },
-  {
-  title: 'Rate',
-  dataIndex: 'RATE',
-  key: 'RATE',
-  render: (text, record) => (
-    <Input
-      defaultValue={text}
-      onChange={e => {
-        const newRate = e.target.value || 0;
-        const newData = ratesData.map(item => {
-          if (item.PREFIX === record.PREFIX) {
-            return { ...item, RATE: newRate }; // Update all matching PREFIX values
-          }
-          return item;
-        });
-        setRatesData(newData);
-      }}
-    />
-  ),
-},
-
+    {
+      title: 'Rate',
+      dataIndex: 'RATE',
+      key: 'RATE',
+      render: (text, record) => (
+        <Input
+          defaultValue={text}
+          onChange={e => {
+            const newRate = e.target.value || 0;
+            const newData = ratesData.map(item => {
+              if (item.PREFIX === record.PREFIX) {
+                return { ...item, RATE: newRate }; // Update all matching PREFIX values
+              }
+              return item;
+            });
+            setRatesData(newData);
+          }}
+        />
+      ),
+    },
   ];
 
   const handleSubmit = async () => {
@@ -119,15 +118,16 @@ const TodaysRates = () => {
         });
       }
       setVisible(false);
+      fetchRates(); // Refresh the rates after submission
     } catch (error) {
       console.error("Error submitting rates:", error);
     }
   };
+  
 
   const popoverContent = (
     <div>
-      <Table dataSource={ratesData} columns={columns}       style={{ width: '600px' }} // Adjust the width as needed
- size="small" rowKey="PREFIX" pagination={false} />
+      <Table dataSource={ratesData} columns={columns} style={{ width: '600px' }} size="small" rowKey="PREFIX" pagination={false} />
       <Button type="primary" onClick={handleSubmit} style={{ marginTop: 10 }}>
         Submit
       </Button>

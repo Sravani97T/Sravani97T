@@ -1,4 +1,4 @@
-import React, { useState,  useRef,  } from "react";
+import React, { useState, useRef } from "react";
 import {
     Form,
     Input,
@@ -13,8 +13,10 @@ import {
     Breadcrumb,
     Select,
     Radio,
+    Pagination
 } from "antd";
 import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import TableHeaderStyles from "../Pages/TableHeaderStyles";
 
 const { Option } = Select;
 
@@ -45,6 +47,8 @@ const EmployeeMaster = () => {
         },
     ]);
     const [editingKey, setEditingKey] = useState(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(20);
 
     const handleAdd = (values) => {
         const newData = {
@@ -78,8 +82,15 @@ const EmployeeMaster = () => {
         message.success("Employee details updated successfully!");
     };
 
-
     const columns = [
+        {
+            title: "S.No",
+            dataIndex: "sno",
+            key: "sno",
+            className: 'blue-background-column', 
+            width: 50, 
+            render: (_, __, index) => (currentPage - 1) * pageSize + index + 1,
+        },
         { title: "Employee Name", dataIndex: "employeeName", key: "employeeName" },
         { title: "Employee Code", dataIndex: "employeeCode", key: "employeeCode" },
         { title: "Gender", dataIndex: "gender", key: "gender" },
@@ -109,6 +120,7 @@ const EmployeeMaster = () => {
             ),
         },
     ];
+
     const refs = {
         employeeNameRef: useRef(),
         employeeCodeRef: useRef(),
@@ -130,6 +142,7 @@ const EmployeeMaster = () => {
         LICRef: useRef(),
         netSalaryRef: useRef(),
     };
+
     const handleEnterPress = (e, nextRef) => {
         e.preventDefault();
         if (nextRef?.current) {
@@ -137,7 +150,16 @@ const EmployeeMaster = () => {
         } else {
           form.submit(); // Submit the form if there's no next field
         }
-      };
+    };
+
+    const [searchText, setSearchText] = useState("");
+
+    const filteredData = data.filter((item) =>
+        Object.values(item).some((val) =>
+            String(val).toLowerCase().includes(searchText.toLowerCase())
+        )
+    );
+
     return (
         <div style={{ padding: "5px", backgroundColor: "#f4f6f9" }}>
             <Row justify="start" style={{ marginBottom: "16px" }}>
@@ -396,13 +418,45 @@ const EmployeeMaster = () => {
                 </Form>
             </Card>
 
-            <Table
-                bordered
-                columns={columns}
-                dataSource={data}
-                rowClassName="editable-row"
-                pagination={false}
-            />
+            <div style={{ marginLeft:"5px" ,float: "right", marginBottom: "10px" }}>
+                <Pagination
+                    current={currentPage}
+                    pageSize={pageSize}
+                    total={filteredData.length}
+                    showSizeChanger
+                    pageSizeOptions={['10', '20', '50', '100']}
+                    onChange={(page, size) => {
+                        setCurrentPage(page);
+                        setPageSize(size);
+                    }}
+                    showTotal={(total, range) => `${range[0]}-${range[1]} of ${total} items`}
+
+                    style={{ marginBottom: "10px" }}
+                />
+            </div>
+
+            <div style={{ float: "right", marginBottom: "10px" }}>
+                <Input.Search
+                    placeholder="Search"
+                    onChange={(e) => setSearchText(e.target.value)}
+                    style={{ width: "100%", marginBottom: "10px" }}
+                />
+            </div>
+
+            <TableHeaderStyles>
+                <Table
+                    columns={columns}
+                    dataSource={filteredData.slice((currentPage - 1) * pageSize, currentPage * pageSize)}
+                    rowKey="key"
+                    size="small"
+                    pagination={false}
+                    style={{
+                        background: "#fff",
+                        boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+                        borderRadius: "8px",
+                    }}
+                />
+            </TableHeaderStyles>
         </div>
     );
 };

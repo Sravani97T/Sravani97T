@@ -1,10 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import { Table, Row, Col, Breadcrumb, Input, Select, Pagination, DatePicker, Button } from 'antd';
+import React, { useState, useEffect, forwardRef } from 'react';
+import { Table, Row, Col, Breadcrumb, Input, Select, Pagination, Button } from 'antd';
 import axios from 'axios';
 import moment from 'moment';
 import PdfExcelPrint from '../Utiles/PdfExcelPrint'; // Adjust the import path as necessary
-
+import TableHeaderStyles from '../Pages/TableHeaderStyles';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import { FaCalendarAlt } from 'react-icons/fa';
+import { CREATE_jwel } from '../../Config/Config';
 const { Option } = Select;
+
+const CustomInput = forwardRef(({ value, onClick, placeholder }, ref) => (
+    <div className="custom-date-input" onClick={onClick} ref={ref}>
+        <input value={value} placeholder={placeholder} readOnly />
+        <FaCalendarAlt className="calendar-icon" />
+    </div>
+));
 
 const BankStatementReport = () => {
     const [filteredData, setFilteredData] = useState([]);
@@ -20,10 +31,10 @@ const BankStatementReport = () => {
     const [uniqueAccountNumbers, setUniqueAccountNumbers] = useState([]);
     const [uniquePayModes, setUniquePayModes] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
-    const [pageSize, setPageSize] = useState(6);
+    const [pageSize, setPageSize] = useState(20);
 
     useEffect(() => {
-        axios.get('http://www.jewelerp.timeserasoftware.in/api/Erp/GetBankDepDraw')
+        axios.get(`${CREATE_jwel}/api/Erp/GetBankDepDraw`)
             .then(response => {
                 const data = response.data.map((item, index) => ({
                     ...item,
@@ -105,7 +116,9 @@ const BankStatementReport = () => {
     const totals = calculateTotals(filteredData);
 
     const columns = [
-        { title: 'S.No', dataIndex: 'serialNo', align: "center", key: 'serialNo' },
+        { title: 'S.No', dataIndex: 'serialNo',      width: 50, 
+ align: "center", key: 'serialNo',      className: 'blue-background-column', 
+        },
         { title: 'VNO', dataIndex: 'RecNo', key: 'RecNo' },
         { title: 'Date', dataIndex: 'DEPDATE', key: 'DEPDATE', render: (text) => moment(text).format('DD/MM/YYYY') },
         { title: 'Trans Type', dataIndex: 'TRANSTYPE', key: 'TRANSTYPE' },
@@ -147,21 +160,8 @@ const BankStatementReport = () => {
                     allowClear
                     placeholder="Account Number"
                     style={{ width: '100%' }}
-                    value={tempFilters.accountNumber}
-                    onChange={(value) => {
-                        handleTempFilterChange('accountNumber', value);
-                        const selectedAccount = filteredData.find(item => item.ACCNO === value);
-                        if (selectedAccount) {
-                            setTempFilters({
-                                ...tempFilters,
-                                accountNumber: value,
-                                type: selectedAccount.TRANSTYPE,
-                                amount: selectedAccount.Credit || selectedAccount.Debit
-                            });
-                        } else {
-                            handleTempFilterChange('accountNumber', value);
-                        }
-                    }}
+                    value={tempFilters.accountNumber || undefined}
+                    onChange={(value) => handleTempFilterChange('accountNumber', value)}
                 >
                     {uniqueAccountNumbers.map(account => (
                         <Option key={account} value={account}>{account}</Option>
@@ -187,7 +187,7 @@ const BankStatementReport = () => {
                     placeholder="Pay Mode"
                     allowClear
                     style={{ width: '100%' }}
-                    value={tempFilters.payMode}
+                    value={tempFilters.payMode || undefined}
                     onChange={(value) => handleTempFilterChange('payMode', value)}
                 >
                     {uniquePayModes.map(mode => (
@@ -197,24 +197,25 @@ const BankStatementReport = () => {
             </Col>
             <Col xs={24} sm={12} md={4}>
                 <DatePicker
-                    placeholder="From Date"
-                    style={{ width: '100%' }}
-                    format="YYYY-MM-DD"
-                    value={tempFilters.dateFrom ? moment(tempFilters.dateFrom) : null}
-                    onChange={(date) => handleTempFilterChange('dateFrom', date ? date.format('YYYY-MM-DD') : null)}
+                    selected={tempFilters.dateFrom ? new Date(tempFilters.dateFrom) : null}
+                    onChange={(date) => handleTempFilterChange('dateFrom', date ? moment(date).format('YYYY-MM-DD') : null)}
+                    customInput={<CustomInput />}
+                    placeholderText="From Date"
+                    dateFormat="dd/MM/yyyy"
                 />
             </Col>
             <Col xs={24} sm={12} md={4}>
                 <DatePicker
-                    placeholder="To Date"
-                    style={{ width: '100%' }}
-                    format="YYYY-MM-DD"
-                    value={tempFilters.dateTo ? moment(tempFilters.dateTo) : null}
-                    onChange={(date) => handleTempFilterChange('dateTo', date ? date.format('YYYY-MM-DD') : null)}
+                    selected={tempFilters.dateTo ? new Date(tempFilters.dateTo) : null}
+                    onChange={(date) => handleTempFilterChange('dateTo', date ? moment(date).format('YYYY-MM-DD') : null)}
+                    customInput={<CustomInput />}
+                    placeholderText="To Date"
+                    dateFormat="dd/MM/yyyy"
                 />
             </Col>
             <Col xs={24} sm={12} md={4}>
-                <Button type="primary" onClick={applyFilters} style={{ marginRight: 8 }}>Apply</Button>
+                <Button type="primary" className="animated-button"
+                    onClick={applyFilters} style={{ marginRight: 8 }}>Apply</Button>
                 <Button onClick={clearFilters}>Clear</Button>
             </Col>
         </Row>
@@ -258,7 +259,7 @@ const BankStatementReport = () => {
                 <div
                     className="table-responsive scroll-horizontal"
                     style={{
-                        maxHeight: "calc(99vh - 193.33px)",
+                        // maxHeight: "calc(99vh - 193.33px)",
                         overflowY: "auto",
                         overflowX: "auto",
                         marginTop: "20px",
@@ -267,22 +268,24 @@ const BankStatementReport = () => {
                         borderRadius: '8px'
                     }}
                 >
-                    <Table
-                        size="small"
-                        columns={columns}
-                        dataSource={filteredData.slice((currentPage - 1) * pageSize, currentPage * pageSize)}
-                        rowKey="key"
-                        pagination={false}
-                        rowClassName="table-row"
-                        summary={() => (
-                            <Table.Summary.Row>
-                                <Table.Summary.Cell index={0} colSpan={7}>Total</Table.Summary.Cell>
-                                <Table.Summary.Cell index={1} align="right">{totals.debit.toFixed(2)}</Table.Summary.Cell>
-                                <Table.Summary.Cell index={2} align="right">{totals.credit.toFixed(2)}</Table.Summary.Cell>
-                                <Table.Summary.Cell index={3} align="right">{(totals.credit - totals.debit).toFixed(2)}</Table.Summary.Cell>
-                            </Table.Summary.Row>
-                        )}
-                    />
+                    <TableHeaderStyles>
+                        <Table
+                            size="small"
+                            columns={columns}
+                            dataSource={filteredData.slice((currentPage - 1) * pageSize, currentPage * pageSize)}
+                            rowKey="key"
+                            pagination={false}
+                            rowClassName="table-row"
+                            summary={() => (
+                                <Table.Summary.Row style={{ backgroundColor: '#f5f5f5', fontWeight: 'bold' }}>
+                                    <Table.Summary.Cell index={0} colSpan={7}>Total</Table.Summary.Cell>
+                                    <Table.Summary.Cell index={1} align="right">{totals.debit.toFixed(2)}</Table.Summary.Cell>
+                                    <Table.Summary.Cell index={2} align="right">{totals.credit.toFixed(2)}</Table.Summary.Cell>
+                                    <Table.Summary.Cell index={3} align="right">{(totals.credit - totals.debit).toFixed(2)}</Table.Summary.Cell>
+                                </Table.Summary.Row>
+                            )}
+                        />
+                    </TableHeaderStyles>
                 </div>
             </div>
         </>

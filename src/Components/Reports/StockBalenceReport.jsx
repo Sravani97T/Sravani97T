@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Row, Col, Breadcrumb } from 'antd';
+import { Table, Row, Col, Breadcrumb, Pagination } from 'antd';
 import axios from 'axios';
 import PdfExcelPrint from '../Utiles/PdfExcelPrint'; // Adjust the import path as necessary
-
+import TableHeaderStyles from '../Pages/TableHeaderStyles';
+import { CREATE_jwel } from '../../Config/Config';
 const StockBalanceReport = () => {
     const [, setData] = useState([]);
     const [filteredData, setFilteredData] = useState([]);
 
     useEffect(() => {
-        axios.get('http://www.jewelerp.timeserasoftware.in/api/InventoryReports/GetStockBalances?suspennce=NO')
+        axios.get(`${CREATE_jwel}/api/InventoryReports/GetStockBalances?suspennce=NO`)
             .then(response => {
                 setData(response.data);
                 setFilteredData(response.data);  // Initially no filters, all data is shown
@@ -19,7 +20,7 @@ const StockBalanceReport = () => {
     }, []);
 
     const columns = [
-        { title: 'S.No', dataIndex: 'sno', key: 'sno' },
+        { title: 'S.No', dataIndex: 'sno', key: 'sno', width: 50, className: 'blue-background-column' },
         { title: 'Material Name', dataIndex: 'MNAME', key: 'MNAME' },
         { title: 'Pieces', dataIndex: 'PCS', key: 'PCS', align: "right" },
         { title: 'Gross Wt', dataIndex: 'GWT', key: 'GWT', align: "right", render: value => Number(value).toFixed(3) },
@@ -53,18 +54,10 @@ const StockBalanceReport = () => {
             RATE: formatValue(item.RATE),
             AMOUNT: formatValue(item.AMOUNT),
         })),
-        {
-            sno: 'Total', // Empty S.No for the total row
-            MNAME: '', // Set Material Name to an empty string
-            PCS: totalPCS,
-            GWT: totalGWT,
-            NWT: totalNWT,
-            GRMS: formatValue(filteredData.reduce((sum, item) => sum + item.GRMS, 0)),
-            CTS: formatValue(filteredData.reduce((sum, item) => sum + item.CTS, 0)),
-            RATE: formatValue(filteredData.reduce((sum, item) => sum + item.RATE, 0) / filteredData.length),
-            AMOUNT: formatValue(filteredData.reduce((sum, item) => sum + item.AMOUNT, 0)),
-        }
     ];
+
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(20);
 
     return (
         <>
@@ -84,21 +77,52 @@ const StockBalanceReport = () => {
                     />
                 </Col>
             </Row>
-            <div style={{ marginTop: 16 }}>
-                <Table
-                    size="small"
-                    columns={columns}
-                    dataSource={formattedData}
-                    rowKey="MNAME"
-                    pagination={{
-                        pageSize: 5,
-                        pageSizeOptions: ["5", "10", "20", "50"],
-                        showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
-                        position: ["topRight"],
-                        style: { margin: "5px" }
+            <div style={{ marginTop: 16, boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}>
+                <div
+                    className="table-responsive scroll-horizontal"
+                    style={{
+                        overflowY: "auto",
+                        overflowX: "auto",
+                        marginTop: "20px",
+                        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+                        backgroundColor: '#fff',
+                        borderRadius: '8px'
                     }}
-                    rowClassName="table-row"
-                />
+                >
+                    <div style={{ float: "right", marginBottom: "10px", marginLeft: "5px" }}>
+                        <Pagination
+                            current={currentPage}
+                            pageSize={pageSize}
+                            total={filteredData.length}
+                            showSizeChanger
+                            pageSizeOptions={['10', '20', '50', '100']}
+                            onChange={(page, size) => {
+                                setCurrentPage(page);
+                                setPageSize(size);
+                            }}
+                            showTotal={(total, range) => `${range[0]}-${range[1]} of ${total} items`}
+                            style={{ marginBottom: "10px" }}
+                        />
+                    </div>
+                    <TableHeaderStyles>
+                        <Table
+                            columns={columns}
+                            dataSource={formattedData.slice((currentPage - 1) * pageSize, currentPage * pageSize)}
+                            rowKey="MNAME"
+                            size="small"
+                            pagination={false}
+                            summary={() => (
+                                <Table.Summary.Row style={{ backgroundColor: '#f5f5f5', fontWeight: 'bold' }}>
+                                    <Table.Summary.Cell index={0}>Total</Table.Summary.Cell>
+                                    <Table.Summary.Cell index={1} />
+                                    <Table.Summary.Cell index={2} align="right">{totalPCS}</Table.Summary.Cell>
+                                    <Table.Summary.Cell index={3} align="right">{totalGWT}</Table.Summary.Cell>
+                                    <Table.Summary.Cell index={4} align="right">{totalNWT}</Table.Summary.Cell>
+                                </Table.Summary.Row>
+                            )}
+                        />
+                    </TableHeaderStyles>
+                </div>
             </div>
         </>
     );

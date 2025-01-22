@@ -8,7 +8,7 @@ import {
   FileTextOutlined,
   GiftFilled,
 } from "@ant-design/icons";
-
+import { CREATE_jwel } from "../../Config/Config";
 const AdvancedDetailsCard = () => {
   const [advanceWorth, setAdvanceWorth] = useState(0);
   const [orderAdvance, setOrderAdvance] = useState(0);
@@ -21,7 +21,7 @@ const AdvancedDetailsCard = () => {
 
   useEffect(() => {
     const currentDate = new Date().toLocaleDateString("en-US");
-    fetch(`http://www.jewelerp.timeserasoftware.in/api/DashBoard/GetCustomerAdvance?date=${encodeURIComponent(currentDate)}&filter=NO`, {
+    fetch(`${CREATE_jwel}/api/DashBoard/GetCustomerAdvance?date=${encodeURIComponent(currentDate)}&filter=NO`, {
       headers: { "tenantName": tenantNameHeader }
     })
       .then((response) => response.json())
@@ -31,7 +31,7 @@ const AdvancedDetailsCard = () => {
 
   useEffect(() => {
     const currentDate = new Date().toLocaleDateString("en-US");
-    fetch(`http://www.jewelerp.timeserasoftware.in/api/DashBoard/GetOrderAdvance?date=${encodeURIComponent(currentDate)}&filter=NO`, {
+    fetch(`${CREATE_jwel}/api/DashBoard/GetOrderAdvance?date=${encodeURIComponent(currentDate)}&filter=NO`, {
       headers: { "tenantName": tenantNameHeader }
     })
       .then((response) => response.json())
@@ -41,7 +41,7 @@ const AdvancedDetailsCard = () => {
 
   useEffect(() => {
     const currentDate = new Date().toLocaleDateString("en-US");
-    fetch(`http://www.jewelerp.timeserasoftware.in/api/DashBoard/GetReceipt?date=${encodeURIComponent(currentDate)}&filter=NO`, {
+    fetch(`${CREATE_jwel}/api/DashBoard/GetReceipt?date=${encodeURIComponent(currentDate)}&filter=NO`, {
       headers: { "tenantName": tenantNameHeader }
     })
       .then((response) => response.json())
@@ -51,7 +51,7 @@ const AdvancedDetailsCard = () => {
 
   useEffect(() => {
     const currentDate = new Date().toLocaleDateString("en-US");
-    fetch(`http://www.jewelerp.timeserasoftware.in/api/DashBoard/GetURDPurchaseGold?date=${encodeURIComponent(currentDate)}&filter=OLD%20GOLD`, {
+    fetch(`${CREATE_jwel}/api/DashBoard/GetURDPurchaseGold?date=${encodeURIComponent(currentDate)}&filter=OLD%20GOLD`, {
       headers: { "tenantName": tenantNameHeader }
     })
       .then((response) => response.json())
@@ -61,7 +61,7 @@ const AdvancedDetailsCard = () => {
 
   useEffect(() => {
     const currentDate = new Date().toLocaleDateString("en-US");
-    fetch(`http://www.jewelerp.timeserasoftware.in/api/DashBoard/GetURDPurchaseSilver?date=${encodeURIComponent(currentDate)}&filter=OLD%20SILVER`, {
+    fetch(`${CREATE_jwel}/api/DashBoard/GetURDPurchaseSilver?date=${encodeURIComponent(currentDate)}&filter=OLD%20SILVER`, {
       headers: { "tenantName": tenantNameHeader }
     })
       .then((response) => response.json())
@@ -71,7 +71,7 @@ const AdvancedDetailsCard = () => {
 
   useEffect(() => {
     const currentDate = new Date().toLocaleDateString("en-US");
-    fetch(`http://www.jewelerp.timeserasoftware.in/api/DashBoard/GetScheme?date=${encodeURIComponent(currentDate)}&filter=GOLD`, {
+    fetch(`${CREATE_jwel}/api/DashBoard/GetScheme?date=${encodeURIComponent(currentDate)}&filter=GOLD`, {
       headers: { "tenantName": tenantNameHeader }
     })
       .then((response) => response.json())

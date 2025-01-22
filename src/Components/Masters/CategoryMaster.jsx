@@ -12,9 +12,11 @@ import {
   Card,
   message,
   Breadcrumb,
+  Pagination,
 } from "antd";
 import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import { CREATE_jwel } from "../../Config/Config";
+import TableHeaderStyles from "../Pages/TableHeaderStyles";
 
 const CategoryMaster = () => {
   const [form] = Form.useForm();
@@ -24,61 +26,54 @@ const CategoryMaster = () => {
   const [searchText, setSearchText] = useState("");
   const [categoryExists, setCategoryExists] = useState(false);
   const tenantNameHeader = "PmlYjF0yAwEjNohFDKjzn/ExL/LMhjzbRDhwXlvos+0=";
-  const refs = useRef({}); // Use useRef to store references to input fields
+  const refs = useRef({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
 
-  // Focus the next input on Enter key press
   const handleKeyDown = (e, fieldName) => {
     const fieldNames = Object.keys(refs.current);
     const currentIndex = fieldNames.indexOf(fieldName);
     const nextFieldName = fieldNames[currentIndex + 1];
-  
+
     if (e.key === "Enter") {
-      e.preventDefault(); // Prevent default form submission
-  
+      e.preventDefault();
+
       if (nextFieldName && refs.current[nextFieldName]) {
-        // Navigate to the next field
         refs.current[nextFieldName].focus();
       } else if (currentIndex === fieldNames.length - 1) {
-        // If on the last field, save or submit
         if (editingKey) {
-          handleSave(); // Save changes in edit mode
+          handleSave();
         } else {
-          form.submit(); // Submit in add mode
+          form.submit();
         }
       }
     }
-  
-    // Alt+S to submit the form
+
     if (e.altKey && e.key.toLowerCase() === "s") {
       e.preventDefault();
       if (editingKey) {
-        handleSave(); // Save changes in edit mode
+        handleSave();
       } else {
-        form.submit(); // Submit in add mode
+        form.submit();
       }
     }
-  
-    // Alt+C to cancel the form
+
     if (e.altKey && e.key.toLowerCase() === "c") {
       e.preventDefault();
-      handleCancel(); // Cancel action
+      handleCancel();
     }
   };
-  
-  
-  
-  
-  // Fetch data from API
-  useEffect(() => {
-  
 
+  useEffect(() => {
     fetchData();
   }, []);
+
   const fetchData = async () => {
     try {
       const response = await axios.get(`${CREATE_jwel}/api/Master/MasterCategoryMasterList`);
       const transformedData = response.data.map((item, index) => ({
         key: index + 1,
+        sno: index + 1,
         categoryName: item.categoryname,
         wastagePercentage: item.wastage,
         directWastage: item.directwastage,
@@ -92,7 +87,7 @@ const CategoryMaster = () => {
       message.error("Failed to load category data!");
     }
   };
-  // Function to check if category name exists
+
   const checkCategoryExists = async (categoryName) => {
     try {
       const response = await axios.get(
@@ -110,14 +105,13 @@ const CategoryMaster = () => {
   };
 
   const handleAdd = async (values) => {
-    // First, check if category name already exists
     await checkCategoryExists(values.categoryName);
-  
+
     if (categoryExists) {
       message.error("Category name already exists!");
       return;
     }
-  
+
     try {
       const response = await axios.post(
         `${CREATE_jwel}/api/Master/MasterCategoryMasterInsert`,
@@ -131,16 +125,17 @@ const CategoryMaster = () => {
         },
         { headers: { tenantName: tenantNameHeader } }
       );
-  
+
       if (response.data) {
         const newData = {
           key: Date.now(),
+          sno: data.length + 1,
           ...values,
         };
         setData([...data, newData]);
         form.resetFields();
         message.success("Category added successfully!");
-        fetchData()
+        fetchData();
       } else {
         message.error("Failed to add category!");
       }
@@ -149,6 +144,7 @@ const CategoryMaster = () => {
       message.error("Failed to add category!");
     }
   };
+
   const handleDelete = async (key, categoryName) => {
     try {
       const response = await axios.post(
@@ -156,7 +152,7 @@ const CategoryMaster = () => {
         {},
         { headers: { tenantName: tenantNameHeader } }
       );
-  
+
       if (response.data) {
         setData((prevData) => prevData.filter((item) => item.key !== key));
         message.success("Category deleted successfully!");
@@ -168,7 +164,6 @@ const CategoryMaster = () => {
       message.error("An error occurred while deleting the category.");
     }
   };
-  
 
   const handleEdit = (record) => {
     setEditingKey(true);
@@ -179,48 +174,43 @@ const CategoryMaster = () => {
 
   const handleSave = async () => {
     try {
-      const updatedData = form.getFieldsValue(); // Get updated values
+      const updatedData = form.getFieldsValue();
       const oldRecord = data.find((item) => item.key === rowData);
-  
+
       if (!oldRecord) {
         message.error("Old record not found.");
         return;
       }
-  
-      // Check if the new values are the same as the old values
+
       const isUnchanged = Object.keys(updatedData).every(
         (key) => updatedData[key] === oldRecord[key]
       );
-  
+
       if (isUnchanged) {
         setEditingKey(false);
         form.resetFields();
         return;
       }
-  
-      // Step 1: Delete the old category name
+
       const deleteResponse = await axios.post(
         `${CREATE_jwel}/api/Master/MasterCategoryMasterDelete?CategoryName=${oldRecord.categoryName}`,
         {},
         { headers: { tenantName: tenantNameHeader } }
       );
-  
+
       if (!deleteResponse.data) {
-        // message.error("Failed to delete the old category.");
         return;
       }
-  
-      // Step 2: Check if the new category name exists
+
       const searchResponse = await axios.get(
         `${CREATE_jwel}/api/Master/MasterCategoryMasterSearch?CategoryName=${updatedData.categoryName}`
       );
-  
+
       if (searchResponse.data && searchResponse.data.length > 0) {
         message.error("Category name already exists!");
         return;
       }
-  
-      // Step 3: Insert the updated category
+
       const insertResponse = await axios.post(
         `${CREATE_jwel}/api/Master/MasterCategoryMasterInsert`,
         {
@@ -233,7 +223,7 @@ const CategoryMaster = () => {
         },
         { headers: { tenantName: tenantNameHeader } }
       );
-  
+
       if (insertResponse.data) {
         setData((prevData) =>
           prevData.map((item) =>
@@ -252,8 +242,6 @@ const CategoryMaster = () => {
       message.error("An error occurred while updating the category.");
     }
   };
-  
-
 
   const handleCancel = useCallback(() => {
     form.resetFields();
@@ -268,6 +256,13 @@ const CategoryMaster = () => {
   );
 
   const columns = [
+    {
+      title: "S.No",
+      dataIndex: "sno",
+      key: "sno",
+      className: 'blue-background-column', 
+      width: 50, 
+    },
     {
       title: "Category Name",
       dataIndex: "categoryName",
@@ -333,7 +328,6 @@ const CategoryMaster = () => {
 
   return (
     <div style={{ backgroundColor: "#f4f6f9" }}>
-      {/* Breadcrumb */}
       <Row justify="start" style={{ marginBottom: "16px" }}>
         <Col>
           <Breadcrumb style={{ fontSize: "16px", fontWeight: "500", color: "#0C1154" }}>
@@ -358,17 +352,13 @@ const CategoryMaster = () => {
                   placeholder="Enter category name"
                   value={form.getFieldValue("categoryName")}
                   onChange={(e) => {
-                    // Automatically convert the input to uppercase as the user types
                     const value = e.target.value.toUpperCase();
-                    form.setFieldsValue({ categoryName: value }); // Update the form field value with uppercase text
+                    form.setFieldsValue({ categoryName: value });
                   }}
                   onBlur={(e) => checkCategoryExists(e.target.value)}
                 />
               </Form.Item>
             </Col>
-
-
-
 
             <Col xs={24} sm={12} lg={12}>
               <Form.Item
@@ -379,7 +369,6 @@ const CategoryMaster = () => {
                 <Input type="number"
                   ref={(el) => (refs.current["wastagePercentage"] = el)}
                   onKeyDown={(e) => handleKeyDown(e, "wastagePercentage")}
-
                   placeholder="Enter Wastage %" />
               </Form.Item>
             </Col>
@@ -393,7 +382,6 @@ const CategoryMaster = () => {
                 <Input type="number"
                   ref={(el) => (refs.current["directWastage"] = el)}
                   onKeyDown={(e) => handleKeyDown(e, "directWastage")}
-
                   placeholder="Enter Direct Wastage" />
               </Form.Item>
             </Col>
@@ -407,25 +395,23 @@ const CategoryMaster = () => {
                 <Input type="number"
                   ref={(el) => (refs.current["makingChargesPerGram"] = el)}
                   onKeyDown={(e) => handleKeyDown(e, "makingChargesPerGram")}
-
                   placeholder="Enter Making Charges / grams" />
               </Form.Item>
             </Col>
 
             <Col xs={24} sm={12} lg={12}>
-            <Form.Item
-  name="directMakingCharges"
-  label="Direct Making Charges"
-  rules={[{ required: true, message: "Direct Making Charges is required" }]}
->
-  <Input
-    type="number"
-    ref={(el) => (refs.current["directMakingCharges"] = el)}
-    onKeyDown={(e) => handleKeyDown(e, "directMakingCharges")}
-    placeholder="Enter Direct Making Charges"
-  />
-</Form.Item>
-
+              <Form.Item
+                name="directMakingCharges"
+                label="Direct Making Charges"
+                rules={[{ required: true, message: "Direct Making Charges is required" }]}
+              >
+                <Input
+                  type="number"
+                  ref={(el) => (refs.current["directMakingCharges"] = el)}
+                  onKeyDown={(e) => handleKeyDown(e, "directMakingCharges")}
+                  placeholder="Enter Direct Making Charges"
+                />
+              </Form.Item>
             </Col>
           </Row>
 
@@ -433,7 +419,7 @@ const CategoryMaster = () => {
             <Button
               type="primary"
               htmlType="button"
-              onClick={editingKey ? handleSave : form.submit} // Call handleSave in edit mode
+              onClick={editingKey ? handleSave : form.submit}
               style={{ marginRight: 8, backgroundColor: "#0C1154", borderColor: "#0C1154" }}
             >
               {editingKey ? "Save" : "Submit"}
@@ -446,27 +432,45 @@ const CategoryMaster = () => {
         </Form>
       </Card>
 
-      <div style={{float:"right"}}>
+      <div style={{ marginLeft:"5px" ,float: "right", marginBottom: "10px" }}>
+        <Pagination
+          current={currentPage}
+          pageSize={pageSize}
+          total={filteredData.length}
+          showSizeChanger
+          pageSizeOptions={['10', '20', '50', '100']}
+          onChange={(page, size) => {
+            setCurrentPage(page);
+            setPageSize(size);
+          }}
+          showTotal={(total, range) => `${range[0]}-${range[1]} of ${total} items`}
 
-          <Input.Search
-            placeholder="Search records"
-            style={{ marginBottom: "16px", width: "100%", borderRadius: "4px" }}
-            onChange={(e) => setSearchText(e.target.value)}
-          />
-    </div>
+          style={{ marginBottom: "10px" }}
+        />
+      </div>
 
-      <Table
-        columns={columns}
-        dataSource={filteredData}
-        rowKey="key"
-        size="small"
-        pagination={{ pageSize: 5 }}
-        style={{
-          background: "#fff",
-          boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-          borderRadius: "8px",
-        }}
-      />
+      <div style={{ float: "right", marginBottom: "10px" }}>
+        <Input.Search
+          placeholder="Search"
+          onChange={(e) => setSearchText(e.target.value)}
+          style={{ width: "100%", marginBottom: "10px" }}
+        />
+      </div>
+
+      <TableHeaderStyles>
+        <Table
+          columns={columns}
+          dataSource={filteredData.slice((currentPage - 1) * pageSize, currentPage * pageSize)}
+          rowKey="key"
+          size="small"
+          pagination={false}
+          style={{
+            background: "#fff",
+            boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+            borderRadius: "8px",
+          }}
+        />
+      </TableHeaderStyles>
     </div>
   );
 };

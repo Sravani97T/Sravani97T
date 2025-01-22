@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Table, Row, Col, Breadcrumb, Input, Select, Pagination } from 'antd';
 import axios from 'axios';
 import PdfExcelPrint from '../Utiles/PdfExcelPrint'; // Adjust the import path as necessary
-
+import TableHeaderStyles from '../Pages/TableHeaderStyles';
+import { CREATE_jwel } from '../../Config/Config';
 const { Option } = Select;
 
 const OutstandingCustomers = () => {
@@ -12,10 +13,10 @@ const OutstandingCustomers = () => {
     const [customerNameFilter, setCustomerNameFilter] = useState('');
     const [cityOptions, setCityOptions] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
-    const [pageSize, setPageSize] = useState(6);
+    const [pageSize, setPageSize] = useState(20); // Set default page size to 20
 
     useEffect(() => {
-        axios.get('http://www.jewelerp.timeserasoftware.in/api/POSReports/GetOutStandingCustomers?cityName=%&custName=%&saleCode=1&mobileNo=%')
+        axios.get(`${CREATE_jwel}/api/POSReports/GetOutStandingCustomers?cityName=%&custName=%&saleCode=1&mobileNo=%`)
             .then(response => {
                 const data = response.data.map((item, index) => ({
                     ...item,
@@ -58,7 +59,7 @@ const OutstandingCustomers = () => {
     );
 
     const columns = [
-        { title: 'S.No', dataIndex: 'serialNo', key: 'serialNo' },
+        { title: 'S.No', width: 50,   className: 'blue-background-column',  dataIndex: 'serialNo', key: 'serialNo' },
         { title: 'City Name', dataIndex: 'CityName', key: 'CityName' },
         { title: 'Customer Name', dataIndex: 'CustName', key: 'CustName' },
         { title: 'Mobile Number', dataIndex: 'MobileNum', key: 'MobileNum' },
@@ -155,7 +156,8 @@ const OutstandingCustomers = () => {
                     />
                 </Col>
             </Row>
-            <div style={{ marginTop: "8px" }}>
+            <div style={{ marginTop: 16, boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}>
+            <TableHeaderStyles> 
                 <Table
                     size="small"
                     columns={columns}
@@ -164,7 +166,7 @@ const OutstandingCustomers = () => {
                     pagination={false}
                     rowClassName="table-row"
                     summary={() => filteredResults.length > 0 && (
-                        <Table.Summary.Row>
+                        <Table.Summary.Row style={{ backgroundColor: '#f5f5f5', fontWeight: 'bold' }}>
                             <Table.Summary.Cell>Total</Table.Summary.Cell>
                             <Table.Summary.Cell colSpan={3} />
                             <Table.Summary.Cell align="right">{totalDebit}</Table.Summary.Cell>
@@ -173,6 +175,7 @@ const OutstandingCustomers = () => {
                         </Table.Summary.Row>
                     )}
                 />
+                </TableHeaderStyles>
             </div>
         </>
     );

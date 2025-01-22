@@ -12,10 +12,13 @@ import {
   Card,
   message,
   Breadcrumb,
+  Pagination,
 } from "antd";
 import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import axios from "axios";
 import { CREATE_jwel } from "../../Config/Config";
+import TableHeaderStyles from '../Pages/TableHeaderStyles';
+
 const { Option } = Select;
 
 const tenantNameHeader = "PmlYjF0yAwEjNohFDKjzn/ExL/LMhjzbRDhwXlvos+0="; // Your tenant header value
@@ -27,11 +30,10 @@ const ProductCategory = () => {
   const [editingKey, setEditingKey] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [currentPage, setCurrentPage] = useState(1);  // For pagination
-  const [pageSize, setPageSize] = useState(10);      // For pagination
+  const [pageSize, setPageSize] = useState(20);      // For pagination
   const categoryInputRef = useRef(); // Ref for the second input field
   const [mainProductOptions, setMainProductOptions] = useState([]);  // State for dynamic main product options
   const [rowdata, setRowdata] = useState(null);
-
 
   useEffect(() => {
     // Fetch main products from API
@@ -48,21 +50,23 @@ const ProductCategory = () => {
     fetchMainProducts();
 
     // Fetch product category data
-    
     fetchData();
   }, []);
+
   const fetchData = async () => {
     try {
       const response = await axios.get(`${CREATE_jwel}/api/Master/MasterProductCategoryList`);
       const formattedData = response.data.map((item, index) => ({
         ...item,
         key: index,
+        sno: index + 1, // Add serial number
       }));
       setData(formattedData);
     } catch (error) {
       message.error("Failed to fetch product categories.");
     }
   };
+  
 
   const checkProductExists = async (mainProduct, category) => {
     try {
@@ -137,7 +141,7 @@ const ProductCategory = () => {
   const handleSave = async () => {
     const updatedData = form.getFieldsValue();
     const record = data.find((item) => item.key === rowdata);
-  
+
     // Check if there are any changes
     if (
       updatedData.mainProduct === record?.MNAME &&
@@ -147,7 +151,7 @@ const ProductCategory = () => {
       form.resetFields();
       return;
     }
-  
+
     // Proceed with existing logic
     if (updatedData.mainProduct !== record.MNAME || updatedData.category !== record.PRODUCTCATEGORY) {
       const productExists = await checkProductExists(updatedData.mainProduct, updatedData.category);
@@ -156,7 +160,7 @@ const ProductCategory = () => {
         return;
       }
     }
-  
+
     try {
       // Delete the existing record before inserting the new one
       if (updatedData.mainProduct !== record.MNAME || updatedData.category !== record.PRODUCTCATEGORY) {
@@ -164,7 +168,7 @@ const ProductCategory = () => {
           `${CREATE_jwel}/api/Master/MasterProductCategoryDelete?MName=${record.MNAME}&ProductCategory=${record.PRODUCTCATEGORY}`
         );
       }
-  
+
       // Insert the new record
       await axios.post(
         `${CREATE_jwel}/api/Master/MasterProductCategoryInsert`,
@@ -175,7 +179,7 @@ const ProductCategory = () => {
           cloud_upload: false,
         }
       );
-  
+
       // Update the table data
       setData((prevData) =>
         prevData.map((item) =>
@@ -189,7 +193,7 @@ const ProductCategory = () => {
             : item
         )
       );
-  
+
       setEditingKey(false);
       form.resetFields();
       message.success("Product updated successfully!");
@@ -199,9 +203,7 @@ const ProductCategory = () => {
       message.error("Failed to update product.");
     }
   };
-  
-  
-  
+
   const handleCancel = useCallback(() => {
     form.resetFields();
     setEditingKey(false);
@@ -224,6 +226,13 @@ const ProductCategory = () => {
   };
 
   const columns = [
+    {
+      title: 'S.No',
+      dataIndex: 'sno',
+      key: 'sno',
+      className: 'blue-background-column', 
+      width: 50, 
+  },
     {
       title: "Main Product",
       dataIndex: "MNAME",
@@ -267,9 +276,6 @@ const ProductCategory = () => {
       ),
     },
   ];
-  
-  
-  
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -309,7 +315,7 @@ const ProductCategory = () => {
         <Form form={form} layout="vertical" onFinish={editingKey ? handleSave : handleAdd}>
           <Row gutter={16}>
             <Col xs={24} sm={12} lg={12}>
-            <Form.Item
+              <Form.Item
                 name="mainProduct"
                 label="Main Product"
                 rules={[{ required: true, message: "Main Product is required" }]}
@@ -386,32 +392,46 @@ const ProductCategory = () => {
         </Form>
       </Card>
 
-      {/* Search Box */}
-      <div style={{float:"right"}}>
+      {/* Search Box and Pagination */}
+   
+      <div style={{marginLeft:"5px", float: "right", marginBottom: "10px" }}>
+      <Pagination
+            current={currentPage}
+            pageSize={pageSize}
+            total={filteredData.length}
+            showSizeChanger
+            pageSizeOptions={['10', '20', '50', '100']}
+            onChange={handlePageChange}
+            showTotal={(total, range) => `${range[0]}-${range[1]} of ${total} items`}
 
+          />
+      </div>
+
+      <div style={{ float: "right", marginBottom: "10px" }}>
+     
           <Input.Search
             placeholder="Search..."
             value={searchText}
             onChange={handleSearch}
-            style={{ width: "100%",marginBottom:"10px" }}
-          />
-</div>
-
+            style={{ width: "100%", marginBottom: "10px" }}
+            />
+      </div>
       {/* Table with Pagination */}
+      <TableHeaderStyles>
+
       <Table
         columns={columns}
-        dataSource={filteredData}
+        dataSource={filteredData.slice((currentPage - 1) * pageSize, currentPage * pageSize)}
         size="small"
-
-        pagination={{
-          current: currentPage,
-          pageSize,
-          onChange: handlePageChange,
-        }}
-        style={{ marginTop: "10px", background: "#fff",
+        pagination={false}
+        style={{
+          marginTop: "10px",
+          background: "#fff",
           boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-          borderRadius: "8px", }}
+          borderRadius: "8px",
+        }}
       />
+      </TableHeaderStyles>
     </div>
   );
 };

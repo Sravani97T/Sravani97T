@@ -13,8 +13,11 @@ import {
   Breadcrumb,
   Select,
   Checkbox,
+  Pagination
 } from "antd";
 import { CREATE_jwel } from "../../Config/Config";
+import TableHeaderStyles from "../Pages/TableHeaderStyles";
+
 import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import axios from "axios"; // Import axios for API requests
 const { Option } = Select;
@@ -30,11 +33,10 @@ const PrefixMaster = () => {
   const [oldPrefix, setOldPrefix] = useState(""); // Store old prefix for edit
   const [mainProductOptions, setMainProductOptions] = useState([]); // Main product options for dropdown
   const prefixInputRef = useRef(); // Ref for the second input field
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
 
   // Fetch main product list from API
-
-
-  // Fetch data from the API
   useEffect(() => {
     // Fetch main products from API
     const fetchMainProducts = async () => {
@@ -58,6 +60,7 @@ const PrefixMaster = () => {
         setData(
           response.data.map((item, index) => ({
             key: index + 1,
+            sno: index + 1, // Add serial number
             mainProduct: item.MAINPRODUCT,
             prefix: item.Prefix,
             pure: item.PUREORNOT,
@@ -122,6 +125,7 @@ const PrefixMaster = () => {
           ...data,
           {
             key: data.length + 1,
+            sno: data.length + 1, // Add serial number
             mainProduct: values.mainProduct,
             prefix: values.prefix,
             pure: values.pure,
@@ -135,8 +139,6 @@ const PrefixMaster = () => {
       });
   };
 
-
-
   // Handle editing a prefix
   const handleEdit = (record) => {
     form.setFieldsValue({
@@ -148,6 +150,7 @@ const PrefixMaster = () => {
     setEditingKey(record.key);
     setOldPrefix(record.prefix); // Store the old prefix for delete
   };
+
   const handleSave = (values) => {
     if (isPrefixExist) {
       message.error("Prefix already exists!");
@@ -168,7 +171,7 @@ const PrefixMaster = () => {
           null,
           {
             headers: {
-              tenantName: tenantNameHeader,
+            tenantName: tenantNameHeader,
             },
           }
         )
@@ -184,6 +187,7 @@ const PrefixMaster = () => {
       savePrefix(values);
     }
   };
+
   const savePrefix = (values) => {
     // Post request to add or update prefix
     axios
@@ -217,6 +221,7 @@ const PrefixMaster = () => {
             ...data,
             {
               key: data.length + 1,
+              sno: data.length + 1, // Add serial number
               mainProduct: values.mainProduct,
               prefix: values.prefix,
               pure: values.pure,
@@ -231,7 +236,6 @@ const PrefixMaster = () => {
         message.error("Failed to save prefix");
       });
   };
-
 
   // Handle deleting a prefix
   const handleDelete = (prefix) => {
@@ -263,33 +267,35 @@ const PrefixMaster = () => {
 
   const columns = [
     {
+      title: "S.No",
+      dataIndex: "sno",
+      key: "sno",
+      className: 'blue-background-column', 
+      width: 50, 
+    },
+    {
       title: "Main Product",
       dataIndex: "mainProduct",
       key: "mainProduct",
-
       sorter: (a, b) => a.mainProduct.localeCompare(b.mainProduct),
     },
     {
       title: "Prefix",
       dataIndex: "prefix",
       align:'center',
-
       key: "prefix",
     },
     {
       title: "Pure",
       dataIndex: "pure",
       key: "pure",
-      
       align:'center',
-
       render: (text) => (text ? "Yes" : "No"),
     },
     {
       title: "Display Rates",
       dataIndex: "displayOnDailyRates",
       align:'center',
-
       key: "displayOnDailyRates",
       render: (text) => (text ? "Yes" : "No"),
     },
@@ -297,7 +303,6 @@ const PrefixMaster = () => {
       title: "Actions",
       key: "actions",
       align:'center',
-
       render: (_, record) => (
         <Space>
           <Button
@@ -315,6 +320,7 @@ const PrefixMaster = () => {
       ),
     },
   ];
+
   const handleCancel = useCallback(() => {
     form.resetFields(); // Reset form fields
     setEditingKey(null); // Set editingKey to null to switch to Add mode
@@ -424,7 +430,6 @@ const PrefixMaster = () => {
                   }}
                 />
               </Form.Item>
-
             </Col>
           </Row>
 
@@ -433,13 +438,11 @@ const PrefixMaster = () => {
               <Form.Item name="pure" valuePropName="checked">
                 <Checkbox id="pureCheckbox">Pure</Checkbox>
               </Form.Item>
-
             </Col>
             <Col xs={24} sm={8}>
               <Form.Item name="displayOnDailyRates" valuePropName="checked">
                 <Checkbox id="displayOnDailyRatesCheckbox">Display on Daily Rates</Checkbox>
               </Form.Item>
-
             </Col>
           </Row>
 
@@ -467,28 +470,45 @@ const PrefixMaster = () => {
       </Card>
 
       {/* Search Field */}
-      <div style={{ float: "right" }}>
+      <div style={{marginLeft:"5px", float: "right", marginBottom: "10px" }}>
+        <Pagination
+          current={currentPage}
+          pageSize={pageSize}
+          total={filteredData.length}
+          showSizeChanger
+          pageSizeOptions={['10', '20', '50', '100']}
+          onChange={(page, size) => {
+            setCurrentPage(page);
+            setPageSize(size);
+          }}
+          style={{ marginBottom: "10px" }}
+          showTotal={(total, range) => `${range[0]}-${range[1]} of ${total} items`}
 
-        <Input.Search
-          placeholder="Search records"
-          style={{ width: "100%", borderRadius: "4px", marginBottom: "10px" }}
-          onChange={(e) => setSearchText(e.target.value)}
         />
       </div>
 
-      {/* Table */}
-      <Table
-        columns={columns}
-        dataSource={filteredData}
-        size="small"
-        rowKey="key"
-        pagination={{ pageSize: 5 }}
-        style={{
-          background: "#fff",
-          boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-          borderRadius: "8px",
-        }}
-      />
+      <div style={{ float: "right", marginBottom: "10px" }}>
+        <Input.Search
+          placeholder="Search"
+          onChange={(e) => setSearchText(e.target.value)}
+          style={{ width: "100%", marginBottom: "10px" }}
+        />
+      </div>
+
+      <TableHeaderStyles>
+        <Table
+          columns={columns}
+          dataSource={filteredData.slice((currentPage - 1) * pageSize, currentPage * pageSize)}
+          rowKey="key"
+          size="small"
+          pagination={false}
+          style={{
+            background: "#fff",
+            boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+            borderRadius: "8px",
+          }}
+        />
+      </TableHeaderStyles>
     </div>
   );
 };

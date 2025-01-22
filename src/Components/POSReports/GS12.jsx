@@ -1,17 +1,21 @@
 import React, { useState, useEffect, forwardRef } from 'react';
-import { Table, Row, Col, Breadcrumb, Select, } from 'antd';
+import { Table, Row, Col, Breadcrumb, Select, Pagination } from 'antd';
 import axios from 'axios';
 import moment from 'moment';
 import PdfExcelPrint from '../Utiles/PdfExcelPrint'; // Adjust the import path as necessary
 import { FaCalendarAlt } from 'react-icons/fa';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+import TableHeaderStyles from '../Pages/TableHeaderStyles';
+import { CREATE_jwel } from '../../Config/Config';
+
 const CustomInput = forwardRef(({ value, onClick, placeholder }, ref) => (
     <div className="custom-date-input" onClick={onClick} ref={ref}>
         <input value={value} placeholder={placeholder} readOnly />
         <FaCalendarAlt className="calendar-icon" />
     </div>
 ));
+
 const { Option } = Select;
 
 const GS12Reports = () => {
@@ -20,9 +24,11 @@ const GS12Reports = () => {
     const [dates, setDates] = useState([moment().toDate(), moment().toDate()]);
     const [particulars, setParticulars] = useState('');
     const [particularsList, setParticularsList] = useState([]);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(20);
 
     useEffect(() => {
-        axios.get('http://www.jewelerp.timeserasoftware.in/api/POSReports/GetGS12MNameList')
+        axios.get(`${CREATE_jwel}/api/POSReports/GetGS12MNameList`)
             .then(response => {
                 setParticularsList(response.data);
                 if (response.data.length > 0) {
@@ -39,7 +45,7 @@ const GS12Reports = () => {
             const fromDate = moment(dates[0]).format('YYYY/MM/DD');
             const toDate = moment(dates[1]).format('YYYY/MM/DD');
 
-            axios.get(`http://www.jewelerp.timeserasoftware.in/api/POSReports/GetG12Opening?entryDate=${toDate}&particulars=${particulars}&saleCode=1&preFix=%`)
+            axios.get(`${CREATE_jwel}/api/POSReports/GetG12Opening?entryDate=${toDate}&particulars=${particulars}&saleCode=1&preFix=%`)
                 .then(response => {
                     const openingData = response.data[0];
                     const openingCashValue = openingData.Column1 - openingData.Column2;
@@ -49,7 +55,7 @@ const GS12Reports = () => {
                     console.error('Error fetching opening cash:', error);
                 });
 
-            axios.get(`http://www.jewelerp.timeserasoftware.in/api/POSReports/GetG12Details?fromDate=${fromDate}&toDate=${toDate}&particulars=${particulars}&saleCode=1&preFix=%`)
+            axios.get(`${CREATE_jwel}/api/POSReports/GetG12Details?fromDate=${fromDate}&toDate=${toDate}&particulars=${particulars}&saleCode=1&preFix=%`)
                 .then(response => {
                     const detailsData = response.data;
                     let balance = openingCash;
@@ -66,7 +72,7 @@ const GS12Reports = () => {
     }, [dates, particulars, openingCash]);
 
     const columns = [
-        { title: 'S.No', dataIndex: 'serialNo', key: 'serialNo' },
+        { title: 'S.No', dataIndex: 'serialNo', width: 50, align: "center", key: 'serialNo', className: 'blue-background-column' },
         { title: 'Date', dataIndex: 'ENTRYDATE', key: 'ENTRYDATE', render: date => moment(date).format('YYYY/MM/DD') },
         { title: 'Particulars', dataIndex: 'PARTICULARS', key: 'PARTICULARS' },
         { title: 'Party Name', dataIndex: 'PARTYNAME', key: 'PARTYNAME' },
@@ -92,6 +98,11 @@ const GS12Reports = () => {
     };
 
     const { totalDebit, totalCredit, totalBalance } = getTotals();
+
+    const handlePageChange = (page, pageSize) => {
+        setCurrentPage(page);
+        setPageSize(pageSize);
+    };
 
     const formattedData = [
         ...filteredData.map((item, index) => ({
@@ -148,7 +159,6 @@ const GS12Reports = () => {
                                 endDate={dates[1]}
                                 placeholderText="Start Date"
                                 customInput={<CustomInput />}
-
                             />
                         </Col>
                         <Col>
@@ -160,8 +170,6 @@ const GS12Reports = () => {
                                 endDate={dates[1]}
                                 placeholderText="End Date"
                                 customInput={<CustomInput />}
-
-
                             />
                         </Col>
                     </Row>
@@ -181,34 +189,58 @@ const GS12Reports = () => {
                     </Select>
                 </Col>
             </Row>
-            <div style={{ float: 'right', marginTop: "10px", marginBottom: "10px" }}>
-                <div style={{ fontWeight: '600', color: '#0C1154', marginRight: 16 }}>Opening Cash: {openingCash.toFixed(2)}</div>
-            </div>
-            <div style={{ marginTop: "10px" }}>
-                <Table
-                    size="small"
-                    columns={columns}
-                    dataSource={filteredData}
-                    rowKey="key"
-                    pagination={{
-                        pageSize: 6,
-                        pageSizeOptions: ["10", "20", "50", "100"],
-                        showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
-                        position: ["topRight"],
-                        style: { margin: "16px 0" }
+            <Row style={{ marginTop: 16, marginBottom: 16 }}>
+                <Col span={24} style={{ textAlign: 'right', fontWeight: '600', color: '#0C1154' }}>
+                    Opening Cash: {openingCash.toFixed(2)}
+                </Col>
+            </Row>
+            <Row gutter={8} style={{ marginBottom: 8, marginTop: "10px" }} align="middle">
+                <Col flex="auto" />
+                <Col>
+                    <Pagination
+                        current={currentPage}
+                        pageSize={pageSize}
+                        total={filteredData.length}
+                        onChange={handlePageChange}
+                        pageSizeOptions={["6", "10", "20", "50", "100"]}
+                        showSizeChanger
+                        showTotal={(total, range) => `${range[0]}-${range[1]} of ${total} items`}
+                        size="small"
+                    />
+                </Col>
+            </Row>
+            <div style={{ marginTop: 16, boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}>
+                <div
+                    className="table-responsive scroll-horizontal"
+                    style={{
+                        overflowY: "auto",
+                        overflowX: "auto",
+                        marginTop: "20px",
+                        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+                        backgroundColor: '#fff',
+                        borderRadius: '8px'
                     }}
-                    rowClassName="table-row"
-                    summary={() => filteredData.length > 0 && (
-                        <Table.Summary.Row>
-                            <Table.Summary.Cell>Total</Table.Summary.Cell>
-                            <Table.Summary.Cell colSpan={5} />
-                            <Table.Summary.Cell align="right">{totalDebit}</Table.Summary.Cell>
-                            <Table.Summary.Cell align="right">{totalCredit}</Table.Summary.Cell>
-                            <Table.Summary.Cell align="right">{totalBalance}</Table.Summary.Cell>
-                            <Table.Summary.Cell colSpan={2} />
-                        </Table.Summary.Row>
-                    )}
-                />
+                >
+                    <TableHeaderStyles>
+                        <Table
+                            size="small"
+                            columns={columns}
+                            dataSource={filteredData.slice((currentPage - 1) * pageSize, currentPage * pageSize)}
+                            rowKey="key"
+                            pagination={false}
+                            rowClassName="table-row"
+                            summary={() => (
+                                <Table.Summary.Row style={{ backgroundColor: '#f5f5f5', fontWeight: 'bold' }}>
+                                    <Table.Summary.Cell index={0} colSpan={6}>Total</Table.Summary.Cell>
+                                    <Table.Summary.Cell index={1} align="right">{totalDebit}</Table.Summary.Cell>
+                                    <Table.Summary.Cell index={2} align="right">{totalCredit}</Table.Summary.Cell>
+                                    <Table.Summary.Cell index={3} align="right">{totalBalance}</Table.Summary.Cell>
+                                    <Table.Summary.Cell index={4} colSpan={3} />
+                                </Table.Summary.Row>
+                            )}
+                        />
+                    </TableHeaderStyles>
+                </div>
             </div>
         </>
     );

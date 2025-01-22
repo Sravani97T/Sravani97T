@@ -121,11 +121,11 @@ const PdfExcelPrint = ({ data, columns, fileName }) => {
     };
 
     return (
-        <>
-            <Button icon={<PrinterOutlined />} onClick={handlePrint} style={{ marginRight: 8 }}>Print</Button>
-            <Button icon={<FilePdfOutlined />} onClick={handlePDFWithPreview} style={{ marginRight: 8 }}>PDF</Button>
-            <Button icon={<FileExcelOutlined />} onClick={handleExcel} style={{ marginRight: 8 }}>Excel</Button>
-        </>
+        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px', backgroundColor: '#ffffff', borderRadius: '5px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+            <Button icon={<PrinterOutlined style={{ color: 'blue' }} />} onClick={handlePrint} style={{ backgroundColor: '#e6f7ff', color: '#000', border: 'none', marginRight: 8 }}>Print</Button>
+            <Button icon={<FilePdfOutlined style={{ color: 'red' }} />} onClick={handlePDFWithPreview} style={{ backgroundColor: '#fff1f0', color: '#000', border: 'none', marginRight: 8 }}>PDF</Button>
+            <Button icon={<FileExcelOutlined style={{ color: 'green' }} />} onClick={handleExcel} style={{ backgroundColor: '#f6ffed', color: '#000', border: 'none', marginRight: 8 }}>Excel</Button>
+        </div>
     );
 };
 

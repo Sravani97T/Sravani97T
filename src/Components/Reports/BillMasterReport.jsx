@@ -1,10 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import { Table, Row, Col, Breadcrumb, Input, Select, Pagination, DatePicker, Button } from 'antd';
+import React, { useState, useEffect, forwardRef } from 'react';
+import { Table, Row, Col, Breadcrumb, Input, Select, Pagination, Button } from 'antd';
 import axios from 'axios';
 import moment from 'moment';
 import PdfExcelPrint from '../Utiles/PdfExcelPrint'; // Adjust the import path as necessary
-
+import TableHeaderStyles from '../Pages/TableHeaderStyles';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import { FaCalendarAlt } from 'react-icons/fa';
+import { CREATE_jwel } from '../../Config/Config';
 const { Option } = Select;
+
+const CustomInput = forwardRef(({ value, onClick, placeholder }, ref) => (
+    <div className="custom-date-input" onClick={onClick} ref={ref}>
+        <input value={value} placeholder={placeholder} readOnly />
+        <FaCalendarAlt className="calendar-icon" />
+    </div>
+));
 
 const BillMasterReport = () => {
     const [filteredData, setFilteredData] = useState([]);
@@ -21,10 +32,10 @@ const BillMasterReport = () => {
     const [uniqueCustomerNames, setUniqueCustomerNames] = useState([]);
     const [uniqueMobileNumbers, setUniqueMobileNumbers] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
-    const [pageSize, setPageSize] = useState(6);
+    const [pageSize, setPageSize] = useState(20);
 
     useEffect(() => {
-        axios.get('http://www.jewelerp.timeserasoftware.in/api/Erp/GetBillMast')
+        axios.get(`${CREATE_jwel}/api/Erp/GetBillMast`)
             .then(response => {
                 const data = response.data.map((item, index) => ({
                     ...item,
@@ -115,7 +126,9 @@ const BillMasterReport = () => {
     const totals = calculateTotals(filteredData);
 
     const columns = [
-        { title: 'S.No', dataIndex: 'serialNo', align: "center", key: 'serialNo' },
+        { title: 'S.No', dataIndex: 'serialNo', align: "center", key: 'serialNo',      width: 50, 
+            className: 'blue-background-column', 
+        },
         { title: 'Bill Date', dataIndex: 'BillDate', key: 'BillDate', render: (text) => moment(text).format('DD/MM/YYYY') },
         { title: 'Jewel Type', dataIndex: 'JewelType', key: 'JewelType' },
         { title: 'Bill No', dataIndex: 'BillNo', key: 'BillNo' },
@@ -179,7 +192,7 @@ const BillMasterReport = () => {
                     placeholder="Jewel Type"
                     allowClear
                     style={{ width: '100%' }}
-                    value={tempFilters.jewelType}
+                    value={tempFilters.jewelType || undefined}
                     onChange={(value) => handleTempFilterChange('jewelType', value)}
                 >
                     {uniqueJewelTypes.map(type => (
@@ -193,7 +206,7 @@ const BillMasterReport = () => {
                     allowClear
                     placeholder="Customer Name"
                     style={{ width: '100%' }}
-                    value={tempFilters.customerName}
+                    value={tempFilters.customerName || undefined}
                     onChange={(value) => handleTempFilterChange('customerName', value)}
                 >
                     {uniqueCustomerNames.map(name => (
@@ -207,7 +220,7 @@ const BillMasterReport = () => {
                     allowClear
                     placeholder="Mobile Number"
                     style={{ width: '100%' }}
-                    value={tempFilters.mobileNumber}
+                    value={tempFilters.mobileNumber || undefined}
                     onChange={(value) => handleTempFilterChange('mobileNumber', value)}
                 >
                     {uniqueMobileNumbers.map(number => (
@@ -217,24 +230,24 @@ const BillMasterReport = () => {
             </Col>
             <Col xs={24} sm={12} md={4}>
                 <DatePicker
-                    placeholder="From Date"
-                    style={{ width: '100%' }}
-                    format="YYYY-MM-DD"
-                    value={tempFilters.dateFrom ? moment(tempFilters.dateFrom) : null}
-                    onChange={(date) => handleTempFilterChange('dateFrom', date ? date.format('YYYY-MM-DD') : null)}
+                    selected={tempFilters.dateFrom ? moment(tempFilters.dateFrom, 'YYYY-MM-DD').toDate() : null}
+                    onChange={(date) => handleTempFilterChange('dateFrom', date ? moment(date).format('YYYY-MM-DD') : null)}
+                    customInput={<CustomInput placeholder="From Date" />}
+                    dateFormat="dd/MM/yyyy"
+                    placeholderText="From Date"
                 />
             </Col>
             <Col xs={24} sm={12} md={4}>
                 <DatePicker
-                    placeholder="To Date"
-                    style={{ width: '100%' }}
-                    format="YYYY-MM-DD"
-                    value={tempFilters.dateTo ? moment(tempFilters.dateTo) : null}
-                    onChange={(date) => handleTempFilterChange('dateTo', date ? date.format('YYYY-MM-DD') : null)}
+                    selected={tempFilters.dateTo ? moment(tempFilters.dateTo, 'YYYY-MM-DD').toDate() : null}
+                    onChange={(date) => handleTempFilterChange('dateTo', date ? moment(date).format('YYYY-MM-DD') : null)}
+                    customInput={<CustomInput placeholder="To Date" />}
+                    dateFormat="dd/MM/yyyy"
+                    placeholderText="To Date"
                 />
             </Col>
             <Col xs={24} sm={12} md={4}>
-                <Button type="primary" onClick={applyFilters} style={{ marginRight: 8 }}>Apply</Button>
+                <Button type="primary" className="animated-button" onClick={applyFilters} style={{ marginRight: 8 }}>Apply</Button>
                 <Button onClick={clearFilters}>Clear</Button>
             </Col>
         </Row>
@@ -278,7 +291,7 @@ const BillMasterReport = () => {
                 <div
                     className="table-responsive scroll-horizontal"
                     style={{
-                        maxHeight: "calc(99vh - 193.33px)",
+                        // maxHeight: "calc(99vh - 193.33px)",
                         overflowY: "auto",
                         overflowX: "auto",
                         marginTop: "20px",
@@ -287,29 +300,31 @@ const BillMasterReport = () => {
                         borderRadius: '8px'
                     }}
                 >
-                    <Table
-                        size="small"
-                        columns={columns}
-                        dataSource={filteredData.slice((currentPage - 1) * pageSize, currentPage * pageSize)}
-                        rowKey="key"
-                        pagination={false}
-                        rowClassName="table-row"
-                        summary={() => (
-                            <Table.Summary.Row>
-                                <Table.Summary.Cell index={0} colSpan={5}>Total</Table.Summary.Cell>
-                                <Table.Summary.Cell index={1} align="right">{totals.TotPieces}</Table.Summary.Cell>
-                                <Table.Summary.Cell index={2} align="right">{totals.TotGwt.toFixed(3)}</Table.Summary.Cell>
-                                <Table.Summary.Cell index={3} align="right">{totals.TotNwt.toFixed(3)}</Table.Summary.Cell>
-                                <Table.Summary.Cell index={4} align="right">{totals.TotAmt.toFixed(2)}</Table.Summary.Cell>
-                                <Table.Summary.Cell index={5} align="right">{totals.DisAmt.toFixed(2)}</Table.Summary.Cell>
-                                <Table.Summary.Cell index={6} align="right">{totals.BillAmt.toFixed(2)}</Table.Summary.Cell>
-                                <Table.Summary.Cell index={7} align="right">{totals.CGST.toFixed(2)}</Table.Summary.Cell>
-                                <Table.Summary.Cell index={8} align="right">{totals.SGST.toFixed(2)}</Table.Summary.Cell>
-                                <Table.Summary.Cell index={9} align="right">{totals.IGST.toFixed(2)}</Table.Summary.Cell>
-                                <Table.Summary.Cell index={10} align="right">{totals.NetAmt.toFixed(2)}</Table.Summary.Cell>
-                            </Table.Summary.Row>
-                        )}
-                    />
+                    <TableHeaderStyles>
+                        <Table
+                            size="small"
+                            columns={columns}
+                            dataSource={filteredData.slice((currentPage - 1) * pageSize, currentPage * pageSize)}
+                            rowKey="key"
+                            pagination={false}
+                            rowClassName="table-row"
+                            summary={() => (
+                                <Table.Summary.Row style={{ backgroundColor: '#f5f5f5', fontWeight: 'bold' }}>
+                                    <Table.Summary.Cell index={0} colSpan={5}>Total</Table.Summary.Cell>
+                                    <Table.Summary.Cell index={1} align="right">{totals.TotPieces}</Table.Summary.Cell>
+                                    <Table.Summary.Cell index={2} align="right">{totals.TotGwt.toFixed(3)}</Table.Summary.Cell>
+                                    <Table.Summary.Cell index={3} align="right">{totals.TotNwt.toFixed(3)}</Table.Summary.Cell>
+                                    <Table.Summary.Cell index={4} align="right">{totals.TotAmt.toFixed(2)}</Table.Summary.Cell>
+                                    <Table.Summary.Cell index={5} align="right">{totals.DisAmt.toFixed(2)}</Table.Summary.Cell>
+                                    <Table.Summary.Cell index={6} align="right">{totals.BillAmt.toFixed(2)}</Table.Summary.Cell>
+                                    <Table.Summary.Cell index={7} align="right">{totals.CGST.toFixed(2)}</Table.Summary.Cell>
+                                    <Table.Summary.Cell index={8} align="right">{totals.SGST.toFixed(2)}</Table.Summary.Cell>
+                                    <Table.Summary.Cell index={9} align="right">{totals.IGST.toFixed(2)}</Table.Summary.Cell>
+                                    <Table.Summary.Cell index={10} align="right">{totals.NetAmt.toFixed(2)}</Table.Summary.Cell>
+                                </Table.Summary.Row>
+                            )}
+                        />
+                    </TableHeaderStyles>
                 </div>
             </div>
         </>

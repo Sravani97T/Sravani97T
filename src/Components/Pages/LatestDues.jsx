@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Card, Popover, Button } from "antd";
 import { MoneyCollectOutlined, WalletOutlined } from "@ant-design/icons";
 import axios from "axios";
-
+import { CREATE_jwel } from "../../Config/Config";
 const LatestDues = () => {
     const [openTodayDuesPopover, setOpenTodayDuesPopover] = useState(false);
     const [openTotalDuesPopover, setOpenTotalDuesPopover] = useState(false);
@@ -15,8 +15,8 @@ const LatestDues = () => {
         const fetchDues = async () => {
             try {
                 const currentDate = new Date().toLocaleDateString('en-US');
-                const todayDuesResponse = await axios.get(`http://www.jewelerp.timeserasoftware.in/api/DashBoard/GetTodayDues?date=${encodeURIComponent(currentDate)}`);
-                const totalDuesResponse = await axios.get("http://www.jewelerp.timeserasoftware.in/api/DashBoard/GetTotalDues");
+                const todayDuesResponse = await axios.get(`${CREATE_jwel}/api/DashBoard/GetTodayDues?date=${encodeURIComponent(currentDate)}`);
+                const totalDuesResponse = await axios.get(`${CREATE_jwel}/api/DashBoard/GetTotalDues`);
 
                 const todayDues = todayDuesResponse.data;
                 const totalDues = totalDuesResponse.data;

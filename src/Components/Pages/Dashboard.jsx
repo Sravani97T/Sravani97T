@@ -12,6 +12,7 @@ import TodaysRates from "./TodaysRates";
 import TodaysSalesBarGraph from "./TodaysSalesBarGraph";
 import AdvanceDetails from "./AdvanceDetailes";
 import PaymentOverview from "./PaymentOverview";
+import TableHeaderStyles from "./TableHeaderStyles"; // Import the TableHeaderStyles component
 
 const { Option } = Select;
 
@@ -85,9 +86,11 @@ const Dashboard = () => {
 
   const columns = [
     {
-      title: "S.No",
+      title: "BillNo",
       dataIndex: "BillNo",
       key: "BillNo",
+      className: 'blue-background-column', 
+      width: 50, 
       render: (text, record, index) => <>{index + 1}</>,
     },
     {
@@ -216,7 +219,7 @@ const Dashboard = () => {
 
       {/* Filter Row */}
       <Row gutter={[16, 16]} style={{ marginTop: "15px" }}>
-      <Col xs={24} sm={12} md={6} lg={6}>
+        <Col xs={24} sm={12} md={6} lg={6}>
           <DatePicker
             selected={filters.fromDate}
             onChange={(date) => handleFilterChange("fromDate", date)}
@@ -250,7 +253,6 @@ const Dashboard = () => {
             {/* Add more options as necessary */}
           </Select>
         </Col>
-       
       </Row>
 
       {/* Ant Design Table */}
@@ -267,15 +269,19 @@ const Dashboard = () => {
               borderRadius: '8px'
             }}
           >
-            <Table
-              columns={columns}
-              dataSource={tableData}
-              pagination={false}
-              size="small"
-              rowClassName={(record, index) =>
-                index % 2 === 0 ? "table-row-light" : "table-row-dark"
-              }
-            />
+            <TableHeaderStyles>
+              <Table
+              
+                columns={columns}
+                dataSource={tableData}
+                pagination={false}
+                size="small"
+                rowClassName={(record, index) =>
+                  index % 2 === 0 ? "table-row-light" : "table-row-dark"
+                }
+                
+              />
+            </TableHeaderStyles>
           </div>
         </Col>
       </Row>

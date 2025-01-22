@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { CalendarOutlined, FileTextOutlined, FileDoneOutlined, PercentageOutlined } from "@ant-design/icons";
-
+import { CREATE_jwel } from "../../Config/Config";
 const FirstColumn = () => {
   const [firmData, setFirmData] = useState(null);
   const [totalInvoice, setTotalInvoice] = useState(0);
   const tenantNameHeader = "PmlYjF0yAwEjNohFDKjzn/ExL/LMhjzbRDhwXlvos+0=";
 
   useEffect(() => {
-    fetch("http://www.jewelerp.timeserasoftware.in/api/Erp/GetFirmConfihure", {
+    fetch(`${CREATE_jwel}/api/Erp/GetFirmConfihure`, {
       headers: { "tenantName": tenantNameHeader }
     })
       .then((response) => response.json())
@@ -16,7 +16,7 @@ const FirstColumn = () => {
   }, []);
 
   useEffect(() => {
-    fetch("http://www.jewelerp.timeserasoftware.in/api/DashBoard/GetTotalBills?fYear=2425&saleCode=1", {
+    fetch(`${CREATE_jwel}/api/DashBoard/GetTotalBills?fYear=2425&saleCode=1`, {
       headers: { "tenantName": tenantNameHeader }
     })
       .then((response) => response.json())

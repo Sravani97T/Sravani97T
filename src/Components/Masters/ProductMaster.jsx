@@ -12,10 +12,13 @@ import {
   Card,
   message,
   Breadcrumb,
+  Pagination,
 } from "antd";
 import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import axios from "axios";
 import { CREATE_jwel } from "../../Config/Config";
+import TableHeaderStyles from "../Pages/TableHeaderStyles";
+
 const { Option } = Select;
 const tenantNameHeader = "PmlYjF0yAwEjNohFDKjzn/ExL/LMhjzbRDhwXlvos+0="; // Your tenant header value
 axios.defaults.headers.common['tenantName'] = tenantNameHeader;
@@ -28,7 +31,8 @@ const ProductMaster = () => {
   const [mainProductMapping, setMainProductMapping] = useState({});
   const [filteredProductCategories, setFilteredProductCategories] = useState([]);
   const [rowdata, setRowdata] = useState(null);
-
+const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
   // Refs for form fields to handle focus
   // const MainProductRef = useRef(null)
   const ProductCategoryRef = useRef(null)
@@ -76,13 +80,14 @@ const ProductMaster = () => {
       const response = await axios.get(
         `${CREATE_jwel}/api/Master/MasterProductMasterList`
       );
-
-      // Add key to each record for table usage
+  
+      // Add key and serial number to each record for table usage
       const formattedData = response.data.map((item, index) => ({
         ...item,
         key: index, // Or use a unique identifier if available
+        sno: index + 1, // Serial number starts from 1
       }));
-
+  
       setData(formattedData);
     } catch (error) {
       message.error("Failed to fetch product categories.");
@@ -284,6 +289,13 @@ const ProductMaster = () => {
 
   const columns = [
     {
+      title: "S.No",
+      dataIndex: "sno",
+      key: "sno",
+      className: 'blue-background-column', 
+      width: 50, 
+    },
+    {
       title: "Main Product",
       dataIndex: "MNAME",
       key: "MNAME",
@@ -434,7 +446,6 @@ const ProductMaster = () => {
                   ))}
                 </Select>
               </Form.Item>
-
             </Col>
 
             <Col xs={24} sm={12} lg={8}>
@@ -459,7 +470,6 @@ const ProductMaster = () => {
                   ))}
                 </Select>
               </Form.Item>
-
             </Col>
 
             <Col xs={24} sm={12} lg={8}>
@@ -547,7 +557,7 @@ const ProductMaster = () => {
               </Form.Item>
             </Col>
           </Row>
-          <Row justify="end" >
+          <Row justify="end">
             <Col>
               <Form.Item>
                 <Button
@@ -564,32 +574,51 @@ const ProductMaster = () => {
                 <Button htmlType="button" onClick={handleCancel} style={{ backgroundColor: "#f0f0f0" }}>
                   Cancel
                 </Button>
-              </Form.Item></Col></Row>
-
+              </Form.Item>
+            </Col>
+          </Row>
         </Form>
       </Card>
 
-      <div style={{float:"right"}}>
+      <div style={{marginLeft:"5px" , float: "right", marginBottom: "10px" }}>
+        <Pagination
+          current={currentPage}
+          pageSize={pageSize}
+          total={filteredData.length}
+          showSizeChanger
+          pageSizeOptions={['10', '20', '50', '100']}
+          onChange={(page, size) => {
+            setCurrentPage(page);
+            setPageSize(size);
+          }}
+          style={{ marginBottom: "10px" }}
+          showTotal={(total, range) => `${range[0]}-${range[1]} of ${total} items`}
 
-          <Input.Search
-            placeholder="Search..."
-            style={{ width: "100%", borderRadius: "4px",marginBottom:"10px" }}
-            onChange={(e) => setSearchText(e.target.value)}
-          />
+        />
       </div>
+
+      <div style={{ float: "right", marginBottom: "10px" }}>
+        <Input.Search
+          placeholder="Search"
+          onChange={(e) => setSearchText(e.target.value)}
+          style={{ width: "100%", marginBottom: "10px" }}
+        />
+      </div>
+      <TableHeaderStyles>
 
       <Table
         columns={columns}
-        dataSource={filteredData}
+        dataSource={filteredData.slice((currentPage - 1) * pageSize, currentPage * pageSize)}
         rowKey="key"
         size="small"
-        pagination={{ pageSize: 5 }}
+        pagination={false}
         style={{
           background: "#fff",
           boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
           borderRadius: "8px",
         }}
       />
+      </TableHeaderStyles>
     </div>
   );
 };

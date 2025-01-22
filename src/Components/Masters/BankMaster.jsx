@@ -13,8 +13,10 @@ import {
   Breadcrumb,
   Checkbox,
   Select,
+  Pagination
 } from "antd";
 import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import TableHeaderStyles from "../Pages/TableHeaderStyles";
 
 const { Option } = Select;
 
@@ -53,13 +55,12 @@ const BankMaster = () => {
     },
   ]);
   const [editingKey, setEditingKey] = useState(null);
-  const [searchText, ] = useState("");
-
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
   const refs = {
     accountNumRef: useRef(),
     accountNameRef: useRef(),
     accountTypeRef: useRef(),
-
     amountRef: useRef(),
     bankNameRef: useRef(),
     streetRef: useRef(),
@@ -70,7 +71,6 @@ const BankMaster = () => {
     cardCommRef: useRef(),
     currentBalanceRef: useRef(),
     checkaccountRef:useRef()
-    
   };
 
   const handleAdd = (values) => {
@@ -120,12 +120,6 @@ const BankMaster = () => {
     }
   };
 
-  const filteredData = data.filter((item) =>
-    Object.values(item)
-      .join(" ")
-      .toLowerCase()
-      .includes(searchText.toLowerCase())
-  );
   useEffect(() => {
     const handleKeyDown = (e) => {
         if (e.altKey && e.key === "s") {
@@ -144,7 +138,16 @@ const BankMaster = () => {
         window.removeEventListener("keydown", handleKeyDown);
     };
 }, [form, handleCancel]);
+
   const columns = [
+    {
+      title: "S.No",
+      dataIndex: "sno",
+      key: "sno",
+      className: 'blue-background-column', 
+      width: 50, 
+      render: (_, __, index) => (currentPage - 1) * pageSize + index + 1,
+    },
     {
       title: "Account Number",
       dataIndex: "accountNumber",
@@ -416,7 +419,37 @@ const BankMaster = () => {
         </Form>
       </Card>
 
-      <Table columns={columns} dataSource={filteredData} pagination={{ pageSize: 5 }} size="small"/>
+      <div style={{ marginLeft:"5px",float: "right", marginBottom: "10px" }}>
+        <Pagination
+          current={currentPage}
+          pageSize={pageSize}
+          total={data.length}
+          showSizeChanger
+          pageSizeOptions={['10', '20', '50', '100']}
+          onChange={(page, size) => {
+            setCurrentPage(page);
+            setPageSize(size);
+          }}
+          showTotal={(total, range) => `${range[0]}-${range[1]} of ${total} items`}
+
+          style={{ marginBottom: "10px" }}
+        />
+      </div>
+
+      <TableHeaderStyles>
+        <Table
+          columns={columns}
+          dataSource={data.slice((currentPage - 1) * pageSize, currentPage * pageSize)}
+          rowKey="key"
+          size="small"
+          pagination={false}
+          style={{
+            background: "#fff",
+            boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+            borderRadius: "8px",
+          }}
+        />
+      </TableHeaderStyles>
     </div>
   );
 };

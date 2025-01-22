@@ -13,13 +13,16 @@ import {
   Breadcrumb,
   Select,
   Radio,
-  DatePicker
+  DatePicker,
+  Pagination
+
 } from "antd";
 import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import axios from "axios";
 // import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import moment from 'moment';
+import TableHeaderStyles from "../Pages/TableHeaderStyles";
 
 const tenantNameHeader = "PmlYjF0yAwEjNohFDKjzn/ExL/LMhjzbRDhwXlvos+0="; // Your tenant name header
 
@@ -30,7 +33,8 @@ const MailBook = () => {
   const [data, setData] = useState();
   const [loading, setLoading] = useState(false);
   const [isBrandNameExist, setIsBrandNameExist] = useState(false);
-
+const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
   const [editingKey, setEditingKey] = useState(null);
   const refs = {
     nameRef: useRef(),
@@ -55,8 +59,14 @@ const MailBook = () => {
     try {
       setLoading(true);
       const response = await axios.get("http://www.jewelerp.timeserasoftware.in/api/Master/MasterDealerMasterList");
-    
-      setData(response.data);
+      
+      const dataWithSerialNumbers = response.data.map((item, index) => ({
+        ...item,
+        sno: index + 1,
+        key: index + 1, // Ensure each item has a unique key
+      }));
+      
+      setData(dataWithSerialNumbers);
       setLoading(false);
     } catch (error) {
       message.error("Failed to fetch data from the API.");
@@ -331,6 +341,13 @@ const MailBook = () => {
   }, [form, handleCancel]);
 
   const columns = [
+    {
+      title: "S.No",
+      dataIndex: "sno",
+      key: "sno",
+      className: 'blue-background-column', 
+      width: 50, 
+    },
     { title: "Category", dataIndex: "CustType", key: "CustType" },
     { title: "Name", dataIndex: "Dealername", key: "Dealername" },
     { title: "Mobile No.1", dataIndex: "Mobilenum", key: "Mobilenum" },
@@ -407,7 +424,6 @@ const MailBook = () => {
                   <Option value="OFFICIAL">OFFICIAL</Option>
                 </Select>
               </Form.Item>
-
             </Col>
             <Col xs={24} sm={12}>
               <Form.Item
@@ -424,130 +440,130 @@ const MailBook = () => {
                     const dealername = form.getFieldValue("dealername");
                     const category = form.getFieldValue("category"); // Get category
                     handleBrandNameCheck(category, dealername); // Call API with category and dealer name
-                    }}
-                    onPressEnter={(e) => handleEnterPress(e, refs.mobileNo1Ref)}
-                  />
-                  </Form.Item>
-                </Col>
-                <Col xs={24} sm={12}>
-                  <Form.Item
-                  name="mobilenum"
-                  label="Mobile No. 1"
-                  rules={[
-                    { required: true, message: "Mobile Number 1 is required" },
-                    {
+                  }}
+                  onPressEnter={(e) => handleEnterPress(e, refs.mobileNo1Ref)}
+                />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12}>
+              <Form.Item
+                name="mobilenum"
+                label="Mobile No. 1"
+                rules={[
+                  { required: true, message: "Mobile Number 1 is required" },
+                  {
                     pattern: /^[0-9]{10}$/,
                     message: "Enter a valid 10-digit mobile number",
-                    },
-                  ]}              >
-                  <Input
-                    placeholder="Enter Mobile No. 1"
-                    ref={refs.mobileNo1Ref}
-                    type="phone"
-                    maxLength={10}
-                    onPressEnter={(e) => handleEnterPress(e, refs.eMailRef)}
-                  />
-                  </Form.Item>
-                </Col>
-                <Col xs={24} sm={12}>
-
-                  <Form.Item
-                  name="eMail"
-                  label="Email"
-                  rules={[
-                    { required: true, message: "Email is required" },
-                    { type: "email", message: "Enter a valid email" },
-                  ]}
-                  >
-                  <Input
-                    placeholder="Enter Email"
-                    ref={refs.eMailRef}
-                    onPressEnter={(e) => handleEnterPress(e, refs.mobileNo2Ref)}
-                  />
-                  </Form.Item></Col>
-
-                <Col xs={24} sm={12}>
-                  <Form.Item
-                  name="mobileNum2"
-                  label="Mobile No. 2"
-                  rules={[
-                    {
+                  },
+                ]}
+              >
+                <Input
+                  placeholder="Enter Mobile No. 1"
+                  ref={refs.mobileNo1Ref}
+                  type="phone"
+                  maxLength={10}
+                  onPressEnter={(e) => handleEnterPress(e, refs.eMailRef)}
+                />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12}>
+              <Form.Item
+                name="eMail"
+                label="Email"
+                rules={[
+                  { required: true, message: "Email is required" },
+                  { type: "email", message: "Enter a valid email" },
+                ]}
+              >
+                <Input
+                  placeholder="Enter Email"
+                  ref={refs.eMailRef}
+                  onPressEnter={(e) => handleEnterPress(e, refs.mobileNo2Ref)}
+                />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12}>
+              <Form.Item
+                name="mobileNum2"
+                label="Mobile No. 2"
+                rules={[
+                  {
                     pattern: /^[0-9]{10}$/,
                     message: "Enter a valid 10-digit mobile number",
-                    },
-                  ]}              >
-                  <Input
-                    placeholder="Enter Mobile No. 2"
-                    ref={refs.mobileNo2Ref}
-                    type="phone"
-                    maxLength={10}
-                    onPressEnter={(e) => handleEnterPress(e, refs.cityRef)}
-                  />
-                  </Form.Item>
-                </Col>
-                <Col xs={24} sm={12}>
-                  <Form.Item
-                  name="cityName"
-                  label="City"
-                  rules={[{ required: true, message: "City is required" }]}
-                  >
-                  <Select
-                    showSearch
-                    placeholder="Select City"
-                    ref={refs.cityRef}
-                    onKeyDown={(e) =>
+                  },
+                ]}
+              >
+                <Input
+                  placeholder="Enter Mobile No. 2"
+                  ref={refs.mobileNo2Ref}
+                  type="phone"
+                  maxLength={10}
+                  onPressEnter={(e) => handleEnterPress(e, refs.cityRef)}
+                />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12}>
+              <Form.Item
+                name="cityName"
+                label="City"
+                rules={[{ required: true, message: "City is required" }]}
+              >
+                <Select
+                  showSearch
+                  placeholder="Select City"
+                  ref={refs.cityRef}
+                  onKeyDown={(e) =>
                     e.key === "Enter" && refs.addressRef.current?.focus()
-                    }
-                  >
-                    <Option value="NELLORE">NELLORE</Option>
-                    <Option value="YANAM">YANAM</Option>
-                  </Select>
-                  </Form.Item>
-                </Col>
-                <Col xs={24}>
-                  <Form.Item
-                  name="address1"
-                  label="Address"
-                  rules={[{ required: true, message: "Address is required" }]}
-                  >
-                  <Input.TextArea rows={1}
-                    placeholder="Enter Address"
-                    ref={refs.addressRef}
-                    onPressEnter={(e) => handleEnterPress(e, refs.stateRef)}
-                  />
-                  </Form.Item>
-                </Col>
-                <Col xs={24} sm={12}>
-                  <Form.Item
-                  name="state"
-                  label="State"
-                  rules={[{ required: true, message: "State is required" }]}
-                  >
-
-                  <Select
-                    showSearch
-                    placeholder="Select State"
-                    ref={refs.stateRef}
-                    onKeyDown={(e) =>
+                  }
+                >
+                  <Option value="NELLORE">NELLORE</Option>
+                  <Option value="YANAM">YANAM</Option>
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col xs={24}>
+              <Form.Item
+                name="address1"
+                label="Address"
+                rules={[{ required: true, message: "Address is required" }]}
+              >
+                <Input.TextArea
+                  rows={1}
+                  placeholder="Enter Address"
+                  ref={refs.addressRef}
+                  onPressEnter={(e) => handleEnterPress(e, refs.stateRef)}
+                />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12}>
+              <Form.Item
+                name="state"
+                label="State"
+                rules={[{ required: true, message: "State is required" }]}
+              >
+                <Select
+                  showSearch
+                  placeholder="Select State"
+                  ref={refs.stateRef}
+                  onKeyDown={(e) =>
                     e.key === "Enter" && refs.stateCodeRef.current?.focus()
-                    }
-                  >
-                    <Option value="AP">AP</Option>
-                    <Option value="TS">TS</Option>
-                  </Select>
-                  </Form.Item>
-                </Col>
-
-                <Col xs={24} sm={6}>
-                  <Form.Item
-                  name="statecode"
-                  label="State Code"
-                  rules={[{ required: true, message: "State Code is required" }]}
-                  >
-                  <Input
-                    placeholder="Enter State Code"
-                    ref={refs.stateCodeRef}
-                    style={{ width: "120px" }} // Smaller input box for state code
+                  }
+                >
+                  <Option value="AP">AP</Option>
+                  <Option value="TS">TS</Option>
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={6}>
+              <Form.Item
+                name="statecode"
+                label="State Code"
+                rules={[{ required: true, message: "State Code is required" }]}
+              >
+                <Input
+                  placeholder="Enter State Code"
+                  ref={refs.stateCodeRef}
+                  style={{ width: "120px" }} // Smaller input box for state code
                   onPressEnter={(e) => handleEnterPress(e, refs.pinCodeRef)}
                 />
               </Form.Item>
@@ -566,14 +582,15 @@ const MailBook = () => {
                 />
               </Form.Item>
             </Col>
-
             <Col xs={24} sm={12}>
               <Form.Item
                 name="tinNo"
                 label="GSTIN"
                 rules={[{ required: true, message: "GSTIN is required" }]}
               >
-                <Input placeholder="Enter GSTIN" ref={refs.GSTINRef}
+                <Input
+                  placeholder="Enter GSTIN"
+                  ref={refs.GSTINRef}
                   onPressEnter={(e) => handleEnterPress(e, refs.PANRef)}
                 />
               </Form.Item>
@@ -585,22 +602,25 @@ const MailBook = () => {
                 rules={[{ required: true, message: "PAN is required" }]}
               >
                 <Input
-                  placeholder="Enter PAN" ref={refs.PANRef}
+                  placeholder="Enter PAN"
+                  ref={refs.PANRef}
                   onPressEnter={(e) => handleEnterPress(e, refs.proofTypeRef)}
                 />
               </Form.Item>
             </Col>
             <Col xs={24} sm={12}>
               <Form.Item
-
                 name="proofType"
                 label="Proof Type"
                 rules={[{ required: true, message: "Proof Type is required" }]}
               >
-                <Select showSearch ref={refs.proofTypeRef}
+                <Select
+                  showSearch
+                  ref={refs.proofTypeRef}
                   onKeyDown={(e) =>
                     e.key === "Enter" && refs.proofNumberRef.current?.focus()
-                  }>
+                  }
+                >
                   <Option value="Aadhaar">Aadhaar</Option>
                   <Option value="Voter ID">Voter ID</Option>
                 </Select>
@@ -612,34 +632,31 @@ const MailBook = () => {
                 label="Proof Number"
                 rules={[{ required: true, message: "Proof Number is required" }]}
               >
-                <Input placeholder="Enter Proof Number" ref={refs.proofNumberRef} onPressEnter={(e) => handleEnterPress(e, refs.dobRef)}
+                <Input
+                  placeholder="Enter Proof Number"
+                  ref={refs.proofNumberRef}
+                  onPressEnter={(e) => handleEnterPress(e, refs.dobRef)}
                 />
               </Form.Item>
             </Col>
-          <Col xs={24} sm={12}>
-  <Form.Item
-    name="dob"
-    label="Date of Birth"
-  >
-    <DatePicker
-      format="YYYY-MM-DD"
-      ref={refs.dobRef}
-      onPressEnter={(e) => handleEnterPress(e, refs.anniversaryRef)}
-    />
-  </Form.Item>
-</Col>
-<Col xs={24} sm={12}>
-  <Form.Item
-    name="anniversary"
-    label="Anniversary"
-  >
-    <DatePicker
-      format="YYYY-MM-DD"
-      ref={refs.anniversaryRef}
-      onPressEnter={(e) => handleEnterPress(e, refs.locationTypeRef)}
-    />
-  </Form.Item>
-</Col>
+            <Col xs={24} sm={12}>
+              <Form.Item name="dob" label="Date of Birth">
+                <DatePicker
+                  format="YYYY-MM-DD"
+                  ref={refs.dobRef}
+                  onPressEnter={(e) => handleEnterPress(e, refs.anniversaryRef)}
+                />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12}>
+              <Form.Item name="anniversary" label="Anniversary">
+                <DatePicker
+                  format="YYYY-MM-DD"
+                  ref={refs.anniversaryRef}
+                  onPressEnter={(e) => handleEnterPress(e, refs.locationTypeRef)}
+                />
+              </Form.Item>
+            </Col>
             <Col xs={24}>
               <Form.Item
                 name="station"
@@ -655,10 +672,8 @@ const MailBook = () => {
                   <Radio value="Out Station">Out Station</Radio>
                   <Radio value="Local">Local</Radio>
                 </Radio.Group>
-
               </Form.Item>
             </Col>
-
           </Row>
           <div style={{ textAlign: "left", marginTop: "16px", float: "right" }}>
             <Button
@@ -669,8 +684,6 @@ const MailBook = () => {
                 backgroundColor: "#0C1154",
                 borderColor: "#0C1154",
               }}
-            // disabled={isBrandNameExist === true}
-
             >
               {editingKey ? "Save" : "Submit"}
             </Button>
@@ -684,11 +697,38 @@ const MailBook = () => {
           </div>
         </Form>
       </Card>
-      <Table columns={columns} dataSource={data} loading={loading} rowKey="key"
-        size="small"
-        pagination={{ pageSize: 5 }}
-      />
 
+      <div style={{ marginLeft:"5px",float: "right", marginBottom: "10px" }}>
+        <Pagination
+          current={currentPage}
+          pageSize={pageSize}
+          total={data?.length || 0}
+          showSizeChanger
+          showTotal={(total, range) => `${range[0]}-${range[1]} of ${total} items`}
+
+          pageSizeOptions={['10', '20', '50', '100']}
+          onChange={(page, size) => {
+            setCurrentPage(page);
+            setPageSize(size);
+          }}
+          style={{ marginBottom: "10px" }}
+        />
+      </div>
+      <TableHeaderStyles>
+
+      <Table
+        columns={columns}
+        dataSource={data?.slice((currentPage - 1) * pageSize, currentPage * pageSize)}
+        rowKey="key"
+        size="small"
+        pagination={false}
+        style={{
+          background: "#fff",
+          boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+          borderRadius: "8px",
+        }}
+      />
+      </TableHeaderStyles>
     </div>
   );
 };

@@ -4,7 +4,7 @@ import { FaMoneyBillWave } from "react-icons/fa"; // Icon for Cash
 import { AiOutlineCreditCard } from "react-icons/ai"; // Icon for Card
 import { MdOutlineQrCodeScanner } from "react-icons/md"; // Icon for UPI
 import { HiOutlineGlobeAlt } from "react-icons/hi"; // Icon for Online
-
+import { CREATE_jwel } from "../../Config/Config";
 const PaymentOverview = () => {
   const [data, setData] = useState([]);
 
@@ -16,48 +16,31 @@ const PaymentOverview = () => {
         
         // Fetch bank transaction summary
         const bankTransResponse = await axios.get(
-          `http://www.jewelerp.timeserasoftware.in/api/DashBoard/GetBankTransSummary?date=${formattedDate}`
+          `${CREATE_jwel}/api/DashBoard/GetBankTransSummary?date=${formattedDate}`
         );
 
         // Fetch cash book credit/debit
         const cashBookResponse = await axios.get(
-          `http://www.jewelerp.timeserasoftware.in/api/DashBoard/GetCashBookCreditDebit?fromDate=${formattedDate}&toDate=${formattedDate}&saleCode=1`
+          `${CREATE_jwel}/api/DashBoard/GetCashBookCreditDebit?fromDate=${formattedDate}&toDate=${formattedDate}&saleCode=1`
         );
 
         const cashAmount = cashBookResponse.data[0]?.AMT || 0;
 
-        const apiData = bankTransResponse.data.map((item) => {
-          let icon;
-          let color;
-          switch (item.MODE) {
-            case "CARD":
-              icon = <AiOutlineCreditCard />;
-              color = "#FF9800";
-              break;
-            case "CHEQUE":
-              icon = <FaMoneyBillWave />;
-              color = "#4CAF50";
-              break;
-            case "UPI":
-              icon = <MdOutlineQrCodeScanner />;
-              color = "#3F51B5";
-              break;
-            case "ONLINE":
-              icon = <HiOutlineGlobeAlt />;
-              color = "#2196F3";
-              break;
-            case "CASH":
-              icon = <FaMoneyBillWave />;
-              color = "#FFD700";
-              break;
-            default:
-              icon = <HiOutlineGlobeAlt />;
-              color = "#9E9E9E"; // Default gray for unknown modes
-          }
+        // Initialize default data
+        const defaultData = [
+          { MODE: "CARD", AMT: 0, icon: <AiOutlineCreditCard />, color: "#FF9800" },
+          { MODE: "CHEQUE", AMT: 0, icon: <FaMoneyBillWave />, color: "#4CAF50" },
+          { MODE: "UPI", AMT: 0, icon: <MdOutlineQrCodeScanner />, color: "#3F51B5" },
+          { MODE: "ONLINE", AMT: 0, icon: <HiOutlineGlobeAlt />, color: "#2196F3" },
+        ];
+
+        // Merge fetched data with default data
+        const apiData = defaultData.map((defaultItem) => {
+          const fetchedItem = bankTransResponse.data.find(item => item.MODE === defaultItem.MODE);
           return {
-            title: item.MODE,
-            amount: `₹ ${item.AMT.toLocaleString()}`,
-            icon: React.cloneElement(icon, { color, size: 20 }),
+            title: defaultItem.MODE,
+            amount: `₹ ${(fetchedItem ? fetchedItem.AMT : defaultItem.AMT).toLocaleString()}`,
+            icon: React.cloneElement(defaultItem.icon, { color: defaultItem.color, size: 20 }),
           };
         });
 

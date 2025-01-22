@@ -13,10 +13,13 @@ import {
   Breadcrumb,
   Checkbox,
   Radio,
+  Pagination
 } from "antd";
 import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import axios from "axios"; // Import axios
 import { CREATE_jwel } from "../../Config/Config";
+import TableHeaderStyles from "../Pages/TableHeaderStyles";
+
 const StoneItemMaster = () => {
   const [form] = Form.useForm();
   const [data, setData] = useState([]);
@@ -26,7 +29,8 @@ const StoneItemMaster = () => {
   const stoneItemRef = useRef(null);
   const stoneCodeRef = useRef(null);
   const [isJwelTypeExist, setIsJwelTypeExist] = useState(false);
-
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
   const tenantNameHeader = "PmlYjF0yAwEjNohFDKjzn/ExL/LMhjzbRDhwXlvos+0=";
 
   // Fetch all stone items from the API
@@ -41,6 +45,7 @@ const StoneItemMaster = () => {
       const response = await axios.get(`${CREATE_jwel}/api/Master/MasterItemMasterList`);
       const mappedData = response.data.map((item, index) => ({
         key: index, // Ensure each item has a unique key
+        sno: index + 1, // Add serial number starting from 1
         stoneItem: item.ITEMNAME,
         stoneCode: item.ITEMCODE,
         printOnBilling: item.PRINT_BILL,
@@ -55,6 +60,7 @@ const StoneItemMaster = () => {
       message.error("Failed to fetch stone items.");
     }
   };
+  
   const handleStoneItemCheck = async (itemName) => {
     if (!itemName) return false;
   
@@ -245,6 +251,13 @@ const StoneItemMaster = () => {
 
   const columns = [
     {
+      title: "S.No",
+      dataIndex: "sno",
+      key: "sno",
+      className: 'blue-background-column', 
+      width: 50, 
+    },
+    {
       title: "Stone Item",
       dataIndex: "stoneItem",
       key: "stoneItem",
@@ -266,7 +279,7 @@ const StoneItemMaster = () => {
       render: (printOnBilling) => <Checkbox checked={printOnBilling} disabled />,
     },
     {
-      title: "Diamond Value Fix Table",
+      title: "Dia Value Fix",
       dataIndex: "diamondValueFix",
       key: "diamondValueFix",
       align: 'center',
@@ -281,7 +294,7 @@ const StoneItemMaster = () => {
       key: "category",
     },
     {
-      title: "Effect on Net Weight Diamonds",
+      title: "Effect on Net Wt Diamonds",
       dataIndex: "netWeightDiamonds",
       key: "netWeightDiamonds",
       align: 'center',
@@ -289,7 +302,7 @@ const StoneItemMaster = () => {
       render: (netWeightDiamonds) => <Checkbox checked={netWeightDiamonds} disabled />,
     },
     {
-      title: "Effect on Net Weight Others",
+      title: "Effect on Net Wt Others",
       dataIndex: "netWeightOthers",
       key: "netWeightOthers",
       align: 'center',
@@ -485,30 +498,46 @@ const StoneItemMaster = () => {
           </div>
         </Form>
       </Card>
-      <div style={{ float: "right" }}>
 
+      <div style={{marginLeft:"5px", float: "right", marginBottom: "10px" }}>
+        <Pagination
+          current={currentPage}
+          pageSize={pageSize}
+          total={filteredData.length}
+          showTotal={(total, range) => `${range[0]}-${range[1]} of ${total} items`}
 
-        <Input.Search
-          placeholder="Search"
-          style={{ width: "100%", marginBottom: "10px" }}
-
-          onChange={(e) => setSearchText(e.target.value)}
-
+          showSizeChanger
+          pageSizeOptions={['10', '20', '50', '100']}
+          onChange={(page, size) => {
+            setCurrentPage(page);
+            setPageSize(size);
+          }}
+          style={{ marginBottom: "10px" }}
         />
       </div>
 
-      <Table
-        columns={columns}
-        dataSource={filteredData}
-        rowKey="key"
-        size="small"
-        pagination={{ pageSize: 5 }}
-        style={{
-          background: "#fff",
-          boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-          borderRadius: "8px",
-        }}
-      />
+      <div style={{ float: "right", marginBottom: "10px" }}>
+        <Input.Search
+          placeholder="Search"
+          onChange={(e) => setSearchText(e.target.value)}
+          style={{ width: "100%", marginBottom: "10px" }}
+        />
+      </div>
+
+      <TableHeaderStyles>
+        <Table
+          columns={columns}
+          dataSource={filteredData.slice((currentPage - 1) * pageSize, currentPage * pageSize)}
+          rowKey="key"
+          size="small"
+          pagination={false}
+          style={{
+            background: "#fff",
+            boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+            borderRadius: "8px",
+          }}
+        />
+      </TableHeaderStyles>
     </div>
   );
 };

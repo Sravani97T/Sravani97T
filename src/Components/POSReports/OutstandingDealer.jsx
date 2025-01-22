@@ -1,13 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Row, Col, Breadcrumb } from 'antd';
+import { Table, Row, Col, Breadcrumb, Pagination } from 'antd';
 import axios from 'axios';
 import PdfExcelPrint from '../Utiles/PdfExcelPrint'; // Adjust the import path as necessary
+import TableHeaderStyles from '../Pages/TableHeaderStyles';
+import { CREATE_jwel } from '../../Config/Config';
 
 const OutstandingDealers = () => {
     const [filteredData, setFilteredData] = useState([]);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(20);
 
     useEffect(() => {
-        axios.get('http://www.jewelerp.timeserasoftware.in/api/POSReports/GetOutStandingDealers?partyName=%25&mobileNo=%25')
+        axios.get(`${CREATE_jwel}/api/POSReports/GetOutStandingDealers?partyName=%25&mobileNo=%25`)
             .then(response => {
                 const data = response.data.map((item, index) => ({
                     ...item,
@@ -23,7 +27,7 @@ const OutstandingDealers = () => {
     }, []);
 
     const columns = [
-        { title: 'S.No', dataIndex: 'serialNo', key: 'serialNo' },
+        { title: 'S.No',  width: 50,  className: 'blue-background-column', dataIndex: 'serialNo', key: 'serialNo' },
         { title: 'Party Name', dataIndex: 'PARTYNAME', key: 'PARTYNAME' },
         { title: 'Mobile Number', dataIndex: 'MOBILENO', key: 'MOBILENO' },
         { title: 'Debit', dataIndex: 'JAMA', key: 'JAMA', align: "right", render: value => Number(value).toFixed(2) },
@@ -45,17 +49,10 @@ const OutstandingDealers = () => {
 
     const { totalDebit, totalCredit, totalBalance } = getTotals();
 
-    const formattedData = [
-        ...filteredData,
-        {
-            serialNo: 'Total',
-            PARTYNAME: '',
-            MOBILENO: '',
-            JAMA: totalDebit,
-            NAMA: totalCredit,
-            balance: totalBalance,
-        }
-    ];
+    const handlePageChange = (page, pageSize) => {
+        setCurrentPage(page);
+        setPageSize(pageSize);
+    };
 
     return (
         <>
@@ -68,36 +65,58 @@ const OutstandingDealers = () => {
                 </Col>
                 <Col>
                     <PdfExcelPrint
-                        data={formattedData}
+                        data={filteredData}
                         columns={columns}
                         fileName="OutstandingDealersReport"
                     />
                 </Col>
             </Row>
-            <div style={{ marginTop: "10px" }}>
-                <Table
-                    size="small"
-                    columns={columns}
-                    dataSource={filteredData}
-                    rowKey="key"
-                    pagination={{
-                        pageSize: 6,
-                        pageSizeOptions: ["10", "20", "50", "100"],
-                        showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
-                        position: ["topRight"],
-                        style: { margin: "16px 0" }
+            <Row gutter={8} style={{ marginBottom: 8 }} align="middle">
+                <Col flex="auto" />
+                <Col>
+                    <Pagination
+                        current={currentPage}
+                        pageSize={pageSize}
+                        total={filteredData.length}
+                        onChange={handlePageChange}
+                        pageSizeOptions={["6", "10", "20", "50", "100"]}
+                        showSizeChanger
+                        showTotal={(total, range) => `${range[0]}-${range[1]} of ${total} items`}
+                        size="small"
+                    />
+                </Col>
+            </Row>
+            <div style={{ marginTop: 16, boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}>
+                <div
+                    className="table-responsive scroll-horizontal"
+                    style={{
+                        overflowY: "auto",
+                        overflowX: "auto",
+                        marginTop: "20px",
+                        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+                        backgroundColor: '#fff',
+                        borderRadius: '8px'
                     }}
-                    rowClassName="table-row"
-                    summary={() => filteredData.length > 0 && (
-                        <Table.Summary.Row>
-                            <Table.Summary.Cell>Total</Table.Summary.Cell>
-                            <Table.Summary.Cell colSpan={2} />
-                            <Table.Summary.Cell align="right">{totalDebit}</Table.Summary.Cell>
-                            <Table.Summary.Cell align="right">{totalCredit}</Table.Summary.Cell>
-                            <Table.Summary.Cell align="right">{totalBalance}</Table.Summary.Cell>
-                        </Table.Summary.Row>
-                    )}
-                />
+                >
+                    <TableHeaderStyles>
+                        <Table
+                            size="small"
+                            columns={columns}
+                            dataSource={filteredData.slice((currentPage - 1) * pageSize, currentPage * pageSize)}
+                            rowKey="key"
+                            pagination={false}
+                            rowClassName="table-row"
+                            summary={() => (
+                                <Table.Summary.Row style={{ backgroundColor: '#f5f5f5', fontWeight: 'bold' }}>
+                                    <Table.Summary.Cell index={0} colSpan={3}>Total</Table.Summary.Cell>
+                                    <Table.Summary.Cell index={1} align="right">{totalDebit}</Table.Summary.Cell>
+                                    <Table.Summary.Cell index={2} align="right">{totalCredit}</Table.Summary.Cell>
+                                    <Table.Summary.Cell index={3} align="right">{totalBalance}</Table.Summary.Cell>
+                                </Table.Summary.Row>
+                            )}
+                        />
+                    </TableHeaderStyles>
+                </div>
             </div>
         </>
     );

@@ -11,10 +11,13 @@ import {
     Card,
     message,
     Breadcrumb,
+    Pagination
 } from "antd";
 import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import axios from "axios"; // Import axios for API requests
 import { CREATE_jwel } from "../../Config/Config";
+import TableHeaderStyles from "../Pages/TableHeaderStyles";
+
 const tenantNameHeader = "PmlYjF0yAwEjNohFDKjzn/ExL/LMhjzbRDhwXlvos+0="; // Your tenant name header
 
 const BrandMaster = () => {
@@ -24,6 +27,8 @@ const BrandMaster = () => {
     const [searchText, setSearchText] = useState("");
     const [isBrandNameExist, setIsBrandNameExist] = useState(false);
     const [oldBrandName, setOldBrandName] = useState(""); // Store old brand name for delete
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(20);
 
     // Fetch data from the API
     useEffect(() => {
@@ -35,6 +40,7 @@ const BrandMaster = () => {
             .then(response => {
                 setData(response.data.map((item, index) => ({
                     key: index + 1,
+                    sno: index + 1,
                     counterName: item.BrandName,
                 })));
             })
@@ -90,7 +96,7 @@ const BrandMaster = () => {
             })
             .then(response => {
                 if (response.data) {
-                    const newData = { key: Date.now(), counterName: values.counterName };
+                    const newData = { key: Date.now(), sno: data.length + 1, counterName: values.counterName };
                     setData([...data, newData]);
                     form.resetFields();
                     message.success("Brand added successfully!");
@@ -109,78 +115,76 @@ const BrandMaster = () => {
     };
 
     // Handle saving the edited brand
-  // Handle saving the edited brand
-  const handleSave = () => {
-    const updatedData = form.getFieldsValue();
+    const handleSave = () => {
+        const updatedData = form.getFieldsValue();
 
-    // Check if the value is unchanged
-    if (oldBrandName === updatedData.counterName) {
-        setEditingKey(null); // Exit edit mode
-        form.resetFields(); // Reset the form to switch back to Add mode
-        return; // Exit without making an API call
-    }
-
-    // First, check if the brand name exists
-    axios.get(`${CREATE_jwel}/api/Master/MasterBrandMasterSearch?BrandName=${updatedData.counterName}`, {
-        headers: {
-            "tenantName": tenantNameHeader,
+        // Check if the value is unchanged
+        if (oldBrandName === updatedData.counterName) {
+            setEditingKey(null); // Exit edit mode
+            form.resetFields(); // Reset the form to switch back to Add mode
+            return; // Exit without making an API call
         }
-    })
-        .then(response => {
-            const brandExists = response.data.some(item => item.MANUFACTURER === updatedData.counterName);
 
-            if (brandExists) {
-                message.error("Brand name already exists!");
-                return;
-            }
-
-            // If editing, delete the old brand name first
-            if (oldBrandName !== updatedData.counterName) {
-                axios.post(`${CREATE_jwel}/api/Master/MasterBrandMasterDelete?BrandName=${oldBrandName}`, null, {
-                    headers: {
-                        "tenantName": tenantNameHeader,
-                    }
-                })
-                    .then(response => {
-                        if (response.data) {
-                            // Now insert the updated brand name
-                            axios.post(`${CREATE_jwel}/api/Master/MasterBrandMasterInsert`,
-                                {
-                                    brandName: updatedData.counterName,
-                                    cloud_upload: true
-                                },
-                                {
-                                    headers: {
-                                        "tenantName": tenantNameHeader,
-                                    }
-                                })
-                                .then(response => {
-                                    if (response.data) {
-                                        setData(prevData =>
-                                            prevData.map(item =>
-                                                item.key === editingKey ? { ...item, ...updatedData } : item
-                                            )
-                                        );
-                                        setEditingKey(null);
-                                        form.resetFields();
-                                        message.success("Brand updated successfully!");
-                                    }
-                                })
-                                .catch(error => {
-                                    message.error("Failed to update brand");
-                                });
-                        }
-                    })
-                    .catch(error => {
-                        message.error("Failed to delete old brand");
-                    });
+        // First, check if the brand name exists
+        axios.get(`${CREATE_jwel}/api/Master/MasterBrandMasterSearch?BrandName=${updatedData.counterName}`, {
+            headers: {
+                "tenantName": tenantNameHeader,
             }
         })
-        .catch(error => {
-            message.error("Failed to check brand name");
-        });
-};
+            .then(response => {
+                const brandExists = response.data.some(item => item.MANUFACTURER === updatedData.counterName);
 
+                if (brandExists) {
+                    message.error("Brand name already exists!");
+                    return;
+                }
+
+                // If editing, delete the old brand name first
+                if (oldBrandName !== updatedData.counterName) {
+                    axios.post(`${CREATE_jwel}/api/Master/MasterBrandMasterDelete?BrandName=${oldBrandName}`, null, {
+                        headers: {
+                            "tenantName": tenantNameHeader,
+                        }
+                    })
+                        .then(response => {
+                            if (response.data) {
+                                // Now insert the updated brand name
+                                axios.post(`${CREATE_jwel}/api/Master/MasterBrandMasterInsert`,
+                                    {
+                                        brandName: updatedData.counterName,
+                                        cloud_upload: true
+                                    },
+                                    {
+                                        headers: {
+                                            "tenantName": tenantNameHeader,
+                                        }
+                                    })
+                                    .then(response => {
+                                        if (response.data) {
+                                            setData(prevData =>
+                                                prevData.map(item =>
+                                                    item.key === editingKey ? { ...item, ...updatedData } : item
+                                                )
+                                            );
+                                            setEditingKey(null);
+                                            form.resetFields();
+                                            message.success("Brand updated successfully!");
+                                        }
+                                    })
+                                    .catch(error => {
+                                        message.error("Failed to update brand");
+                                    });
+                            }
+                        })
+                        .catch(error => {
+                            message.error("Failed to delete old brand");
+                        });
+                }
+            })
+            .catch(error => {
+                message.error("Failed to check brand name");
+            });
+    };
 
     // Handle deleting a brand
     const handleDelete = (brandName) => {
@@ -208,6 +212,13 @@ const BrandMaster = () => {
     );
 
     const columns = [
+        {
+            title: "S.No",
+            dataIndex: "sno",
+            key: "sno",
+            className: 'blue-background-column', 
+            width: 50, 
+        },
         {
             title: "Brand Name",
             dataIndex: "counterName",
@@ -239,7 +250,7 @@ const BrandMaster = () => {
     ];
 
     return (
-        <div style={{  backgroundColor: "#f4f6f9" }}>
+        <div style={{ backgroundColor: "#f4f6f9" }}>
             {/* Breadcrumb */}
             <Row justify="start" style={{ marginBottom: "16px" }}>
                 <Col>
@@ -272,7 +283,6 @@ const BrandMaster = () => {
                                     }}
                                 />
                             </Form.Item>
-
                         </Col>
                     </Row>
 
@@ -292,29 +302,47 @@ const BrandMaster = () => {
                 </Form>
             </Card>
 
-            {/* Search Field */}
-            <div style={{float:"right"}}>
+            {/* Pagination and Search Field */}
+            <div style={{ marginLeft:"5px" ,float: "right", marginBottom: "10px" }}>
+                <Pagination
+                    current={currentPage}
+                    pageSize={pageSize}
+                    total={filteredData.length}
+                    showSizeChanger
+                    pageSizeOptions={['10', '20', '50', '100']}
+                    onChange={(page, size) => {
+                        setCurrentPage(page);
+                        setPageSize(size);
+                    }}
+                    showTotal={(total, range) => `${range[0]}-${range[1]} of ${total} items`}
 
-                    <Input.Search
-                        placeholder="Search records"
-                        style={{ marginBottom: "10px", width: "100%", borderRadius: "4px" }}
-                        onChange={(e) => setSearchText(e.target.value)}
-                    />
-              </div>
+                    style={{ marginBottom: "10px" }}
+                />
+            </div>
+
+            <div style={{ float: "right", marginBottom: "10px" }}>
+                <Input.Search
+                    placeholder="Search"
+                    onChange={(e) => setSearchText(e.target.value)}
+                    style={{ width: "100%", marginBottom: "10px" }}
+                />
+            </div>
 
             {/* Table */}
-            <Table
-                columns={columns}
-                dataSource={filteredData}
-                rowKey="key"
-                size="small"
-                pagination={{ pageSize: 5 }}
-                style={{
-                    background: "#fff",
-                    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-                    borderRadius: "8px",
-                }}
-            />
+            <TableHeaderStyles>
+                <Table
+                    columns={columns}
+                    dataSource={filteredData.slice((currentPage - 1) * pageSize, currentPage * pageSize)}
+                    rowKey="key"
+                    size="small"
+                    pagination={false}
+                    style={{
+                        background: "#fff",
+                        boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+                        borderRadius: "8px",
+                    }}
+                />
+            </TableHeaderStyles>
         </div>
     );
 };

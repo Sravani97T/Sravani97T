@@ -13,10 +13,13 @@ import {
   Checkbox,
   message,
   Breadcrumb,
+  Pagination
 } from "antd";
 import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import axios from "axios";
 import { CREATE_jwel } from "../../Config/Config";
+import TableHeaderStyles from "../Pages/TableHeaderStyles";
+
 const { Option } = Select;
 
 const JewelryTypeMaster = () => {
@@ -32,7 +35,8 @@ const JewelryTypeMaster = () => {
   const mainProductRef = useRef(null);
   const hsnCodeRef = useRef(null);
   const tenantNameHeader = "PmlYjF0yAwEjNohFDKjzn/ExL/LMhjzbRDhwXlvos+0="; // Your tenant name header
-
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
   // Fetch Main Products
   const fetchMainProducts = async () => {
     try {
@@ -52,8 +56,9 @@ const JewelryTypeMaster = () => {
       const response = await axios.get(
         `${CREATE_jwel}/api/Master/MasterJewelTypeMasterList`
       );
-      const tableData = response.data.map((item) => ({
+      const tableData = response.data.map((item, index) => ({
         key: item.JewelType,  // Using JewelType as the key
+        sno: index + 1,  // Adding serial number
         jewelryType: item.JewelType,
         mainProduct: item.MName,
         hsnCode: item.HSNCODE,
@@ -125,6 +130,7 @@ const JewelryTypeMaster = () => {
           // Successfully inserted
           const newData = {
             key: Date.now(),
+            sno: data.length + 1,  // Adding serial number
             ...values,
           };
           setData([...data, newData]);
@@ -253,6 +259,13 @@ const JewelryTypeMaster = () => {
 
   const columns = [
     {
+      title: "S.No",
+      dataIndex: "sno",
+      key: "sno",
+      className: 'blue-background-column', 
+      width: 50, 
+    },
+    {
       title: "Jewelry Type",
       dataIndex: "jewelryType",
       key: "jewelryType",
@@ -304,7 +317,7 @@ const JewelryTypeMaster = () => {
   ];
 
   return (
-    <div style={{  backgroundColor: "#f4f6f9" }}>
+    <div style={{ backgroundColor: "#f4f6f9" }}>
       <Row justify="start" style={{ marginBottom: "16px" }}>
         <Col>
           <Breadcrumb style={{ fontSize: "16px", fontWeight: "500", color: "#0C1154" }}>
@@ -404,26 +417,51 @@ const JewelryTypeMaster = () => {
           </div>
         </Form>
       </Card>
-      <div style={{ float: "right" }}>
 
-        <Input.Search
-          placeholder="Search.."
-          style={{ width: "100%", borderRadius: "4px", marginBottom: "10px" }}
-          onChange={(e) => setSearchText(e.target.value)}
+      <div style={{marginLeft:"5px" , float: "right", marginBottom: "10px" }}>
+        <Pagination
+          current={currentPage}
+          pageSize={pageSize}
+          total={data.length}
+          showSizeChanger
+          pageSizeOptions={['10', '20', '50', '100']}
+          onChange={(page, size) => {
+            setCurrentPage(page);
+            setPageSize(size);
+          }}
+          showTotal={(total, range) => `${range[0]}-${range[1]} of ${total} items`}
+
+          style={{ marginBottom: "10px" }}
         />
       </div>
-      <Table
-        columns={columns}
-        dataSource={data.filter((item) =>
-          Object.values(item)
-            .join(" ")
-            .toLowerCase()
-            .includes(searchText.toLowerCase())
-        )}
-        rowKey="key"
-        size="small"
-        pagination={{ pageSize: 5 }}
-      />
+
+      <div style={{ float: "right", marginBottom: "10px" }}>
+        <Input.Search
+          placeholder="Search"
+          onChange={(e) => setSearchText(e.target.value)}
+          style={{ width: "100%", marginBottom: "10px" }}
+        />
+      </div>
+
+      <TableHeaderStyles>
+        <Table
+          columns={columns}
+          dataSource={data.filter((item) =>
+            Object.values(item)
+              .join(" ")
+              .toLowerCase()
+              .includes(searchText.toLowerCase())
+          ).slice((currentPage - 1) * pageSize, currentPage * pageSize)}
+          rowKey="key"
+          size="small"
+          pagination={false}
+          style={{
+            background: "#fff",
+            boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+            borderRadius: "8px",
+          }}
+        />
+      </TableHeaderStyles>
     </div>
   );
 };

@@ -11,12 +11,14 @@ import {
   Row,
   Col,
   Breadcrumb,
-  Card
+  Card,
+  Pagination
 } from "antd";
 import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import axios from "axios";
 import "../Assets/css/Style.css";
 import { CREATE_jwel } from "../../Config/Config";
+import TableHeaderStyles from "../Pages/TableHeaderStyles";
 
 const MainProduct = () => {
   const [form] = Form.useForm();
@@ -24,59 +26,55 @@ const MainProduct = () => {
   const [editingKey, setEditingKey] = useState(null);
   const [searchText, setSearchText] = useState("");
   const [oldProductName, setOldProductName] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
 
   const tenantNameHeader = "PmlYjF0yAwEjNohFDKjzn/ExL/LMhjzbRDhwXlvos+0=";
   const mainprodRef = useRef(null);
   const gstRef = useRef(null);
-
   const pgstRef = useRef(null);
   const barCodeRef = useRef(null);
   const checkRef = useRef(null);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await axios.get(`${CREATE_jwel}/api/Master/MasterMainProductList`, {
           headers: { tenantName: tenantNameHeader },
         });
-        if (response.status === 200) {
-          const transformedData = response.data.map((item) => ({
-            key: item.ID || `${item.MNAME}-${Date.now()}`, // Ensure a unique key
-            mainProduct: item.MNAME || "",
-            gst: item.VAT || 0,
-            pgst: item.PTAX || 0,
-            barcodePrefix: item.BarcodePrefix || "",
-            includingGst: item.INCLUDING_GST || false,
-          }));
-
-          setData(transformedData);
-        } else {
-          message.error("Failed to fetch product data.");
-        }
+        const formattedData = response.data.map((item, index) => ({
+          key: index,
+          sno: index + 1,
+          mainProduct: item.MNAME || "",
+          gst: item.VAT || 0,
+          pgst: item.PTAX || 0,
+          barcodePrefix: item.BarcodePrefix || "",
+          includingGst: item.INCLUDING_GST || false,
+        }));
+        setData(formattedData);
       } catch (error) {
-        console.error("Error fetching data:", error);
-        message.error("An error occurred while fetching data.");
+        message.error("Failed to fetch product data.");
       }
     };
 
     fetchData();
   }, []);
 
-
   const handleAdd = async (values) => {
     const upperCaseProduct = values.mainProduct.toUpperCase();
     form.setFieldsValue({ mainProduct: upperCaseProduct });
-  
+
     try {
       const searchResponse = await axios.get(
         `${CREATE_jwel}/api/Master/MasterMainProductSearch?MName=${upperCaseProduct}`,
         { headers: { tenantName: tenantNameHeader } }
       );
-  
+
       if (searchResponse.data.length > 0) {
         message.error("Main product already exists!");
         return;
       }
-  
+
       const response = await axios.post(
         `${CREATE_jwel}/api/Master/MasterMainProductInsert`,
         {
@@ -90,10 +88,11 @@ const MainProduct = () => {
         },
         { headers: { tenantName: tenantNameHeader } }
       );
-  
+
       if (response.data) {
         const newProduct = {
           key: response.data.ID || `${upperCaseProduct}-${Date.now()}`,
+          sno: data.length + 1,
           mainProduct: upperCaseProduct,
           gst: values.gst,
           pgst: values.pgst,
@@ -111,7 +110,6 @@ const MainProduct = () => {
       message.error("An error occurred while adding the product.");
     }
   };
-  
 
   const handleDelete = async (key, mainProduct) => {
     try {
@@ -120,7 +118,7 @@ const MainProduct = () => {
         {},
         { headers: { tenantName: tenantNameHeader } }
       );
-  
+
       if (response.data === true) {
         setData((prevData) => prevData.filter((item) => item.mainProduct !== mainProduct));
         message.success("Product deleted successfully!");
@@ -132,7 +130,6 @@ const MainProduct = () => {
       message.error("An error occurred while deleting the product.");
     }
   };
-  
 
   const handleEdit = (product) => {
     setOldProductName(product.mainProduct);
@@ -149,7 +146,7 @@ const MainProduct = () => {
   const handleSave = async () => {
     const updatedData = form.getFieldsValue();
     const newMainProduct = updatedData.mainProduct.toUpperCase(); // Convert to uppercase
-  
+
     // Check if the form values are the same as the original values
     if (
       newMainProduct === oldProductName &&
@@ -162,18 +159,18 @@ const MainProduct = () => {
       setEditingKey(null);
       return; // Stop further processing
     }
-  
+
     try {
       const searchResponse = await axios.get(
         `${CREATE_jwel}/api/Master/MasterMainProductSearch?MName=${newMainProduct}`,
         { headers: { tenantName: tenantNameHeader } }
       );
-  
+
       if (searchResponse.data.length > 0 && newMainProduct !== oldProductName) {
         message.error("Main product already exists!");
         return;
       }
-  
+
       if (newMainProduct !== oldProductName) {
         await axios.post(
           `${CREATE_jwel}/api/Master/MasterMainProductDelete?MName=${oldProductName}`,
@@ -181,7 +178,7 @@ const MainProduct = () => {
           { headers: { tenantName: tenantNameHeader } }
         );
       }
-  
+
       const response = await axios.post(
         `${CREATE_jwel}/api/Master/MasterMainProductInsert`,
         {
@@ -195,21 +192,22 @@ const MainProduct = () => {
         },
         { headers: { tenantName: tenantNameHeader } }
       );
-  
+
       if (response.data) {
         const updatedRecord = {
           key: editingKey,
+          sno: data.find((item) => item.key === editingKey).sno,
           mainProduct: newMainProduct,
           gst: updatedData.gst,
           pgst: updatedData.pgst,
           barcodePrefix: updatedData.barcodePrefix,
           includingGst: updatedData.includingGst,
         };
-  
+
         setData((prevData) =>
           prevData.map((item) => (item.key === editingKey ? updatedRecord : item))
         );
-  
+
         form.resetFields();
         setEditingKey(null);
         message.success("Product updated successfully!");
@@ -221,8 +219,7 @@ const MainProduct = () => {
       message.error("An error occurred while updating the product.");
     }
   };
-  
-  
+
   const handleMainProductChange = async (e) => {
     const enteredProduct = e.target.value.toUpperCase(); // Ensure product name is uppercase
     form.setFieldsValue({ mainProduct: enteredProduct });
@@ -248,8 +245,6 @@ const MainProduct = () => {
     }
   };
 
-
-
   const handleCancel = useCallback(() => {
     form.resetFields();
     setEditingKey(null);
@@ -261,6 +256,13 @@ const MainProduct = () => {
 
   const columns = [
     {
+      title: "S.No",
+      dataIndex: "sno",
+      key: "sno",
+      className: 'blue-background-column', 
+      width: 50, 
+    },
+    {
       title: "Main Product",
       dataIndex: "mainProduct",
       key: "mainProduct",
@@ -269,36 +271,31 @@ const MainProduct = () => {
       title: "GST",
       dataIndex: "gst",
       key: "gst",
-      align:'center',
-
+      align: 'center',
     },
     {
       title: "PGST",
       dataIndex: "pgst",
       key: "pgst",
-      align:"center"
-
+      align: "center"
     },
     {
       title: "Barcode Prefix",
       dataIndex: "barcodePrefix",
       key: "barcodePrefix",
-      align:"center"
-
+      align: "center"
     },
     {
       title: "Including GST",
       dataIndex: "includingGst",
       key: "includingGst",
-      align:'center',
-
+      align: 'center',
       render: (value) => (value ? "Yes" : "No"),
     },
     {
       title: "Action",
       key: "action",
-      align:'center',
-
+      align: 'center',
       render: (_, record) => (
         <Space>
           <Button
@@ -317,14 +314,16 @@ const MainProduct = () => {
       ),
     },
   ];
+
   const handleEnterPress = (e, nextFieldRef) => {
     e.preventDefault();
     if (nextFieldRef.current) {
       nextFieldRef.current.focus();
     }
   };
+
   return (
-    <div style={{  backgroundColor: "#f4f6f9" }}>
+    <div style={{ backgroundColor: "#f4f6f9" }}>
       <Row justify="start" style={{ marginBottom: "10px" }}>
         <Col>
           <Breadcrumb style={{ fontSize: "16px", fontWeight: "500", color: "#0C1154" }}>
@@ -364,82 +363,114 @@ const MainProduct = () => {
               </Form.Item>
             </Col>
             <Col xs={24} sm={12}>
-              <Form.Item name="gst" label="GST" rules={[{ required: true, }]}
-              >
-                <Input placeholder="GST" type="number" ref={gstRef}
-                  onPressEnter={(e) => handleEnterPress(e, pgstRef)} />
+              <Form.Item name="gst" label="GST" rules={[{ required: true }]}>
+                <Input
+                  placeholder="GST"
+                  type="number"
+                  ref={gstRef}
+                  onPressEnter={(e) => handleEnterPress(e, pgstRef)}
+                />
               </Form.Item>
             </Col>
             <Col xs={24} sm={12}>
-              <Form.Item name="pgst" label="PGST" rules={[{ required: true, }]}>
-                <Input placeholder="PGST" type="number"
+              <Form.Item name="pgst" label="PGST" rules={[{ required: true }]}>
+                <Input
+                  placeholder="PGST"
+                  type="number"
                   ref={pgstRef}
-                  onPressEnter={(e) => handleEnterPress(e, barCodeRef)} />
+                  onPressEnter={(e) => handleEnterPress(e, barCodeRef)}
+                />
               </Form.Item>
             </Col>
             <Col xs={24} sm={12}>
-              <Form.Item name="barcodePrefix" label="Barcode Prefix" rules={[{ required: true, }]}>
-                <Input placeholder="Barcode Prefix" ref={barCodeRef}
-                  onPressEnter={(e) => handleEnterPress(e, checkRef)} />
+              <Form.Item name="barcodePrefix" label="Barcode Prefix" rules={[{ required: true }]}>
+                <Input
+                  placeholder="Barcode Prefix"
+                  ref={barCodeRef}
+                  onPressEnter={(e) => handleEnterPress(e, checkRef)}
+                />
               </Form.Item>
             </Col>
             <Col xs={24} sm={12}>
               <Form.Item name="includingGst" valuePropName="checked">
-                <Checkbox ref={checkRef}
+                <Checkbox
+                  ref={checkRef}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
                       e.preventDefault(); // Prevent default behavior
                       form.submit(); // Submit the form
                     }
-                  }}>Including GST</Checkbox>
+                  }}
+                >
+                  <b>Including GST</b>
+                </Checkbox>
               </Form.Item>
             </Col>
-            <Col >
+            <Col>
               <Form.Item>
-              <Button
-              type="primary"
-              htmlType="submit"
-              style={{
-                marginRight: 8,
-                backgroundColor: "#0C1154",
-                borderColor: "#0C1154",
-              }}
-            >
-              {editingKey ? "Save" : "Submit"}
-            </Button>
-            <Button
-              htmlType="button"
-              onClick={handleCancel}
-              style={{ backgroundColor: "#f0f0f0", }}
-            >
-              Cancel
-            </Button>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  className="animated-button"
+                  style={{
+                    marginRight: 8,
+                  }}
+                >
+                  {editingKey ? "Save" : "Submit"}
+                </Button>
+
+                <Button
+                  htmlType="button"
+                  onClick={handleCancel}
+                  style={{ backgroundColor: "#f0f0f0" }}
+                >
+                  Cancel
+                </Button>
               </Form.Item>
             </Col>
           </Row>
-         
         </Form>
       </Card>
-      <div style={{float:"right"}}>
-        
-          <Input.Search
-            placeholder="Search"
-            onChange={(e) => setSearchText(e.target.value)}
-            style={{width: "100%" ,marginBottom:"10px"}}
-          />
+
+      <div style={{ float: "right", marginBottom: "10px",marginLeft:"5px" }}>
+        <Pagination
+          current={currentPage}
+          pageSize={pageSize}
+          total={filteredData.length}
+          showSizeChanger
+          pageSizeOptions={['10', '20', '50', '100']}
+          onChange={(page, size) => {
+            setCurrentPage(page);
+            setPageSize(size);
+          }}
+          showTotal={(total, range) => `${range[0]}-${range[1]} of ${total} items`}
+          style={{ marginBottom: "10px" }}
+
+        />
       </div>
-      <Table
-        columns={columns}
-        dataSource={filteredData}
-        rowKey="key"
-        size="small"
-        pagination={{ pageSize: 5 }}
-        style={{
-          background: "#fff",
-          boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-          borderRadius: "8px",
-        }}
-      />
+
+      <div style={{ float: "right", marginBottom: "10px" }}>
+        <Input.Search
+          placeholder="Search"
+          onChange={(e) => setSearchText(e.target.value)}
+          style={{ width: "100%", marginBottom: "10px" }}
+        />
+      </div>
+
+      <TableHeaderStyles>
+        <Table
+          columns={columns}
+          dataSource={filteredData.slice((currentPage - 1) * pageSize, currentPage * pageSize)}
+          rowKey="key"
+          size="small"
+          pagination={false}
+          style={{
+            background: "#fff",
+            boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+            borderRadius: "8px",
+          }}
+        />
+      </TableHeaderStyles>
     </div>
   );
 };

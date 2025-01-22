@@ -12,10 +12,13 @@ import {
     Card,
     message,
     Breadcrumb,
+    Pagination,
 } from "antd";
 import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import axios from "axios";
 import { CREATE_jwel } from "../../Config/Config";
+import TableHeaderStyles from "../Pages/TableHeaderStyles";
+
 const { Option } = Select;
 
 const CounterMaster = () => {
@@ -27,7 +30,8 @@ const CounterMaster = () => {
     const counterInputRef = useRef(); // Ref for the second input field
     const [rowdata, setRowdata] = useState(null);
     const mainCounterOptions = Array.from({ length: 10 }, (_, i) => `CTN ${i + 1}`);
-
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(20);
     const tenantNameHeader = "PmlYjF0yAwEjNohFDKjzn/ExL/LMhjzbRDhwXlvos+0="; // Your tenant header value
 
     useEffect(() => {
@@ -46,7 +50,7 @@ const CounterMaster = () => {
                 console.error("Error fetching data:", error);
                 message.error("Failed to load counter data.");
             });
-        }
+    }
 
     const handleAdd = (values) => {
         const upperCaseValues = {
@@ -191,8 +195,6 @@ const CounterMaster = () => {
         }
     };
     
-    
-    
     const handleDelete = (key, counterName) => {
         axios
             .post(
@@ -213,7 +215,6 @@ const CounterMaster = () => {
                 message.error("Failed to delete counter.");
             });
     };
-    
 
     const handleCancel = useCallback(() => {
         form.resetFields();
@@ -229,14 +230,23 @@ const CounterMaster = () => {
         }
     };
 
-    const filteredData = data.filter((item) =>
-        Object.values(item)
-            .join(" ")
-            .toLowerCase()
-            .includes(searchText.toLowerCase())
-    );
+    const filteredData = data
+        .filter((item) =>
+            Object.values(item)
+                .join(" ")
+                .toLowerCase()
+                .includes(searchText.toLowerCase())
+        )
+        .map((item, index) => ({ ...item, sno: index + 1 }));
 
     const columns = [
+        {
+            title: "S.No",
+            dataIndex: "sno",
+            key: "sno",
+            className: 'blue-background-column', 
+            width: 50, 
+        },
         {
             title: "Counter Name",
             dataIndex: "COUNTERNAME",
@@ -248,13 +258,11 @@ const CounterMaster = () => {
             dataIndex: "CNTCHARTDISPLAY",
             key: "CNTCHARTDISPLAY",
             align:'center',
-
         },
         {
             title: "Action",
             key: "action",
             align:'center',
-
             render: (_, record) => (
                 <Space size="middle">
                     <Button
@@ -273,7 +281,6 @@ const CounterMaster = () => {
             ),
         },
     ];
-
 
     useEffect(() => {
         const handleKeyDown = (e) => {
@@ -327,7 +334,6 @@ const CounterMaster = () => {
                                     onKeyDown={(e) => handleEnterPress(e, counterInputRef)}
                                 />
                             </Form.Item>
-
                         </Col>
                         <Col xs={24} sm={12} lg={12}>
                             <Form.Item
@@ -375,27 +381,45 @@ const CounterMaster = () => {
                 </Form>
             </Card>
 
-            <div style={{float:"right"}}>
+            <div style={{marginLeft:"5px" , float: "right", marginBottom: "10px" }}>
+                <Pagination
+                    current={currentPage}
+                    pageSize={pageSize}
+                    total={filteredData.length}
+                    showSizeChanger
+                    pageSizeOptions={['10', '20', '50', '100']}
+                    onChange={(page, size) => {
+                        setCurrentPage(page);
+                        setPageSize(size);
+                    }}
+                    showTotal={(total, range) => `${range[0]}-${range[1]} of ${total} items`}
 
-                    <Input.Search
-                        placeholder="Search records"
-                        style={{ marginBottom: "16px", width: "100%", borderRadius: "4px" }}
-                        onChange={(e) => setSearchText(e.target.value)}
-                    />
-             </div>
+                    style={{ marginBottom: "10px" }}
+                />
+            </div>
 
-            <Table
-                columns={columns}
-                dataSource={filteredData}
-                rowKey="key"
-                size="small"
-                pagination={{ pageSize: 5 }}
-                style={{
-                    background: "#fff",
-                    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-                    borderRadius: "8px",
-                }}
-            />
+            <div style={{ float: "right", marginBottom: "10px" }}>
+                <Input.Search
+                    placeholder="Search"
+                    onChange={(e) => setSearchText(e.target.value)}
+                    style={{ width: "100%", marginBottom: "10px" }}
+                />
+            </div>
+
+            <TableHeaderStyles>
+                <Table
+                    columns={columns}
+                    dataSource={filteredData.slice((currentPage - 1) * pageSize, currentPage * pageSize)}
+                    rowKey="key"
+                    size="small"
+                    pagination={false}
+                    style={{
+                        background: "#fff",
+                        boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+                        borderRadius: "8px",
+                    }}
+                />
+            </TableHeaderStyles>
         </div>
     );
 };

@@ -3,7 +3,7 @@ import { Card, Popover, Button } from "antd";
 import { HeartOutlined } from "@ant-design/icons";
 import { FaBirthdayCake } from "react-icons/fa";
 import axios from "axios";
-
+import { CREATE_jwel } from "../../Config/Config";
 const BirthdayAnniversaryCard = () => {
   const [birthdayCount, setBirthdayCount] = useState(0);
   const [anniversaryCount, setAnniversaryCount] = useState(0);
@@ -17,12 +17,12 @@ const BirthdayAnniversaryCard = () => {
     const currentDate = new Date().toLocaleDateString("en-US");
 
     const fetchBirthdayData = axios.get(
-      `http://www.jewelerp.timeserasoftware.in/api/DashBoard/GetBirthDayWishBoxDetails?date=${encodeURIComponent(currentDate)}`,
+      `${CREATE_jwel}/api/DashBoard/GetBirthDayWishBoxDetails?date=${encodeURIComponent(currentDate)}`,
       { headers: { tenantName: tenantNameHeader } }
     );
 
     const fetchAnniversaryData = axios.get(
-      `http://www.jewelerp.timeserasoftware.in/api/DashBoard/GetAnniversaryWishBoxDetails?date=${encodeURIComponent(currentDate)}`,
+      `${CREATE_jwel}/api/DashBoard/GetAnniversaryWishBoxDetails?date=${encodeURIComponent(currentDate)}`,
       { headers: { tenantName: tenantNameHeader } }
     );
 

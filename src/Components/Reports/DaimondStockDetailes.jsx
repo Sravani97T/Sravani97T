@@ -1,14 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Row, Col, Breadcrumb } from 'antd';
+import { Table, Row, Col, Breadcrumb, Pagination } from 'antd';
 import axios from 'axios';
 import PdfExcelPrint from '../Utiles/PdfExcelPrint'; // Adjust the import path as necessary
+import TableHeaderStyles from '../Pages/TableHeaderStyles';
+import { CREATE_jwel } from '../../Config/Config';
 
 const DiamondStockDetails = () => {
     const [, setData] = useState([]);
     const [filteredData, setFilteredData] = useState([]);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(20);
 
     useEffect(() => {
-        axios.get('http://www.jewelerp.timeserasoftware.in/api/InventoryReports/GetDiamondStockDetail')
+        axios.get(`${CREATE_jwel}/api/InventoryReports/GetDiamondStockDetail`)
             .then(response => {
                 setData(response.data);
                 setFilteredData(response.data);  // Initially no filters, all data is shown
@@ -23,9 +27,8 @@ const DiamondStockDetails = () => {
     };
 
     const columns = [
-        { title: 'S.No', dataIndex: 'sno', key: 'sno', align: 'center' },
+        { title: 'S.No', dataIndex: 'sno', width: 50, align: "center", key: 'sno', className: 'blue-background-column' },
         { title: 'Material Name', dataIndex: 'MNAME', key: 'MNAME' },
-
         { title: 'Product Category', dataIndex: 'PRODUCTCATEGORY', key: 'PRODUCTCATEGORY' },
         { title: 'Product Code', dataIndex: 'PRODUCTCODE', key: 'PRODUCTCODE' },
         { title: 'Product Name', dataIndex: 'PRODUCTNAME', key: 'PRODUCTNAME' },
@@ -40,7 +43,6 @@ const DiamondStockDetails = () => {
         { title: 'Cut', dataIndex: 'CUT', key: 'CUT' },
         { title: 'Clarity', dataIndex: 'CLARITY', key: 'CLARITY' },
     ];
-
 
     const getTotals = () => {
         const totalPieces = filteredData.reduce((sum, item) => sum + item.PIECES, 0);
@@ -61,25 +63,19 @@ const DiamondStockDetails = () => {
 
     const { totalPieces, totalGrams, totalCarats, totalAmount, averageRate } = getTotals();
 
-    const formattedData = [
-        ...filteredData.map((item, index) => ({
-            ...item,
-            sno: index + 1,
-            GRMS: formatValue(item.GRMS),
-            CTS: formatValue(item.CTS),
-            RATE: formatValue(item.RATE),
-            AMOUNT: formatValue(item.AMOUNT),
-        })),
-        {
-            sno: 'Total',
-            MNAME: '',
-            PIECES: totalPieces,
-            GRMS: totalGrams,
-            CTS: totalCarats,
-            RATE: averageRate,
-            AMOUNT: totalAmount,
-        }
-    ];
+    const formattedData = filteredData.map((item, index) => ({
+        ...item,
+        sno: (currentPage - 1) * pageSize + index + 1,
+        GRMS: formatValue(item.GRMS),
+        CTS: formatValue(item.CTS),
+        RATE: formatValue(item.RATE),
+        AMOUNT: formatValue(item.AMOUNT),
+    }));
+
+    const handlePageChange = (page, pageSize) => {
+        setCurrentPage(page);
+        setPageSize(pageSize);
+    };
 
     return (
         <>
@@ -98,12 +94,25 @@ const DiamondStockDetails = () => {
                     />
                 </Col>
             </Row>
+            <Row gutter={8} style={{ marginBottom: 16, marginTop: 16 }} align="middle">
+                <Col flex="auto" />
+                <Col>
+                    <Pagination
+                        current={currentPage}
+                        pageSize={pageSize}
+                        total={filteredData.length}
+                        onChange={handlePageChange}
+                        pageSizeOptions={["6", "10", "20", "50", "100"]}
+                        showSizeChanger
+                        showTotal={(total, range) => `${range[0]}-${range[1]} of ${total} items`}
+                        size="small"
+                    />
+                </Col>
+            </Row>
             <div style={{ marginTop: 16, boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}>
-
                 <div
                     className="table-responsive scroll-horizontal"
                     style={{
-                        maxHeight: "calc(99vh - 193.33px)",
                         overflowY: "auto",
                         overflowX: "auto",
                         marginTop: "20px",
@@ -112,21 +121,35 @@ const DiamondStockDetails = () => {
                         borderRadius: '8px'
                     }}
                 >
-                    <Table
-                        size="small"
-                        columns={columns}
-                        dataSource={formattedData}
-                        rowKey="TAGNO"
-                        pagination={{
-                            pageSize: 5,
-                            pageSizeOptions: ["5", "10", "20", "50"],
-                            showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
-                            position: ["topRight"],
-                            style: { margin: "5px" }
-                        }}
-                        rowClassName="table-row"
-
-                    />
+                    <TableHeaderStyles>
+                        <Table
+                            size="small"
+                            columns={columns}
+                            dataSource={formattedData.slice((currentPage - 1) * pageSize, currentPage * pageSize)}
+                            rowKey="TAGNO"
+                            pagination={false}
+                            rowClassName="table-row"
+                            summary={() => (
+                                <Table.Summary.Row style={{ backgroundColor: '#f5f5f5', fontWeight: 'bold' }}>
+                                    <Table.Summary.Cell>Total</Table.Summary.Cell>
+                                    <Table.Summary.Cell />
+                                    <Table.Summary.Cell />
+                                    <Table.Summary.Cell />
+                                    <Table.Summary.Cell />
+                                    <Table.Summary.Cell />
+                                    <Table.Summary.Cell />
+                                    <Table.Summary.Cell align='right'>{totalPieces}</Table.Summary.Cell>
+                                    <Table.Summary.Cell align='right'>{totalGrams}</Table.Summary.Cell>
+                                    <Table.Summary.Cell align='right'>{totalCarats}</Table.Summary.Cell>
+                                    <Table.Summary.Cell align='right'>{averageRate}</Table.Summary.Cell>
+                                    <Table.Summary.Cell align='right'>{totalAmount}</Table.Summary.Cell>
+                                    <Table.Summary.Cell />
+                                    <Table.Summary.Cell />
+                                    <Table.Summary.Cell />
+                                </Table.Summary.Row>
+                            )}
+                        />
+                    </TableHeaderStyles>
                 </div>
             </div>
         </>

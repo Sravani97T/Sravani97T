@@ -1,12 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Select, Input, Breadcrumb, Row, Col, DatePicker, Popover, Button } from 'antd';
+import { Table, Select, Input, Breadcrumb, Row, Col, Popover, Button ,Pagination} from 'antd';
 import axios from 'axios';
 import moment from 'moment';
 import { PrinterOutlined, FilePdfOutlined, FileExcelOutlined, FilterOutlined } from '@ant-design/icons';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { saveAs } from 'file-saver';
-
+import TableHeaderStyles from "../Pages/TableHeaderStyles";
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import { FaCalendarAlt } from 'react-icons/fa';
+import { forwardRef } from 'react';
+import { CREATE_jwel } from '../../Config/Config';
+const CustomInput = forwardRef(({ value, onClick, placeholder }, ref) => (
+    <div className="custom-date-input" onClick={onClick} ref={ref}>
+        <input value={value} placeholder={placeholder} readOnly />
+        <FaCalendarAlt className="calendar-icon" />
+    </div>
+));
 const { Option } = Select;
 
 const ProductTable = () => {
@@ -27,6 +38,8 @@ const ProductTable = () => {
     });
     const [tempFilters, setTempFilters] = useState(filters);
     const [data, setData] = useState([]);
+     const [currentPage, setCurrentPage] = useState(1);
+      const [pageSize, setPageSize] = useState(20);
     const [filteredData, setFilteredData] = useState([]);
     const [popoverVisible, setPopoverVisible] = useState(false);
     const handlePrint = () => {
@@ -187,7 +200,7 @@ const ProductTable = () => {
     };
 
     useEffect(() => {
-        axios.get('http://www.jewelerp.timeserasoftware.in/api/Erp/GetTagGenerationDetailsList')
+        axios.get(`${CREATE_jwel}/api/Erp/GetTagGenerationDetailsList`)
             .then(response => {
                 setData(response.data);
             })
@@ -297,7 +310,8 @@ const ProductTable = () => {
     };
 
     const columns = [
-        { title: 'S.No', dataIndex: 'sno', key: 'sno', },
+        { title: 'S.No', dataIndex: 'sno', key: 'sno',       className: 'blue-background-column', 
+        },
         { title: 'Tag No', dataIndex: 'TAGNO', key: 'TAGNO' },
         { title: 'Product Name', dataIndex: 'PRODUCTNAME', key: 'PRODUCTNAME' },
         { title: 'Pieces', dataIndex: 'PIECES', align: "right", key: 'PIECES', render: (value) => value || '' },
@@ -334,6 +348,8 @@ const ProductTable = () => {
     const uniqueBrands = [...new Set(data.map(item => item.BRANDNAME))];
 
     const isFilterApplied = filters.mainProduct || filters.product || filters.productName || filters.counterName || filters.categoryName || filters.manufacturer || filters.dealerName || filters.prefix || filters.brand || (filters.tagWeightType && filters.tagWeightFrom !== null && filters.tagWeightTo !== null) || (filters.tagDate.length === 2);
+
+ 
 
     const filterContent = (
         <Row gutter={[8, 8]}>
@@ -489,28 +505,31 @@ const ProductTable = () => {
             </Col>
             <Col xs={24} sm={12} md={8}>
                 <DatePicker
-                    placeholderText="Tag Date From"
                     selected={tempFilters.tagDate[0] ? new Date(tempFilters.tagDate[0]) : null}
                     onChange={(date) => {
                         const newDates = [...tempFilters.tagDate];
                         newDates[0] = date ? date.toISOString() : null;
                         handleTempFilterChange('tagDate', newDates);
                     }}
+                    customInput={<CustomInput placeholder="Tag Date From" />}
                     dateFormat="yyyy-MM-dd"
                     className="ant-input"
+                    placeholderText="From Date"
                     style={{ width: '100%' }}
                 />
             </Col>
             <Col xs={24} sm={12} md={8}>
                 <DatePicker
-                    placeholderText="Tag Date To"
                     selected={tempFilters.tagDate[1] ? new Date(tempFilters.tagDate[1]) : null}
                     onChange={(date) => {
                         const newDates = [...tempFilters.tagDate];
                         newDates[1] = date ? date.toISOString() : null;
                         handleTempFilterChange('tagDate', newDates);
                     }}
+                    customInput={<CustomInput placeholder="Tag Date To" />}
                     dateFormat="yyyy-MM-dd"
+                    placeholderText="To Date"
+
                     className="ant-input"
                     style={{ width: '100%' }}
                 />
@@ -524,7 +543,7 @@ const ProductTable = () => {
 
     return (
         <>
-            <Row justify="space-between" align="middle">
+            <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
                 <Col>
                     <Breadcrumb style={{ fontSize: "16px", fontWeight: "500", color: "#0C1154" }}>
                         <Breadcrumb.Item>Masters</Breadcrumb.Item>
@@ -548,8 +567,7 @@ const ProductTable = () => {
                     </Popover>
                 </Col>
             </Row>
-            <div style={{ marginTop: 16, boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}>
-
+            <div style={{ marginTop: 20, boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', backgroundColor: '#fff', borderRadius: '8px' }}>
                 <div
                     id="printableTable"
                     className="table-responsive scroll-horizontal"
@@ -557,44 +575,37 @@ const ProductTable = () => {
                         maxHeight: "calc(99vh - 193.33px)",
                         overflowY: "auto",
                         overflowX: "auto",
-                        marginTop: "20px",
                         boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
                         backgroundColor: '#fff',
                         borderRadius: '8px'
                     }}
                 >
-                    <Table
-                        size="small"
-                        columns={columns}
-                        dataSource={isFilterApplied ? filteredData : []}
-                        rowKey="TAGNO"
-                        pagination={{
-                            pageSize: 5,
-                            showSizeChanger: true,
-                            pageSizeOptions: ["5", "10", "20", "50"],
-                            showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
-                            position: ["topRight"],
-                            style: { margin: "5px" }
-                        }}
-                        rowClassName={(record, index) => (index % 2 === 0 ? 'table-row-light' : 'table-row-dark')}
-                        summary={() => isFilterApplied && (
-                            <Table.Summary fixed>
-                                <Table.Summary.Row style={{ backgroundColor: "#D5D8DC" }}>
-                                    <Table.Summary.Cell index={0} colSpan={3}>Total</Table.Summary.Cell>
-                                    <Table.Summary.Cell index={3} align="right">{sums.PCS || ''}</Table.Summary.Cell>
-                                    <Table.Summary.Cell index={4}></Table.Summary.Cell>
-                                    <Table.Summary.Cell index={5} align="right">{formatWeight(sums.GWT)}</Table.Summary.Cell>
-                                    <Table.Summary.Cell index={6}></Table.Summary.Cell>
-                                    <Table.Summary.Cell index={7} align="right">{formatWeight(sums.NWT)}</Table.Summary.Cell>
-                                    <Table.Summary.Cell index={8} align="right">{sums.diacts ? sums.diacts.toFixed(2) : ''}</Table.Summary.Cell>
-                                    <Table.Summary.Cell index={9} align="right">{sums.Diamond_Amount ? sums.Diamond_Amount.toFixed(2) : ''}</Table.Summary.Cell>
-                                    <Table.Summary.Cell index={10} colSpan={9}></Table.Summary.Cell>
-                                    <Table.Summary.Cell index={11} colSpan={9}></Table.Summary.Cell>
-
-                                </Table.Summary.Row>
-                            </Table.Summary>
-                        )}
-                    />
+                    <TableHeaderStyles>
+                        <Table
+                            size="small"
+                            columns={columns}
+                            dataSource={isFilterApplied ? filteredData : []}
+                            rowKey="TAGNO"
+                            pagination={false}
+                            rowClassName={(index) => (index % 2 === 0 ? 'table-row-light' : 'table-row-dark')}
+                            summary={() => isFilterApplied && (
+                                <Table.Summary fixed>
+                                    <Table.Summary.Row style={{ backgroundColor: "#D5D8DC" }}>
+                                        <Table.Summary.Cell index={0} colSpan={3}>Total</Table.Summary.Cell>
+                                        <Table.Summary.Cell index={3} align="right">{sums.PCS || ''}</Table.Summary.Cell>
+                                        <Table.Summary.Cell index={4}></Table.Summary.Cell>
+                                        <Table.Summary.Cell index={5} align="right">{formatWeight(sums.GWT)}</Table.Summary.Cell>
+                                        <Table.Summary.Cell index={6}></Table.Summary.Cell>
+                                        <Table.Summary.Cell index={7} align="right">{formatWeight(sums.NWT)}</Table.Summary.Cell>
+                                        <Table.Summary.Cell index={8} align="right">{sums.diacts ? sums.diacts.toFixed(2) : ''}</Table.Summary.Cell>
+                                        <Table.Summary.Cell index={9} align="right">{sums.Diamond_Amount ? sums.Diamond_Amount.toFixed(2) : ''}</Table.Summary.Cell>
+                                        <Table.Summary.Cell index={10} colSpan={9}></Table.Summary.Cell>
+                                        <Table.Summary.Cell index={11} colSpan={9}></Table.Summary.Cell>
+                                    </Table.Summary.Row>
+                                </Table.Summary>
+                            )}
+                        />
+                    </TableHeaderStyles>
                 </div>
                 <style jsx>{`
                     .table-row-light {

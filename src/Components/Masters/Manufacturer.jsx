@@ -11,10 +11,13 @@ import {
     Card,
     message,
     Breadcrumb,
+    Pagination, // Import Pagination
 } from "antd";
 import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import axios from "axios";
 import { CREATE_jwel } from "../../Config/Config";
+import TableHeaderStyles from "../Pages/TableHeaderStyles";
+
 const Manufacturer = () => {
     const [form] = Form.useForm();
     const [data, setData] = useState([]);
@@ -23,7 +26,8 @@ const Manufacturer = () => {
     const [isDuplicate, setIsDuplicate] = useState(false);  // State to check duplicate
     const [loading, setLoading] = useState(false); // State for preventing multiple submissions
     const [oldManufacturer, setOldManufacturer] = useState(""); // Store the old manufacturer for deletion
-
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(20);
     const tenantNameHeader = "PmlYjF0yAwEjNohFDKjzn/ExL/LMhjzbRDhwXlvos+0="; // Your tenant name header
 
     // Fetch data from API and map it to table format
@@ -224,6 +228,14 @@ const Manufacturer = () => {
 
     const columns = [
         {
+            title: "S.No",
+            dataIndex: "sno",
+            key: "sno",
+            className: 'blue-background-column', 
+            width: 50, 
+            render: (_, __, index) => (currentPage - 1) * pageSize + index + 1, // Calculate serial number
+          },
+        {
             title: "Manufacturer",
             dataIndex: "Manufacturer",
             key: "Manufacturer",
@@ -280,7 +292,7 @@ const Manufacturer = () => {
     }, [form, handleCancel]);
 
     return (
-        <div style={{  backgroundColor: "#f4f6f9" }}>
+        <div style={{ backgroundColor: "#f4f6f9" }}>
             {/* Breadcrumb */}
             <Row justify="start" style={{ marginBottom: "10px" }}>
                 <Col>
@@ -332,46 +344,45 @@ const Manufacturer = () => {
                 </Form>
             </Card>
 
-          
-            <div
-                    className="table-responsive scroll-horizontal"
-                    style={{
-                        overflowY: "auto",
-                        maxHeight: "calc(97vh - 193.33px)",
-
-                        overflowX: "auto",
-
+            <div style={{ marginLeft:"5px",float: "right", marginBottom: "10px" }}>
+                <Pagination
+                    current={currentPage}
+                    pageSize={pageSize}
+                    total={filteredData.length}
+                    showSizeChanger
+                    pageSizeOptions={['10', '20', '50', '100']}
+                    onChange={(page, size) => {
+                        setCurrentPage(page);
+                        setPageSize(size);
                     }}
-                >
-                      <div style={{ float: "right" }}>
-                <Input.Search
-                    placeholder="Search records"
-                    style={{ marginBottom: "10px", width: "100%", borderRadius: "4px" }}
-                    onChange={(e) => setSearchText(e.target.value)}
+                    showTotal={(total, range) => `${range[0]}-${range[1]} of ${total} items`}
+
+                    style={{ marginBottom: "10px" }}
                 />
             </div>
-            <Table
-                columns={columns}
-                dataSource={filteredData}
-                rowKey="key"
-                size="small"
-                pagination={{
-                    pageSize: 5,
-                    showSizeChanger: true,
-                    pageSizeOptions: ["5", "10", "20", "50"],
-                    showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
-                    position: ["topRight"], // Show pagination only at the top right
-                    style: { margin: "5px" } // Add margin to pagination
-                }}
-                style={{
-                    background: "#fff",
-                    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-                    borderRadius: "8px",
-                    marginTop:"20px"
 
-                }}
-            />
+            <div style={{ float: "right", marginBottom: "10px" }}>
+                <Input.Search
+                    placeholder="Search"
+                    onChange={(e) => setSearchText(e.target.value)}
+                    style={{ width: "100%", marginBottom: "10px" }}
+                />
             </div>
+
+            <TableHeaderStyles>
+                <Table
+                    columns={columns}
+                    dataSource={filteredData.slice((currentPage - 1) * pageSize, currentPage * pageSize)}
+                    rowKey="key"
+                    size="small"
+                    pagination={false}
+                    style={{
+                        background: "#fff",
+                        boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+                        borderRadius: "8px",
+                    }}
+                />
+            </TableHeaderStyles>
         </div>
     );
 };
