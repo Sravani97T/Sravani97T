@@ -2,36 +2,37 @@ import React, { useState, useEffect, useRef } from "react";
 import { Layout } from "antd";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
-import logo from "../Components/Assets/textLogo.png"; // Regular logo
 import logo1 from "../Components/Assets/tlogo.png"; // Collapsed logo
 
 const { Sider, Content } = Layout;
 
 const DashboardLayout = ({ children }) => {
-  const [collapsed, setCollapsed] = useState(false); // Default state for collapsed
-  const [isMobile, setIsMobile] = useState(false); // Track if in mobile view
-  const sidebarRef = useRef(null); // Reference to sidebar to detect outside clicks
+  const [collapsed, setCollapsed] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const sidebarRef = useRef(null);
 
-  // Set screen size and handle mobile view
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768); // Set to true for mobile screens
+      setIsMobile(window.innerWidth <= 768);
     };
     window.addEventListener("resize", handleResize);
-    handleResize(); // Run on initial load
+    handleResize();
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Toggle sidebar open/close
   const toggleSidebar = () => {
-    setCollapsed(!collapsed); // Toggle collapse for both mobile and web
+    setCollapsed(!collapsed);
   };
 
-  // Close sidebar when clicking outside of it in mobile view
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (isMobile && sidebarRef.current && !sidebarRef.current.contains(event.target) && !event.target.closest(".ant-menu")) {
-        setCollapsed(true); // Close sidebar if clicked outside while in mobile view
+      if (
+        isMobile &&
+        sidebarRef.current &&
+        !sidebarRef.current.contains(event.target) &&
+        !event.target.closest(".ant-menu")
+      ) {
+        setCollapsed(true);
       }
     };
 
@@ -44,12 +45,8 @@ const DashboardLayout = ({ children }) => {
     };
   }, [isMobile]);
 
-  // Styles for logos
-  const expandedLogoStyle = { width: "165px", height: "40px" };
-  const collapsedLogoStyle = { width: "30px", height: "30px" };
-
   return (
-    <Layout style={{ minHeight: "100vh",    
+    <Layout style={{ minHeight: "100vh" ,          minWidth:"220px"
     }}>
       {/* Sidebar */}
       <Sider
@@ -57,41 +54,60 @@ const DashboardLayout = ({ children }) => {
         collapsed={collapsed}
         trigger={null}
         style={{
-          backgroundColor: "#fff",
-          width: collapsed ? "80px" : "200px",
-          position: "relative", // Make sure sidebar itself doesn't interfere with sticky positioning
-          borderTopLeftRadius: "10px", // Add border radius to the top-left corner
+          backgroundColor: "#150A4E",
+          position: "sticky",
+          top: 0,
+          zIndex: 100,
+          height: "100vh",
+          overflow: "hidden",
+       
 
         }}
-        ref={sidebarRef} // Attach the reference to sidebar
+        ref={sidebarRef}
+        width={260} // Expanded width
+
       >
+        {/* Logo Section */}
         <div
           style={{
-            padding: "10px",
+            padding: "5px 5px 5px",
             textAlign: "center",
-            position: "sticky", // Make logo sticky at the top of the sidebar
-            top: 0, // Stick it to the top
-            zIndex: 100, // Ensure logo stays on top of other content
             backgroundColor: "#150A4E",
-            borderTopLeftRadius: "10px",
-
+            borderBottom: "1px solid rgba(255, 255, 255, 0.2)",
+            transition: "all 0.3s ease",
+            position: "sticky",
+            top: 0,
+            zIndex: 101,
           }}
         >
-          <img src={logo1} alt="Collapsed Logo" style={collapsedLogoStyle} />
-          {!collapsed && <img src={logo} alt="Expanded Logo" style={expandedLogoStyle} />}
-
+          <img
+            src={logo1}
+            alt="Logo"
+            style={{
+              width: "35px",
+              height: "35px",
+              transition: "all 0.3s ease",
+            }}
+          />
         </div>
-                  {/* <hr style={{ border: "0.5px solid  #4FBE91", }} /> */}
-
         <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
-
       </Sider>
 
       {/* Main Content */}
       <Layout>
         <Header collapsed={collapsed} toggleSidebar={toggleSidebar} />
-        <Content style={{ margin: "16px" }}>{children}</Content>
-
+        <Content
+          style={{
+            margin: "16px",
+            padding: "16px",
+            backgroundColor: "#f4f4f4",
+            borderRadius: "10px",
+            boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
+            transition: "all 0.3s ease",
+          }}
+        >
+          {children}
+        </Content>
       </Layout>
     </Layout>
   );

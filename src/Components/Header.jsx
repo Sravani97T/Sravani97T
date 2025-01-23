@@ -1,34 +1,33 @@
 import React, { useState, useEffect } from "react";
-import { Avatar, Dropdown, Button,  Space, Typography } from "antd";
-import { UserOutlined, MenuFoldOutlined, MenuUnfoldOutlined, SettingOutlined, LogoutOutlined, MoreOutlined } from "@ant-design/icons";
+import { Avatar, Dropdown, Button, Space, Typography } from "antd";
+import {
+  UserOutlined,
+  MenuFoldOutlined,
+  MenuUnfoldOutlined,
+  SettingOutlined,
+  LogoutOutlined,
+} from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 
 const { Text } = Typography;
 
 const Header = ({ collapsed, toggleSidebar }) => {
-  const navigate = useNavigate(); // Using React Router's useNavigate hook
-  const [isMobile, setIsMobile] = useState(false); // Track if in mobile view
+  const navigate = useNavigate();
+  const [isMobile, setIsMobile] = useState(false);
 
-  // Check if the view is mobile
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768); // Set to true for mobile screens
+      setIsMobile(window.innerWidth <= 768);
     };
     window.addEventListener("resize", handleResize);
-    handleResize(); // Run on initial load
+    handleResize();
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Function to handle menu item click
   const handleMenuClick = ({ key }) => {
-    if (key === "1") {
-      navigate("/settings"); // Redirect to settings page
-    } else if (key === "2") {
-      navigate("/profile"); // Redirect to profile page
-    } else if (key === "3") {
-      // Logout action (could be handled by clearing user data or redirecting to login)
-      console.log("Logging out...");
-    }
+    if (key === "1") navigate("/settings");
+    else if (key === "2") navigate("/profile");
+    else if (key === "3") console.log("Logging out...");
   };
 
   const userMenu = {
@@ -60,34 +59,25 @@ const Header = ({ collapsed, toggleSidebar }) => {
         alignItems: "center",
         padding: "0 16px",
         background: "#fff",
-        borderBottom: "1px solid #d9d9d9",
+        color: "#000",
         height: "64px",
-        position: "sticky", // Make header sticky
-        top: 0, // Keep header at the top
-        zIndex: 100, // Ensures it's above other content
+        position: "sticky",
+        top: 0,
+        zIndex: 1000,
+        boxShadow: "0px 2px 10px rgba(0, 0, 0, 0.1)",
       }}
     >
-      {/* Sidebar toggle button */}
       <Button
         type="text"
-        icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+        icon={collapsed ? <MenuUnfoldOutlined style={{ color: "#000" }} /> : <MenuFoldOutlined style={{ color: "#000" }} />}
         onClick={toggleSidebar}
       />
-
-<div style={{ display: "flex", alignItems: "center" }}>
-        {isMobile ? (
-          <Dropdown menu={userMenu} placement="bottomRight">
-            <Button type="text" icon={<MoreOutlined />} style={{ fontSize: "18px" }} />
-          </Dropdown>
-        ) : (
-          <Dropdown menu={userMenu} placement="bottomRight">
-            <Space>
-              <Avatar size={30} icon={<UserOutlined />} style={{ cursor: "pointer" }} />
-              <Text strong style={{ marginLeft: "8px" }}>Sravani Reddy</Text>
-            </Space>
-          </Dropdown>
-        )}
-      </div>
+      <Dropdown menu={userMenu} placement="bottomRight">
+        <Space>
+          <Avatar size={30} icon={<UserOutlined />} />
+          {!isMobile && <Text strong style={{ color: "#000" }}>Sravani Reddy</Text>}
+        </Space>
+      </Dropdown>
     </div>
   );
 };

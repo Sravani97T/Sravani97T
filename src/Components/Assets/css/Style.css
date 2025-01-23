@@ -346,7 +346,7 @@
   margin: 0 !important;
 }
 /* sidebar colur */
-.ant-menu-light .ant-menu-item {
+/* .ant-menu-light .ant-menu-item {
   color: #acc4e2 !important;
 
 }
@@ -361,20 +361,20 @@
   display: flex;
   justify-content: center;
   align-items: center;
-}
+} */
 /* dashboard */
 
 /* Style.css */
 
-.custom-scrollbar .ant-menu-submenu-title {
-  font-size: 12px; /* Reduce font size */
-  padding-left: 10px !important; /* Align from start */
+/* .custom-scrollbar .ant-menu-submenu-title {
+  font-size: 12px; 
+  padding-left: 10px !important; 
 }
 
 .custom-scrollbar .ant-menu-item {
-  font-size: 12px; /* Reduce font size */
-  padding-left: 10px !important; /* Align from start */
-}
+  font-size: 12px; 
+  padding-left: 10px !important; 
+} */
 .ant-menu-submenu-popup .ant-menu-vertical.ant-menu{
   background-color: #150A4E;
 }
@@ -407,13 +407,13 @@
     color: #a3ccf2;
 }
 /* Basic table styling */
-.sidebar-container {
+/* .sidebar-container {
   display: flex;
   flex-direction: column;
   height: 100vh;
   background: #1e266d;
   color: #fff;
-}
+} */
 
 .logo-section {
   display: flex;
@@ -460,14 +460,14 @@
   padding: 0.1rem 0.5rem;
   border-radius: 12px;
 }
-
+/* 
 .sidebar-footer {
   display: flex;
   align-items: center;
   padding: 1rem;
   background: #18204d;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
+} */
 
 .profile-pic {
   width: 40px;
@@ -565,3 +565,50 @@ font-weight: bold;
   background: none !important;
 }
 
+/* sidebar */
+/* Background image and sidebar styling */
+/* Sidebar scrollable content */
+.sidebar-menu {
+  scrollbar-width: thin;
+  scrollbar-color: #888 transparent;
+}
+
+.sidebar-menu::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar-menu::-webkit-scrollbar-thumb {
+  background-color: #888;
+  border-radius: 3px;
+}
+
+.sidebar-menu::-webkit-scrollbar-thumb:hover {
+  background-color: #555;
+}
+
+/* Transition effects */
+.ant-layout-sider {
+  transition: all 0.3s ease;
+}
+
+.ant-menu-item {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.ant-menu-item:hover {
+  background-color: #1f1f2e !important;
+  color: #fff !important;
+}
+
+/* Header hover effects */
+.ant-avatar {
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.ant-avatar:hover {
+  transform: scale(1.1);
+}
+.ant-menu-dark.ant-menu-inline .ant-menu-sub.ant-menu-inline {
+  background-color: #555e9f;
+}
