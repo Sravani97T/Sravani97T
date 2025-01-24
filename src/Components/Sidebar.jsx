@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Menu, Divider } from "antd";
+import { Menu, Divider, Popover } from "antd";
 import { Link } from "react-router-dom";
 import {
   HomeOutlined,
@@ -9,6 +9,7 @@ import {
   DollarOutlined,
   TeamOutlined,
   LineChartOutlined,
+  RightCircleFilled
 } from "@ant-design/icons";
 import logo from "../Components/Assets/textLogo.png"; // Import the logo
 
@@ -47,7 +48,7 @@ const Sidebar = ({ collapsed }) => {
         margin: "5px 0",
         boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
         border: "1px solid grey", // Grey border
-      } : { border: "1px solid grey" }, // Grey border for collapsed state
+      } : {}, // No additional styles for collapsed state
     },
     {
       key: "2",
@@ -90,7 +91,27 @@ const Sidebar = ({ collapsed }) => {
       label: <span style={{ color: "#fff" }}>Point of Sale</span>,
       children: [
         { key: "4-1", label: <Link to="/day-glance" style={{ color: "#fff" }}>Day Glance</Link> },
-        { key: "4-2", label: <Link to="/pos-sales" style={{ color: "#fff" }}>Sales</Link> },
+        { key: "4-2", label: (
+          <span style={{ color: "#fff" }}>
+            Sales
+            <Popover
+              content={
+                <Menu>
+                  <Menu.Item key="4-2-1" style={{ backgroundColor: "#555E9F" }}>
+                    <Link to="/sub-menu-1" style={{ color: "#fff" }}>Sub Menu 1</Link>
+                  </Menu.Item>
+                  <Menu.Item key="4-2-2" style={{ backgroundColor: "#555E9F" }}>
+                    <Link to="/sub-menu-2" style={{ color: "#fff" }}>Sub Menu 2</Link>
+                  </Menu.Item>
+                </Menu>
+              }
+              trigger="click"
+              placement="right" // Change the direction of the popover
+            >
+              <RightCircleFilled style={{ marginLeft: "117px", color: "#fff" }} />
+            </Popover>
+          </span>
+        ) },
       ],
     },
     {
@@ -175,67 +196,64 @@ const Sidebar = ({ collapsed }) => {
         selectedKeys={[selectedKey]} // Apply selected key for highlighting
         openKeys={openKeys} // Open submenu based on open keys
         onOpenChange={handleSubMenuOpenChange} // Handle submenu open state
-        
-        
       >
         {menuItems.map((menuItem) => {
           if (menuItem.children) {
             return (
               <Menu.SubMenu
-                key={menuItem.key}
-                icon={menuItem.icon}
-                title={menuItem.label}
+              key={menuItem.key}
+              icon={menuItem.icon}
+              title={menuItem.label}
+              style={{
+                maxHeight: "calc(100vh - 150px)", // Adjust height for submenu scroll
+                overflow: "hidden",
+              }}
+              >
+              {/* Submenu Items */}
+              <div
                 style={{
-                  maxHeight: "calc(100vh - 150px)", // Adjust height for submenu scroll
-                  overflow: "hidden",
+                maxHeight: "350px", // Set a fixed height for scrolling
+                overflowY: "auto", // Enable vertical scrolling
+                scrollbarWidth: "thin", // Make scrollbar thin (for Firefox)
+                scrollbarColor: "rgba(255, 255, 255, 0.2) transparent", // Light scrollbar color
                 }}
               >
-                {/* Submenu Items */}
-                <div
+                {/* Webkit scrollbar styling */}
+                {menuItem.children.map((submenu, index) => (
+                <React.Fragment key={submenu.key}>
+                  <Menu.Item
+                  key={submenu.key}
                   style={{
-                    maxHeight: "400px", // Set a fixed height for scrolling
-                    overflowY: "auto", // Enable vertical scrolling
-                    scrollbarWidth: "thin", // Make scrollbar thin (for Firefox)
-                    scrollbarColor: "rgba(255, 255, 255, 0.2) transparent", // Light scrollbar color
+                    backgroundColor:
+                    selectedKey === submenu.key ? "#aed2f385" : "transparent", // Highlight selected submenu item
+                    borderRadius: selectedKey === submenu.key ? "10px" : "0px", // Rounded corners for selected item
+                    position: "relative", // For positioning pseudo-element
                   }}
-                >
-                  {/* Webkit scrollbar styling */}
-                  {menuItem.children.map((submenu, index) => (
-                    <React.Fragment key={submenu.key}>
-                      <Menu.Item
-                        key={submenu.key}
-                        
-                        style={{
-                          backgroundColor:
-                            selectedKey === submenu.key ? "#aed2f385" : "transparent", // Highlight selected submenu item
-                          borderRadius: selectedKey === submenu.key ? "10px" : "0px", // Rounded corners for selected item
-                          position: "relative", // For positioning pseudo-element
-                        }}
-                      >
-                        <span style={{ marginRight: "10px", color: "#fff" }}>
-                          <AppstoreOutlined />
-                        </span>
-                        {submenu.label}
-                        {selectedKey === submenu.key && (
-                          <div
-                            style={{
-                              content: '""',
-                              position: "absolute",
-                              top: "-10px",
-                              left: "-10px",
-                              right: "-10px",
-                              bottom: "-10px",
-                              background: "rgba(173, 216, 230, 0.3)", // Light blue background for shape
-                              borderRadius: "10px", // Rounded corners for the shape
-                              zIndex: "-1", // Behind the text
-                            }}
-                          />
-                        )}
-                      </Menu.Item>
-                      {index < menuItem.children.length - 1 && <Divider style={{ backgroundColor: "#7a7878", padding: "0px", margin: "0px" }} />}
-                    </React.Fragment>
-                  ))}
-                </div>
+                  >
+                  <span style={{ marginRight: "10px", color: "#fff" }}>
+                    <AppstoreOutlined />
+                  </span>
+                  {submenu.label}
+                  {selectedKey === submenu.key && (
+                    <div
+                    style={{
+                      content: '""',
+                      position: "absolute",
+                      top: "-10px",
+                      left: "-10px",
+                      right: "-10px",
+                      bottom: "-10px",
+                      background: "rgba(173, 216, 230, 0.3)", // Light blue background for shape
+                      borderRadius: "10px", // Rounded corners for the shape
+                      zIndex: "-1", // Behind the text
+                    }}
+                    />
+                  )}
+                  </Menu.Item>
+                  {index < menuItem.children.length - 1 && <Divider style={{ backgroundColor: "rgb(163 159 159)", padding: "0px", margin: "0px" }} />}
+                </React.Fragment>
+                ))}
+              </div>
               </Menu.SubMenu>
             );
           } else {

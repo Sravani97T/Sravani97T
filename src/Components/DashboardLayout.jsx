@@ -46,8 +46,7 @@ const DashboardLayout = ({ children }) => {
   }, [isMobile]);
 
   return (
-    <Layout style={{ minHeight: "100vh" ,          minWidth:"220px"
-    }}>
+    <Layout style={{ minHeight: "100vh", minWidth: "220px" }}>
       {/* Sidebar */}
       <Sider
         collapsible
@@ -60,12 +59,9 @@ const DashboardLayout = ({ children }) => {
           zIndex: 100,
           height: "100vh",
           overflow: "hidden",
-       
-
         }}
         ref={sidebarRef}
         width={260} // Expanded width
-
       >
         {/* Logo Section */}
         <div
@@ -91,6 +87,20 @@ const DashboardLayout = ({ children }) => {
           />
         </div>
         <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
+        <div
+          style={{
+            padding: "10px",
+            textAlign: "center",
+            color: "#fff",
+            position: "absolute",
+            bottom: 0,
+            width: "100%",
+            backgroundColor: "#150A4E",
+            borderTop: "1px solid rgba(255, 255, 255, 0.2)",
+          }}
+        >
+          {collapsed ? "V - 1.0" : "@TimeseraERP Pvt Ltd - Version 1.0"}
+        </div>
       </Sider>
 
       {/* Main Content */}
