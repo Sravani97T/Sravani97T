@@ -108,12 +108,12 @@ const DashboardLayout = ({ children }) => {
         <Header collapsed={collapsed} toggleSidebar={toggleSidebar} />
         <Content
           style={{
-            margin: "16px",
-            padding: "16px",
+            margin: "10px",
+            padding: "7px",
             backgroundColor: "#f4f4f4",
             borderRadius: "10px",
             boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
-            transition: "all 0.3s ease",
+            // transition: "all 0.3s ease",
           }}
         >
           {children}

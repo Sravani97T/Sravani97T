@@ -1,5 +1,5 @@
-import React from "react";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import React, { useState } from "react";
+import { BrowserRouter as Router, Route, Routes, Navigate } from "react-router-dom";
 import DashboardLayout from "../src/Components/DashboardLayout";
 import Dashboard from "../src/Components/Pages/Dashboard";
 import Settings from "../src/Components/Pages/Settings";
@@ -40,7 +40,6 @@ import CounterNetSummry from "./Components/Reports/CounterNetSummry";
 import DealerNetSummry from "./Components/Reports/DealerNetSummry";
 import DiamondStockDetails from "./Components/Reports/DaimondStockDetailes";
 import CashBookReports from "./Components/POSReports/CashBookReports";
-
 import SalesReportsMain from "./Components/POSReports/SalesReportsMain";
 import ProductWiseSaleDetailes from "./Components/POSReports/ProductWiseSaleDetailes";
 import NewOrnamentReport from "./Components/POSReports/NewOrnamentReport";
@@ -53,79 +52,90 @@ import TraySummary from "./Components/Reports/TraySummary";
 import CounterChart from "./Components/Reports/CounterChart";
 import StoneDetails from "./Components/Reports/StoneDetailes";
 import DayGlance from "./Components/POSReports/DayGlance";
+import LoginPage from "./Components/Masters/Logins/LoginPage"
+import AvatarUpload from "./Components/Utiles/UploadImg";
 const App = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  const handleLogin = () => {
+    setIsAuthenticated(true);
+  };
+
   return (
     <Router>
-      <DashboardLayout>
-        <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/profile" element={<Profile />} />
-
-          {/* Masters */}
-          <Route path="/main-product" element={<MainProduct />} />
-          <Route path="/product-category" element={<ProductCategory />} />
-          <Route path="/product-master" element={<ProductMaster />} />
-          <Route path="/counter-master" element={<CounterMaster />} />
-          <Route path="/category-master" element={<CategoryMaster />} />
-          <Route path="/prefix-master" element={<PrefixMaster />} />
-          <Route path="/stone-item-master" element={<StoneItemMaster />} />
-          <Route path="/brand-master" element={<BrandMaster />} />
-          <Route path="/manufacturer-master" element={<Manufacturer />} />
-          <Route path="/jewelry-type-master" element={<JewelryTypeMaster />} />
-          <Route path="/bank-master" element={<BankMaster />} />
-          <Route path="/mail-book" element={<MailBook />} />
-          <Route path="/employee-master" element={<EmployeeMaster />} />
-          <Route path="/account-group" element={<AccountGroup />} />
-          <Route path="/journal-entry-master" element={<JournalEntryMaster />} />
-          <Route path="/state-master" element={<StateMaster />} />
-          <Route path="/diamond-rate-fix" element={<DaimondRate />} />
-          <Route path="/online-mode" element={<OnlineMode />} />
-          {/* estimation */}
-          <Route path="/daily-rates" element={<DailyRates />} />
-          {/* inventory */}
-          <Route path="/lot-creation" element={<LotCreation />} />
-          <Route path="/tag-generation" element={<TagGeneration/>} />
-          <Route path="/masters-report" element={<ProductTable/>} />
-          <Route path="/dailyrates-report" element={<DailyRatesReports/>} />
-          <Route path="/bankstatement-report" element={<BankStatementReport/>} />
-          <Route path="/billmaster-report" element={<BillMasterReport/>} />
-          <Route path="/stockBalence-report" element={<StockBalanceReport/>} />
-          <Route path="/stocksummry-report" element={<StockSummryReport/>} />
-          <Route path="/productcategory-report" element={<ProductCategorySummary/>} />
-          <Route path="/categorynet-report" element={<CategoryNetSummary/>} />
-
-          <Route path="/DealerwisestockSummry-report" element={<DealerWiseStockSummry/>} />
-          <Route path="/Dealerwisestockdetailes-report" element={<DealerWiseStockDetailes/>} />
-
-          <Route path="/prifixnetsummry-report" element={<PrifixNetSummry/>} />
-          <Route path="/counternetsummry-report" element={<CounterNetSummry/>} />
-          <Route path="/dealernetsummry-report" element={<DealerNetSummry/>} />
-          <Route path="/daimondstockdetailes-report" element={<DiamondStockDetails/>} />
-
-          <Route path="/cash-book" element={<CashBookReports/>} />
-          <Route path="/sale-reports" element={<SalesReportsMain/>} />
-          <Route path="/product-wise-detailes" element={<ProductWiseSaleDetailes/>} />
-
-          <Route path="/new-ornament-purchase-register" element={<NewOrnamentReport/>} />
-
-          <Route path="/gs11-report" element={<GS11Reports/>} />
-          <Route path="/gs12-report" element={<GS12/>} />
-          <Route path="/outstandingcustomers-report" element={<OutstandingCustomers/>} />
-          <Route path="/outstandingdealers-report" element={<OutstandingDealers/>} />
-          <Route path="/oldgoldbook-report" element={<OldGoldBookOpening/>} />
-          <Route path="/traysummery-report" element={<TraySummary/>} />
-          <Route path="/counterchart-report" element={<CounterChart/>} />
-          <Route path="/stonedetailes-report" element={<StoneDetails/>} />
-          <Route path="/day-glance" element={<DayGlance/>}/>
+      <Routes>
+        <Route path="/" element={<LoginPage onLogin={handleLogin} />} />
+        <Route
+          path="*"
+          element={
+            isAuthenticated ? (
+              <DashboardLayout>
+                <Routes>
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/settings" element={<Settings />} />
+                  <Route path="/profile" element={<Profile />} />
+                  {/* Masters */}
+                  <Route path="/main-product" element={<MainProduct />} />
+                  <Route path="/upload" element={<AvatarUpload />} />
 
 
-          
-
-
-          
-        </Routes>
-      </DashboardLayout>
+                  <Route path="/product-category" element={<ProductCategory />} />
+                  <Route path="/product-master" element={<ProductMaster />} />
+                  <Route path="/counter-master" element={<CounterMaster />} />
+                  <Route path="/category-master" element={<CategoryMaster />} />
+                  <Route path="/prefix-master" element={<PrefixMaster />} />
+                  <Route path="/stone-item-master" element={<StoneItemMaster />} />
+                  <Route path="/brand-master" element={<BrandMaster />} />
+                  <Route path="/manufacturer-master" element={<Manufacturer />} />
+                  <Route path="/jewelry-type-master" element={<JewelryTypeMaster />} />
+                  <Route path="/bank-master" element={<BankMaster />} />
+                  <Route path="/mail-book" element={<MailBook />} />
+                  <Route path="/employee-master" element={<EmployeeMaster />} />
+                  <Route path="/account-group" element={<AccountGroup />} />
+                  <Route path="/journal-entry-master" element={<JournalEntryMaster />} />
+                  <Route path="/state-master" element={<StateMaster />} />
+                  <Route path="/diamond-rate-fix" element={<DaimondRate />} />
+                  <Route path="/online-mode" element={<OnlineMode />} />
+                  {/* Estimation */}
+                  <Route path="/daily-rates" element={<DailyRates />} />
+                  {/* Inventory */}
+                  <Route path="/lot-creation" element={<LotCreation />} />
+                  <Route path="/tag-generation" element={<TagGeneration />} />
+                  <Route path="/masters-report" element={<ProductTable />} />
+                  <Route path="/dailyrates-report" element={<DailyRatesReports />} />
+                  <Route path="/bankstatement-report" element={<BankStatementReport />} />
+                  <Route path="/billmaster-report" element={<BillMasterReport />} />
+                  <Route path="/stockBalence-report" element={<StockBalanceReport />} />
+                  <Route path="/stocksummry-report" element={<StockSummryReport />} />
+                  <Route path="/productcategory-report" element={<ProductCategorySummary />} />
+                  <Route path="/categorynet-report" element={<CategoryNetSummary />} />
+                  <Route path="/DealerwisestockSummry-report" element={<DealerWiseStockSummry />} />
+                  <Route path="/Dealerwisestockdetailes-report" element={<DealerWiseStockDetailes />} />
+                  <Route path="/prifixnetsummry-report" element={<PrifixNetSummry />} />
+                  <Route path="/counternetsummry-report" element={<CounterNetSummry />} />
+                  <Route path="/dealernetsummry-report" element={<DealerNetSummry />} />
+                  <Route path="/daimondstockdetailes-report" element={<DiamondStockDetails />} />
+                  <Route path="/cash-book" element={<CashBookReports />} />
+                  <Route path="/sale-reports" element={<SalesReportsMain />} />
+                  <Route path="/product-wise-detailes" element={<ProductWiseSaleDetailes />} />
+                  <Route path="/new-ornament-purchase-register" element={<NewOrnamentReport />} />
+                  <Route path="/gs11-report" element={<GS11Reports />} />
+                  <Route path="/gs12-report" element={<GS12 />} />
+                  <Route path="/outstandingcustomers-report" element={<OutstandingCustomers />} />
+                  <Route path="/outstandingdealers-report" element={<OutstandingDealers />} />
+                  <Route path="/oldgoldbook-report" element={<OldGoldBookOpening />} />
+                  <Route path="/traysummery-report" element={<TraySummary />} />
+                  <Route path="/counterchart-report" element={<CounterChart />} />
+                  <Route path="/stonedetailes-report" element={<StoneDetails />} />
+                  <Route path="/day-glance" element={<DayGlance />} />
+                </Routes>
+              </DashboardLayout>
+            ) : (
+              <Navigate to="/" />
+            )
+          }
+        />
+      </Routes>
     </Router>
   );
 };

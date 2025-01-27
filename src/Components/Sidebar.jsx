@@ -19,10 +19,15 @@ const Sidebar = ({ collapsed }) => {
 
   const handleMenuClick = (e) => {
     setSelectedKey(e.key); // Update selected key on click
+    if (e.key === "1") {
+      setOpenKeys([]); // Close all submenus when Dashboard is clicked
+    }
+    console.log("e", e);
   };
 
   const handleSubMenuOpenChange = (keys) => {
-    setOpenKeys(keys.length ? [keys[keys.length - 1]] : []); // Only keep the last opened submenu key
+    console.log("Submenu open keys:", keys);
+    setOpenKeys(keys.length ? [keys[keys.length - 1]] : []); // Only keep the last opened submenu
   };
 
   const iconStyle = {
@@ -41,14 +46,17 @@ const Sidebar = ({ collapsed }) => {
     {
       key: "1",
       icon: <HomeOutlined style={iconStyle} />,
-      label: <Link to="/" style={{ color: "#fff" }}>Dashboard</Link>,
+      label: <Link to="/dashboard" style={{ color: "#fff" }}>Dashboard</Link>,
       style: !collapsed ? {
         backgroundColor: "#52BD91", // Light green background for Dashboard
         borderRadius: "10px",
         margin: "5px 0",
         boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
         border: "1px solid grey", // Grey border
-      } : {}, // No additional styles for collapsed state
+        width: "227px",
+        marginLeft: "20px",
+        padding: "10px"
+      } : {},
     },
     {
       key: "2",
@@ -97,16 +105,17 @@ const Sidebar = ({ collapsed }) => {
             <Popover
               content={
                 <Menu>
-                  <Menu.Item key="4-2-1" style={{ backgroundColor: "#555E9F" }}>
+                  <Menu.Item key="4-2-1" style={{ backgroundColor: "#555E9F", width: "150px" }}>
                     <Link to="/sub-menu-1" style={{ color: "#fff" }}>Sub Menu 1</Link>
                   </Menu.Item>
-                  <Menu.Item key="4-2-2" style={{ backgroundColor: "#555E9F" }}>
+                  <Menu.Item key="4-2-2" style={{ backgroundColor: "#555E9F", width: "150px" }}>
                     <Link to="/sub-menu-2" style={{ color: "#fff" }}>Sub Menu 2</Link>
                   </Menu.Item>
                 </Menu>
               }
-              trigger="click"
+              trigger={collapsed ? "hover" : "click"} // Show popover on hover when collapsed, click otherwise
               placement="right" // Change the direction of the popover
+              overlayStyle={{ width: "170px" }} // Increase the width of the popover
             >
               <RightCircleFilled style={{ marginLeft: "117px", color: "#fff" }} />
             </Popover>
@@ -158,7 +167,7 @@ const Sidebar = ({ collapsed }) => {
       label: <span style={{ color: "#fff" }}>Analysis</span>,
       children: [
         { key: "7-1", label: <Link to="/analysis-sales" style={{ color: "#fff" }}>Sales Analysis</Link> },
-        { key: "7-2", label: <Link to="/analysis-performance" style={{ color: "#fff" }}>Performance</Link> },
+        { key: "7-2", label: <Link to="/upload" style={{ color: "#fff" }}>Upload</Link> },
       ],
     },
   ];
@@ -191,6 +200,7 @@ const Sidebar = ({ collapsed }) => {
           height: "calc(100vh - 50px)", // Leaves space for the sticky logo
           overflow: "hidden",
           backgroundColor: "#11083E", // Set the background color
+          transition: "all 0.2s ease-in-out", // Add transition for quick expansion
         }}
         onClick={handleMenuClick} // Handle click event to select items
         selectedKeys={[selectedKey]} // Apply selected key for highlighting
@@ -201,59 +211,59 @@ const Sidebar = ({ collapsed }) => {
           if (menuItem.children) {
             return (
               <Menu.SubMenu
-              key={menuItem.key}
-              icon={menuItem.icon}
-              title={menuItem.label}
-              style={{
-                maxHeight: "calc(100vh - 150px)", // Adjust height for submenu scroll
-                overflow: "hidden",
-              }}
-              >
-              {/* Submenu Items */}
-              <div
+                key={menuItem.key}
+                icon={menuItem.icon}
+                title={menuItem.label}
                 style={{
-                maxHeight: "350px", // Set a fixed height for scrolling
-                overflowY: "auto", // Enable vertical scrolling
-                scrollbarWidth: "thin", // Make scrollbar thin (for Firefox)
-                scrollbarColor: "rgba(255, 255, 255, 0.2) transparent", // Light scrollbar color
+                  maxHeight: "calc(100vh - 150px)", // Adjust height for submenu scroll
+                  overflow: "hidden",
                 }}
               >
-                {/* Webkit scrollbar styling */}
-                {menuItem.children.map((submenu, index) => (
-                <React.Fragment key={submenu.key}>
-                  <Menu.Item
-                  key={submenu.key}
+                {/* Submenu Items */}
+                <div
                   style={{
-                    backgroundColor:
-                    selectedKey === submenu.key ? "#aed2f385" : "transparent", // Highlight selected submenu item
-                    borderRadius: selectedKey === submenu.key ? "10px" : "0px", // Rounded corners for selected item
-                    position: "relative", // For positioning pseudo-element
+                    maxHeight: "280px", // Set a fixed height for scrolling
+                    overflowY: "auto", // Enable vertical scrolling
+                    scrollbarWidth: "thin", // Make scrollbar thin (for Firefox)
+                    scrollbarColor: "rgba(255, 255, 255, 0.2) transparent", // Light scrollbar color
                   }}
-                  >
-                  <span style={{ marginRight: "10px", color: "#fff" }}>
-                    <AppstoreOutlined />
-                  </span>
-                  {submenu.label}
-                  {selectedKey === submenu.key && (
-                    <div
-                    style={{
-                      content: '""',
-                      position: "absolute",
-                      top: "-10px",
-                      left: "-10px",
-                      right: "-10px",
-                      bottom: "-10px",
-                      background: "rgba(173, 216, 230, 0.3)", // Light blue background for shape
-                      borderRadius: "10px", // Rounded corners for the shape
-                      zIndex: "-1", // Behind the text
-                    }}
-                    />
-                  )}
-                  </Menu.Item>
-                  {index < menuItem.children.length - 1 && <Divider style={{ backgroundColor: "rgb(163 159 159)", padding: "0px", margin: "0px" }} />}
-                </React.Fragment>
-                ))}
-              </div>
+                >
+                  {/* Webkit scrollbar styling */}
+                  {menuItem.children.map((submenu, index) => (
+                    <React.Fragment key={submenu.key}>
+                      <Menu.Item
+                        key={submenu.key}
+                        style={{
+                          backgroundColor:
+                            selectedKey === submenu.key ? "#aed2f385" : "transparent", // Highlight selected submenu item
+                          borderRadius: selectedKey === submenu.key ? "10px" : "0px", // Rounded corners for selected item
+                          position: "relative", // For positioning pseudo-element
+                        }}
+                      >
+                        <span style={{ marginRight: "10px", color: "#fff" }}>
+                          <AppstoreOutlined />
+                        </span>
+                        {submenu.label}
+                        {selectedKey === submenu.key && (
+                          <div
+                            style={{
+                              content: '""',
+                              position: "absolute",
+                              top: "-10px",
+                              left: "-10px",
+                              right: "-10px",
+                              bottom: "-10px",
+                              background: "rgba(173, 216, 230, 0.3)", // Light blue background for shape
+                              borderRadius: "10px", // Rounded corners for the shape
+                              zIndex: "-1", // Behind the text
+                            }}
+                          />
+                        )}
+                      </Menu.Item>
+                      {index < menuItem.children.length - 1 && <Divider style={{ backgroundColor: "rgb(163 159 159)", padding: "0px", margin: "0px" }} />}
+                    </React.Fragment>
+                  ))}
+                </div>
               </Menu.SubMenu>
             );
           } else {

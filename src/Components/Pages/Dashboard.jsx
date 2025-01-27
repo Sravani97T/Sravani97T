@@ -194,10 +194,10 @@ const Dashboard = () => {
             <Col xs={24} md={8} lg={8}>
               <BirthdayAnniversaryCard />
             </Col>
-            <Col xs={24} md={8} lg={6}>
+            <Col xs={24} md={8} lg={8}>
               <LatestDues />
             </Col>
-            <Col xs={24} md={8} lg={10}>
+            <Col xs={24} md={8} lg={8}>
               <TodaysRates />
             </Col>
           </Row>
@@ -271,7 +271,6 @@ const Dashboard = () => {
           >
             <TableHeaderStyles>
               <Table
-              
                 columns={columns}
                 dataSource={tableData}
                 pagination={false}
@@ -279,7 +278,6 @@ const Dashboard = () => {
                 rowClassName={(record, index) =>
                   index % 2 === 0 ? "table-row-light" : "table-row-dark"
                 }
-                
               />
             </TableHeaderStyles>
           </div>

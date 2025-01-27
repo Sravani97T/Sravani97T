@@ -3,6 +3,7 @@ import { Card, Popover, Button } from "antd";
 import { MoneyCollectOutlined, WalletOutlined } from "@ant-design/icons";
 import axios from "axios";
 import { CREATE_jwel } from "../../Config/Config";
+
 const LatestDues = () => {
     const [openTodayDuesPopover, setOpenTodayDuesPopover] = useState(false);
     const [openTotalDuesPopover, setOpenTotalDuesPopover] = useState(false);
@@ -64,6 +65,8 @@ const LatestDues = () => {
                 position: "relative",
                 padding: "10px",
                 overflow: "hidden",
+                paddingLeft:"0px",
+                paddingRight:"0px"
             }}
             bordered={false}
         >
@@ -118,7 +121,7 @@ const LatestDues = () => {
                 }}
             >
                 <div style={{
-                    fontSize: "12px", fontWeight: "bold", marginTop: "5px"
+                    fontSize: "11px", fontWeight: "bold", marginTop: "5px"
                 }}>₹{totalTodayDues}</div>
                 <Popover
                     content={todayDuesContent}
@@ -133,7 +136,8 @@ const LatestDues = () => {
                             backgroundColor: "#28a745",
                             color: "white",
                             borderRadius: "10px",
-                            marginTop: "5px"
+                            marginTop: "5px",
+                            marginLeft: "10px" // Added margin for spacing
                         }}
                     >
                         Check
@@ -164,7 +168,7 @@ const LatestDues = () => {
                 }}
             >
                 <div style={{
-                    fontSize: "13px", fontWeight: "bold", marginTop: "5px"
+                    fontSize: "11px", fontWeight: "bold", marginTop: "5px"
                 }}>₹{totalDues}</div>
                 <Popover
                     content={totalDuesContent}
@@ -179,7 +183,8 @@ const LatestDues = () => {
                             backgroundColor: "#28a745",
                             color: "white",
                             borderRadius: "10px",
-                            marginTop: "10px"
+                            marginTop: "10px",
+                            marginLeft: "10px" // Added margin for spacing
                         }}
                     >
                         Check
