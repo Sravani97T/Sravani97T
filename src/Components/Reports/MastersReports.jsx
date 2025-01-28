@@ -357,10 +357,10 @@ const ProductTable = () => {
                 <Select
                     showSearch
                     allowClear
-                    placeholder="Main Product"
                     style={{ width: '100%' }}
                     value={tempFilters.mainProduct}
                     onChange={(value) => handleTempFilterChange('mainProduct', value)}
+                    placeholder="Main Product"
                 >
                     {uniqueMainProducts.map(product => (
                         <Option key={product} value={product}>{product}</Option>
@@ -369,6 +369,7 @@ const ProductTable = () => {
             </Col>
             <Col xs={24} sm={12} md={8}>
                 <Select
+                    showSearch
                     placeholder="Product Category"
                     allowClear
                     style={{ width: '100%' }}
@@ -383,6 +384,7 @@ const ProductTable = () => {
             </Col>
             <Col xs={24} sm={12} md={8}>
                 <Select
+                    showSearch
                     placeholder="Product Name"
                     allowClear
                     style={{ width: '100%' }}
@@ -397,6 +399,7 @@ const ProductTable = () => {
             </Col>
             <Col xs={24} sm={12} md={8}>
                 <Select
+                    showSearch
                     placeholder="Counter Name"
                     allowClear
                     style={{ width: '100%' }}
@@ -410,6 +413,7 @@ const ProductTable = () => {
             </Col>
             <Col xs={24} sm={12} md={8}>
                 <Select
+                    showSearch
                     placeholder="Category Name"
                     allowClear
                     style={{ width: '100%' }}
@@ -423,6 +427,7 @@ const ProductTable = () => {
             </Col>
             <Col xs={24} sm={12} md={8}>
                 <Select
+                    showSearch
                     placeholder="Manufacturer"
                     allowClear
                     style={{ width: '100%' }}
@@ -436,6 +441,7 @@ const ProductTable = () => {
             </Col>
             <Col xs={24} sm={12} md={8}>
                 <Select
+                    showSearch
                     placeholder="Dealer Name"
                     allowClear
                     style={{ width: '100%' }}
@@ -449,6 +455,7 @@ const ProductTable = () => {
             </Col>
             <Col xs={24} sm={12} md={8}>
                 <Select
+                    showSearch
                     placeholder="Prefix"
                     allowClear
                     style={{ width: '100%' }}
@@ -462,6 +469,7 @@ const ProductTable = () => {
             </Col>
             <Col xs={24} sm={12} md={8}>
                 <Select
+                    showSearch
                     placeholder="Brand"
                     allowClear
                     style={{ width: '100%' }}
@@ -475,6 +483,7 @@ const ProductTable = () => {
             </Col>
             <Col xs={24} sm={12} md={8}>
                 <Select
+                    showSearch
                     placeholder="Tag Weight Type"
                     allowClear
                     style={{ width: '100%' }}
@@ -529,7 +538,6 @@ const ProductTable = () => {
                     customInput={<CustomInput placeholder="Tag Date To" />}
                     dateFormat="yyyy-MM-dd"
                     placeholderText="To Date"
-
                     className="ant-input"
                     style={{ width: '100%' }}
                 />

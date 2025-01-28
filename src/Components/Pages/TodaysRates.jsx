@@ -35,7 +35,12 @@ const TodaysRates = () => {
         setRatesData(todayRates);
       } else {
         const masterResponse = await axios.get("http://www.jewelerp.timeserasoftware.in/api/Master/MasterPrefixMasterList");
-        const masterData = masterResponse.data;
+        const masterData = masterResponse.data.map(item =>({
+          MAINPRODUCT : item.MAINPRODUCT,
+          PREFIX : item.Prefix,
+          
+          ...item
+        }));
         setRatesData(masterData);
       }
     } catch (error) {
@@ -54,24 +59,13 @@ const TodaysRates = () => {
   }, [prefixes.length]);
 
   useEffect(() => {
-    const fetchRatesByPrefix = async () => {
-      try {
-        const response = await axios.get(`${CREATE_jwel}/api/Erp/GetDailyRatesList`);
-        const data = response.data;
-        const today = new Date().toISOString().split("T")[0];
+    const currentPrefix = prefixes[currentPrefixIndex];
+    const goldRates = ratesData.filter(item => item.MAINPRODUCT === "GOLD" && item.PREFIX === currentPrefix);
 
-        const goldRates = data.filter(item => item.RDATE.split("T")[0] === today && item.MAINPRODUCT === "GOLD" && item.PREFIX === prefixes[currentPrefixIndex]);
-
-        if (goldRates.length > 0) {
-          setGoldRate({ prefix: goldRates[0].PREFIX, rate: goldRates[0].RATE });
-        }
-      } catch (error) {
-        console.error("Error fetching rates:", error);
-      }
-    };
-
-    fetchRatesByPrefix();
-  }, [currentPrefixIndex, prefixes]);
+    if (goldRates.length > 0) {
+      setGoldRate({ prefix: goldRates[0].PREFIX, rate: goldRates[0].RATE });
+    }
+  }, [currentPrefixIndex, prefixes, ratesData]);
 
   const handleVisibleChange = visible => {
     setVisible(visible);
@@ -120,8 +114,8 @@ const TodaysRates = () => {
           mainproduct: rate.MAINPRODUCT,
           rate: rate.RATE || 0,
           prefix: rate.PREFIX,
-          pureornot: rate.PUREORNOT,
-          temP_RATE: rate.TEMP_RATE,
+          pureornot: rate.PUREORNOT ,
+          temP_RATE: rate.TEMP_RATE || 0,
           cloud_upload: rate.cloud_upload,
         });
       }
@@ -134,7 +128,14 @@ const TodaysRates = () => {
 
   const popoverContent = (
     <div>
-      <Table dataSource={ratesData} columns={columns} style={{ width: '600px' }} size="small" rowKey="PREFIX" pagination={false} />
+      <Table 
+        dataSource={ratesData} 
+        columns={columns} 
+        style={{ width: '600px', backgroundColor: '#cdc9c9' }} 
+        size="small" 
+        rowKey="PREFIX" 
+        pagination={false} 
+      />
       <Button type="primary" onClick={handleSubmit} style={{ marginTop: 10 }}>
         Submit
       </Button>
@@ -167,7 +168,7 @@ const TodaysRates = () => {
         </Popover>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "10px" }}>
           <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: "28px", fontWeight: "bold", marginBottom: "5px", color: "#c0c0c0" }}>
+            <div style={{ fontSize: "23px", fontWeight: "bold", marginBottom: "5px", color: "#c0c0c0" }}>
               ₹{goldRate.rate}{" "}
               <span style={{ fontSize: "18px", fontWeight: "bold", color: goldRate.rate > 0 ? "red" : "green" }}>
                 {goldRate.rate > 0 ? "↑" : "↓"}
@@ -176,7 +177,7 @@ const TodaysRates = () => {
             <div style={{ fontSize: "14px", opacity: 0.8 }}>Gold - {goldRate.prefix}</div>
           </div>
           <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: "28px", fontWeight: "bold", marginBottom: "5px", color: "#c0c0c0" }}>
+            <div style={{ fontSize: "23px", fontWeight: "bold", marginBottom: "5px", color: "#c0c0c0" }}>
               ₹{silverRate}{" "}
               <span style={{ fontSize: "18px", fontWeight: "bold", color: silverRate > 0 ? "red" : "green" }}>
                 {silverRate > 0 ? "↑" : "↓"}
