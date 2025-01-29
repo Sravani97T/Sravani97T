@@ -1,5 +1,5 @@
 import React, { useState, useEffect, forwardRef } from 'react';
-import { Table, Row, Col, Breadcrumb, Input, Select, Pagination, Button } from 'antd';
+import { Table, Row, Col, Breadcrumb, Input, Select, Pagination } from 'antd';
 import axios from 'axios';
 import moment from 'moment';
 import PdfExcelPrint from '../Utiles/PdfExcelPrint'; // Adjust the import path as necessary
@@ -25,8 +25,8 @@ const BillMasterReport = () => {
         jewelType: '',
         customerName: '',
         mobileNumber: '',
-        dateFrom: null,
-        dateTo: null,
+        dateFrom: moment().startOf('day').format('YYYY-MM-DD'),
+        dateTo: moment().endOf('day').format('YYYY-MM-DD'),
     });
     const [uniqueJewelTypes, setUniqueJewelTypes] = useState([]);
     const [uniqueCustomerNames, setUniqueCustomerNames] = useState([]);
@@ -42,7 +42,6 @@ const BillMasterReport = () => {
                     key: index + 1,
                     serialNo: index + 1,
                 }));
-                setFilteredData(data);
                 setOriginalData(data);
 
                 // Extract unique jewel types, customer names, and mobile numbers
@@ -52,11 +51,18 @@ const BillMasterReport = () => {
                 setUniqueJewelTypes(uniqueJewelTypes);
                 setUniqueCustomerNames(uniqueCustomerNames);
                 setUniqueMobileNumbers(uniqueMobileNumbers);
+
+                // Apply filters after data is fetched
+                applyFilters(data);
             })
             .catch(error => {
                 console.error('Error fetching bill master data:', error);
             });
     }, []);
+
+    useEffect(() => {
+        applyFilters();
+    }, [tempFilters]);
 
     const handleTempFilterChange = (field, value) => {
         setTempFilters(prevFilters => ({
@@ -65,8 +71,8 @@ const BillMasterReport = () => {
         }));
     };
 
-    const applyFilters = () => {
-        let filtered = originalData;
+    const applyFilters = (data = originalData) => {
+        let filtered = data;
 
         if (tempFilters.billNo) {
             filtered = filtered.filter(item => item.BillNo.toString().includes(tempFilters.billNo));
@@ -81,25 +87,13 @@ const BillMasterReport = () => {
             filtered = filtered.filter(item => item.MobileNum === tempFilters.mobileNumber);
         }
         if (tempFilters.dateFrom) {
-            filtered = filtered.filter(item => moment(item.BillDate).isSameOrAfter(tempFilters.dateFrom));
+            filtered = filtered.filter(item => moment(item.BillDate, 'YYYY-MM-DD').isSameOrAfter(moment(tempFilters.dateFrom, 'YYYY-MM-DD')));
         }
         if (tempFilters.dateTo) {
-            filtered = filtered.filter(item => moment(item.BillDate).isSameOrBefore(tempFilters.dateTo));
+            filtered = filtered.filter(item => moment(item.BillDate, 'YYYY-MM-DD').isSameOrBefore(moment(tempFilters.dateTo, 'YYYY-MM-DD')));
         }
 
         setFilteredData(filtered);
-    };
-
-    const clearFilters = () => {
-        setTempFilters({
-            billNo: '',
-            jewelType: '',
-            customerName: '',
-            mobileNumber: '',
-            dateFrom: null,
-            dateTo: null,
-        });
-        setFilteredData(originalData);
     };
 
     const handlePageChange = (page, pageSize) => {
@@ -126,9 +120,7 @@ const BillMasterReport = () => {
     const totals = calculateTotals(filteredData);
 
     const columns = [
-        { title: 'S.No', dataIndex: 'serialNo', align: "center", key: 'serialNo',      width: 50, 
-            className: 'blue-background-column', 
-        },
+        { title: 'S.No', dataIndex: 'serialNo', align: "center", key: 'serialNo', width: 50, className: 'blue-background-column' },
         { title: 'Bill Date', dataIndex: 'BillDate', key: 'BillDate', render: (text) => moment(text).format('DD/MM/YYYY') },
         { title: 'Jewel Type', dataIndex: 'JewelType', key: 'JewelType' },
         { title: 'Bill No', dataIndex: 'BillNo', key: 'BillNo' },
@@ -246,10 +238,6 @@ const BillMasterReport = () => {
                     placeholderText="To Date"
                 />
             </Col>
-            <Col xs={24} sm={12} md={4}>
-                <Button type="primary" className="animated-button" onClick={applyFilters} style={{ marginRight: 8 }}>Apply</Button>
-                <Button onClick={clearFilters}>Clear</Button>
-            </Col>
         </Row>
     );
 
@@ -291,7 +279,6 @@ const BillMasterReport = () => {
                 <div
                     className="table-responsive scroll-horizontal"
                     style={{
-                        // maxHeight: "calc(99vh - 193.33px)",
                         overflowY: "auto",
                         overflowX: "auto",
                         marginTop: "20px",

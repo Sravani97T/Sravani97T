@@ -53,18 +53,28 @@ const StoneDetails = () => {
         const totalAMOUNT = filteredData.reduce((sum, item) => sum + item.AMOUNT, 0);
         return {
             totalPCS,
-            totalGRMS,
-            totalCTS,
-            totalAMOUNT,
+            totalGRMS: Number(totalGRMS).toFixed(3),
+            totalCTS: Number(totalCTS).toFixed(3),
+            totalAMOUNT: Number(totalAMOUNT).toFixed(2),
         };
     };
 
     const { totalPCS, totalGRMS, totalCTS, totalAMOUNT } = getTotals();
 
-    const formattedData = filteredData.map((item, index) => ({
-        ...item,
-        sno: index + 1,
-    }));
+    const formattedData = [
+        ...filteredData.map((item, index) => ({
+            ...item,
+            sno: index + 1,
+        })),
+        {
+            sno: 'Total',
+            ITEMNAME: '',
+            PCS: totalPCS,
+            GRMS: totalGRMS,
+            CTS: totalCTS,
+            AMOUNT: totalAMOUNT,
+        }
+    ];
 
     const handlePageChange = (page, pageSize) => {
         setCurrentPage(page);
@@ -130,7 +140,7 @@ const StoneDetails = () => {
                         <Table
                             size="small"
                             columns={columns}
-                            dataSource={formattedData.slice((currentPage - 1) * pageSize, currentPage * pageSize)}
+                            dataSource={formattedData.slice(0, -1).slice((currentPage - 1) * pageSize, currentPage * pageSize)}
                             rowKey="ITEMNAME"
                             pagination={false}
                             rowClassName="table-row"

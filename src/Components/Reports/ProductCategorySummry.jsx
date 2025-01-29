@@ -56,10 +56,19 @@ const ProductCategorySummary = () => {
 
     const { totalNWT, totalPCS, totalGWT } = getTotals();
 
-    const formattedData = filteredData.map((item, index) => ({
-        ...item,
-        serialNumber: index + 1,
-    }));
+    const formattedData = [
+        ...filteredData.map((item, index) => ({
+            ...item,
+            serialNumber: index + 1,
+        })),
+        {
+            serialNumber: 'Total',
+            PRODUCTNAME: '',
+            PIECES: totalPCS,
+            GWT: totalGWT,
+            NWT: totalNWT,
+        }
+    ];
 
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(20); // Default page size to 20
@@ -129,7 +138,7 @@ const ProductCategorySummary = () => {
                         <Table
                             size="small"
                             columns={columns}
-                            dataSource={formattedData.slice((currentPage - 1) * pageSize, currentPage * pageSize)}
+                            dataSource={formattedData.slice(0, -1).slice((currentPage - 1) * pageSize, currentPage * pageSize)}
                             rowKey="PRODUCTNAME"
                             pagination={false}
                             summary={() => (

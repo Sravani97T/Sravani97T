@@ -56,12 +56,21 @@ const CategoryNetSummary = () => {
 
     const { totalNWT, totalPCS, totalGWT } = getTotals();
 
-    const formattedData = filteredData.map((item, index) => ({
-        ...item,
-        sno: index + 1,
-        Gwt: Number(item.Gwt).toFixed(3),
-        Nwt: Number(item.Nwt).toFixed(3),
-    }));
+    const formattedData = [
+        ...filteredData.map((item, index) => ({
+            ...item,
+            sno: index + 1,
+            Gwt: Number(item.Gwt).toFixed(3),
+            Nwt: Number(item.Nwt).toFixed(3),
+        })),
+        {
+            sno: 'Total',
+            CATEGORYNAME: '',
+            Pieces: totalPCS,
+            Gwt: totalGWT,
+            Nwt: totalNWT,
+        }
+    ];
 
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(20); // Default page size is 20
@@ -85,6 +94,7 @@ const CategoryNetSummary = () => {
                         data={formattedData}
                         columns={columns}
                         fileName="CategoryNetSummaryReport"
+                        totals={{ totalPCS, totalGWT, totalNWT }} // Pass totals as props
                     />
                 </Col>
             </Row>
@@ -130,7 +140,7 @@ const CategoryNetSummary = () => {
                         <Table
                             size="small"
                             columns={columns}
-                            dataSource={formattedData.slice((currentPage - 1) * pageSize, currentPage * pageSize)}
+                            dataSource={formattedData.slice(0, -1).slice((currentPage - 1) * pageSize, currentPage * pageSize)}
                             rowKey="CATEGORYNAME"
                             pagination={false}
                             rowClassName="table-row"

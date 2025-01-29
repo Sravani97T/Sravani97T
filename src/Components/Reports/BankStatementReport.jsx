@@ -1,5 +1,5 @@
 import React, { useState, useEffect, forwardRef } from 'react';
-import { Table, Row, Col, Breadcrumb, Input, Select, Pagination, Button } from 'antd';
+import { Table, Row, Col, Breadcrumb, Input, Select, Pagination } from 'antd';
 import axios from 'axios';
 import moment from 'moment';
 import PdfExcelPrint from '../Utiles/PdfExcelPrint'; // Adjust the import path as necessary
@@ -25,8 +25,8 @@ const BankStatementReport = () => {
         type: '',
         amount: '',
         payMode: '',
-        dateFrom: null,
-        dateTo: null,
+        dateFrom: moment().format('YYYY-MM-DD'),
+        dateTo: moment().format('YYYY-MM-DD'),
     });
     const [uniqueAccountNumbers, setUniqueAccountNumbers] = useState([]);
     const [uniquePayModes, setUniquePayModes] = useState([]);
@@ -42,7 +42,6 @@ const BankStatementReport = () => {
                     serialNo: index + 1,
                     balance: item.Credit - item.Debit,
                 }));
-                setFilteredData(data);
                 setOriginalData(data);
 
                 // Extract unique account numbers and pay modes
@@ -50,54 +49,51 @@ const BankStatementReport = () => {
                 const uniqueModes = [...new Set(data.map(item => item.mode))];
                 setUniqueAccountNumbers(uniqueAccounts);
                 setUniquePayModes(uniqueModes);
+
+                // Apply initial filters based on current date
+                const filtered = data.filter(item => 
+                    moment(item.DEPDATE).isSameOrAfter(tempFilters.dateFrom) &&
+                    moment(item.DEPDATE).isSameOrBefore(tempFilters.dateTo)
+                );
+                setFilteredData(filtered.length > 0 ? filtered : []);
             })
             .catch(error => {
                 console.error('Error fetching bank statement:', error);
             });
-    }, []);
+    }, [tempFilters.dateFrom, tempFilters.dateTo]);
 
     const handleTempFilterChange = (field, value) => {
-        setTempFilters(prevFilters => ({
-            ...prevFilters,
+        const newFilters = {
+            ...tempFilters,
             [field]: value,
-        }));
+        };
+        setTempFilters(newFilters);
+        applyFilters(newFilters);
     };
 
-    const applyFilters = () => {
+    const applyFilters = (filters) => {
         let filtered = originalData;
 
-        if (tempFilters.accountNumber) {
-            filtered = filtered.filter(item => item.ACCNO === tempFilters.accountNumber);
+        if (filters.accountNumber) {
+            filtered = filtered.filter(item => item.ACCNO === filters.accountNumber);
         }
-        if (tempFilters.type) {
-            filtered = filtered.filter(item => item.TRANSTYPE.includes(tempFilters.type));
+        if (filters.type) {
+            filtered = filtered.filter(item => item.TRANSTYPE.includes(filters.type));
         }
-        if (tempFilters.amount) {
-            filtered = filtered.filter(item => item.Credit === parseFloat(tempFilters.amount) || item.Debit === parseFloat(tempFilters.amount));
+        if (filters.amount) {
+            filtered = filtered.filter(item => item.Credit === parseFloat(filters.amount) || item.Debit === parseFloat(filters.amount));
         }
-        if (tempFilters.payMode) {
-            filtered = filtered.filter(item => item.mode === tempFilters.payMode);
+        if (filters.payMode) {
+            filtered = filtered.filter(item => item.mode === filters.payMode);
         }
-        if (tempFilters.dateFrom) {
-            filtered = filtered.filter(item => moment(item.DEPDATE).isSameOrAfter(tempFilters.dateFrom));
+        if (filters.dateFrom) {
+            filtered = filtered.filter(item => moment(item.DEPDATE, 'YYYY-MM-DD').isSameOrAfter(moment(filters.dateFrom, 'YYYY-MM-DD')));
         }
-        if (tempFilters.dateTo) {
-            filtered = filtered.filter(item => moment(item.DEPDATE).isSameOrBefore(tempFilters.dateTo));
+        if (filters.dateTo) {
+            filtered = filtered.filter(item => moment(item.DEPDATE, 'YYYY-MM-DD').isSameOrBefore(moment(filters.dateTo, 'YYYY-MM-DD')));
         }
 
         setFilteredData(filtered);
-    };
-
-    const clearFilters = () => {
-        setTempFilters({
-            accountNumber: '',
-            type: '',
-            amount: '',
-            payMode: '',
-            dateFrom: null,
-            dateTo: null,
-        });
-        setFilteredData(originalData);
     };
 
     const handlePageChange = (page, pageSize) => {
@@ -116,11 +112,9 @@ const BankStatementReport = () => {
     const totals = calculateTotals(filteredData);
 
     const columns = [
-        { title: 'S.No', dataIndex: 'serialNo',      width: 50, 
- align: "center", key: 'serialNo',      className: 'blue-background-column', 
-        },
+        { title: 'S.No', dataIndex: 'serialNo', width: 50, align: "center", key: 'serialNo', className: 'blue-background-column' },
         { title: 'VNO', dataIndex: 'RecNo', key: 'RecNo' },
-        { title: 'Date', dataIndex: 'DEPDATE', key: 'DEPDATE', render: (text) => moment(text).format('DD/MM/YYYY') },
+        { title: 'Date', dataIndex: 'DEPDATE', key: 'DEPDATE', render: (text) => moment(text, 'YYYY-MM-DD').format('DD/MM/YYYY') },
         { title: 'Trans Type', dataIndex: 'TRANSTYPE', key: 'TRANSTYPE' },
         { title: 'Pay Mode', dataIndex: 'mode', key: 'mode' },
         { title: 'Particulars', dataIndex: 'DESCR', key: 'DESCR' },
@@ -213,11 +207,6 @@ const BankStatementReport = () => {
                     dateFormat="dd/MM/yyyy"
                 />
             </Col>
-            <Col xs={24} sm={12} md={4}>
-                <Button type="primary" className="animated-button"
-                    onClick={applyFilters} style={{ marginRight: 8 }}>Apply</Button>
-                <Button onClick={clearFilters}>Clear</Button>
-            </Col>
         </Row>
     );
 
@@ -259,7 +248,6 @@ const BankStatementReport = () => {
                 <div
                     className="table-responsive scroll-horizontal"
                     style={{
-                        // maxHeight: "calc(99vh - 193.33px)",
                         overflowY: "auto",
                         overflowX: "auto",
                         marginTop: "20px",

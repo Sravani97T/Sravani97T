@@ -78,6 +78,17 @@ const DealerWiseStockDetailes = () => {
             GWT: Number(item.GWT).toFixed(3),
             NWT: Number(item.NWT).toFixed(3),
         })),
+        {
+            sno: 'Total',
+            TAGNO: '',
+            PRODUCTNAME: '',
+            PIECES: totalPCS,
+            GWT: totalGWT,
+            NWT: totalNWT,
+            PREFIX: '',
+            COUNTERNAME: '',
+            TAGDATE: '',
+        }
     ];
 
     const [currentPage, setCurrentPage] = useState(1);
@@ -102,6 +113,7 @@ const DealerWiseStockDetailes = () => {
                         data={formattedData}
                         columns={columns}
                         fileName="DealerWiseStockDetailReport"
+                        totals={{ totalPCS, totalGWT, totalNWT }} // Pass totals as props
                     />
                 </Col>
             </Row>
@@ -147,7 +159,7 @@ const DealerWiseStockDetailes = () => {
                         <Table
                             size="small"
                             columns={columns}
-                            dataSource={formattedData.slice((currentPage - 1) * pageSize, currentPage * pageSize)}
+                            dataSource={formattedData.slice(0, -1).slice((currentPage - 1) * pageSize, currentPage * pageSize)}
                             rowKey="TAGNO"
                             pagination={false}
                             rowClassName="table-row"

@@ -9,12 +9,15 @@ import { FaCalendarAlt } from 'react-icons/fa';
 import TableHeaderStyles from '../Pages/TableHeaderStyles';
 import { CREATE_jwel } from '../../Config/Config';
 
-const CustomInput = forwardRef(({ value, onClick, placeholder }, ref) => (
-    <div className="custom-date-input" onClick={onClick} ref={ref}>
-        <input value={value} placeholder={placeholder} readOnly />
-        <FaCalendarAlt className="calendar-icon" />
-    </div>
-));
+const CustomInput = forwardRef(({ value, onClick, placeholder }, ref) => {
+    const formattedValue = value ? moment(value).format('DD/MM/YYYY') : '';
+    return (
+        <div className="custom-date-input" onClick={onClick} ref={ref}>
+            <input value={formattedValue} placeholder={placeholder} readOnly />
+            <FaCalendarAlt className="calendar-icon" />
+        </div>
+    );
+});
 
 const { Option } = Select;
 
@@ -38,39 +41,43 @@ const OldGoldBookOpening = () => {
     }, []);
 
     useEffect(() => {
-        if (dates[0] && dates[1]) {
-            const fromDate = moment(dates[0]).format('YYYY/MM/DD');
-            const toDate = moment(dates[1]).format('YYYY/MM/DD');
+        const fetchData = () => {
+            if (dates[0] && dates[1]) {
+                const fromDate = moment(dates[0]).format('YYYY/MM/DD');
+                const toDate = moment(dates[1]).format('YYYY/MM/DD');
 
-            axios.get(`${CREATE_jwel}/api/POSReports/GetOldGoldBookOpening?entryDate=${toDate}&particulars=${particulars}`)
-                .then(response => {
-                    const openingData = response.data[0];
-                    const openingCashValue = openingData.Column1 - openingData.Column2;
-                    setOpeningCash(openingCashValue);
-                })
-                .catch(error => {
-                    console.error('Error fetching opening cash:', error);
-                });
-
-            axios.get(`${CREATE_jwel}/api/POSReports/GetOldGoldBookDetails?fromDate=${fromDate}&toDate=${toDate}&particulars=${particulars}`)
-                .then(response => {
-                    const detailsData = response.data;
-                    let balance = openingCash;
-                    const calculatedData = detailsData.map((item, index) => {
-                        balance = balance + item.JAMA - item.NAMA;
-                        return { ...item, BALANCE: balance, key: index + 1, serialNo: index + 1, HSNCode: '123456' };
+                axios.get(`${CREATE_jwel}/api/POSReports/GetOldGoldBookOpening?entryDate=${toDate}&particulars=${particulars}`)
+                    .then(response => {
+                        const openingData = response.data[0];
+                        const openingCashValue = openingData.Column1 - openingData.Column2;
+                        setOpeningCash(openingCashValue);
+                    })
+                    .catch(error => {
+                        console.error('Error fetching opening cash:', error);
                     });
-                    setFilteredData(calculatedData);
-                })
-                .catch(error => {
-                    console.error('Error fetching Old Gold Book details:', error);
-                });
-        }
+
+                axios.get(`${CREATE_jwel}/api/POSReports/GetOldGoldBookDetails?fromDate=${fromDate}&toDate=${toDate}&particulars=${particulars}`)
+                    .then(response => {
+                        const detailsData = response.data;
+                        let balance = openingCash;
+                        const calculatedData = detailsData.map((item, index) => {
+                            balance = balance + item.JAMA - item.NAMA;
+                            return { ...item, BALANCE: balance, key: index + 1, serialNo: index + 1, HSNCode: '123456' };
+                        });
+                        setFilteredData(calculatedData);
+                    })
+                    .catch(error => {
+                        console.error('Error fetching Old Gold Book details:', error);
+                    });
+            }
+        };
+
+        fetchData();
     }, [dates, openingCash, particulars]);
 
     const columns = [
         { title: 'S.No', dataIndex: 'serialNo', key: 'serialNo', width: 50, className: 'blue-background-column' },
-        { title: 'Date', dataIndex: 'ENTRYDATE', key: 'ENTRYDATE', render: date => moment(date).format('YYYY/MM/DD') },
+        { title: 'Date', dataIndex: 'ENTRYDATE', key: 'ENTRYDATE', render: date => moment(date).format('DD/MM/YYYY') },
         { title: 'Particulars', dataIndex: 'PARTICULARS', key: 'PARTICULARS' },
         { title: 'Party Name', dataIndex: 'PARTYNAME', key: 'PARTYNAME' },
         { title: 'HSN Code', dataIndex: 'HSNCode', key: 'HSNCode' },
@@ -144,6 +151,8 @@ const OldGoldBookOpening = () => {
                 <Col>
                     <Row gutter={16} justify="center">
                         <Col>
+                        <label style={{ marginRight: 8 ,fontSize:"16px"}}>Start Date:</label>
+
                             <DatePicker
                                 selected={dates[0]}
                                 onChange={(date) => setDates([date, dates[1]])}
@@ -155,6 +164,8 @@ const OldGoldBookOpening = () => {
                             />
                         </Col>
                         <Col>
+                        <label style={{ marginRight: 8 ,fontSize:"16px"}}>End Date:</label>
+
                             <DatePicker
                                 selected={dates[1]}
                                 onChange={(date) => setDates([dates[0], date])}

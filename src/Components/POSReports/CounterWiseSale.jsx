@@ -9,12 +9,15 @@ import { FaCalendarAlt } from 'react-icons/fa';
 import TableHeaderStyles from '../Pages/TableHeaderStyles';
 import { CREATE_jwel } from '../../Config/Config';
 
-const CustomInput = forwardRef(({ value, onClick, placeholder }, ref) => (
-    <div className="custom-date-input" onClick={onClick} ref={ref}>
-        <input value={value} placeholder={placeholder} readOnly />
-        <FaCalendarAlt className="calendar-icon" />
-    </div>
-));
+const CustomInput = forwardRef(({ value, onClick, placeholder }, ref) => {
+    const formattedValue = value ? moment(value).format('DD/MM/YYYY') : '';
+    return (
+        <div className="custom-date-input" onClick={onClick} ref={ref}>
+            <input value={formattedValue} placeholder={placeholder} readOnly />
+            <FaCalendarAlt className="calendar-icon" />
+        </div>
+    );
+});
 
 const CounterWiseSale = () => {
     const [filteredData, setFilteredData] = useState([]);
@@ -78,6 +81,24 @@ const CounterWiseSale = () => {
 
     const { totalPcs, totalGwt, totalNwt, totalAmount } = getTotals();
 
+    const formattedData = [
+        ...filteredData.map((item, index) => ({
+            ...item,
+            serialNo: index + 1,
+            Gwt: Number(item.Gwt).toFixed(3),
+            Nwt: Number(item.Nwt).toFixed(3),
+            Amount: Number(item.Amount).toFixed(2),
+        })),
+        {
+            serialNo: 'Total',
+            CounterName: '',
+            Pcs: totalPcs,
+            Gwt: totalGwt,
+            Nwt: totalNwt,
+            Amount: totalAmount,
+        }
+    ];
+
     const handlePageChange = (page, pageSize) => {
         setCurrentPage(page);
         setPageSize(pageSize);
@@ -89,6 +110,8 @@ const CounterWiseSale = () => {
                 <Col>
                     <Row gutter={16}>
                         <Col>
+                        <label style={{ marginRight: 8 ,fontSize:"16px"}}>Start Date:</label>
+
                             <DatePicker
                                 selected={dates[0]}
                                 onChange={(date) => setDates([date, dates[1]])}
@@ -100,6 +123,8 @@ const CounterWiseSale = () => {
                             />
                         </Col>
                         <Col>
+                        <label style={{ marginRight: 8 ,fontSize:"16px"}}>End Date:</label>
+
                             <DatePicker
                                 selected={dates[1]}
                                 onChange={(date) => setDates([dates[0], date])}
@@ -114,7 +139,7 @@ const CounterWiseSale = () => {
                 </Col>
                 <Col>
                     <PdfExcelPrint
-                        data={filteredData}
+                        data={formattedData}
                         columns={columns}
                         fileName="CounterWiseSaleReport"
                     />
@@ -151,13 +176,14 @@ const CounterWiseSale = () => {
                         <Table
                             size="small"
                             columns={columns}
-                            dataSource={filteredData.slice((currentPage - 1) * pageSize, currentPage * pageSize)}
+                            dataSource={formattedData.slice(0, -1).slice((currentPage - 1) * pageSize, currentPage * pageSize)}
                             rowKey="key"
                             pagination={false}
                             rowClassName="table-row"
                             summary={() => (
                                 <Table.Summary.Row style={{ backgroundColor: '#f5f5f5', fontWeight: 'bold' }}>
                                     <Table.Summary.Cell>Total</Table.Summary.Cell>
+                                    <Table.Summary.Cell />
                                     <Table.Summary.Cell align="right">{totalPcs}</Table.Summary.Cell>
                                     <Table.Summary.Cell align="right">{totalGwt}</Table.Summary.Cell>
                                     <Table.Summary.Cell align="right">{totalNwt}</Table.Summary.Cell>

@@ -10,12 +10,15 @@ import { FaCalendarAlt } from 'react-icons/fa';
 import TableHeaderStyles from '../Pages/TableHeaderStyles';
 import { CREATE_jwel } from '../../Config/Config';
 
-const CustomInput = forwardRef(({ value, onClick, placeholder }, ref) => (
-    <div className="custom-date-input" onClick={onClick} ref={ref}>
-        <input value={value} placeholder={placeholder} readOnly />
-        <FaCalendarAlt className="calendar-icon" />
-    </div>
-));
+const CustomInput = forwardRef(({ value, onClick, placeholder }, ref) => {
+    const formattedValue = value ? moment(value).format('DD/MM/YYYY') : '';
+    return (
+        <div className="custom-date-input" onClick={onClick} ref={ref}>
+            <input value={formattedValue} placeholder={placeholder} readOnly />
+            <FaCalendarAlt className="calendar-icon" />
+        </div>
+    );
+});
 
 const { Option } = Select;
 
@@ -162,6 +165,40 @@ const NewOrnamentReport = () => {
         </div>
     );
 
+    const formattedData = [
+        ...filteredTableData.map((item, index) => ({
+            ...item,
+            sno: index + 1,
+            Gwt: Number(item.Gwt).toFixed(3),
+            NWT: Number(item.NWT).toFixed(3),
+            TotVal: Number(item.TotVal).toFixed(2),
+            cgst: Number(item.cgst).toFixed(2),
+            Sgst: Number(item.Sgst).toFixed(2),
+            igst: Number(item.igst).toFixed(2),
+            grossamt: Number(item.grossamt).toFixed(2),
+            tcsamt: Number(item.tcsamt).toFixed(2),
+            NETAMT: Number(item.NETAMT).toFixed(2),
+        })),
+        {
+            sno: 'Total',
+            entryno: '',
+            InvNo: '',
+            InvDate: '',
+            ptype: '',
+            PartyName: '',
+            Gwt: totalGrossWeight,
+            Others: '',
+            NWT: totalNetWeight,
+            TotVal: totalTaxable,
+            cgst: totalCGST,
+            Sgst: totalSGST,
+            igst: totalIGST,
+            grossamt: totalGrossAmount,
+            tcsamt: totalTCSAmount,
+            NETAMT: totalNetAmount,
+        }
+    ];
+
     return (
         <>
             <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
@@ -173,7 +210,7 @@ const NewOrnamentReport = () => {
                 </Col>
                 <Col>
                     <PdfExcelPrint
-                        data={filteredData}
+                        data={formattedData}
                         columns={columns}
                         fileName="NewOrnamentReport"
                     />
@@ -183,6 +220,8 @@ const NewOrnamentReport = () => {
                 <Col>
                     <Row gutter={16} justify="center">
                         <Col>
+                        <label style={{ marginRight: 8 ,fontSize:"16px"}}>Start Date:</label>
+
                             <DatePicker
                                 selected={dates[0]}
                                 onChange={(date) => setDates([date, dates[1]])}
@@ -194,6 +233,8 @@ const NewOrnamentReport = () => {
                             />
                         </Col>
                         <Col>
+                        <label style={{ marginRight: 8 ,fontSize:"16px"}}>End Date:</label>
+
                             <DatePicker
                                 selected={dates[1]}
                                 onChange={(date) => setDates([dates[0], date])}
@@ -222,20 +263,20 @@ const NewOrnamentReport = () => {
                 </Col>
             </Row>
             <Row gutter={8} style={{ marginBottom: 8, marginTop: 16 }} align="middle">
-    <Col flex="auto" />
-    <Col>
-        <Pagination
-            current={currentPage}
-            pageSize={pageSize}
-            total={filteredTableData.length}
-            onChange={handlePageChange}
-            pageSizeOptions={["6", "10", "20", "50", "100"]}
-            showSizeChanger
-            showTotal={(total, range) => `${range[0]}-${range[1]} of ${total} items`}
-            size="small"
-        />
-    </Col>
-</Row>
+                <Col flex="auto" />
+                <Col>
+                    <Pagination
+                        current={currentPage}
+                        pageSize={pageSize}
+                        total={filteredTableData.length}
+                        onChange={handlePageChange}
+                        pageSizeOptions={["6", "10", "20", "50", "100"]}
+                        showSizeChanger
+                        showTotal={(total, range) => `${range[0]}-${range[1]} of ${total} items`}
+                        size="small"
+                    />
+                </Col>
+            </Row>
             <div style={{ marginTop: 16, boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}>
                 <div
                     className="table-responsive scroll-horizontal"
@@ -252,23 +293,28 @@ const NewOrnamentReport = () => {
                         <Table
                             size="small"
                             columns={columns}
-                            dataSource={filteredTableData.slice((currentPage - 1) * pageSize, currentPage * pageSize)}
+                            dataSource={formattedData.slice(0, -1).slice((currentPage - 1) * pageSize, currentPage * pageSize)}
                             rowKey="key"
                             pagination={false}
                             rowClassName="table-row"
-                            summary={() => filteredTableData.length > 0 && (
+                            summary={() => (
                                 <Table.Summary.Row style={{ backgroundColor: '#f5f5f5', fontWeight: 'bold' }}>
-                                    <Table.Summary.Cell index={0} colSpan={6}>Total</Table.Summary.Cell>
-                                    <Table.Summary.Cell index={1} align="right">{totalGrossWeight}</Table.Summary.Cell>
-                                    <Table.Summary.Cell index={2} align="right"></Table.Summary.Cell>
-                                    <Table.Summary.Cell index={3} align="right">{totalNetWeight}</Table.Summary.Cell>
-                                    <Table.Summary.Cell index={4} align="right">{totalTaxable}</Table.Summary.Cell>
-                                    <Table.Summary.Cell index={5} align="right">{totalCGST}</Table.Summary.Cell>
-                                    <Table.Summary.Cell index={6} align="right">{totalSGST}</Table.Summary.Cell>
-                                    <Table.Summary.Cell index={7} align="right">{totalIGST}</Table.Summary.Cell>
-                                    <Table.Summary.Cell index={8} align="right">{totalGrossAmount}</Table.Summary.Cell>
-                                    <Table.Summary.Cell index={9} align="right">{totalTCSAmount}</Table.Summary.Cell>
-                                    <Table.Summary.Cell index={10} align="right">{totalNetAmount}</Table.Summary.Cell>
+                                    <Table.Summary.Cell>Total</Table.Summary.Cell>
+                                    <Table.Summary.Cell />
+                                    <Table.Summary.Cell />
+                                    <Table.Summary.Cell />
+                                    <Table.Summary.Cell />
+                                    <Table.Summary.Cell />
+                                    <Table.Summary.Cell align="right">{totalGrossWeight}</Table.Summary.Cell>
+                                    <Table.Summary.Cell align="right"></Table.Summary.Cell>
+                                    <Table.Summary.Cell align="right">{totalNetWeight}</Table.Summary.Cell>
+                                    <Table.Summary.Cell align="right">{totalTaxable}</Table.Summary.Cell>
+                                    <Table.Summary.Cell align="right">{totalCGST}</Table.Summary.Cell>
+                                    <Table.Summary.Cell align="right">{totalSGST}</Table.Summary.Cell>
+                                    <Table.Summary.Cell align="right">{totalIGST}</Table.Summary.Cell>
+                                    <Table.Summary.Cell align="right">{totalGrossAmount}</Table.Summary.Cell>
+                                    <Table.Summary.Cell align="right">{totalTCSAmount}</Table.Summary.Cell>
+                                    <Table.Summary.Cell align="right">{totalNetAmount}</Table.Summary.Cell>
                                 </Table.Summary.Row>
                             )}
                         />

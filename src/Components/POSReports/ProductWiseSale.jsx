@@ -9,16 +9,18 @@ import TableHeaderStyles from '../Pages/TableHeaderStyles';
 import { CREATE_jwel } from '../../Config/Config';
 import { FaCalendarAlt } from 'react-icons/fa';
 
-const CustomInput = forwardRef(({ value, onClick, placeholder }, ref) => (
-    <div className="custom-date-input" onClick={onClick} ref={ref}>
-        <input value={value} placeholder={placeholder} readOnly />
-        <FaCalendarAlt className="calendar-icon" />
-    </div>
-));
-
+const CustomInput = forwardRef(({ value, onClick, placeholder }, ref) => {
+    const formattedValue = value ? moment(value).format('DD/MM/YYYY') : '';
+    return (
+        <div className="custom-date-input" onClick={onClick} ref={ref}>
+            <input value={formattedValue} placeholder={placeholder} readOnly />
+            <FaCalendarAlt className="calendar-icon" />
+        </div>
+    );
+});
 const ProductWiseSale = () => {
     const [filteredData, setFilteredData] = useState([]);
-    const [dates, setDates] = useState([null, null]);
+    const [dates, setDates] = useState([new Date(), new Date()]);
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(20);
 
@@ -101,6 +103,8 @@ const ProductWiseSale = () => {
                 <Col>
                     <Row gutter={16}>
                         <Col>
+                        <label style={{ marginRight: 8 ,fontSize:"16px"}}>Start Date:</label>
+
                             <DatePicker
                                 selected={dates[0]}
                                 onChange={(date) => setDates([date, dates[1]])}
@@ -112,6 +116,8 @@ const ProductWiseSale = () => {
                             />
                         </Col>
                         <Col>
+                        <label style={{ marginRight: 8 ,fontSize:"16px"}}>End Date:</label>
+
                             <DatePicker
                                 selected={dates[1]}
                                 onChange={(date) => setDates([dates[0], date])}

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Row, Col, Breadcrumb, Select, Pagination } from 'antd';
 import axios from 'axios';
-import PdfExcelPrint from '../Utiles/PdfExcelPrint'; // Adjust the import path as necessary
+import PdfExcelPrint from '../Utiles/PdfExcelPrint'; 
 import TableHeaderStyles from '../Pages/TableHeaderStyles';
 import { CREATE_jwel } from "../../Config/Config";
 const { Option } = Select;
@@ -50,10 +50,17 @@ const CounterChart = () => {
 
     const { totalPCS } = getTotals();
 
-    const formattedData = filteredData.map((item, index) => ({
-        ...item,
-        sno: index + 1,
-    }));
+    const formattedData = [
+        ...filteredData.map((item, index) => ({
+            ...item,
+            sno: index + 1,
+        })),
+        {
+            sno: 'Total',
+            PRODUCTNAME: '',
+            PCS: totalPCS,
+        }
+    ];
 
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(20); // Default page size to 20
@@ -122,7 +129,7 @@ const CounterChart = () => {
                         <Table
                             size="small"
                             columns={columns}
-                            dataSource={formattedData.slice((currentPage - 1) * pageSize, currentPage * pageSize)}
+                            dataSource={formattedData.slice(0, -1).slice((currentPage - 1) * pageSize, currentPage * pageSize)}
                             rowKey="PRODUCTNAME"
                             pagination={false}
                             rowClassName="table-row"

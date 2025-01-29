@@ -86,13 +86,23 @@ const Dashboard = () => {
 
   const columns = [
     {
-      title: "BillNo",
+      title: "S.No",
+      key: "sno",
+
+      className: 'blue-background-column', 
+      render: (text, record, index) => index + 1,
+      width: 50,
+    },
+    {
+      title: "Ino No",
       dataIndex: "BillNo",
       key: "BillNo",
-      className: 'blue-background-column', 
-      width: 50, 
-      render: (text, record, index) => <>{index + 1}</>,
+      align: 'center',
+      render: (text, record, index) => (
+        <span style={{ fontSize: '16px', fontWeight: 'bold' }}>{index + 1}</span>
+      ),
     },
+    
     {
       title: "Bill Date",
       dataIndex: "BillDate",
@@ -103,12 +113,8 @@ const Dashboard = () => {
       title: "Jewel Type",
       dataIndex: "JewelType",
       key: "JewelType",
-    },
-    {
-      title: "Bill No",
-      dataIndex: "BillNo",
-      key: "BillNo",
-      align: 'center',
+      width:100,
+
     },
     {
       title: "Customer Name",
@@ -122,30 +128,15 @@ const Dashboard = () => {
       align: 'right',
     },
     {
-      title: "Gwt",
-      dataIndex: "TotGwt",
-      key: "TotGwt",
+      title: "Weight",
+      key: "Weight",
       align: 'right',
-      render: (value) => value.toFixed(3),
-    },
-    {
-      title: "Nwt",
-      dataIndex: "TotNwt",
-      key: "TotNwt",
-      align: 'right',
-      render: (value) => value.toFixed(3),
-    },
-    {
-      title: "Total Amount",
-      dataIndex: "TotAmt",
-      key: "TotAmt",
-      align: 'right',
-    },
-    {
-      title: "Discount",
-      dataIndex: "DisAmt",
-      key: "DisAmt",
-      align: 'right',
+      render: (text, record) => (
+        <>
+          <div>Gwt: {record.TotGwt.toFixed(3)}</div>
+          <div>Nwt: {record.TotNwt.toFixed(3)}</div>
+        </>
+      ),
     },
     {
       title: "Gross Amt",
@@ -155,30 +146,25 @@ const Dashboard = () => {
       render: (value) => value.toFixed(2),
     },
     {
-      title: "CGST",
-      dataIndex: "CGST",
-      key: "CGST",
-      align: 'right',
-    },
-    {
-      title: "SGST",
-      dataIndex: "SGST",
-      key: "SGST",
-      align: 'right',
-    },
-    {
-      title: "IGST",
-      dataIndex: "IGST",
-      key: "IGST",
-      align: 'right',
-    },
-    {
       title: "Net Amount",
       dataIndex: "NetAmt",
       key: "NetAmt",
       align: 'right',
       render: (value) => value.toFixed(2),
     },
+    {
+      title: "Tax",
+      key: "Tax",
+      align: 'center',
+      render: (text, record) => {
+        const totalTax = (record.CGST + record.SGST + record.IGST).toFixed(2);
+        return (
+          <>
+            <div style={{ fontSize: '16px', textAlign: 'center' }}> {totalTax}</div>
+          </>
+        );
+      },
+    }
   ];
 
   return (
@@ -220,6 +206,8 @@ const Dashboard = () => {
       {/* Filter Row */}
       <Row gutter={[16, 16]} style={{ marginTop: "15px" }}>
         <Col xs={24} sm={12} md={6} lg={6}>
+        <label style={{ marginRight: 8 ,fontSize:"16px"}}>Start Date:</label>
+
           <DatePicker
             selected={filters.fromDate}
             onChange={(date) => handleFilterChange("fromDate", date)}
@@ -228,6 +216,8 @@ const Dashboard = () => {
           />
         </Col>
         <Col xs={24} sm={12} md={6} lg={6}>
+        <label style={{ marginRight: 8 ,fontSize:"16px"}}>End Date:</label>
+
           <DatePicker
             selected={filters.toDate}
             onChange={(date) => handleFilterChange("toDate", date)}

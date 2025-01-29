@@ -4,6 +4,7 @@ import axios from 'axios';
 import PdfExcelPrint from '../Utiles/PdfExcelPrint'; // Adjust the import path as necessary
 import TableHeaderStyles from '../Pages/TableHeaderStyles';
 import { CREATE_jwel } from '../../Config/Config';
+
 const StockBalanceReport = () => {
     const [, setData] = useState([]);
     const [filteredData, setFilteredData] = useState([]);
@@ -12,7 +13,7 @@ const StockBalanceReport = () => {
         axios.get(`${CREATE_jwel}/api/InventoryReports/GetStockBalances?suspennce=NO`)
             .then(response => {
                 setData(response.data);
-                setFilteredData(response.data);  // Initially no filters, all data is shown
+                setFilteredData(response.data); // Initially no filters, all data is shown
             })
             .catch(error => {
                 console.error('Error fetching data:', error);
@@ -28,9 +29,9 @@ const StockBalanceReport = () => {
     ];
 
     const getTotals = () => {
-        const totalPCS = filteredData.reduce((sum, item) => sum + item.PCS, 0);
-        const totalGWT = filteredData.reduce((sum, item) => sum + item.GWT, 0);
-        const totalNWT = filteredData.reduce((sum, item) => sum + item.NWT, 0);
+        const totalPCS = filteredData.reduce((sum, item) => sum + (item.PCS || 0), 0);
+        const totalGWT = filteredData.reduce((sum, item) => sum + (item.GWT || 0), 0);
+        const totalNWT = filteredData.reduce((sum, item) => sum + (item.NWT || 0), 0);
 
         return {
             totalPCS: totalPCS,
@@ -49,11 +50,14 @@ const StockBalanceReport = () => {
             sno: index + 1,
             GWT: formatValue(item.GWT),
             NWT: formatValue(item.NWT),
-            GRMS: formatValue(item.GRMS),
-            CTS: formatValue(item.CTS),
-            RATE: formatValue(item.RATE),
-            AMOUNT: formatValue(item.AMOUNT),
         })),
+        {
+            sno: 'Total',
+            MNAME: '',
+            PCS: totalPCS,
+            GWT: totalGWT,
+            NWT: totalNWT,
+        }
     ];
 
     const [currentPage, setCurrentPage] = useState(1);
@@ -107,7 +111,7 @@ const StockBalanceReport = () => {
                     <TableHeaderStyles>
                         <Table
                             columns={columns}
-                            dataSource={formattedData.slice((currentPage - 1) * pageSize, currentPage * pageSize)}
+                            dataSource={formattedData.slice(0, -1).slice((currentPage - 1) * pageSize, currentPage * pageSize)}
                             rowKey="MNAME"
                             size="small"
                             pagination={false}

@@ -35,10 +35,10 @@ const DiamondStockDetails = () => {
         { title: 'Tag No', dataIndex: 'TAGNO', key: 'TAGNO', align: 'right' },
         { title: 'Item Name', dataIndex: 'ITEMNAME', key: 'ITEMNAME' },
         { title: 'Pieces', dataIndex: 'PIECES', key: 'PIECES', align: 'right' },
-        { title: 'Grams', dataIndex: 'GRMS', align: 'right', key: 'GRMS', render: value => Number(value).toFixed(3) },
-        { title: 'Carats', dataIndex: 'CTS', align: 'right', key: 'CTS', render: value => Number(value).toFixed(3) },
-        { title: 'Rate', dataIndex: 'RATE', align: 'right', key: 'RATE', render: value => Number(value).toFixed(3) },
-        { title: 'Amount', dataIndex: 'AMOUNT', align: 'right', key: 'AMOUNT', render: value => Number(value).toFixed(3) },
+        { title: 'Grams', dataIndex: 'GRMS', align: 'right', key: 'GRMS', render: value => formatValue(Number(value)) },
+        { title: 'Carats', dataIndex: 'CTS', align: 'right', key: 'CTS', render: value => formatValue(Number(value)) },
+        { title: 'Rate', dataIndex: 'RATE', align: 'right', key: 'RATE', render: value => formatValue(Number(value), 2) },
+        { title: 'Amount', dataIndex: 'AMOUNT', align: 'right', key: 'AMOUNT', render: value => formatValue(Number(value), 2) },
         { title: 'Colour', dataIndex: 'COLOUR', key: 'COLOUR' },
         { title: 'Cut', dataIndex: 'CUT', key: 'CUT' },
         { title: 'Clarity', dataIndex: 'CLARITY', key: 'CLARITY' },
@@ -56,21 +56,40 @@ const DiamondStockDetails = () => {
             totalPieces: totalPieces,
             totalGrams: formatValue(totalGrams),
             totalCarats: formatValue(totalCarats),
-            totalAmount: formatValue(totalAmount),
-            averageRate: formatValue(averageRate),
+            totalAmount: formatValue(totalAmount, 2),
+            averageRate: formatValue(averageRate, 2),
         };
     };
 
     const { totalPieces, totalGrams, totalCarats, totalAmount, averageRate } = getTotals();
 
-    const formattedData = filteredData.map((item, index) => ({
-        ...item,
-        sno: (currentPage - 1) * pageSize + index + 1,
-        GRMS: formatValue(item.GRMS),
-        CTS: formatValue(item.CTS),
-        RATE: formatValue(item.RATE),
-        AMOUNT: formatValue(item.AMOUNT),
-    }));
+    const formattedData = [
+        ...filteredData.map((item, index) => ({
+            ...item,
+            sno: (currentPage - 1) * pageSize + index + 1,
+            GRMS: formatValue(item.GRMS),
+            CTS: formatValue(item.CTS),
+            RATE: formatValue(item.RATE, 2),
+            AMOUNT: formatValue(item.AMOUNT, 2),
+        })),
+        {
+            sno: 'Total',
+            MNAME: '',
+            PRODUCTCATEGORY: '',
+            PRODUCTCODE: '',
+            PRODUCTNAME: '',
+            TAGNO: '',
+            ITEMNAME: '',
+            PIECES: totalPieces,
+            GRMS: totalGrams,
+            CTS: totalCarats,
+            RATE: averageRate,
+            AMOUNT: totalAmount,
+            COLOUR: '',
+            CUT: '',
+            CLARITY: '',
+        }
+    ];
 
     const handlePageChange = (page, pageSize) => {
         setCurrentPage(page);
@@ -125,29 +144,10 @@ const DiamondStockDetails = () => {
                         <Table
                             size="small"
                             columns={columns}
-                            dataSource={formattedData.slice((currentPage - 1) * pageSize, currentPage * pageSize)}
+                            dataSource={formattedData.slice((currentPage - 1) * pageSize, currentPage * pageSize - 1)}
                             rowKey="TAGNO"
                             pagination={false}
                             rowClassName="table-row"
-                            summary={() => (
-                                <Table.Summary.Row style={{ backgroundColor: '#f5f5f5', fontWeight: 'bold' }}>
-                                    <Table.Summary.Cell>Total</Table.Summary.Cell>
-                                    <Table.Summary.Cell />
-                                    <Table.Summary.Cell />
-                                    <Table.Summary.Cell />
-                                    <Table.Summary.Cell />
-                                    <Table.Summary.Cell />
-                                    <Table.Summary.Cell />
-                                    <Table.Summary.Cell align='right'>{totalPieces}</Table.Summary.Cell>
-                                    <Table.Summary.Cell align='right'>{totalGrams}</Table.Summary.Cell>
-                                    <Table.Summary.Cell align='right'>{totalCarats}</Table.Summary.Cell>
-                                    <Table.Summary.Cell align='right'>{averageRate}</Table.Summary.Cell>
-                                    <Table.Summary.Cell align='right'>{totalAmount}</Table.Summary.Cell>
-                                    <Table.Summary.Cell />
-                                    <Table.Summary.Cell />
-                                    <Table.Summary.Cell />
-                                </Table.Summary.Row>
-                            )}
                         />
                     </TableHeaderStyles>
                 </div>

@@ -25,7 +25,7 @@ const CashBookReports = () => {
 
     useEffect(() => {
         if (dates[0] && dates[1]) {
-            const fromDate = moment(dates[0]).format('MM/DD/YYYY');
+            const fromDate = moment(dates[0]).format('YYYY-MM-DD');
             const saleCode = 1;
 
             axios.get(`${CREATE_jwel}/api/POSReports/GetCashBookOpenings?billDate=${fromDate}&saleCode=${saleCode}`)
@@ -42,8 +42,8 @@ const CashBookReports = () => {
 
     useEffect(() => {
         if (dates[0] && dates[1]) {
-            const fromDate = moment(dates[0]).format('MM/DD/YYYY');
-            const toDate = moment(dates[1]).format('MM/DD/YYYY');
+            const fromDate = moment(dates[0]).format('YYYY-MM-DD');
+            const toDate = moment(dates[1]).format('YYYY-MM-DD');
             const saleCode = 1;
 
             axios.get(`${CREATE_jwel}/api/POSReports/GetCashBookDetails?fromDate=${fromDate}&toDate=${toDate}&saleCode=${saleCode}`)
@@ -69,7 +69,7 @@ const CashBookReports = () => {
     const columns = [
         { title: 'S.No', dataIndex: 'serialNo', width: 50, align: "center", key: 'serialNo', className: 'blue-background-column' },
         { title: 'Bill No', dataIndex: 'BILLNO', key: 'BILLNO' },
-        { title: 'Bill Date', dataIndex: 'BILLDATE', key: 'BILLDATE', render: date => moment(date).format('MM/DD/YYYY') },
+        { title: 'Bill Date', dataIndex: 'BILLDATE', key: 'BILLDATE', render: date => moment(date).format('DD/MM/YYYY') },
         { title: 'Particulars', dataIndex: 'PARTICULARS', key: 'PARTICULARS' },
         { title: 'Type', dataIndex: 'TYPE', key: 'TYPE' }, // New column added here
         { title: 'Debit', dataIndex: 'DEBIT', key: 'DEBIT', align: "right", render: value => Number(value).toFixed(2) },
@@ -96,6 +96,26 @@ const CashBookReports = () => {
 
     const { totalDebit, totalCredit, totalBalance } = getTotals();
 
+    const formattedData = [
+        ...filteredData.map((item, index) => ({
+            ...item,
+            serialNo: index + 1,
+            DEBIT: Number(item.DEBIT).toFixed(2),
+            CREDIT: Number(item.CREDIT).toFixed(2),
+            BALANCE: Number(item.BALANCE).toFixed(2),
+        })),
+        {
+            serialNo: 'Total',
+            BILLNO: '',
+            BILLDATE: '',
+            PARTICULARS: '',
+            TYPE: '',
+            DEBIT: totalDebit,
+            CREDIT: totalCredit,
+            BALANCE: totalBalance,
+        }
+    ];
+
     const handlePageChange = (page, pageSize) => {
         setCurrentPage(page);
         setPageSize(pageSize);
@@ -112,16 +132,18 @@ const CashBookReports = () => {
                 </Col>
                 <Col>
                     <PdfExcelPrint
-                        data={filteredData}
+                        data={formattedData}
                         columns={columns}
                         fileName="CashBookReport"
+                        totals={{ totalDebit, totalCredit, totalBalance }} // Pass totals as props
                     />
                 </Col>
             </Row>
             <Row justify="space-between" align="middle">
                 <Col>
-                    <Row gutter={16} justify="center">
+                    <Row gutter={16} justify="center" align="middle">
                         <Col>
+                            <label style={{ marginRight: 8 ,fontSize:"16px"}}>Start Date:</label>
                             <DatePicker
                                 selected={dates[0]}
                                 onChange={(date) => setDates([date, dates[1]])}
@@ -130,9 +152,11 @@ const CashBookReports = () => {
                                 endDate={dates[1]}
                                 placeholderText="Start Date"
                                 customInput={<CustomInput />}
+                                dateFormat="dd/MM/yyyy"
                             />
                         </Col>
                         <Col>
+                            <label style={{ marginRight: 8 ,fontSize:"16px"}}>End Date:</label>
                             <DatePicker
                                 selected={dates[1]}
                                 onChange={(date) => setDates([dates[0], date])}
@@ -141,6 +165,7 @@ const CashBookReports = () => {
                                 endDate={dates[1]}
                                 placeholderText="End Date"
                                 customInput={<CustomInput />}
+                                dateFormat="dd/MM/yyyy"
                             />
                         </Col>
                     </Row>
@@ -180,20 +205,20 @@ const CashBookReports = () => {
                         <Table
                             size="small"
                             columns={columns}
-                            dataSource={filteredData.slice((currentPage - 1) * pageSize, currentPage * pageSize)}
+                            dataSource={formattedData.slice(0, -1).slice((currentPage - 1) * pageSize, currentPage * pageSize)}
                             rowKey="key"
                             pagination={false}
                             rowClassName="table-row"
                             summary={() => (
                                 <Table.Summary.Row style={{ backgroundColor: '#f5f5f5', fontWeight: 'bold' }}>
-                                    <Table.Summary.Cell index={0}>Total</Table.Summary.Cell>
-                                    <Table.Summary.Cell index={1} />
-                                    <Table.Summary.Cell index={2} />
-                                    <Table.Summary.Cell index={3} />
-                                    <Table.Summary.Cell index={4} />
-                                    <Table.Summary.Cell index={5} align="right">{totalDebit}</Table.Summary.Cell>
-                                    <Table.Summary.Cell index={6} align="right">{totalCredit}</Table.Summary.Cell>
-                                    <Table.Summary.Cell index={7} align="right">{totalBalance}</Table.Summary.Cell>
+                                    <Table.Summary.Cell>Total</Table.Summary.Cell>
+                                    <Table.Summary.Cell />
+                                    <Table.Summary.Cell />
+                                    <Table.Summary.Cell />
+                                    <Table.Summary.Cell />
+                                    <Table.Summary.Cell align="right">{totalDebit}</Table.Summary.Cell>
+                                    <Table.Summary.Cell align="right">{totalCredit}</Table.Summary.Cell>
+                                    <Table.Summary.Cell align="right">{totalBalance}</Table.Summary.Cell>
                                 </Table.Summary.Row>
                             )}
                         />

@@ -90,14 +90,25 @@ const PrifixNetSummry = () => {
 
     const { totalNwt, totalPieces, totalGwt, totalDiaCts, totalDiaAmt } = getFilteredTotals();
 
-    const formattedData = filteredByPrefix.map((item, index) => ({
-        ...item,
-        sno: index + 1,
-        Gwt: Number(item.Gwt).toFixed(3),
-        Nwt: Number(item.Nwt).toFixed(3),
-        DIACTS: Number(item.DIACTS).toFixed(2),
-        DIAAMT: Number(item.DIAAMT).toFixed(2),
-    }));
+    const formattedData = [
+        ...filteredByPrefix.map((item, index) => ({
+            ...item,
+            sno: index + 1,
+            Gwt: Number(item.Gwt).toFixed(3),
+            Nwt: Number(item.Nwt).toFixed(3),
+            DIACTS: Number(item.DIACTS).toFixed(2),
+            DIAAMT: Number(item.DIAAMT).toFixed(2),
+        })),
+        {
+            sno: 'Total',
+            PREFIX: '',
+            Pieces: totalPieces,
+            Gwt: totalGwt,
+            Nwt: totalNwt,
+            DIACTS: totalDiaCts,
+            DIAAMT: totalDiaAmt,
+        }
+    ];
 
     return (
         <>
@@ -170,7 +181,7 @@ const PrifixNetSummry = () => {
                         <Table
                             size="small"
                             columns={columns}
-                            dataSource={formattedData.slice((currentPage - 1) * pageSize, currentPage * pageSize)}
+                            dataSource={formattedData.slice(0, -1).slice((currentPage - 1) * pageSize, currentPage * pageSize)}
                             rowKey="PREFIX"
                             pagination={false}
                             rowClassName="table-row"

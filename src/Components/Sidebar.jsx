@@ -129,7 +129,7 @@ const Sidebar = ({ collapsed }) => {
       label: <span style={{ color: "#fff" }}>Accounts</span>,
       children: [
         { key: "5-3", label: <Link to="/bankstatement-report" style={{ color: "#fff" }}>Bank Report</Link> },
-        { key: "5-4", label: <Link to="/billmaster-report" style={{ color: "#fff" }}>Bill Report</Link> },
+        { key: "5-4", label: <Link to="/billmaster-report" style={{ color: "#fff" }}>Sale Register</Link> },
         { key: "5-5", label: <Link to="/stockBalence-report" style={{ color: "#fff" }}>Stock Balance</Link> },
         { key: "5-6", label: <Link to="/stocksummry-report" style={{ color: "#fff" }}>Stock Summary</Link> },
         { key: "5-15", label: <Link to="/traysummery-report" style={{ color: "#fff" }}>Tray Summary</Link> },
@@ -152,7 +152,7 @@ const Sidebar = ({ collapsed }) => {
       children: [
         { key: "6-3", label: <Link to="/cash-book" style={{ color: "#fff" }}>Cash Book</Link> },
         { key: "6-4", label: <Link to="/sale-reports" style={{ color: "#fff" }}>Sales Reports</Link> },
-        { key: "6-5", label: <Link to="/product-wise-detailes" style={{ color: "#fff" }}>Product Details</Link> },
+        { key: "6-5", label: <Link to="/product-wise-detailes" style={{ color: "#fff" }}>Product Wise Sale Details</Link> },
         { key: "6-6", label: <Link to="/new-ornament-purchase-register" style={{ color: "#fff" }}>Purchase Register</Link> },
         { key: "6-7", label: <Link to="/gs11-report" style={{ color: "#fff" }}>GS11</Link> },
         { key: "6-8", label: <Link to="/gs12-report" style={{ color: "#fff" }}>GS12</Link> },

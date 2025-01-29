@@ -742,3 +742,6 @@ font-weight: bold;
   transform: scale(1.2);
 }
 
+.react-datepicker__input-container {
+  width: 75% !important;
+}

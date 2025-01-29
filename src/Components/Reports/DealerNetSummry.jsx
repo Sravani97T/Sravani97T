@@ -36,7 +36,7 @@ const DealerNetSummry = () => {
     }, [mName]);  // Re-fetch when MNAME is changed
 
     const columns = [
-        { title: 'S.No', dataIndex: 'sno',  width: 50,   className: 'blue-background-column',key: 'sno' },
+        { title: 'S.No', dataIndex: 'sno', width: 50, className: 'blue-background-column', key: 'sno' },
         { title: 'Dealer', dataIndex: 'DEALERNAME', key: 'DEALERNAME' },
         { title: 'Pieces', align: "right", dataIndex: 'Pieces', key: 'Pieces' },
         { title: 'Gross Wt', align: "right", dataIndex: 'Gwt', key: 'Gwt', render: value => Number(value).toFixed(3) },
@@ -62,14 +62,25 @@ const DealerNetSummry = () => {
 
     const { totalNwt, totalPieces, totalGwt, totalDiaCts, totalDiaAmt } = getTotals();
 
-    const formattedData = filteredData.map((item, index) => ({
-        ...item,
-        sno: index + 1,
-        Gwt: Number(item.Gwt).toFixed(3),
-        Nwt: Number(item.Nwt).toFixed(3),
-        DIACTS: Number(item.DIACTS).toFixed(2),
-        DIAAMT: Number(item.DIAAMT).toFixed(2),
-    }));
+    const formattedData = [
+        ...filteredData.map((item, index) => ({
+            ...item,
+            sno: index + 1,
+            Gwt: Number(item.Gwt).toFixed(3),
+            Nwt: Number(item.Nwt).toFixed(3),
+            DIACTS: Number(item.DIACTS).toFixed(2),
+            DIAAMT: Number(item.DIAAMT).toFixed(2),
+        })),
+        {
+            sno: 'Total',
+            DEALERNAME: '',
+            Pieces: totalPieces,
+            Gwt: totalGwt,
+            Nwt: totalNwt,
+            DIACTS: totalDiaCts,
+            DIAAMT: totalDiaAmt,
+        }
+    ];
 
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(20); // Default page size to 20
@@ -138,7 +149,7 @@ const DealerNetSummry = () => {
                         <Table
                             size="small"
                             columns={columns}
-                            dataSource={formattedData.slice((currentPage - 1) * pageSize, currentPage * pageSize)}
+                            dataSource={formattedData.slice(0, -1).slice((currentPage - 1) * pageSize, currentPage * pageSize)}
                             rowKey="DEALERNAME"
                             pagination={false}
                             rowClassName="table-row"

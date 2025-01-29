@@ -43,7 +43,7 @@ const CounterNetSummry = () => {
     };
 
     const columns = [
-        { title: 'S.No', dataIndex: 'serialNo', width: 50, align: "center", key: 'serialNo', className: 'blue-background-column', render: (text, record, index) => (currentPage - 1) * pageSize + index + 1 },
+        { title: 'S.No', dataIndex: 'sno', width: 50, align: "center", key: 'sno', className: 'blue-background-column' },
         { title: 'Counter Name', dataIndex: 'CounterName', key: 'CounterName' },
         { title: 'Pieces', align: "right", dataIndex: 'Pieces', key: 'Pieces' },
         { title: 'Gross Wt', align: "right", dataIndex: 'Gwt', key: 'Gwt', render: value => Number(value).toFixed(3) },
@@ -69,6 +69,28 @@ const CounterNetSummry = () => {
 
     const { totalNwt, totalPieces, totalGwt, totalDiaCts, totalDiaAmt } = getTotals();
 
+    const formatValue = value => Number(value).toFixed(3);
+
+    const formattedData = [
+        ...filteredData.map((item, index) => ({
+            ...item,
+            sno: (currentPage - 1) * pageSize + index + 1,
+            Gwt: formatValue(item.Gwt),
+            Nwt: formatValue(item.Nwt),
+            DIACTS: Number(item.DIACTS).toFixed(2),
+            DIAAMT: Number(item.DIAAMT).toFixed(2),
+        })),
+        {
+            sno: 'Total',
+            CounterName: '',
+            Pieces: totalPieces,
+            Gwt: totalGwt,
+            Nwt: totalNwt,
+            DIACTS: totalDiaCts,
+            DIAAMT: totalDiaAmt,
+        }
+    ];
+
     return (
         <>
             <Row justify="space-between" align="middle">
@@ -80,9 +102,10 @@ const CounterNetSummry = () => {
                 </Col>
                 <Col>
                     <PdfExcelPrint
-                        data={filteredData}
+                        data={formattedData}
                         columns={columns}
                         fileName="CounterNetSummaryReport"
+                        totals={{ totalPieces, totalGwt, totalNwt, totalDiaCts, totalDiaAmt }} // Pass totals as props
                     />
                 </Col>
             </Row>
@@ -128,13 +151,14 @@ const CounterNetSummry = () => {
                         <Table
                             size="small"
                             columns={columns}
-                            dataSource={filteredData.slice((currentPage - 1) * pageSize, currentPage * pageSize)}
+                            dataSource={formattedData.slice(0, -1).slice((currentPage - 1) * pageSize, currentPage * pageSize)}
                             rowKey="CounterName"
                             pagination={false}
                             rowClassName="table-row"
                             summary={() => (
                                 <Table.Summary.Row style={{ backgroundColor: '#f5f5f5', fontWeight: 'bold' }}>
                                     <Table.Summary.Cell>Total</Table.Summary.Cell>
+                                    <Table.Summary.Cell />
                                     <Table.Summary.Cell align='right'>{totalPieces}</Table.Summary.Cell>
                                     <Table.Summary.Cell align='right'>{totalGwt}</Table.Summary.Cell>
                                     <Table.Summary.Cell align='right'>{totalNwt}</Table.Summary.Cell>

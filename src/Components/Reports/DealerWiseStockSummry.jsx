@@ -54,14 +54,44 @@ const DealerWiseStockSummary = () => {
         { title: 'Diamond Amount', dataIndex: 'DIAAMT', key: 'DIAAMT', align: 'right', render: value => Number(value).toFixed(2) },
     ];
 
-    const formattedData = filteredData.map((item, index) => ({
-        ...item,
-        sno: (currentPage - 1) * pageSize + index + 1,
-        GWT: Number(item.GWT).toFixed(3),
-        NWT: Number(item.NWT).toFixed(3),
-        DIACTS: Number(item.DIACTS).toFixed(2),
-        DIAAMT: Number(item.DIAAMT).toFixed(2),
-    }));
+    const getTotals = () => {
+        const totalPieces = filteredData.reduce((sum, item) => sum + item.PIECES, 0);
+        const totalGWT = filteredData.reduce((sum, item) => sum + item.GWT, 0);
+        const totalNWT = filteredData.reduce((sum, item) => sum + item.NWT, 0);
+        const totalDIACTS = filteredData.reduce((sum, item) => sum + item.DIACTS, 0);
+        const totalDIAAMT = filteredData.reduce((sum, item) => sum + item.DIAAMT, 0);
+
+        return {
+            totalPieces,
+            totalGWT: Number(totalGWT).toFixed(3),
+            totalNWT: Number(totalNWT).toFixed(3),
+            totalDIACTS: Number(totalDIACTS).toFixed(2),
+            totalDIAAMT: Number(totalDIAAMT).toFixed(2),
+        };
+    };
+
+    const { totalPieces, totalGWT, totalNWT, totalDIACTS, totalDIAAMT } = getTotals();
+
+    const formattedData = [
+        ...filteredData.map((item, index) => ({
+            ...item,
+            sno: (currentPage - 1) * pageSize + index + 1,
+            GWT: Number(item.GWT).toFixed(3),
+            NWT: Number(item.NWT).toFixed(3),
+            DIACTS: Number(item.DIACTS).toFixed(2),
+            DIAAMT: Number(item.DIAAMT).toFixed(2),
+        })),
+        {
+            sno: 'Total',
+            DEALERNAME: '',
+            PRODUCTNAME: '',
+            PIECES: totalPieces,
+            GWT: totalGWT,
+            NWT: totalNWT,
+            DIACTS: totalDIACTS,
+            DIAAMT: totalDIAAMT,
+        }
+    ];
 
     return (
         <>
@@ -77,6 +107,7 @@ const DealerWiseStockSummary = () => {
                         data={formattedData}
                         columns={columns}
                         fileName="DealerWiseStockSummary"
+                        totals={{ totalPieces, totalGWT, totalNWT, totalDIACTS, totalDIAAMT }} // Pass totals as props
                     />
                 </Col>
             </Row>
@@ -122,30 +153,22 @@ const DealerWiseStockSummary = () => {
                         <Table
                             size="small"
                             columns={columns}
-                            dataSource={formattedData.slice((currentPage - 1) * pageSize, currentPage * pageSize)}
+                            dataSource={formattedData.slice(0, -1).slice((currentPage - 1) * pageSize, currentPage * pageSize)}
                             rowKey="PRODUCTNAME"
                             pagination={false}
                             rowClassName="table-row"
-                            summary={() => {
-                                const totalPieces = filteredData.reduce((sum, item) => sum + item.PIECES, 0);
-                                const totalGWT = filteredData.reduce((sum, item) => sum + item.GWT, 0);
-                                const totalNWT = filteredData.reduce((sum, item) => sum + item.NWT, 0);
-                                const totalDIACTS = filteredData.reduce((sum, item) => sum + item.DIACTS, 0);
-                                const totalDIAAMT = filteredData.reduce((sum, item) => sum + item.DIAAMT, 0);
-
-                                return (
-                                    <Table.Summary.Row style={{ backgroundColor: '#f5f5f5', fontWeight: 'bold' }}>
-                                        <Table.Summary.Cell>Total</Table.Summary.Cell>
-                                        <Table.Summary.Cell />
-                                        <Table.Summary.Cell />
-                                        <Table.Summary.Cell align='right'>{totalPieces}</Table.Summary.Cell>
-                                        <Table.Summary.Cell align='right'>{Number(totalGWT).toFixed(3)}</Table.Summary.Cell>
-                                        <Table.Summary.Cell align='right'>{Number(totalNWT).toFixed(3)}</Table.Summary.Cell>
-                                        <Table.Summary.Cell align='right'>{Number(totalDIACTS).toFixed(2)}</Table.Summary.Cell>
-                                        <Table.Summary.Cell align='right'>{Number(totalDIAAMT).toFixed(2)}</Table.Summary.Cell>
-                                    </Table.Summary.Row>
-                                );
-                            }}
+                            summary={() => (
+                                <Table.Summary.Row style={{ backgroundColor: '#f5f5f5', fontWeight: 'bold' }}>
+                                    <Table.Summary.Cell>Total</Table.Summary.Cell>
+                                    <Table.Summary.Cell />
+                                    <Table.Summary.Cell />
+                                    <Table.Summary.Cell align='right'>{totalPieces}</Table.Summary.Cell>
+                                    <Table.Summary.Cell align='right'>{totalGWT}</Table.Summary.Cell>
+                                    <Table.Summary.Cell align='right'>{totalNWT}</Table.Summary.Cell>
+                                    <Table.Summary.Cell align='right'>{totalDIACTS}</Table.Summary.Cell>
+                                    <Table.Summary.Cell align='right'>{totalDIAAMT}</Table.Summary.Cell>
+                                </Table.Summary.Row>
+                            )}
                         />
                     </TableHeaderStyles>
                 </div>

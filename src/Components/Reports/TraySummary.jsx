@@ -53,12 +53,22 @@ const TraySummary = () => {
 
     const formatValue = value => Number(value).toFixed(3);
 
-    const formattedData = filteredData.map((item, index) => ({
-        ...item,
-        sno: index + 1,
-        GWT: formatValue(item.GWT),
-        NWT: formatValue(item.NWT),
-    }));
+    const formattedData = [
+        ...filteredData.map((item, index) => ({
+            ...item,
+            sno: index + 1,
+            GWT: formatValue(item.GWT),
+            NWT: formatValue(item.NWT),
+        })),
+        {
+            sno: 'Total',
+            TAGNO: '',
+            PRODUCTNAME: '',
+            PCS: totalPCS,
+            GWT: totalGWT,
+            NWT: totalNWT,
+        }
+    ];
 
     const paginatedData = formattedData.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
@@ -80,8 +90,8 @@ const TraySummary = () => {
                 </Col>
             </Row>
             <Row gutter={8} style={{ marginBottom: 8 }} align="middle">
-                     <Col flex="auto" />
-                                <Col>
+                <Col flex="auto" />
+                <Col>
                     <Pagination
                         current={currentPage}
                         pageSize={pageSize}
@@ -93,15 +103,14 @@ const TraySummary = () => {
                             setPageSize(size);
                         }}
                         showTotal={(total, range) => `${range[0]}-${range[1]} of ${total} items`}
-                        style={{ marginBottom: "10px" , marginTop: 16, }}
+                        style={{ marginBottom: "10px", marginTop: 16 }}
                     />
-                    </Col>
+                </Col>
             </Row>
             <div style={{ marginTop: 5, boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}>
                 <div
                     className="table-responsive scroll-horizontal"
                     style={{
-                        // maxHeight: "calc(99vh - 193.33px)",
                         overflowY: "auto",
                         overflowX: "auto",
                         marginTop: "6px",
@@ -114,7 +123,7 @@ const TraySummary = () => {
                         <Table
                             size="small"
                             columns={columns}
-                            dataSource={paginatedData}
+                            dataSource={paginatedData.slice(0, -1)}
                             rowKey="TAGNO"
                             pagination={false}
                             rowClassName={() => 'blue-background-row no-hover'} // Apply blue background to all rows in S.No column and remove hover effect
@@ -131,7 +140,6 @@ const TraySummary = () => {
                         />
                     </TableHeaderStyles>
                 </div>
-                
             </div>
         </>
     );

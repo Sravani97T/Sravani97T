@@ -27,7 +27,7 @@ const OutstandingDealers = () => {
     }, []);
 
     const columns = [
-        { title: 'S.No',  width: 50,  className: 'blue-background-column', dataIndex: 'serialNo', key: 'serialNo' },
+        { title: 'S.No', width: 50, className: 'blue-background-column', dataIndex: 'serialNo', key: 'serialNo' },
         { title: 'Party Name', dataIndex: 'PARTYNAME', key: 'PARTYNAME' },
         { title: 'Mobile Number', dataIndex: 'MOBILENO', key: 'MOBILENO' },
         { title: 'Debit', dataIndex: 'JAMA', key: 'JAMA', align: "right", render: value => Number(value).toFixed(2) },
@@ -49,6 +49,24 @@ const OutstandingDealers = () => {
 
     const { totalDebit, totalCredit, totalBalance } = getTotals();
 
+    const formattedData = [
+        ...filteredData.map((item, index) => ({
+            ...item,
+            serialNo: index + 1,
+            JAMA: Number(item.JAMA).toFixed(2),
+            NAMA: Number(item.NAMA).toFixed(2),
+            balance: Number(item.balance).toFixed(2),
+        })),
+        {
+            serialNo: 'Total',
+            PARTYNAME: '',
+            MOBILENO: '',
+            JAMA: totalDebit,
+            NAMA: totalCredit,
+            balance: totalBalance,
+        }
+    ];
+
     const handlePageChange = (page, pageSize) => {
         setCurrentPage(page);
         setPageSize(pageSize);
@@ -65,7 +83,7 @@ const OutstandingDealers = () => {
                 </Col>
                 <Col>
                     <PdfExcelPrint
-                        data={filteredData}
+                        data={formattedData}
                         columns={columns}
                         fileName="OutstandingDealersReport"
                     />
@@ -102,7 +120,7 @@ const OutstandingDealers = () => {
                         <Table
                             size="small"
                             columns={columns}
-                            dataSource={filteredData.slice((currentPage - 1) * pageSize, currentPage * pageSize)}
+                            dataSource={formattedData.slice(0, -1).slice((currentPage - 1) * pageSize, currentPage * pageSize)}
                             rowKey="key"
                             pagination={false}
                             rowClassName="table-row"
