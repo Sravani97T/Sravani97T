@@ -3,6 +3,7 @@ import { Card, Button, Form, Input, Checkbox } from "antd";
 import { useNavigate } from "react-router-dom";
 import logo from "../../../Components/Assets/textLogo.png";
 import { CREATE_jwel } from "../../../Config/Config";
+
 const LoginPage = ({ onLogin }) => {
     const navigate = useNavigate();
 
@@ -27,7 +28,18 @@ const LoginPage = ({ onLogin }) => {
     };
 
     return (
-        <div className="login-page-container">
+        <div
+            className="login-page-container"
+            style={{
+                backgroundImage: "url('https://img.freepik.com/free-vector/abstract-dark-blue-vector-futuristic-digital-grid-background_53876-110562.jpg')",
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                height: "100vh",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center"
+            }}
+        >
             <div className="login-wrapper">
                 {/* Left Section */}
                 <div className="welcome-section">

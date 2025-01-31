@@ -1,12 +1,28 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Row, Col, Typography, Input, Select, Upload, message } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
+import axios from 'axios';
 
 const { Option } = Select;
 const { Text } = Typography;
 
-const ProductDetails = () => {
+const ProductDetails = ({ mname }) => {
   const [fileList, setFileList] = useState([]);
+  const [products, setProducts] = useState([]);
+
+  useEffect(() => {
+    if (!mname) return; // Avoid making API call if mname is empty
+  
+    axios.get('http://www.jewelerp.timeserasoftware.in/api/Master/MasterProductMasterList')
+      .then(response => {
+        const filteredProducts = response.data.filter(product => product.MNAME === mname);
+        setProducts(filteredProducts);
+      })
+      .catch(error => {
+        console.error('Error fetching product data:', error);
+      });
+  }, [mname]); // Re-run when mname changes
+  
 
   const handleChange = ({ fileList: newFileList }) => setFileList(newFileList);
 
@@ -55,10 +71,17 @@ const ProductDetails = () => {
               <Text style={{ fontSize: "12px" }}>Product Name</Text>
             </div>
             <Select placeholder="Select a product" style={{ width: "100%" }}>
-              <Option value="product1">Product 1</Option>
-              <Option value="product2">Product 2</Option>
-              <Option value="product3">Product 3</Option>
-            </Select>
+  {products.length > 0 ? (
+    products.map(product => (
+      <Option key={product.PRODUCTCODE} value={product.PRODUCTNAME}>
+        {product.PRODUCTNAME}
+      </Option>
+    ))
+  ) : (
+    <Option disabled>No products available</Option>
+  )}
+</Select>
+
           </Col>
 
           {/* PCS */}
@@ -109,35 +132,33 @@ const ProductDetails = () => {
                 backgroundColor: "#fafafa",
                 padding: "10px",
                 textAlign: "center",
-                width:'80px',
-                height:"80px",
+                width: '80px',
+                height: "80px",
                 boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)",
               }}
             >
-               <div
-              style={{
-                display: "inline-block",
-                transform: "scale(0.6)", // Scale down to 80% of its original size
-                transformOrigin: "top left", // Anchor the scaling to the top-left corner
-              }}
-            >
-              <Upload
-                action="/upload"
-                listType="picture-card"
-                fileList={fileList}
-                onChange={handleChange}
-                beforeUpload={beforeUpload}
-                maxCount={1}
-               
+              <div
+                style={{
+                  display: "inline-block",
+                  transform: "scale(0.6)", // Scale down to 80% of its original size
+                  transformOrigin: "top left", // Anchor the scaling to the top-left corner
+                }}
               >
-                
-                {fileList.length < 1 && (
-                  <div>
-                    <PlusOutlined style={{fontSize:'14px'}}/>
-                    <div style={{ marginTop: 8 ,fontSize:'14px'}}>Upload</div>
-                  </div>
-                )}
-              </Upload>
+                <Upload
+                  action="/upload"
+                  listType="picture-card"
+                  fileList={fileList}
+                  onChange={handleChange}
+                  beforeUpload={beforeUpload}
+                  maxCount={1}
+                >
+                  {fileList.length < 1 && (
+                    <div>
+                      <PlusOutlined style={{ fontSize: '14px' }} />
+                      <div style={{ marginTop: 8, fontSize: '14px' }}>Upload</div>
+                    </div>
+                  )}
+                </Upload>
               </div>
             </div>
           </Col>

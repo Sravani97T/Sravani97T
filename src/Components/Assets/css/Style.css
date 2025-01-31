@@ -596,9 +596,10 @@ font-weight: bold;
 }
 
 .ant-menu-item:hover {
-  background-color: #1f1f2e !important;
+  background-color: #150A4E !important;
   color: #fff !important;
 }
+
 
 /* Header hover effects */
 .ant-avatar {
@@ -618,7 +619,7 @@ font-weight: bold;
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background: linear-gradient(to right, #2e8b57, #ffffff);
+  background: linear-gradient(to right, #f7f8f8, #ffffff);
 }
 
 .login-wrapper {
@@ -631,7 +632,7 @@ font-weight: bold;
 }
 
 .welcome-section {
-  background: #2e8b57;
+  background: #031f3c;
   color: #fff;
   flex: 1;
   display: flex;
@@ -640,6 +641,7 @@ font-weight: bold;
   align-items: center;
   text-align: center;
   padding: 20px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Added shadow */
 }
 
 .logo {
@@ -650,7 +652,7 @@ font-weight: bold;
 
 .register-button {
   background: #fff;
-  color: #2e8b57;
+  color: #090542;
   border: none;
   margin-top: 20px;
   padding: 10px 20px;
@@ -659,7 +661,7 @@ font-weight: bold;
 }
 
 .register-button:hover {
-  background: #2e8b57;
+  background: #070431;
   color: #fff;
 }
 
@@ -674,7 +676,7 @@ font-weight: bold;
 
 .login-section h2 {
   font-size: 24px;
-  color: #2e8b57;
+  color: #a9a4f7;
 }
 
 .login-section p {
@@ -683,7 +685,7 @@ font-weight: bold;
 }
 
 .login-button {
-  background: #2e8b57;
+  background: #050f46;
   color: #fff;
   width: 100%;
 }

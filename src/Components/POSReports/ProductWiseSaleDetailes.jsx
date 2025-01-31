@@ -8,6 +8,7 @@ import 'react-datepicker/dist/react-datepicker.css';
 import { FaCalendarAlt } from 'react-icons/fa';
 import TableHeaderStyles from '../Pages/TableHeaderStyles';
 import { CREATE_jwel } from '../../Config/Config';
+
 const CustomInput = forwardRef(({ value, onClick, placeholder }, ref) => {
     const formattedValue = value ? moment(value).format('DD/MM/YYYY') : '';
     return (
@@ -101,6 +102,42 @@ const ProductWiseSaleDetailes = () => {
 
     const { totalAmount, totalGwt, totalNwt } = getTotals();
 
+    const formattedData = [
+        ...filteredData.map((item, index) => ({
+            ...item,
+            serialNo: index + 1,
+            Amount: Number(item.Amount).toFixed(2),
+            Gwt: Number(item.Gwt).toFixed(3),
+            Nwt: Number(item.Nwt).toFixed(3),
+        })),
+        {
+            serialNo: 'Total',
+            BillDate: '',
+            JewelType: '',
+            BillNo: '',
+            TagNo: '',
+            Mname: '',
+            ProductName: '',
+            Prefix: '',
+            Pieces: '',
+            Gwt: totalGwt,
+            Nwt: totalNwt,
+            Item_Cts: '',
+            Item_Diamonds: '',
+            Item_Uncuts: '',
+            Amount: totalAmount,
+            Itemamt: '',
+            Totamt: '',
+            MANUFACTURER: '',
+            Desc1: '',
+            TagDate: '',
+            HUID: '',
+            HSNCODE: '',
+            PVALUE: '',
+            SVALUE: '',
+        }
+    ];
+
     return (
         <>
             <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
@@ -112,7 +149,7 @@ const ProductWiseSaleDetailes = () => {
                 </Col>
                 <Col>
                     <PdfExcelPrint
-                        data={filteredData}
+                        data={formattedData}
                         columns={columns}
                         fileName="ProductWiseSaleDetailsReport"
                     />
@@ -122,8 +159,7 @@ const ProductWiseSaleDetailes = () => {
                 <Col>
                     <Row gutter={16} justify="center">
                         <Col>
-                        <label style={{ marginRight: 8 ,fontSize:"16px"}}>Start Date:</label>
-
+                            <label style={{ marginRight: 8 ,fontSize:"16px"}}>Start Date:</label>
                             <DatePicker
                                 selected={dates[0]}
                                 onChange={(date) => setDates([date, dates[1]])}
@@ -135,8 +171,7 @@ const ProductWiseSaleDetailes = () => {
                             />
                         </Col>
                         <Col>
-                        <label style={{ marginRight: 8 ,fontSize:"16px"}}>End Date:</label>
-
+                            <label style={{ marginRight: 8 ,fontSize:"16px"}}>End Date:</label>
                             <DatePicker
                                 selected={dates[1]}
                                 onChange={(date) => setDates([dates[0], date])}
@@ -181,18 +216,34 @@ const ProductWiseSaleDetailes = () => {
                         <Table
                             size="small"
                             columns={columns}
-                            dataSource={filteredData.slice((currentPage - 1) * pageSize, currentPage * pageSize)}
+                            dataSource={formattedData.slice(0, -1).slice((currentPage - 1) * pageSize, currentPage * pageSize)}
                             rowKey="key"
                             pagination={false}
                             rowClassName="table-row"
                             summary={() => (
                                 <Table.Summary.Row style={{ backgroundColor: '#f5f5f5', fontWeight: 'bold' }}>
-                                    <Table.Summary.Cell index={0} colSpan={9}>Total</Table.Summary.Cell>
-                                    <Table.Summary.Cell index={9} align="right">{totalGwt}</Table.Summary.Cell>
-                                    <Table.Summary.Cell index={10} align="right">{totalNwt}</Table.Summary.Cell>
-                                    <Table.Summary.Cell index={11} colSpan={3} />
-                                    <Table.Summary.Cell index={14} align="right">{totalAmount}</Table.Summary.Cell>
-                                    <Table.Summary.Cell index={15} colSpan={9} />
+                                    <Table.Summary.Cell>Total</Table.Summary.Cell>
+                                    <Table.Summary.Cell />
+                                    <Table.Summary.Cell />
+                                    <Table.Summary.Cell />
+                                    <Table.Summary.Cell />
+                                    <Table.Summary.Cell />
+                                    <Table.Summary.Cell />
+                                    <Table.Summary.Cell />
+                                    <Table.Summary.Cell />
+                                    <Table.Summary.Cell align="right">{totalGwt}</Table.Summary.Cell>
+                                    <Table.Summary.Cell align="right">{totalNwt}</Table.Summary.Cell>
+                                    <Table.Summary.Cell />
+                                    <Table.Summary.Cell />
+                                    <Table.Summary.Cell />
+                                    <Table.Summary.Cell align="right">{totalAmount}</Table.Summary.Cell>
+                                    <Table.Summary.Cell />
+                                    <Table.Summary.Cell />
+                                    <Table.Summary.Cell />
+                                    <Table.Summary.Cell />
+                                    <Table.Summary.Cell />
+                                    <Table.Summary.Cell />
+                                    <Table.Summary.Cell />
                                 </Table.Summary.Row>
                             )}
                         />

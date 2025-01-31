@@ -88,13 +88,18 @@ const Dashboard = () => {
     {
       title: "S.No",
       key: "sno",
-
       className: 'blue-background-column', 
       render: (text, record, index) => index + 1,
       width: 50,
     },
     {
-      title: "Ino No",
+      title: "Inv Date",
+      dataIndex: "BillDate",
+      key: "BillDate",
+      render: (date) => moment(date).format('DD/MM/YYYY'),
+    },
+    {
+      title: "Inv No",
       dataIndex: "BillNo",
       key: "BillNo",
       align: 'center',
@@ -104,17 +109,10 @@ const Dashboard = () => {
     },
     
     {
-      title: "Bill Date",
-      dataIndex: "BillDate",
-      key: "BillDate",
-      render: (date) => moment(date).format('DD/MM/YYYY'),
-    },
-    {
       title: "Jewel Type",
       dataIndex: "JewelType",
       key: "JewelType",
       width:100,
-
     },
     {
       title: "Customer Name",
@@ -146,25 +144,25 @@ const Dashboard = () => {
       render: (value) => value.toFixed(2),
     },
     {
-      title: "Net Amount",
+      title: "Tax",
+      key: "Tax",
+      align: 'right',
+      render: (text, record) => {
+        const totalTax = (record.CGST + record.SGST + record.IGST).toFixed(2);
+        return (
+          <>
+            <div>{totalTax}</div>
+          </>
+        );
+      },
+    },
+    {
+      title: "Amount",
       dataIndex: "NetAmt",
       key: "NetAmt",
       align: 'right',
       render: (value) => value.toFixed(2),
     },
-    {
-      title: "Tax",
-      key: "Tax",
-      align: 'center',
-      render: (text, record) => {
-        const totalTax = (record.CGST + record.SGST + record.IGST).toFixed(2);
-        return (
-          <>
-            <div style={{ fontSize: '16px', textAlign: 'center' }}> {totalTax}</div>
-          </>
-        );
-      },
-    }
   ];
 
   return (
@@ -205,45 +203,51 @@ const Dashboard = () => {
 
       {/* Filter Row */}
       <Row gutter={[16, 16]} style={{ marginTop: "15px" }}>
-        <Col xs={24} sm={12} md={6} lg={6}>
-        <label style={{ marginRight: 8 ,fontSize:"16px"}}>Start Date:</label>
+  <Col xs={24} sm={12} md={6} lg={6}>
+    <div style={{ display: "flex", alignItems: "center" }}>
+      <label style={{ marginRight: 8, fontSize: "16px", whiteSpace: "nowrap" }}>
+        Start Date:
+      </label>
+      <DatePicker
+        selected={filters.fromDate}
+        onChange={(date) => handleFilterChange("fromDate", date)}
+        customInput={<CustomInput placeholder="From Date" />}
+        dateFormat="dd/MM/yyyy"
+      />
+    </div>
+  </Col>
+  <Col xs={24} sm={12} md={6} lg={6}>
+    <div style={{ display: "flex", alignItems: "center" }}>
+      <label style={{ marginRight: 8, fontSize: "16px", whiteSpace: "nowrap" }}>
+        End Date:
+      </label>
+      <DatePicker
+        selected={filters.toDate}
+        onChange={(date) => handleFilterChange("toDate", date)}
+        customInput={<CustomInput placeholder="To Date" />}
+        dateFormat="dd/MM/yyyy"
+      />
+    </div>
+  </Col>
+  <Col xs={24} sm={12} md={6} lg={6}>
+    <Input
+      placeholder="Search Bill No"
+      onChange={(e) => handleFilterChange("billNo", e.target.value)}
+      style={{ width: "100%" }}
+    />
+  </Col>
+  <Col xs={24} sm={12} md={6} lg={6}>
+    <Select
+      placeholder="Select Jewel Type"
+      onChange={(value) => handleFilterChange("jewelType", value)}
+      style={{ width: "100%" }}
+    >
+      <Option value="Gold">Gold</Option>
+      <Option value="Silver">Silver</Option>
+    </Select>
+  </Col>
+</Row>
 
-          <DatePicker
-            selected={filters.fromDate}
-            onChange={(date) => handleFilterChange("fromDate", date)}
-            customInput={<CustomInput placeholder="From Date" />}
-            dateFormat="dd/MM/yyyy"
-          />
-        </Col>
-        <Col xs={24} sm={12} md={6} lg={6}>
-        <label style={{ marginRight: 8 ,fontSize:"16px"}}>End Date:</label>
-
-          <DatePicker
-            selected={filters.toDate}
-            onChange={(date) => handleFilterChange("toDate", date)}
-            customInput={<CustomInput placeholder="To Date" />}
-            dateFormat="dd/MM/yyyy"
-          />
-        </Col>
-        <Col xs={24} sm={12} md={6} lg={6}>
-          <Input
-            placeholder="Search Bill No"
-            onChange={(e) => handleFilterChange("billNo", e.target.value)}
-            style={{ width: "100%" }}
-          />
-        </Col>
-        <Col xs={24} sm={12} md={6} lg={6}>
-          <Select
-            placeholder="Select Jewel Type"
-            onChange={(value) => handleFilterChange("jewelType", value)}
-            style={{ width: "100%" }}
-          >
-            <Option value="Gold">Gold</Option>
-            <Option value="Silver">Silver</Option>
-            {/* Add more options as necessary */}
-          </Select>
-        </Col>
-      </Row>
 
       {/* Ant Design Table */}
       <Row gutter={[16, 16]} style={{ marginTop: "5px" }}>
