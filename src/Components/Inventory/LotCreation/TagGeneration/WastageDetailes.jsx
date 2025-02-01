@@ -1,15 +1,16 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Row, Col, Typography, Input, Select } from "antd";
 import StoneDetails from "../TagGeneration/StoneDetailes";
+import axios from 'axios';
 
 const { Text } = Typography;
 const { Option } = Select;
 
-const WastageDetails = () => {
+const WastageDetails = ({ categoryRef }) => {
     const [wastageData, setWastageData] = useState([
         {
             key: "1",
-            percentage: "18%",
+            percentage: "",
             direct: "",
             total: "",
             perGram: "",
@@ -18,11 +19,62 @@ const WastageDetails = () => {
         },
     ]);
 
-    const handleWastageChange = (e, key, field) => {
+    const [categories, setCategories] = useState([]);
+    const [selectedCategory, setSelectedCategory] = useState(null);
+
+    const directRef = useRef(null);
+    const direct1Ref = useRef(null);
+
+    const totalRef = useRef(null);
+    const total1Ref = useRef(null);
+
+    const perGramRef = useRef(null);
+    const percentageRef = useRef(null);
+
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const response = await axios.get("http://www.jewelerp.timeserasoftware.in/api/Master/MasterCategoryMasterList");
+                setCategories(response.data);
+            } catch (error) {
+                console.error("Error fetching categories:", error);
+            }
+        };
+
+        fetchCategories();
+    }, []);
+
+    const handleWastageChange = (e, key, field, nextRef) => {
+        const value = e.target.value;
         const updatedData = wastageData.map((item) =>
-            item.key === key ? { ...item, [field]: e.target.value } : item
+            item.key === key ? { ...item, [field]: value } : item
         );
         setWastageData(updatedData);
+    
+        if (nextRef) {
+            nextRef.current.focus();
+        }
+    };
+
+    const handleKeyDown = (e, nextRef, prevRef) => {
+        if (e.key === 'Enter' && nextRef) {
+            nextRef.current.focus();
+        } else if (e.key === 'ArrowLeft' && prevRef) {
+            prevRef.current.focus();
+        }
+    };
+
+    const handleCategoryChange = (value) => {
+        setSelectedCategory(value);
+    };
+
+    const handleCategorySelect = (value) => {
+        setSelectedCategory(value);
+        setTimeout(() => {
+            if (percentageRef.current) {
+                percentageRef.current.focus();
+            }
+        }, 0);
     };
 
     return (
@@ -30,16 +82,12 @@ const WastageDetails = () => {
             {/* Wastage Section */}
             <Row gutter={16}>
                 {/* First Column: Wastage & Making */}
-                <Col xs={24} sm={4} style={{
-                    marginTop: "33px",
-                }}>
-
+                <Col xs={24} sm={4} style={{ marginTop: "33px" }}>
                     <div
                         style={{
                             borderRadius: "10px",
                             padding: "10px",
                             backgroundColor: "#fff",
-
                             boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.1)",
                         }}
                     >
@@ -55,27 +103,31 @@ const WastageDetails = () => {
                                 Category
                             </Text>
                             <Select
-                                value={wastageData[0].percentage}
+                                showSearch
+                                ref={categoryRef}
+                                value={selectedCategory}
                                 placeholder="%"
-                                onChange={(value) =>
-                                    handleWastageChange(
-                                        { target: { value } },
-                                        wastageData[0].key,
-                                        "percentage"
-                                    )
-                                }
+                                onChange={handleCategoryChange}
+                                onSelect={handleCategorySelect}
                                 style={{
                                     width: "100%",
                                     borderRadius: "8px",
                                     marginTop: "4px",
                                 }}
+                                optionFilterProp="children"
+                                filterOption={(input, option) =>
+                                    option.children.toLowerCase().includes(input.toLowerCase())
+                                }
                             >
-                                <Option value="18%">18%</Option>
+                                {categories.map((category) => (
+                                    <Option key={category.categoryname} value={category.categoryname}>
+                                        {category.categoryname}
+                                    </Option>
+                                ))}
                             </Select>
                         </div>
                     </div>
                 </Col>
-
 
                 {/* Second Column: Wastage */}
                 <Col xs={24} sm={8}>
@@ -118,36 +170,39 @@ const WastageDetails = () => {
                             {wastageData.map((item) => (
                                 <React.Fragment key={item.key}>
                                     <Input
+                                        ref={percentageRef}
                                         placeholder="%"
                                         style={{
                                             width: "100%",
                                             borderRadius: "8px",
                                             marginTop: "4px",
                                         }}
+                                        onKeyDown={(e) => handleKeyDown(e, directRef, null)}
                                     />
                                     <Input
+                                        ref={directRef}
                                         value={item.direct}
                                         placeholder="Direct"
                                         onChange={(e) =>
-                                            handleWastageChange(e, item.key, "direct")
+                                            handleWastageChange(e, item.key, "direct", totalRef)
                                         }
                                         style={{
                                             width: "100%",
                                             borderRadius: "8px",
                                             marginTop: "4px",
                                         }}
+                                        onKeyDown={(e) => handleKeyDown(e, totalRef, percentageRef)}
                                     />
                                     <Input
+                                        ref={totalRef}
                                         value={item.total}
                                         placeholder="Total"
-                                        onChange={(e) =>
-                                            handleWastageChange(e, item.key, "total")
-                                        }
                                         style={{
                                             width: "100%",
                                             borderRadius: "8px",
                                             marginTop: "4px",
                                         }}
+                                        onKeyDown={(e) => handleKeyDown(e, perGramRef, directRef)}
                                     />
                                 </React.Fragment>
                             ))}
@@ -196,40 +251,43 @@ const WastageDetails = () => {
                             {wastageData.map((item) => (
                                 <React.Fragment key={item.key}>
                                     <Input
+                                        ref={perGramRef}
                                         value={item.perGram}
                                         placeholder="Per Gram"
                                         onChange={(e) =>
-                                            handleWastageChange(e, item.key, "perGram")
+                                            handleWastageChange(e, item.key, "perGram", direct1Ref)
                                         }
                                         style={{
                                             width: "100%",
                                             borderRadius: "8px",
                                             marginTop: "4px",
                                         }}
+                                        onKeyDown={(e) => handleKeyDown(e, direct1Ref, totalRef)}
                                     />
                                     <Input
+                                        ref={direct1Ref}
                                         value={item.direct}
                                         placeholder="Direct"
                                         onChange={(e) =>
-                                            handleWastageChange(e, item.key, "direct")
+                                            handleWastageChange(e, item.key, "direct", total1Ref)
                                         }
                                         style={{
                                             width: "100%",
                                             borderRadius: "8px",
                                             marginTop: "4px",
                                         }}
+                                        onKeyDown={(e) => handleKeyDown(e, total1Ref, perGramRef)}
                                     />
                                     <Input
+                                        ref={total1Ref}
                                         value={item.total}
                                         placeholder="Total"
-                                        onChange={(e) =>
-                                            handleWastageChange(e, item.key, "total")
-                                        }
                                         style={{
                                             width: "100%",
                                             borderRadius: "8px",
                                             marginTop: "4px",
                                         }}
+                                        onKeyDown={(e) => handleKeyDown(e, null, direct1Ref)}
                                     />
                                 </React.Fragment>
                             ))}

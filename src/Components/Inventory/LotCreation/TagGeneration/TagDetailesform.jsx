@@ -5,7 +5,7 @@ import axios from 'axios';
 const { Option } = Select;
 const { TextArea } = Input;
 
-const TagDetailsForm = ({ mname ,counter, Prefix, manufacturer }) => {
+const TagDetailsForm = ({ mname, counter, prefix, manufacturer }) => {
     const [counterOptions, setCounterOptions] = useState([]);
     const [manufacturerOptions, setManufacturerOptions] = useState([]);
     const [dealerOptions, setDealerOptions] = useState([]);
@@ -13,42 +13,23 @@ const TagDetailsForm = ({ mname ,counter, Prefix, manufacturer }) => {
     const [tableData] = useState([]);
     const [searchText, setSearchText] = useState('');
     const [form] = Form.useForm();
+    console.log("Prefix",prefix);
+    console.log("counter",counter);
+
 
     const baseURL = "http://www.jewelerp.timeserasoftware.in/api/";
 
     useEffect(() => {
         fetchOptions();
     }, [mname]); // Refetch purity options when mname changes
-    
 
     useEffect(() => {
         form.setFieldsValue({
             counter: counter || "",
-            Prefix: Prefix || "",
+            prefix: prefix || "",
             manufacturer: manufacturer || "",
         });
-    }, [counter, Prefix, manufacturer]);
-
-    // const fetchOptions = async () => {
-    //     const fetchData = async (url, setState, filterFn = null) => {
-    //         try {
-    //             const response = await axios.get(url);
-    //             const data = filterFn ? response.data.filter(filterFn) : response.data;
-    //             setState(data);
-    //         } catch (error) {
-    //             message.error(`Failed to fetch data from ${url}`);
-    //         }
-    //     };
-    
-    //     fetchData(`${baseURL}Master/MasterCounterMasterList`, setCounterOptions);
-    //     fetchData(`${baseURL}Master/MasterManufacturerMasterList`, setManufacturerOptions);
-    //     fetchData(`${baseURL}Master/MasterDealerMasterList`, setDealerOptions);
-    
-    //     // Filter purity options based on mname
-    //     fetchData(`${baseURL}Master/MasterPrefixMasterList`, setPurityOptions, item => item.MAINPRODUCT === mname);
-    // };
-    
-
+    }, [counter, prefix, manufacturer]);
 
     const fetchOptions = async () => {
         const fetchData = async (url, setState, filterFn = null) => {
@@ -60,11 +41,11 @@ const TagDetailsForm = ({ mname ,counter, Prefix, manufacturer }) => {
                 message.error(`Failed to fetch data from ${url}`);
             }
         };
-    
+
         fetchData(`${baseURL}Master/MasterCounterMasterList`, setCounterOptions);
         fetchData(`${baseURL}Master/MasterManufacturerMasterList`, setManufacturerOptions);
         fetchData(`${baseURL}Master/MasterDealerMasterList`, setDealerOptions);
-    
+
         // Only fetch purity options if mname is available
         if (mname) {
             fetchData(
@@ -74,7 +55,6 @@ const TagDetailsForm = ({ mname ,counter, Prefix, manufacturer }) => {
             );
         }
     };
-    
 
     const onFinish = (values) => {
         console.log('Form Values:', values);
@@ -92,8 +72,8 @@ const TagDetailsForm = ({ mname ,counter, Prefix, manufacturer }) => {
         },
         {
             title: 'Purity',
-            dataIndex: 'Prefix',
-            key: 'Prefix',
+            dataIndex: 'prefix',
+            key: 'prefix',
             align: "center"
         },
         {
@@ -154,31 +134,31 @@ const TagDetailsForm = ({ mname ,counter, Prefix, manufacturer }) => {
                                 <Col xs={24} sm={8}>
                                     <label style={{ fontSize: "12px" }}>Counter</label>
                                     <Form.Item name="counter" rules={[{ message: 'Please select counter' }]}>
-                                       <Select>
-                            {counterOptions.map((c, index) => (
-                                <Option key={index} value={c.COUNTERNAME}>{c.COUNTERNAME}</Option>
-                            ))}
-                        </Select>
+                                        <Select>
+                                            {counterOptions.map((c, index) => (
+                                                <Option key={index} value={c.COUNTERNAME}>{c.COUNTERNAME}</Option>
+                                            ))}
+                                        </Select>
                                     </Form.Item>
                                 </Col>
                                 <Col xs={24} sm={8}>
                                     <label style={{ fontSize: "12px" }}>Purity</label>
-                                    <Form.Item name="purity" rules={[{ message: 'Please select purity' }]}>
-                                         <Select>
-                            {purityOptions.map((p, index) => (
-                                <Option key={index} value={p.Prefix}>{p.Prefix}</Option>
-                            ))}
-                        </Select>
+                                    <Form.Item name="prefix" rules={[{ message: 'Please select purity' }]}>
+                                        <Select>
+                                            {purityOptions.map((p, index) => (
+                                                <Option key={index} value={p.Prefix}>{p.Prefix}</Option>
+                                            ))}
+                                        </Select>
                                     </Form.Item>
                                 </Col>
                                 <Col xs={24} sm={8}>
                                     <label style={{ fontSize: "12px" }}>Manufacturer</label>
                                     <Form.Item name="manufacturer" rules={[{ message: 'Please select manufacturer' }]}>
-                                         <Select>
-                            {manufacturerOptions.map((m, index) => (
-                                <Option key={index} value={m.MANUFACTURER}>{m.MANUFACTURER}</Option>
-                            ))}
-                        </Select>
+                                        <Select>
+                                            {manufacturerOptions.map((m, index) => (
+                                                <Option key={index} value={m.MANUFACTURER}>{m.MANUFACTURER}</Option>
+                                            ))}
+                                        </Select>
                                     </Form.Item>
                                 </Col>
                             </Row>
