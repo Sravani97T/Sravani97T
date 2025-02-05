@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Form, Input, Select, Button, Checkbox, Row, Col, Card, Table, Tag, message } from 'antd';
 import axios from 'axios';
 
 const { Option } = Select;
 const { TextArea } = Input;
 
-const TagDetailsForm = ({ mname, counter, prefix, manufacturer }) => {
+const TagDetailsForm = ({ mname, counter, prefix, manufacturer, counterRef }) => {
     const [counterOptions, setCounterOptions] = useState([]);
     const [manufacturerOptions, setManufacturerOptions] = useState([]);
     const [dealerOptions, setDealerOptions] = useState([]);
@@ -13,15 +13,14 @@ const TagDetailsForm = ({ mname, counter, prefix, manufacturer }) => {
     const [tableData] = useState([]);
     const [searchText, setSearchText] = useState('');
     const [form] = Form.useForm();
-    console.log("Prefix",prefix);
-    console.log("counter",counter);
-
-
+    const purityRef = useRef(null);
+    const manufacturerRef = useRef(null);
+    const dealerRef = useRef(null);
     const baseURL = "http://www.jewelerp.timeserasoftware.in/api/";
 
     useEffect(() => {
         fetchOptions();
-    }, [mname]); // Refetch purity options when mname changes
+    }, [mname]);
 
     useEffect(() => {
         form.setFieldsValue({
@@ -46,13 +45,24 @@ const TagDetailsForm = ({ mname, counter, prefix, manufacturer }) => {
         fetchData(`${baseURL}Master/MasterManufacturerMasterList`, setManufacturerOptions);
         fetchData(`${baseURL}Master/MasterDealerMasterList`, setDealerOptions);
 
-        // Only fetch purity options if mname is available
         if (mname) {
             fetchData(
                 `${baseURL}Master/MasterPrefixMasterList`,
                 setPurityOptions,
                 (item) => item.MAINPRODUCT === mname
             );
+        }
+    };
+
+    const handleKeyDown = (e, nextRef, prevRef) => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            e.stopPropagation();
+            if (nextRef && nextRef.current) {
+                nextRef.current.focus();
+            }
+        } else if (e.key === "ArrowLeft" && prevRef && prevRef.current) {
+            prevRef.current.focus();
         }
     };
 
@@ -134,7 +144,12 @@ const TagDetailsForm = ({ mname, counter, prefix, manufacturer }) => {
                                 <Col xs={24} sm={8}>
                                     <label style={{ fontSize: "12px" }}>Counter</label>
                                     <Form.Item name="counter" rules={[{ message: 'Please select counter' }]}>
-                                        <Select>
+                                        <Select
+                                            ref={counterRef}
+                                            showSearch
+                                            placeholder="Select a counter"
+                                            onKeyDown={(e) => handleKeyDown(e, purityRef, null)}
+                                        >
                                             {counterOptions.map((c, index) => (
                                                 <Option key={index} value={c.COUNTERNAME}>{c.COUNTERNAME}</Option>
                                             ))}
@@ -144,7 +159,12 @@ const TagDetailsForm = ({ mname, counter, prefix, manufacturer }) => {
                                 <Col xs={24} sm={8}>
                                     <label style={{ fontSize: "12px" }}>Purity</label>
                                     <Form.Item name="prefix" rules={[{ message: 'Please select purity' }]}>
-                                        <Select>
+                                        <Select
+                                            ref={purityRef}
+                                            showSearch
+                                            placeholder="Select purity"
+                                            onKeyDown={(e) => handleKeyDown(e, manufacturerRef, counterRef)}
+                                        >
                                             {purityOptions.map((p, index) => (
                                                 <Option key={index} value={p.Prefix}>{p.Prefix}</Option>
                                             ))}
@@ -154,7 +174,12 @@ const TagDetailsForm = ({ mname, counter, prefix, manufacturer }) => {
                                 <Col xs={24} sm={8}>
                                     <label style={{ fontSize: "12px" }}>Manufacturer</label>
                                     <Form.Item name="manufacturer" rules={[{ message: 'Please select manufacturer' }]}>
-                                        <Select>
+                                        <Select
+                                            ref={manufacturerRef}
+                                            showSearch
+                                            placeholder="Select manufacturer"
+                                            onKeyDown={(e) => handleKeyDown(e, dealerRef, purityRef)}
+                                        >
                                             {manufacturerOptions.map((m, index) => (
                                                 <Option key={index} value={m.MANUFACTURER}>{m.MANUFACTURER}</Option>
                                             ))}
@@ -166,7 +191,12 @@ const TagDetailsForm = ({ mname, counter, prefix, manufacturer }) => {
                                 <Col xs={12} sm={8}>
                                     <label style={{ fontSize: "12px" }}>Dealer Name</label>
                                     <Form.Item name="dealerName">
-                                        <Select>
+                                        <Select
+                                            ref={dealerRef}
+                                            showSearch
+                                            placeholder="Select dealer"
+                                            onKeyDown={(e) => handleKeyDown(e, null, manufacturerRef)}
+                                        >
                                             {dealerOptions.map((dealer, index) => (
                                                 <Option key={index} value={dealer.DEALERNAME}>{dealer.DEALERNAME}</Option>
                                             ))}
@@ -176,13 +206,13 @@ const TagDetailsForm = ({ mname, counter, prefix, manufacturer }) => {
                                 <Col xs={12} sm={8}>
                                     <label style={{ fontSize: "12px" }}>HUID</label>
                                     <Form.Item name="huid">
-                                        <Input />
+                                        <Input onKeyDown={(e) => handleKeyDown(e, counterRef, dealerRef)} />
                                     </Form.Item>
                                 </Col>
                                 <Col xs={24} sm={8}>
                                     <label style={{ fontSize: "12px" }}>Size</label>
                                     <Form.Item name="size">
-                                        <Input />
+                                        <Input onKeyDown={(e) => handleKeyDown(e, counterRef, dealerRef)} />
                                     </Form.Item>
                                 </Col>
                             </Row>
@@ -190,13 +220,13 @@ const TagDetailsForm = ({ mname, counter, prefix, manufacturer }) => {
                                 <Col xs={24} sm={8}>
                                     <label style={{ fontSize: "12px" }}>Certificate No.</label>
                                     <Form.Item name="certificateNo">
-                                        <Input />
+                                        <Input onKeyDown={(e) => handleKeyDown(e, counterRef, dealerRef)} />
                                     </Form.Item>
                                 </Col>
                                 <Col xs={24} sm={8}>
                                     <label style={{ fontSize: "12px" }}>Description</label>
                                     <Form.Item name="description">
-                                        <TextArea rows={1} />
+                                        <TextArea rows={1} onKeyDown={(e) => handleKeyDown(e, counterRef, dealerRef)} />
                                     </Form.Item>
                                 </Col>
                                 <Col xs={24} sm={8}>
@@ -217,19 +247,19 @@ const TagDetailsForm = ({ mname, counter, prefix, manufacturer }) => {
                                 <Col xs={8}>
                                     <label style={{ fontSize: "12px" }}>GWT</label>
                                     <Form.Item name="gwt">
-                                        <Input size="small" />
+                                        <Input size="small" onKeyDown={(e) => handleKeyDown(e, counterRef, dealerRef)} />
                                     </Form.Item>
                                 </Col>
                                 <Col xs={8}>
                                     <label style={{ fontSize: "12px" }}>LES</label>
                                     <Form.Item name="les">
-                                        <Input size="small" />
+                                        <Input size="small" onKeyDown={(e) => handleKeyDown(e, counterRef, dealerRef)} />
                                     </Form.Item>
                                 </Col>
                                 <Col xs={8}>
                                     <label style={{ fontSize: "12px" }}>NWT</label>
                                     <Form.Item name="nwt">
-                                        <Input size="small" />
+                                        <Input size="small" onKeyDown={(e) => handleKeyDown(e, counterRef, dealerRef)} />
                                     </Form.Item>
                                 </Col>
                             </Row>
@@ -237,19 +267,19 @@ const TagDetailsForm = ({ mname, counter, prefix, manufacturer }) => {
                                 <Col xs={8}>
                                     <label style={{ fontSize: "12px" }}>Cost</label>
                                     <Form.Item name="cost">
-                                        <Input size="small" />
+                                        <Input size="small" onKeyDown={(e) => handleKeyDown(e, counterRef, dealerRef)} />
                                     </Form.Item>
                                 </Col>
                                 <Col xs={8}>
                                     <label style={{ fontSize: "12px" }}>MC/G</label>
                                     <Form.Item name="mcg">
-                                        <Input size="small" />
+                                        <Input size="small" onKeyDown={(e) => handleKeyDown(e, counterRef, dealerRef)} />
                                     </Form.Item>
                                 </Col>
                                 <Col xs={8}>
                                     <label style={{ fontSize: "12px" }}>MC/Amount</label>
                                     <Form.Item name="mcAmount">
-                                        <Input size="small" />
+                                        <Input size="small" onKeyDown={(e) => handleKeyDown(e, counterRef, dealerRef)} />
                                     </Form.Item>
                                 </Col>
                             </Row>
@@ -273,6 +303,7 @@ const TagDetailsForm = ({ mname, counter, prefix, manufacturer }) => {
                                             boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)",
                                             margin: "0 auto",
                                         }}
+                                        onKeyDown={(e) => handleKeyDown(e, counterRef, dealerRef)}
                                     />
                                 </Col>
                             </Row>

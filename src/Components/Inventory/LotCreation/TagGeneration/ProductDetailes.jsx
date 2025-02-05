@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Row, Col, Typography, Input, Select, Upload, message, Spin } from "antd";
+import { Row, Col, Typography, Input, Select, Upload, message } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import axios from 'axios';
 import WastageDetails from "./WastageDetailes";
@@ -16,7 +16,6 @@ const ProductDetails = ({ mname, productNameRef }) => {
   const [breadsLess, setBreadsLess] = useState(0);
   const [totalLess, setTotalLess] = useState(0);
   const [nwt, setNwt] = useState(0);
-  const [loading, setLoading] = useState(false);
   const pcsRef = useRef(null);
   const gwtRef = useRef(null);
   const breadsLessRef = useRef(null);
@@ -27,16 +26,13 @@ const ProductDetails = ({ mname, productNameRef }) => {
   // Fetch product data based on mname
   useEffect(() => {
     if (!mname) return;
-    setLoading(true);
     const url = `http://www.jewelerp.timeserasoftware.in/api/Master/GetDataFromGivenTableNameWithWhereandOrder?tableName=PRODUCT_MASTER&where=MNAME='${mname}'&order=PRODUCTNAME`;
     axios.get(url)
       .then(response => {
         setProducts(response.data);
-        setLoading(false);
       })
       .catch(error => {
         console.error('Error fetching product data:', error);
-        setLoading(false);
       });
   }, [mname]);
 
@@ -58,13 +54,6 @@ const ProductDetails = ({ mname, productNameRef }) => {
     return isJpgOrPng && isLt2M;
   };
 
-  const handleSelect = (value) => {
-    setCategory(value);
-    if (pcsRef.current) {
-      pcsRef.current.focus();
-    }
-  };
-
   const handleKeyDown = (e, nextRef, prevRef, category) => {
     if (e.key === "Enter") {
       e.preventDefault();
@@ -82,10 +71,32 @@ const ProductDetails = ({ mname, productNameRef }) => {
     }
   };
 
+  const [selectedProduct, setSelectedProduct] = useState('');
+
+  const handleSelect = (value) => {
+    setSelectedProduct(value);
+    if (pcsRef.current) {
+      pcsRef.current.focus();
+    }
+  };
+
   const handleProductNameKeyDown = (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
       e.stopPropagation();
+    } else if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      const options = products.map(product => product.PRODUCTNAME);
+      const currentIndex = options.indexOf(selectedProduct);
+      let newIndex = currentIndex;
+
+      if (e.key === "ArrowDown") {
+        newIndex = (currentIndex + 1) % options.length;
+      } else if (e.key === "ArrowUp") {
+        newIndex = (currentIndex - 1 + options.length) % options.length;
+      }
+
+      const newSelectedProduct = options[newIndex];
+      setSelectedProduct(newSelectedProduct);
     }
   };
 
@@ -116,32 +127,40 @@ const ProductDetails = ({ mname, productNameRef }) => {
           }}
         >
           <Row gutter={16} justify="start" align="middle">
-            {/* Product Name Dropdown */}
             <Col xs={24} sm={8} md={6}>
               <div style={{ textAlign: "center", marginBottom: "8px" }}>
                 <Text style={{ fontSize: "12px" }}>Product Name</Text>
               </div>
-              <Spin spinning={loading}>
-                <Select
-                  ref={productNameRef}
-                  placeholder="Select a product"
-                  style={{ width: "100%" }}
-                  showSearch
-                  autoFocus
-                  onSelect={handleSelect}
-                  onKeyDown={handleProductNameKeyDown}
-                >
-                  {products.length > 0 ? (
-                    products.map(product => (
-                      <Option key={product.PRODUCTCODE} value={product.PRODUCTNAME}>
-                        {product.PRODUCTNAME}
-                      </Option>
-                    ))
-                  ) : (
-                    <Option disabled>No products available</Option>
-                  )}
-                </Select>
-              </Spin>
+              <Select
+                ref={productNameRef}
+                placeholder="Select a product"
+                style={{ width: "100%" }}
+                showSearch
+                autoFocus
+                value={selectedProduct || undefined}
+                onSelect={handleSelect}
+                onKeyDown={handleProductNameKeyDown}
+                dropdownRender={menu => (
+                  <div>
+                    {menu}
+                    <style jsx>{`
+                      .ant-select-item-option-active {
+                        background-color: rgb(125, 248, 156) !important;
+                      }
+                    `}</style>
+                  </div>
+                )}
+              >
+                {products.length > 0 ? (
+                  products.map(product => (
+                    <Option key={product.PRODUCTCODE} value={product.PRODUCTNAME}>
+                      {product.PRODUCTNAME}
+                    </Option>
+                  ))
+                ) : (
+                  <Option disabled>No products available</Option>
+                )}
+              </Select>
             </Col>
 
             {/* PCS */}
@@ -154,7 +173,7 @@ const ProductDetails = ({ mname, productNameRef }) => {
                 type="number"
                 value={pcs}
                 placeholder="Enter PCS"
-                style={{ width: "100%" }}
+                style={{ width: "100%", textAlign: "right" }}
                 onChange={(e) => setPcs(e.target.value)}
                 onKeyDown={(e) => handleKeyDown(e, gwtRef, null)}
               />
@@ -170,7 +189,7 @@ const ProductDetails = ({ mname, productNameRef }) => {
                 type="number"
                 value={gwt === 0 ? '' : gwt}
                 placeholder="Enter GWT"
-                style={{ width: "100%" }}
+                style={{ width: "100%", textAlign: "right" }}
                 onChange={(e) => setGwt(e.target.value)}
                 onKeyDown={(e) => handleKeyDown(e, breadsLessRef, pcsRef)}
               />
@@ -186,7 +205,7 @@ const ProductDetails = ({ mname, productNameRef }) => {
                 type="number"
                 value={breadsLess === 0 ? '' : breadsLess}
                 placeholder="Enter Breads Less Weight"
-                style={{ width: "100%" }}
+                style={{ width: "100%", textAlign: "right" }}
                 onChange={(e) => setBreadsLess(e.target.value)}
                 onKeyDown={(e) => handleKeyDown(e, totalLessRef, gwtRef)}
               />
@@ -202,7 +221,7 @@ const ProductDetails = ({ mname, productNameRef }) => {
                 type="number"
                 value={totalLess === 0 ? '' : totalLess}
                 placeholder="Enter Total Less"
-                style={{ width: "100%" }}
+                style={{ width: "100%", textAlign: "right" }}
                 onChange={(e) => setTotalLess(e.target.value)}
                 onKeyDown={(e) => handleKeyDown(e, nwtRef, breadsLessRef)}
               />
@@ -218,7 +237,7 @@ const ProductDetails = ({ mname, productNameRef }) => {
                 type="number"
                 value={nwt === 0 ? '' : nwt}
                 placeholder="Enter NWT"
-                style={{ width: "100%" }}
+                style={{ width: "100%", textAlign: "right" }}
                 readOnly
                 onKeyDown={(e) => handleKeyDown(e, categoryRef, totalLessRef)}
               />
@@ -265,7 +284,7 @@ const ProductDetails = ({ mname, productNameRef }) => {
           </Row>
         </div>
       </div>
-      <WastageDetails categoryRef={categoryRef} />
+      <WastageDetails categoryRef={categoryRef} nwt={nwt}/>
     </>
   );
 };
