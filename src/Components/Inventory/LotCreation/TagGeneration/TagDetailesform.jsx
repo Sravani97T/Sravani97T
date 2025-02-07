@@ -6,7 +6,7 @@ import TableHeaderStyles from '../../../Pages/TableHeaderStyles';
 const { Option } = Select;
 const { TextArea } = Input;
 
-const TagDetailsForm = ({ lotno, mname, nwt, counter, prefix, manufacturer, counterRef,setWastageData,setSelectedProduct,setSelectedCategory,
+const TagDetailsForm = ({ lotno, mname, nwt, counter, prefix, manufacturer, counterRef, setWastageData, setSelectedProduct, setSelectedCategory,
     dealername, hsncode, productcategory,
     productname, productcode, gwt, bswt, aswt, pieces, selectedCategory, wastage,
     directwastage, cattotwast, makingcharges, directmc, cattotmc, setGwt, setBreadsLess,
@@ -14,14 +14,17 @@ const TagDetailsForm = ({ lotno, mname, nwt, counter, prefix, manufacturer, coun
     const [counterOptions, setCounterOptions] = useState([]);
     const [manufacturerOptions, setManufacturerOptions] = useState([]);
     const [dealerOptions, setDealerOptions] = useState([]);
+    // console.log("dealerOptions",dealerOptions)
     const [purityOptions, setPurityOptions] = useState([]);
     const [tableData, setTableData] = useState([]);
     const [searchText, setSearchText] = useState('');
+
     const [form] = Form.useForm();
     const purityRef = useRef(null);
     const manufacturerRef = useRef(null);
     const dealerRef = useRef(null);
     const huidRef = useRef(null);
+
 
     const sizeRef = useRef(null);
 
@@ -29,7 +32,15 @@ const TagDetailsForm = ({ lotno, mname, nwt, counter, prefix, manufacturer, coun
     const descriptionRef = useRef(null);
 
     const labreportRef = useRef(null);
-
+    const [selectedCounter, setSelectedCounter] = useState(""); // State for selected counter
+    const [inputValue, setInputValue] = useState(""); // State for search input
+    const [selectedPurity, setSelectedPurity] = useState(""); // State for selected purity
+    const [purityInputValue, setPurityInputValue] = useState(""); // State for search input
+    const [selectedManufacturer, setSelectedManufacturer] = useState(""); // State for selected manufacturer
+    const [manufacturerInputValue, setManufacturerInputValue] = useState(""); // State for search input
+    const [selectedDealer, setSelectedDealer] = useState(""); // State for selected dealer
+    const [dealerInputValue, setDealerInputValue] = useState(""); // State for search input
+    
     const baseURL = "http://www.jewelerp.timeserasoftware.in/api/";
 
     useEffect(() => {
@@ -59,7 +70,8 @@ const TagDetailsForm = ({ lotno, mname, nwt, counter, prefix, manufacturer, coun
 
         fetchData(`${baseURL}Master/MasterCounterMasterList`, setCounterOptions);
         fetchData(`${baseURL}Master/MasterManufacturerMasterList`, setManufacturerOptions);
-        fetchData(`${baseURL}Master/MasterDealerMasterList`, setDealerOptions);
+        fetchData(`http://www.jewelerp.timeserasoftware.in/api/Master/GetDataFromGivenTableNameWithWhereandOrder?tableName=DEALER_MASTER&where=CUSTTYPE%3D%27DEALER%27&order=DEALERNAME
+`, setDealerOptions);
 
         if (mname) {
             fetchData(
@@ -183,7 +195,7 @@ const TagDetailsForm = ({ lotno, mname, nwt, counter, prefix, manufacturer, coun
                 cosT_CATEGORY: "-",
                 tagGeneration: "true"
             };
-    
+
             const response = await axios.post(`${baseURL}Erp/TagGenerationInsert`, payload);
             if (response) {
                 message.success('Data saved successfully');
@@ -219,13 +231,14 @@ const TagDetailsForm = ({ lotno, mname, nwt, counter, prefix, manufacturer, coun
                         newField1: "",
                         newField2: "",
                     },
-                ]);            }
+                ]);
+            }
         } catch (error) {
             message.error('Failed to save data');
         }
     };
-    
-    
+
+
     const filteredData = tableData.filter((item) =>
         item.PRODUCTNAME.toLowerCase().includes(searchText.toLowerCase())
     );
@@ -292,7 +305,149 @@ const TagDetailsForm = ({ lotno, mname, nwt, counter, prefix, manufacturer, coun
     ];
     const totalGwt = tableData.reduce((sum, item) => sum + item.GWT, 0).toFixed(3);
     const totalNwt = tableData.reduce((sum, item) => sum + item.NWT, 0).toFixed(3);
+    const handleCounterSelect = (value) => {
+        setSelectedCounter(value);
+        setInputValue(""); // Clear input after selection
 
+        setTimeout(() => {
+            if (purityRef.current) {
+                purityRef.current.focus(); // Move to next input
+            }
+        }, 100);
+    };
+
+    // ✅ Properly handle typing + Enter to select an option
+    const handleCounterKeyDown = (e) => {
+        if (e.key === "Enter") {
+            e.preventDefault(); // Prevent form submission
+
+            const typedValue = inputValue.trim();
+            const matchedOption = counterOptions.find(
+                (c) => c.COUNTERNAME.toLowerCase() === typedValue.toLowerCase()
+            );
+
+            if (matchedOption) {
+                setSelectedCounter(matchedOption.COUNTERNAME);
+                setInputValue(""); // Clear input for next search
+            }
+
+            setTimeout(() => {
+                if (purityRef.current) {
+                    purityRef.current.focus();
+                }
+            }, 100);
+        }
+    };
+
+    const handlePuritySelect = (value) => {
+        setSelectedPurity(value);
+        setPurityInputValue(""); // Clear input after selection
+
+        setTimeout(() => {
+            if (manufacturerRef.current) {
+                manufacturerRef.current.focus(); // Move focus to the next field
+            }
+        }, 100);
+    };
+
+    // ✅ Properly handle typing + Enter to select an option
+    const handlePurityKeyDown = (e) => {
+        if (e.key === "Enter") {
+            e.preventDefault(); // Prevent form submission
+
+            const typedValue = purityInputValue.trim();
+            const matchedOption = purityOptions.find(
+                (p) => p.Prefix.toLowerCase() === typedValue.toLowerCase()
+            );
+
+            if (matchedOption) {
+                setSelectedPurity(matchedOption.Prefix);
+                setPurityInputValue(""); // Clear input for next search
+            }
+
+            setTimeout(() => {
+                if (manufacturerRef.current) {
+                    manufacturerRef.current.focus();
+                }
+            }, 100);
+        }
+    };
+    const handleManufacturerSelect = (value) => {
+        setSelectedManufacturer(value);
+        setManufacturerInputValue(""); // Clear input after selection
+
+        setTimeout(() => {
+            if (dealerRef.current) {
+                dealerRef.current.focus(); // Move focus to the next field
+            }
+        }, 100);
+    };
+
+    // ✅ Properly handle typing + Enter to select an option
+    const handleManufacturerKeyDown = (e) => {
+        if (e.key === "Enter") {
+            e.preventDefault(); // Prevent form submission
+
+            const typedValue = manufacturerInputValue.trim();
+            const matchedOption = manufacturerOptions.find(
+                (m) => m.MANUFACTURER.toLowerCase() === typedValue.toLowerCase()
+            );
+
+            if (matchedOption) {
+                setSelectedManufacturer(matchedOption.MANUFACTURER);
+                setManufacturerInputValue(""); // Clear input for next search
+            }
+
+            setTimeout(() => {
+                if (dealerRef.current) {
+                    dealerRef.current.focus();
+                }
+            }, 100);
+        }
+    };
+    const handleDealerChange = (value) => {
+        setSelectedDealer(value);
+        setDealerInputValue(""); // ✅ Clears input after selection
+      };
+      
+      const handleDealerSelect = (value) => {
+        setSelectedDealer(value);
+        setDealerInputValue(""); // ✅ Clears input after selection
+      
+        setTimeout(() => {
+          if (huidRef.current) {
+            huidRef.current.focus(); // ✅ Moves focus to next field
+          }
+        }, 100);
+      };
+      
+      const handleDealerKeyDown = (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault(); // ✅ Prevents reopening dropdown
+      
+          const typedValue = dealerInputValue?.trim();
+          if (!typedValue) return;
+      
+          const matchedOption = dealerOptions.find(
+            (d) => d.Dealername?.toLowerCase() === typedValue.toLowerCase()
+          );
+      
+          if (matchedOption) {
+            setSelectedDealer(matchedOption.Dealername);
+          } else {
+            setSelectedDealer(typedValue); // ✅ Allows new entry if not in the list
+          }
+      
+          setDealerInputValue(""); // ✅ Clears input after Enter
+      
+          setTimeout(() => {
+            if (huidRef.current) {
+              huidRef.current.focus(); // ✅ Moves focus to next field
+            }
+          }, 100);
+        }
+      };
+      
     return (
         <>
             <Row gutter={[16, 16]} justify="center">
@@ -302,45 +457,93 @@ const TagDetailsForm = ({ lotno, mname, nwt, counter, prefix, manufacturer, coun
                             <Row gutter={[8, 16]}>
                                 <Col xs={24} sm={8}>
                                     <label style={{ fontSize: "12px" }}>Counter</label>
-                                    <Form.Item name="counter" rules={[{ message: 'Please select counter' }]}>
+                                    <Form.Item name="counter" rules={[{ message: "Please select counter" }]}>
                                         <Select
                                             ref={counterRef}
                                             showSearch
                                             placeholder="Select a counter"
-                                            onKeyDown={(e) => handleKeyDown(e, purityRef, null)}
+                                            value={selectedCounter || undefined} // ✅ Fix value binding
+                                            onSelect={handleCounterSelect}
+                                            onSearch={(value) => setInputValue(value)} // ✅ Keep track of typed value
+                                            onKeyDown={handleCounterKeyDown}
+                                            optionFilterProp="children"
+                                            filterOption={(input, option) =>
+                                                option.children.toLowerCase().includes(input.toLowerCase())
+                                            }
+                                            dropdownRender={menu => (
+                                                <div>
+                                                    {menu}
+                                                    <style jsx>{`
+                                            .ant-select-item-option-active {
+                                              background-color: rgb(125, 248, 156) !important;
+                                            }
+                                          `}</style>
+                                                </div>
+                                            )}
                                         >
                                             {counterOptions.map((c, index) => (
-                                                <Option key={index} value={c.COUNTERNAME}>{c.COUNTERNAME}</Option>
+                                                <Option key={index} value={c.COUNTERNAME}>
+                                                    {c.COUNTERNAME}
+                                                </Option>
                                             ))}
                                         </Select>
                                     </Form.Item>
                                 </Col>
+
                                 <Col xs={24} sm={8}>
                                     <label style={{ fontSize: "12px" }}>Purity</label>
-                                    <Form.Item name="prefix" rules={[{ message: 'Please select purity' }]}>
+                                    <Form.Item name="prefix" rules={[{ message: "Please select purity" }]}>
                                         <Select
                                             ref={purityRef}
                                             showSearch
                                             placeholder="Select purity"
-                                            onKeyDown={(e) => handleKeyDown(e, manufacturerRef, counterRef)}
+                                            value={selectedPurity || undefined} // ✅ Fix value binding
+                                            onSelect={handlePuritySelect}
+                                            onSearch={(value) => setPurityInputValue(value)} // ✅ Track typed value
+                                            onKeyDown={handlePurityKeyDown}
+                                            optionFilterProp="children"
+                                            filterOption={(input, option) =>
+                                                option.children.toLowerCase().includes(input.toLowerCase())
+                                            }
+                                            dropdownRender={menu => (
+                                                <div>
+                                                    {menu}
+                                                    <style jsx>{`
+                .ant-select-item-option-active {
+                  background-color: rgb(125, 248, 156) !important;
+                }
+              `}</style>
+                                                </div>
+                                            )}
                                         >
                                             {purityOptions.map((p, index) => (
-                                                <Option key={index} value={p.Prefix}>{p.Prefix}</Option>
+                                                <Option key={index} value={p.Prefix}>
+                                                    {p.Prefix}
+                                                </Option>
                                             ))}
                                         </Select>
                                     </Form.Item>
                                 </Col>
                                 <Col xs={24} sm={8}>
                                     <label style={{ fontSize: "12px" }}>Manufacturer</label>
-                                    <Form.Item name="manufacturer" rules={[{ message: 'Please select manufacturer' }]}>
+                                    <Form.Item name="manufacturer" rules={[{ message: "Please select manufacturer" }]}>
                                         <Select
                                             ref={manufacturerRef}
                                             showSearch
                                             placeholder="Select manufacturer"
-                                            onKeyDown={(e) => handleKeyDown(e, dealerRef, purityRef)}
+                                            value={selectedManufacturer || undefined} // ✅ Fix value binding
+                                            onSelect={handleManufacturerSelect}
+                                            onSearch={(value) => setManufacturerInputValue(value)} // ✅ Track typed value
+                                            onKeyDown={handleManufacturerKeyDown}
+                                            optionFilterProp="children"
+                                            filterOption={(input, option) =>
+                                                option.children.toLowerCase().includes(input.toLowerCase())
+                                            }
                                         >
                                             {manufacturerOptions.map((m, index) => (
-                                                <Option key={index} value={m.MANUFACTURER}>{m.MANUFACTURER}</Option>
+                                                <Option key={index} value={m.MANUFACTURER}>
+                                                    {m.MANUFACTURER}
+                                                </Option>
                                             ))}
                                         </Select>
                                     </Form.Item>
@@ -350,16 +553,37 @@ const TagDetailsForm = ({ lotno, mname, nwt, counter, prefix, manufacturer, coun
                                 <Col xs={12} sm={8}>
                                     <label style={{ fontSize: "12px" }}>Dealer Name</label>
                                     <Form.Item name="dealerName">
-                                        <Select
-                                            ref={dealerRef}
-                                            showSearch
-                                            placeholder="Select dealer"
-                                            onKeyDown={(e) => handleKeyDown(e, null, manufacturerRef)}
-                                        >
-                                            {dealerOptions.map((dealer, index) => (
-                                                <Option key={index} value={dealer.DEALERNAME}>{dealer.DEALERNAME}</Option>
-                                            ))}
-                                        </Select>
+                                    <Select
+  ref={dealerRef}
+  showSearch
+  value={selectedDealer || dealerInputValue} // ✅ Ensures correct value display
+  placeholder="Select dealer"
+  onChange={handleDealerChange} // ✅ Updates selected value when changed
+  onSelect={handleDealerSelect} // ✅ Handles item selection
+  onSearch={(value) => setDealerInputValue(value)} // ✅ Captures user input
+  onKeyDown={handleDealerKeyDown} // ✅ Handles Enter & Arrow navigation
+  optionFilterProp="children"
+  filterOption={(input, option) =>
+    option?.children?.toLowerCase().includes(input?.toLowerCase())
+  }
+  dropdownRender={(menu) => (
+    <div>
+      {menu}
+      <style jsx>{`
+        .ant-select-item-option-active {
+          background-color: rgb(125, 248, 156) !important;
+        }
+      `}</style>
+    </div>
+  )}
+>
+  {dealerOptions.map((dealer, index) => (
+    <Option key={index} value={dealer.Dealername}>
+      {dealer.Dealername}
+    </Option>
+  ))}
+</Select>
+
                                     </Form.Item>
                                 </Col>
                                 <Col xs={12} sm={8}>
@@ -367,7 +591,7 @@ const TagDetailsForm = ({ lotno, mname, nwt, counter, prefix, manufacturer, coun
                                     <Form.Item name="huid">
                                         <Input
                                             ref={huidRef}
-                                            onKeyDown={(e) => handleKeyDown(e, counterRef, sizeRef)} />
+                                            onKeyDown={(e) => handleKeyDown(e, sizeRef)} />
                                     </Form.Item>
                                 </Col>
                                 <Col xs={24} sm={8}>
@@ -375,7 +599,7 @@ const TagDetailsForm = ({ lotno, mname, nwt, counter, prefix, manufacturer, coun
                                     <Form.Item name="size">
                                         <Input
                                             ref={sizeRef}
-                                            onKeyDown={(e) => handleKeyDown(e, counterRef, certificatenoRef)} />
+                                            onKeyDown={(e) => handleKeyDown(e, certificatenoRef)} />
                                     </Form.Item>
                                 </Col>
                             </Row>
@@ -385,7 +609,7 @@ const TagDetailsForm = ({ lotno, mname, nwt, counter, prefix, manufacturer, coun
                                     <Form.Item name="certificateNo">
                                         <Input
                                             ref={certificatenoRef}
-                                            onKeyDown={(e) => handleKeyDown(e, counterRef, descriptionRef)} />
+                                            onKeyDown={(e) => handleKeyDown(e, descriptionRef)} />
                                     </Form.Item>
                                 </Col>
                                 <Col xs={24} sm={8}>
@@ -393,7 +617,7 @@ const TagDetailsForm = ({ lotno, mname, nwt, counter, prefix, manufacturer, coun
                                     <Form.Item name="description">
                                         <TextArea
                                             ref={descriptionRef}
-                                            rows={1} onKeyDown={(e) => handleKeyDown(e, counterRef, labreportRef)} />
+                                            rows={1} onKeyDown={(e) => handleKeyDown(e, labreportRef)} />
                                     </Form.Item>
                                 </Col>
                                 <Col xs={24} sm={8}>
@@ -471,7 +695,13 @@ const TagDetailsForm = ({ lotno, mname, nwt, counter, prefix, manufacturer, coun
                                             boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)",
                                             margin: "0 auto",
                                         }}
-                                        onKeyDown={(e) => handleKeyDown(e, counterRef, dealerRef)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === "Enter") {
+                                                handleSave();
+                                            } else {
+                                                handleKeyDown(e, counterRef, dealerRef);
+                                            }
+                                        }}
                                     />
                                 </Col>
                             </Row>

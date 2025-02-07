@@ -59,9 +59,13 @@ const WastageDetails = ({ categoryRef, nwt, mname,setGwt,setBreadsLess,setTotalL
     };
 
     const handleCategoryChange = (value) => {
-        setSelectedCategory(value);
+        setSelectedCategory("");
+        setTimeout(() => {
+            setSelectedCategory(value);
+        }, 0); // Small delay to ensure state update
+        
         setIsEditable(value === "OTHERS");
-
+    
         if (value === "OTHERS") {
             setWastageData([
                 {
@@ -82,7 +86,9 @@ const WastageDetails = ({ categoryRef, nwt, mname,setGwt,setBreadsLess,setTotalL
                         key: "1",
                         percentage: selectedOption.wastage,
                         direct: selectedOption.directwastage.toFixed(3),
-                        total: parseFloat(selectedOption.directwastage) > 0 ? selectedOption.directwastage.toFixed(3) : ((selectedOption.wastage * nwt) / 100 + selectedOption.directwastage).toFixed(3),
+                        total: parseFloat(selectedOption.directwastage) > 0
+                            ? selectedOption.directwastage.toFixed(3)
+                            : ((selectedOption.wastage * nwt) / 100 + selectedOption.directwastage).toFixed(3),
                         perGram: selectedOption.makingcharges.toFixed(2),
                         newField1: selectedOption.directmc.toFixed(2),
                         newField2: (selectedOption.makingcharges * nwt).toFixed(2),
@@ -91,45 +97,44 @@ const WastageDetails = ({ categoryRef, nwt, mname,setGwt,setBreadsLess,setTotalL
             }
         }
     };
+    
 
     const handleCategorySelect = (value) => {
-        const selectedOption = categories.find(item => item.categoryname === value);
-        if (selectedOption) {
-            const updatedData = wastageData.map((item) => ({
-                ...item,
-                percentage: selectedOption.wastage,
-                direct: selectedOption.directwastage.toFixed(3),
-                total: parseFloat(selectedOption.directwastage) > 0 ? selectedOption.directwastage.toFixed(3) : ((selectedOption.wastage * nwt) / 100 + selectedOption.directwastage).toFixed(3),
-                perGram: selectedOption.makingcharges.toFixed(2),
-                newField1: selectedOption.directmc.toFixed(2),
-                newField2: (selectedOption.makingcharges * nwt).toFixed(2),
-            }));
-            setWastageData(updatedData);
-        }
-        setSelectedCategory(value);
-        setIsEditable(value === "OTHERS");
+        setSelectedCategory("");  // Reset first
         setTimeout(() => {
-            if (percentageRef.current) {
-                percentageRef.current.focus();
+            setSelectedCategory(value);
+            const selectedOption = categories.find(item => item.categoryname === value);
+            if (selectedOption) {
+                setWastageData(wastageData.map(item => ({
+                    ...item,
+                    percentage: selectedOption.wastage,
+                    direct: selectedOption.directwastage.toFixed(3),
+                    total: parseFloat(selectedOption.directwastage) > 0
+                        ? selectedOption.directwastage.toFixed(3)
+                        : ((selectedOption.wastage * nwt) / 100 + selectedOption.directwastage).toFixed(3),
+                    perGram: selectedOption.makingcharges.toFixed(2),
+                    newField1: selectedOption.directmc.toFixed(2),
+                    newField2: (selectedOption.makingcharges * nwt).toFixed(2),
+                })));
             }
-        }, 0);
+        }, 0); // Ensures state updates correctly
     };
-
+    
     const handleCategoryKeyDown = (event) => {
         if (event.key === 'Enter') {
             event.preventDefault(); // Prevent dropdown from reopening
-    
-            const selectedOption = categories.find(item => item.categoryname === selectedCategory);
-    
-            if (selectedOption && selectedOption.categoryname !== "OTHERS") {
-                if (counterRef.current) {
-                    setTimeout(() => {
+            
+            setTimeout(() => {
+                const selectedOption = categories.find(item => item.categoryname === selectedCategory);
+                if (selectedOption && selectedOption.categoryname !== "OTHERS") {
+                    if (counterRef.current) {
                         counterRef.current.focus();
-                    }, 100);
+                    }
                 }
-            }
+            }, 100);
         }
     };
+    
 
     return (
         <>
@@ -174,6 +179,16 @@ const WastageDetails = ({ categoryRef, nwt, mname,setGwt,setBreadsLess,setTotalL
                                         option.children.toLowerCase().includes(input.toLowerCase())
                                     }
                                     onKeyDown={handleCategoryKeyDown} // Attach keydown event
+                                    dropdownRender={menu => (
+                                        <div>
+                                          {menu}
+                                          <style jsx>{`
+                                            .ant-select-item-option-active {
+                                              background-color: rgb(125, 248, 156) !important;
+                                            }
+                                          `}</style>
+                                        </div>
+                                      )}
                                 >
                                     {categories.map((category) => (
                                         <Option key={category.categoryname} value={category.categoryname}>
