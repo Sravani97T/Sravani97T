@@ -1,25 +1,40 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Form, Input, Select, Button, Checkbox, Row, Col, Card, Table, Tag, message } from 'antd';
 import axios from 'axios';
+import TableHeaderStyles from '../../../Pages/TableHeaderStyles';
 
 const { Option } = Select;
 const { TextArea } = Input;
 
-const TagDetailsForm = ({ mname, counter, prefix, manufacturer, counterRef }) => {
+const TagDetailsForm = ({ lotno, mname, nwt, counter, prefix, manufacturer, counterRef,setWastageData,setSelectedProduct,setSelectedCategory,
+    dealername, hsncode, productcategory,
+    productname, productcode, gwt, bswt, aswt, pieces, selectedCategory, wastage,
+    directwastage, cattotwast, makingcharges, directmc, cattotmc, setGwt, setBreadsLess,
+    setTotalLess, setNwt, pcsRef, gwtRef, breadsLessRef, totalLessRef, nwtRef, setPcs }) => {
     const [counterOptions, setCounterOptions] = useState([]);
     const [manufacturerOptions, setManufacturerOptions] = useState([]);
     const [dealerOptions, setDealerOptions] = useState([]);
     const [purityOptions, setPurityOptions] = useState([]);
-    const [tableData] = useState([]);
+    const [tableData, setTableData] = useState([]);
     const [searchText, setSearchText] = useState('');
     const [form] = Form.useForm();
     const purityRef = useRef(null);
     const manufacturerRef = useRef(null);
     const dealerRef = useRef(null);
+    const huidRef = useRef(null);
+
+    const sizeRef = useRef(null);
+
+    const certificatenoRef = useRef(null);
+    const descriptionRef = useRef(null);
+
+    const labreportRef = useRef(null);
+
     const baseURL = "http://www.jewelerp.timeserasoftware.in/api/";
 
     useEffect(() => {
         fetchOptions();
+        fetchTableData();
     }, [mname]);
 
     useEffect(() => {
@@ -27,8 +42,9 @@ const TagDetailsForm = ({ mname, counter, prefix, manufacturer, counterRef }) =>
             counter: counter || "",
             prefix: prefix || "",
             manufacturer: manufacturer || "",
+            productcategory: productcategory || "",
         });
-    }, [counter, prefix, manufacturer]);
+    }, [counter, prefix, manufacturer, productcategory]);
 
     const fetchOptions = async () => {
         const fetchData = async (url, setState, filterFn = null) => {
@@ -54,6 +70,15 @@ const TagDetailsForm = ({ mname, counter, prefix, manufacturer, counterRef }) =>
         }
     };
 
+    const fetchTableData = async () => {
+        try {
+            const response = await axios.get(`${baseURL}Erp/GetTagGenerationDetailsList`);
+            setTableData(response.data);
+        } catch (error) {
+            message.error('Failed to fetch table data');
+        }
+    };
+
     const handleKeyDown = (e, nextRef, prevRef) => {
         if (e.key === "Enter") {
             e.preventDefault();
@@ -66,80 +91,214 @@ const TagDetailsForm = ({ mname, counter, prefix, manufacturer, counterRef }) =>
         }
     };
 
-    const onFinish = (values) => {
-        console.log('Form Values:', values);
+    const handleSave = async () => {
+        try {
+            const aswtValue = form.getFieldValue('aswt') || 0;
+            const bswtValue = form.getFieldValue('bswt') || 0;
+            const stonewt = aswtValue + bswtValue;
+            const payload = {
+                ...form.getFieldsValue(), // Get all form values
+                lotno,
+                mname,
+                dealername,
+                productcategory,
+                productname,
+                productcode,
+                gwt,
+                bswt,
+                aswt,
+                pieces,
+                selectedCategory,
+                wastage: wastage.toString(),
+                directwastage,
+                cattotwast,
+                makingcharges,
+                directmc,
+                cattotmc,
+                DESC1: form.getFieldValue('description') || '',
+                hsncode,
+                COUNTERNAME: form.getFieldValue('counter') || '',
+                CATEGORYNAME: selectedCategory || '',
+                PRODUCTCATEGORY: productcategory || '',
+                brandname: "-",
+                brandamt: 0,
+                brandcalc: "0",
+                brandcalcamt: 0,
+                nwt,
+                tagno: 11,
+                balpieces: 0,
+                balweight: 0,
+                tagdate: "2025-02-05",
+                tagtime: "14:30",
+                netamt: 0,
+                tagsize: "Medium",
+                iteM_TOTPIECES: 0,
+                iteM_TOTGMS: 0,
+                iteM_TOTCTS: 0,
+                iteM_TOTAMT: 0,
+                iteM_TOTNOPCS: 0,
+                recycle: "No",
+                suspence: "No",
+                tray: true,
+                regenrate: "No",
+                scheck: true,
+                status: "no",
+                userId: "admin123",
+                appcategory: "-",
+                appname: "-",
+                appsalesman: "-",
+                appinchrg: "-",
+                appDate: "2025-02-05",
+                apptime: "15:00",
+                lesS_WPER: 0,
+                imgpath: "/images/necklace.jpg",
+                lesscts: 0,
+                diapcs: 0,
+                diacts: 0,
+                dealerApprovals: true,
+                item_Cts: 0,
+                item_diamonds: 0,
+                item_Uncuts: 0,
+                diamond_Amount: 0,
+                cosT_GWT: 0,
+                cosT_LESS: 0,
+                cosT_NWT: 0,
+                cosT_TOUCH: 0,
+                cosT_WASTAGE: 0,
+                cosT_FTOUCH: 0,
+                cosT_MC: 0,
+                cosT_STAMT: 0,
+                purE_RATE: 0,
+                colorstoneS_AMOUNT: 0,
+                uncutS_AMOUNT: 0,
+                orgcategory: "-",
+                clouD_UPLOAD: true,
+                cosT_MCPER: 0,
+                itemcost: 0,
+                vv: "-",
+                stonewt,
+                rate: 0,
+                finerate: 0,
+                atagno: "-",
+                cosT_CATEGORY: "-",
+                tagGeneration: "true"
+            };
+    
+            const response = await axios.post(`${baseURL}Erp/TagGenerationInsert`, payload);
+            if (response) {
+                message.success('Data saved successfully');
+                fetchTableData(); // Refresh table data after save
+                const currentValues = form.getFieldsValue(['counter', 'prefix', 'manufacturer']);
+                form.resetFields(); // Reset form fields
+                form.setFieldsValue(currentValues); // Restore counter, prefix, and manufacturer fields
+                setGwt();
+                setBreadsLess();
+                setTotalLess();
+                setNwt();
+                pcsRef.current = null;
+                gwtRef.current = null;
+                breadsLessRef.current = null;
+                totalLessRef.current = null;
+                nwtRef.current = null;
+                setPcs();
+                dealerRef.current = null;
+                huidRef.current = null;
+                sizeRef.current = null;
+                certificatenoRef.current = null;
+                descriptionRef.current = null;
+                labreportRef.current = null;
+                setSelectedProduct();
+                setSelectedCategory(null);
+                setWastageData([
+                    {
+                        key: "1",
+                        percentage: "",
+                        direct: "",
+                        total: "",
+                        perGram: "",
+                        newField1: "",
+                        newField2: "",
+                    },
+                ]);            }
+        } catch (error) {
+            message.error('Failed to save data');
+        }
     };
-
+    
+    
     const filteredData = tableData.filter((item) =>
-        item.productName.toLowerCase().includes(searchText.toLowerCase())
+        item.PRODUCTNAME.toLowerCase().includes(searchText.toLowerCase())
     );
 
     const columns = [
         {
+            title: 'S.No',
+            dataIndex: 'sno',
+            key: 'sno',
+            render: (text, record, index) => index + 1,
+            align: "center",
+            className: 'blue-background-column',
+            width: 50,
+        },
+        {
             title: 'Product Name',
-            dataIndex: 'productName',
-            key: 'productName',
+            dataIndex: 'PRODUCTNAME',
+            key: 'PRODUCTNAME',
         },
         {
             title: 'Purity',
-            dataIndex: 'prefix',
-            key: 'prefix',
+            dataIndex: 'PREFIX',
+            key: 'PREFIX',
             align: "center"
         },
         {
             title: 'Pieces',
-            dataIndex: 'pieces',
-            key: 'pieces',
+            dataIndex: 'PIECES',
+            key: 'PIECES',
             align: "center"
         },
         {
             title: 'Gross.Wt',
-            dataIndex: 'gwt',
-            key: 'gwt',
-            align: "center"
-        },
-        {
-            title: 'Less Wt',
-            dataIndex: 'lessWeight',
-            key: 'lessWeight',
-            align: "center"
+            dataIndex: 'GWT',
+            key: 'GWT',
+            align: "right",
+            render: (text) => Number(text).toFixed(3)
         },
         {
             title: 'Net.Wt',
-            dataIndex: 'nwt',
-            key: 'nwt',
-            align: "center"
+            dataIndex: 'NWT',
+            key: 'NWT',
+            align: "right",
+            render: (text) => Number(text).toFixed(3)
         },
         {
             title: 'Dealer Name',
-            dataIndex: 'dealerName',
-            key: 'dealerName',
+            dataIndex: 'DEALERNAME',
+            key: 'DEALERNAME',
             align: "center"
         },
         {
             title: 'Tag No',
-            dataIndex: 'tagNo',
-            key: 'tagNo',
+            dataIndex: 'TAGNO',
+            key: 'TAGNO',
             align: "center"
         },
         {
             title: 'Counter',
-            dataIndex: 'counter',
-            key: 'counter',
+            dataIndex: 'COUNTERNAME',
+            key: 'COUNTERNAME',
             align: "center"
         },
     ];
-
-    const totalGwt = tableData.reduce((sum, item) => sum + item.gwt, 0);
-    const totalNwt = tableData.reduce((sum, item) => sum + item.nwt, 0);
-    const totalLessWeight = tableData.reduce((sum, item) => sum + item.lessWeight, 0);
+    const totalGwt = tableData.reduce((sum, item) => sum + item.GWT, 0).toFixed(3);
+    const totalNwt = tableData.reduce((sum, item) => sum + item.NWT, 0).toFixed(3);
 
     return (
         <>
             <Row gutter={[16, 16]} justify="center">
                 <Col xs={24} sm={12}>
                     <Card bordered={false} style={{ marginTop: "5px" }}>
-                        <Form layout="vertical" form={form} onFinish={onFinish}>
+                        <Form layout="vertical" form={form} onFinish={handleSave}>
                             <Row gutter={[8, 16]}>
                                 <Col xs={24} sm={8}>
                                     <label style={{ fontSize: "12px" }}>Counter</label>
@@ -206,13 +365,17 @@ const TagDetailsForm = ({ mname, counter, prefix, manufacturer, counterRef }) =>
                                 <Col xs={12} sm={8}>
                                     <label style={{ fontSize: "12px" }}>HUID</label>
                                     <Form.Item name="huid">
-                                        <Input onKeyDown={(e) => handleKeyDown(e, counterRef, dealerRef)} />
+                                        <Input
+                                            ref={huidRef}
+                                            onKeyDown={(e) => handleKeyDown(e, counterRef, sizeRef)} />
                                     </Form.Item>
                                 </Col>
                                 <Col xs={24} sm={8}>
                                     <label style={{ fontSize: "12px" }}>Size</label>
                                     <Form.Item name="size">
-                                        <Input onKeyDown={(e) => handleKeyDown(e, counterRef, dealerRef)} />
+                                        <Input
+                                            ref={sizeRef}
+                                            onKeyDown={(e) => handleKeyDown(e, counterRef, certificatenoRef)} />
                                     </Form.Item>
                                 </Col>
                             </Row>
@@ -220,18 +383,23 @@ const TagDetailsForm = ({ mname, counter, prefix, manufacturer, counterRef }) =>
                                 <Col xs={24} sm={8}>
                                     <label style={{ fontSize: "12px" }}>Certificate No.</label>
                                     <Form.Item name="certificateNo">
-                                        <Input onKeyDown={(e) => handleKeyDown(e, counterRef, dealerRef)} />
+                                        <Input
+                                            ref={certificatenoRef}
+                                            onKeyDown={(e) => handleKeyDown(e, counterRef, descriptionRef)} />
                                     </Form.Item>
                                 </Col>
                                 <Col xs={24} sm={8}>
                                     <label style={{ fontSize: "12px" }}>Description</label>
                                     <Form.Item name="description">
-                                        <TextArea rows={1} onKeyDown={(e) => handleKeyDown(e, counterRef, dealerRef)} />
+                                        <TextArea
+                                            ref={descriptionRef}
+                                            rows={1} onKeyDown={(e) => handleKeyDown(e, counterRef, labreportRef)} />
                                     </Form.Item>
                                 </Col>
                                 <Col xs={24} sm={8}>
-                                    <Form.Item style={{ marginTop: "30px" }}>
-                                        <Checkbox>
+                                    <Form.Item name="labreport" valuePropName="checked" style={{ marginTop: "30px" }}>
+                                        <Checkbox ref={labreportRef}
+                                        >
                                             <span style={{ fontSize: "10px" }}>Lab Report</span>
                                         </Checkbox>
                                     </Form.Item>
@@ -242,7 +410,7 @@ const TagDetailsForm = ({ mname, counter, prefix, manufacturer, counterRef }) =>
                 </Col>
                 <Col xs={24} sm={8}>
                     <Card bordered={false} style={{ marginTop: "5px" }}>
-                        <Form layout="vertical" form={form} onFinish={onFinish}>
+                        <Form layout="vertical" form={form} onFinish={handleSave}>
                             <Row gutter={[8, 16]}>
                                 <Col xs={8}>
                                     <label style={{ fontSize: "12px" }}>GWT</label>
@@ -288,7 +456,7 @@ const TagDetailsForm = ({ mname, counter, prefix, manufacturer, counterRef }) =>
                 </Col>
                 <Col xs={24} sm={4}>
                     <Card bordered={false} style={{ marginTop: "5px", display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
-                        <Form onFinish={onFinish}>
+                        <Form onFinish={handleSave}>
                             <Row gutter={[8, 16]} style={{ width: '100%' }}>
                                 <Col xs={24} style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center" }}>
                                     <div style={{ fontSize: "12px", marginBottom: "8px", fontWeight: "bold" }}>Tag No</div>
@@ -323,7 +491,7 @@ const TagDetailsForm = ({ mname, counter, prefix, manufacturer, counterRef }) =>
             <Row justify="space-between" align="middle" style={{ marginBottom: '10px', marginTop: "5px" }}>
                 <Col>
                     <div>
-                        <strong>Total: </strong><Tag color="cyan-inverse"> GWT: {totalGwt}</Tag><Tag color="lime-inverse"> NWT: {totalNwt}</Tag><Tag color="volcano-inverse"> Less Wt: {totalLessWeight}</Tag>
+                        <strong>Total: </strong><Tag color="cyan-inverse"> GWT: {totalGwt}</Tag><Tag color="lime-inverse"> NWT: {totalNwt}</Tag>
                     </div>
                 </Col>
                 <Col>
@@ -337,15 +505,19 @@ const TagDetailsForm = ({ mname, counter, prefix, manufacturer, counterRef }) =>
             <Row gutter={[16, 16]}>
                 <Col xs={24}>
                     <div style={{ overflowX: 'auto' }}>
-                        <Table
-                            dataSource={filteredData}
-                            columns={columns}
-                            size="small"
-                            pagination={{
-                                pageSize: 5,
-                                responsive: true,
-                            }}
-                        />
+                        <TableHeaderStyles>
+
+                            <Table
+                                dataSource={filteredData}
+                                columns={columns}
+                                size="small"
+                                rowClassName="table-row"
+                                pagination={{
+                                    pageSize: 5,
+                                    responsive: true,
+                                }}
+                            />
+                        </TableHeaderStyles>
                     </div>
                 </Col>
             </Row>

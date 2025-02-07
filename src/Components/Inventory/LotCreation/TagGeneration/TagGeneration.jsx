@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Row, Col, Typography, Select, Breadcrumb } from "antd";
 import ProductDetails from "../TagGeneration/ProductDetailes";
-import TagDetailsForm from "./TagDetailesform";
 import axios from 'axios';
 
 const { Text } = Typography;
@@ -12,7 +11,7 @@ const TagGeneration = () => {
     const [selectedLot, setSelectedLot] = useState(null);
     const lotNoRef = useRef(null);
     const productNameRef = useRef(null);
-
+console.log("productNameRef",productNameRef)
     useEffect(() => {
         axios.get('http://www.jewelerp.timeserasoftware.in/api/Erp/GetLotCreationList')
             .then(response => {
@@ -79,48 +78,63 @@ const TagGeneration = () => {
                         style={{
                             borderRadius: "10px",
                             backgroundColor: "#fff",
-                            padding: "10px",
+                            padding: "6px",
                             boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)",
                         }}
                     >
                         <Row gutter={[16, 16]} align="middle">
                             {/* Lot No Section (Left aligned) */}
                             <Col xs={{ span: 24 }} sm={{ span: 12 }} md={{ span: 6 }} lg={{ span: 4 }}>
-                                <div>
+                                <div style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                   
+                                    borderRadius: "8px",
+                                    width: "fit-content"
+                                }}>
+                                    {/* Label */}
                                     <Text
                                         style={{
                                             color: "#8c8c8c",
-                                            display: "block",
-                                            marginBottom: "5px",
-                                            textAlign: "center",
+                                            marginRight: "10px",
+                                            whiteSpace: "nowrap"
                                         }}
                                     >
                                         Lot No
                                     </Text>
-                                    <div>
-                                        <Select
-                                            ref={lotNoRef}
-                                            showSearch
-                                            value={selectedLot}
-                                            onChange={handleLotChange}
-                                            onSelect={handleSelect}
-                                            style={{ width: "100%", textAlign: "center" }}
-                                            optionFilterProp="children"
-                                            filterOption={(input, option) =>
-                                                option.children.toLowerCase().includes(input.toLowerCase())
-                                            }
-                                            onKeyDown={handleKeyDown}
-                                            placeholder="Select a lot"
-                                        >
-                                            {data.map(item => (
-                                                <Option key={item.lotno} value={item.lotno}>
-                                                    {item.lotno}
-                                                </Option>
-                                            ))}
-                                        </Select>
-                                    </div>
+
+                                    {/* Select Input */}
+                                    <Select
+                                        ref={lotNoRef}
+                                        showSearch
+                                        value={selectedLot}
+                                        onChange={handleLotChange}
+                                        onSelect={handleSelect}
+                                        style={{
+                                            width: "100px",
+                                            height: "43px",
+                                            textAlign: "center",
+                                            borderRadius: "4px",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center"
+                                        }}
+                                        optionFilterProp="children"
+                                        filterOption={(input, option) =>
+                                            option.children.toLowerCase().includes(input.toLowerCase())
+                                        }
+                                        onKeyDown={handleKeyDown}
+                                        placeholder="Lot No"
+                                    >
+                                        {data.map(item => (
+                                            <Option key={item.lotno} value={item.lotno}>
+                                                {item.lotno}
+                                            </Option>
+                                        ))}
+                                    </Select>
                                 </div>
                             </Col>
+
 
                             {/* Remaining Metrics Section (Right aligned) */}
                             <Col xs={{ span: 24 }} sm={{ span: 12 }} md={{ span: 17 }} lg={{ span: 19 }} offset={1}>
@@ -253,7 +267,13 @@ const TagGeneration = () => {
 
             {/* Product Details */}
             <div>
-                <ProductDetails mname={selectedLotDetails ? selectedLotDetails.mname : ''} productNameRef={productNameRef} />
+                <ProductDetails
+                    lotno={selectedLotDetails ? selectedLotDetails.lotno : ''}
+                    counter={selectedLotDetails ? selectedLotDetails.counter : ''}
+                    prefix={selectedLotDetails ? selectedLotDetails.prefix : ''}
+                    manufacturer={selectedLotDetails ? selectedLotDetails.manufacturer : ''}
+                    dealername={selectedLotDetails ? selectedLotDetails.dealerName : ''}
+                    mname={selectedLotDetails ? selectedLotDetails.mname : ''} productNameRef={productNameRef} />
             </div>
 
             {/* Wastage and Making Charges Section */}
@@ -262,13 +282,16 @@ const TagGeneration = () => {
             </div> */}
             {/* tag detailes */}
             <div >
-                <TagDetailsForm
+                {/* <TagDetailsForm
+                    lotno={selectedLotDetails ? selectedLotDetails.lotno : ''}
                     mname={selectedLotDetails ? selectedLotDetails.mname : ''}
                     counter={selectedLotDetails ? selectedLotDetails.counter : ''}
                     prefix={selectedLotDetails ? selectedLotDetails.prefix : ''}
                     manufacturer={selectedLotDetails ? selectedLotDetails.manufacturer : ''}
-                />
+                    dealername={selectedLotDetails ? selectedLotDetails.dealerName : ''}
+                /> */}
             </div>
+
         </div>
     );
 };

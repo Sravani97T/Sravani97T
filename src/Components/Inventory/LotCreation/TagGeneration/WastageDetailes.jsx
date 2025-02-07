@@ -7,7 +7,7 @@ import TagDetailsForm from "./TagDetailesform";
 const { Text } = Typography;
 const { Option } = Select;
 
-const WastageDetails = ({ categoryRef, nwt }) => {
+const WastageDetails = ({ categoryRef, nwt, mname,setGwt,setBreadsLess,setTotalLess,nwtRef,setSelectedProduct,setPcs,setNwt,pcsRef,gwtRef,breadsLessRef,totalLessRef, counter, prefix, manufacturer, dealername, lotno, productcategory,hsncode, productname, productcode, gwt, bswt, aswt, pieces }) => {
     const [wastageData, setWastageData] = useState([
         {
             key: "1",
@@ -431,9 +431,44 @@ const WastageDetails = ({ categoryRef, nwt }) => {
                     </Col>
                 </Row>
             </div>
-            <div style={{ display: 'none' }}>
-  <TagDetailsForm counterRef={counterRef} />
-</div>
+            <TagDetailsForm 
+            setGwt={setGwt}
+            setBreadsLess={setBreadsLess}
+            setTotalLess ={setTotalLess}
+            setNwt={setNwt}
+            pcsRef={pcsRef}
+            gwtRef={gwtRef}
+            breadsLessRef={breadsLessRef}
+            totalLessRef={totalLessRef}
+            nwtRef={nwtRef}
+            setPcs={setPcs}
+            setSelectedProduct={setSelectedProduct}
+            setWastageData={setWastageData}
+            setSelectedCategory={setSelectedCategory}
+                counterRef={counterRef} 
+                mname={mname}
+                counter={counter} 
+                prefix={prefix} 
+                lotno={lotno} 
+                manufacturer={manufacturer} 
+                dealername={dealername}
+                productcategory={productcategory}
+                hsncode={hsncode}
+                productname={productname}
+                productcode={productcode}
+                gwt={gwt}
+                bswt={bswt}
+                nwt={nwt}
+                aswt={aswt}
+                pieces={pieces} // Pass pieces to TagDetailsForm
+                selectedCategory={selectedCategory} // Pass selectedCategory to TagDetailsForm
+                wastage={wastageData[0].percentage} // Pass percentage as wastage
+                directwastage={wastageData[0].direct} // Pass direct as directwastage
+                cattotwast={wastageData[0].total} // Pass total as cattotwast
+                makingcharges={wastageData[0].perGram} // Pass perGram as makingcharges
+                directmc={wastageData[0].newField1} // Pass newField1 as directmc
+                cattotmc={wastageData[0].newField2} // Pass newField2 as cattotmc
+            />
         </>
     );
 };

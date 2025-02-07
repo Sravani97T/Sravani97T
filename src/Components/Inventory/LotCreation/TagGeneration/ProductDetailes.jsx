@@ -7,7 +7,7 @@ import WastageDetails from "./WastageDetailes";
 const { Option } = Select;
 const { Text } = Typography;
 
-const ProductDetails = ({ mname, productNameRef }) => {
+const ProductDetails = ({ mname, productNameRef ,lotno,counter,prefix,manufacturer,dealername,}) => {
   const [fileList, setFileList] = useState([]);
   const [products, setProducts] = useState([]);
   const [category, setCategory] = useState('');
@@ -72,9 +72,15 @@ const ProductDetails = ({ mname, productNameRef }) => {
   };
 
   const [selectedProduct, setSelectedProduct] = useState('');
+  const [selectedProductCode, setSelectedProductCode] = useState('');
+  const [selectedProductCategory, setSelectedProductCategory] = useState('');
+  const [selectedProductHSNCode, setSelectedProductHSNCode] = useState('');
 
-  const handleSelect = (value) => {
+  const handleSelect = (value, option) => {
     setSelectedProduct(value);
+    setSelectedProductCode(option.key);
+    setSelectedProductCategory(option.category);
+    setSelectedProductHSNCode(option.hsncode); // Set HSN code
     if (pcsRef.current) {
       pcsRef.current.focus();
     }
@@ -153,7 +159,7 @@ const ProductDetails = ({ mname, productNameRef }) => {
               >
                 {products.length > 0 ? (
                   products.map(product => (
-                    <Option key={product.PRODUCTCODE} value={product.PRODUCTNAME}>
+                    <Option key={product.PRODUCTCODE} value={product.PRODUCTNAME} category={product.CATEGORY} hsncode={product.HSNCODE}>
                       {product.PRODUCTNAME}
                     </Option>
                   ))
@@ -284,7 +290,36 @@ const ProductDetails = ({ mname, productNameRef }) => {
           </Row>
         </div>
       </div>
-      <WastageDetails categoryRef={categoryRef} nwt={nwt}/>
+ 
+      <WastageDetails 
+setGwt={setGwt}
+setBreadsLess={setBreadsLess}
+setTotalLess ={setTotalLess}
+setNwt={setNwt}
+pcsRef={pcsRef}
+gwtRef={gwtRef}
+breadsLessRef={breadsLessRef}
+totalLessRef={totalLessRef}
+nwtRef={nwtRef}
+setPcs={setPcs}
+setSelectedProduct={setSelectedProduct}
+        categoryRef={categoryRef} 
+        nwt={nwt} 
+        lotno={lotno} 
+        counter={counter} 
+        prefix={prefix} 
+        manufacturer={manufacturer}
+        dealername={dealername} 
+        mname={mname}
+        productname={selectedProduct}
+        productcode={selectedProductCode}
+        productcategory={selectedProductCategory}
+        hsncode={selectedProductHSNCode} // Pass HSN code to WastageDetails
+        gwt={gwt}
+        bswt={breadsLess}
+        aswt={totalLess}
+        pieces={pcs} // Pass pieces to WastageDetails
+      />
     </>
   );
 };
