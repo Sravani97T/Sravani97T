@@ -1,12 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Form, Input, Select, Button, Checkbox, Row, Col, Card, Table, Tag, message } from 'antd';
+import {
+    Form, Input, Select, Button, Checkbox, Row, Col, Card, Table, Tag, message, Pagination, Space, Typography
+} from 'antd';
 import axios from 'axios';
 import TableHeaderStyles from '../../../Pages/TableHeaderStyles';
 
 const { Option } = Select;
 const { TextArea } = Input;
+const { Text } = Typography;
 
-const TagDetailsForm = ({ lotno, mname, nwt, counter, prefix, manufacturer, counterRef, setWastageData, setSelectedProduct, setSelectedCategory,
+const TagDetailsForm = ({ stoneData, focusProductName, updateTotals, feachTagno, tagInfo, lotno, mname, nwt, counter, prefix, manufacturer, counterRef, setWastageData, setSelectedProduct, setSelectedCategory,
     dealername, hsncode, productcategory,
     productname, productcode, gwt, bswt, aswt, pieces, selectedCategory, wastage,
     directwastage, cattotwast, makingcharges, directmc, cattotmc, setGwt, setBreadsLess,
@@ -14,18 +17,19 @@ const TagDetailsForm = ({ lotno, mname, nwt, counter, prefix, manufacturer, coun
     const [counterOptions, setCounterOptions] = useState([]);
     const [manufacturerOptions, setManufacturerOptions] = useState([]);
     const [dealerOptions, setDealerOptions] = useState([]);
-    // console.log("dealerOptions",dealerOptions)
+    console.log("stoneData", stoneData)
+
     const [purityOptions, setPurityOptions] = useState([]);
     const [tableData, setTableData] = useState([]);
     const [searchText, setSearchText] = useState('');
 
     const [form] = Form.useForm();
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(10);
     const purityRef = useRef(null);
     const manufacturerRef = useRef(null);
     const dealerRef = useRef(null);
     const huidRef = useRef(null);
-
-
     const sizeRef = useRef(null);
 
     const certificatenoRef = useRef(null);
@@ -40,13 +44,27 @@ const TagDetailsForm = ({ lotno, mname, nwt, counter, prefix, manufacturer, coun
     const [manufacturerInputValue, setManufacturerInputValue] = useState(""); // State for search input
     const [selectedDealer, setSelectedDealer] = useState(""); // State for selected dealer
     const [dealerInputValue, setDealerInputValue] = useState(""); // State for search input
-    
+    const tagStyle = {
+        fontSize: "12px",
+        padding: "6px 12px",
+        borderRadius: "16px",
+        fontWeight: "bold",
+        color: "white",
+    };
     const baseURL = "http://www.jewelerp.timeserasoftware.in/api/";
 
     useEffect(() => {
         fetchOptions();
         fetchTableData();
+
     }, [mname]);
+
+
+    useEffect(() => {
+        if (lotno) {
+            feachTagno(lotno);
+        }
+    }, [lotno]);
 
     useEffect(() => {
         form.setFieldsValue({
@@ -56,7 +74,51 @@ const TagDetailsForm = ({ lotno, mname, nwt, counter, prefix, manufacturer, coun
             productcategory: productcategory || "",
         });
     }, [counter, prefix, manufacturer, productcategory]);
+    const stonePostFunction = async () => {
+        if (!stoneData || stoneData.length === 0) {
+            message.error('No stone data available to save');
+            return;
+        }
 
+        try {
+            const item = stoneData[0]; // Only take the first object from stoneData
+            const payload = {
+                mname: mname || "defaultMname",
+                productcategory: productcategory || "defaultProductCategory",
+                productcode: productcode || "defaultProductCode",
+                productname: productname || "defaultProductName",
+                tagno: parseInt(`${tagInfo.barcodePrefix}${tagInfo.maxTagNo}`, 10),
+                sno: 0,
+                itemname: item.stoneItem || "",
+                pieces: parseInt(item.pcs, 10) || 0,
+                grms: parseFloat(item.grams) || 0,
+                cts: parseFloat(item.cts) || 0,
+                rate: parseFloat(item.rate) || 0,
+                nopcs: parseInt(item.noPcs, 10) || 0,
+                amount: parseFloat(item.amount) || 0,
+                colour: item.color || "defaultColor",
+                cut: item.cut || "defaultCut",
+                clarity: item.clarity || "defaultClarity",
+                clouD_UPLOAD: true,
+                itemcode: item.itemcode || "defaultItemCode",
+                dprice: parseFloat(item.dprice) || 0,
+                damt: parseFloat(item.damt) || 0,
+                dname: item.dname || "defaultDname",
+                vv: item.vv || "defaultVv",
+                snO1: parseInt(item.snO1, 10) || 0,
+            };
+
+            const response = await axios.post(`http://www.jewelerp.timeserasoftware.in/api/Erp/TagItemInsert`, payload);
+            if (response.data === true) {
+                message.success('Data saved successfully');
+            } else {
+                message.error('Failed to save data');
+            }
+        } catch (error) {
+            console.error('Failed to save data', error);
+            message.error('Failed to save data');
+        }
+    }
     const fetchOptions = async () => {
         const fetchData = async (url, setState, filterFn = null) => {
             try {
@@ -84,12 +146,25 @@ const TagDetailsForm = ({ lotno, mname, nwt, counter, prefix, manufacturer, coun
 
     const fetchTableData = async () => {
         try {
-            const response = await axios.get(`${baseURL}Erp/GetTagGenerationDetailsList`);
+            const response = await axios.get(`http://www.jewelerp.timeserasoftware.in/api/Master/GetDataFromGivenTableNameWithWhereandOrder?tableName=TAG_GENERATION&where=LOTNO%3D${lotno}&order=TAGNO`);
             setTableData(response.data);
+            calculateTotals(response.data); // Call totals calculation
         } catch (error) {
-            message.error('Failed to fetch table data');
+            console.error('Failed to fetch table data', error);
         }
     };
+
+    const calculateTotals = (data) => {
+        const totalGwt = data.reduce((sum, item) => sum + item.GWT, 0).toFixed(3);
+        const totalNwt = data.reduce((sum, item) => sum + item.NWT, 0).toFixed(3);
+        const totalPieces = data.reduce((sum, item) => sum + item.PIECES, 0);
+
+        updateTotals(totalGwt, totalNwt, totalPieces); // Send totals to parent
+    };
+
+    useEffect(() => {
+        calculateTotals(tableData);
+    }, [tableData]);
 
     const handleKeyDown = (e, nextRef, prevRef) => {
         if (e.key === "Enter") {
@@ -102,12 +177,13 @@ const TagDetailsForm = ({ lotno, mname, nwt, counter, prefix, manufacturer, coun
             prevRef.current.focus();
         }
     };
-
     const handleSave = async () => {
+        stonePostFunction();
         try {
             const aswtValue = form.getFieldValue('aswt') || 0;
             const bswtValue = form.getFieldValue('bswt') || 0;
-            const stonewt = aswtValue + bswtValue;
+            const stonewt = parseFloat(aswtValue) + parseFloat(bswtValue); // Calculate stonewt as the sum of aswt and bswt
+            console.log("stonewt", stonewt)
             const payload = {
                 ...form.getFieldsValue(), // Get all form values
                 lotno,
@@ -137,7 +213,7 @@ const TagDetailsForm = ({ lotno, mname, nwt, counter, prefix, manufacturer, coun
                 brandcalc: "0",
                 brandcalcamt: 0,
                 nwt,
-                tagno: 11,
+                tagno: `${tagInfo.barcodePrefix}` + `${tagInfo.maxTagNo}`,
                 balpieces: 0,
                 balweight: 0,
                 tagdate: "2025-02-05",
@@ -188,7 +264,7 @@ const TagDetailsForm = ({ lotno, mname, nwt, counter, prefix, manufacturer, coun
                 cosT_MCPER: 0,
                 itemcost: 0,
                 vv: "-",
-                stonewt,
+                stonewt, // Pass the calculated stonewt
                 rate: 0,
                 finerate: 0,
                 atagno: "-",
@@ -197,9 +273,13 @@ const TagDetailsForm = ({ lotno, mname, nwt, counter, prefix, manufacturer, coun
             };
 
             const response = await axios.post(`${baseURL}Erp/TagGenerationInsert`, payload);
-            if (response) {
+            if (response.status === 200) {
                 message.success('Data saved successfully');
+                if (focusProductName) {
+                    focusProductName(); // Move cursor to Product Name in ProductDetails
+                }
                 fetchTableData(); // Refresh table data after save
+                feachTagno(lotno); // Ensure feachTagno is called after successful save
                 const currentValues = form.getFieldsValue(['counter', 'prefix', 'manufacturer']);
                 form.resetFields(); // Reset form fields
                 form.setFieldsValue(currentValues); // Restore counter, prefix, and manufacturer fields
@@ -248,7 +328,7 @@ const TagDetailsForm = ({ lotno, mname, nwt, counter, prefix, manufacturer, coun
             title: 'S.No',
             dataIndex: 'sno',
             key: 'sno',
-            render: (text, record, index) => index + 1,
+            render: (_, __, index) => index + 1,
             align: "center",
             className: 'blue-background-column',
             width: 50,
@@ -305,6 +385,7 @@ const TagDetailsForm = ({ lotno, mname, nwt, counter, prefix, manufacturer, coun
     ];
     const totalGwt = tableData.reduce((sum, item) => sum + item.GWT, 0).toFixed(3);
     const totalNwt = tableData.reduce((sum, item) => sum + item.NWT, 0).toFixed(3);
+    const totalPieces = tableData.reduce((sum, item) => sum + item.PIECES, 0);
     const handleCounterSelect = (value) => {
         setSelectedCounter(value);
         setInputValue(""); // Clear input after selection
@@ -408,51 +489,70 @@ const TagDetailsForm = ({ lotno, mname, nwt, counter, prefix, manufacturer, coun
     const handleDealerChange = (value) => {
         setSelectedDealer(value);
         setDealerInputValue(""); // ✅ Clears input after selection
-      };
-      
-      const handleDealerSelect = (value) => {
+    };
+
+    const handleDealerSelect = (value) => {
         setSelectedDealer(value);
         setDealerInputValue(""); // ✅ Clears input after selection
-      
+
         setTimeout(() => {
-          if (huidRef.current) {
-            huidRef.current.focus(); // ✅ Moves focus to next field
-          }
-        }, 100);
-      };
-      
-      const handleDealerKeyDown = (e) => {
-        if (e.key === "Enter") {
-          e.preventDefault(); // ✅ Prevents reopening dropdown
-      
-          const typedValue = dealerInputValue?.trim();
-          if (!typedValue) return;
-      
-          const matchedOption = dealerOptions.find(
-            (d) => d.Dealername?.toLowerCase() === typedValue.toLowerCase()
-          );
-      
-          if (matchedOption) {
-            setSelectedDealer(matchedOption.Dealername);
-          } else {
-            setSelectedDealer(typedValue); // ✅ Allows new entry if not in the list
-          }
-      
-          setDealerInputValue(""); // ✅ Clears input after Enter
-      
-          setTimeout(() => {
             if (huidRef.current) {
-              huidRef.current.focus(); // ✅ Moves focus to next field
+                huidRef.current.focus(); // ✅ Moves focus to next field
             }
-          }, 100);
+        }, 100);
+    };
+
+    const handleDealerKeyDown = (e) => {
+        if (e.key === "Enter") {
+            e.preventDefault(); // ✅ Prevents reopening dropdown
+
+            const typedValue = dealerInputValue?.trim();
+            if (!typedValue) return;
+
+            const matchedOption = dealerOptions.find(
+                (d) => d.Dealername?.toLowerCase() === typedValue.toLowerCase()
+            );
+
+            if (matchedOption) {
+                setSelectedDealer(matchedOption.Dealername);
+            } else {
+                setSelectedDealer(typedValue); // ✅ Allows new entry if not in the list
+            }
+
+            setDealerInputValue(""); // ✅ Clears input after Enter
+
+            setTimeout(() => {
+                if (huidRef.current) {
+                    huidRef.current.focus(); // ✅ Moves focus to next field
+                }
+            }, 100);
         }
-      };
-      
+    };
+
     return (
         <>
             <Row gutter={[16, 16]} justify="center">
                 <Col xs={24} sm={12}>
-                    <Card bordered={false} style={{ marginTop: "5px" }}>
+                    <div
+                        style={{
+                            width: "150px",
+                            borderRadius: "10px",
+                            marginTop: "5px",
+                            marginBottom: "5px",
+                            boxShadow: "0px 4px 12px rgba(243, 238, 238, 0.91)",
+                            textAlign: "center",
+                            // backgroundColor:"#71769b",
+                            padding: "5px",
+
+                        }}
+                        className="bgcolur"
+
+                    >
+                        <Text style={{ fontSize: "13px", color: "#fff" }}>
+                            Others Detailes
+                        </Text>
+                    </div>
+                    <Card bordered={false} style={{ marginTop: "5px", backgroundColor: "#d9d6d6" }}>
                         <Form layout="vertical" form={form} onFinish={handleSave}>
                             <Row gutter={[8, 16]}>
                                 <Col xs={24} sm={8}>
@@ -553,36 +653,36 @@ const TagDetailsForm = ({ lotno, mname, nwt, counter, prefix, manufacturer, coun
                                 <Col xs={12} sm={8}>
                                     <label style={{ fontSize: "12px" }}>Dealer Name</label>
                                     <Form.Item name="dealerName">
-                                    <Select
-  ref={dealerRef}
-  showSearch
-  value={selectedDealer || dealerInputValue} // ✅ Ensures correct value display
-  placeholder="Select dealer"
-  onChange={handleDealerChange} // ✅ Updates selected value when changed
-  onSelect={handleDealerSelect} // ✅ Handles item selection
-  onSearch={(value) => setDealerInputValue(value)} // ✅ Captures user input
-  onKeyDown={handleDealerKeyDown} // ✅ Handles Enter & Arrow navigation
-  optionFilterProp="children"
-  filterOption={(input, option) =>
-    option?.children?.toLowerCase().includes(input?.toLowerCase())
-  }
-  dropdownRender={(menu) => (
-    <div>
-      {menu}
-      <style jsx>{`
+                                        <Select
+                                            ref={dealerRef}
+                                            showSearch
+                                            value={selectedDealer || dealerInputValue} // ✅ Ensures correct value display
+                                            placeholder="Select dealer"
+                                            onChange={handleDealerChange} // ✅ Updates selected value when changed
+                                            onSelect={handleDealerSelect} // ✅ Handles item selection
+                                            onSearch={(value) => setDealerInputValue(value)} // ✅ Captures user input
+                                            onKeyDown={handleDealerKeyDown} // ✅ Handles Enter & Arrow navigation
+                                            optionFilterProp="children"
+                                            filterOption={(input, option) =>
+                                                option?.children?.toLowerCase().includes(input?.toLowerCase())
+                                            }
+                                            dropdownRender={(menu) => (
+                                                <div>
+                                                    {menu}
+                                                    <style jsx>{`
         .ant-select-item-option-active {
           background-color: rgb(125, 248, 156) !important;
         }
       `}</style>
-    </div>
-  )}
->
-  {dealerOptions.map((dealer, index) => (
-    <Option key={index} value={dealer.Dealername}>
-      {dealer.Dealername}
-    </Option>
-  ))}
-</Select>
+                                                </div>
+                                            )}
+                                        >
+                                            {dealerOptions.map((dealer, index) => (
+                                                <Option key={index} value={dealer.Dealername}>
+                                                    {dealer.Dealername}
+                                                </Option>
+                                            ))}
+                                        </Select>
 
                                     </Form.Item>
                                 </Col>
@@ -633,7 +733,26 @@ const TagDetailsForm = ({ lotno, mname, nwt, counter, prefix, manufacturer, coun
                     </Card>
                 </Col>
                 <Col xs={24} sm={8}>
-                    <Card bordered={false} style={{ marginTop: "5px" }}>
+                    <div
+                        style={{
+                            width: "150px",
+                            borderRadius: "10px",
+                            marginTop: "5px",
+                            marginBottom: "5px",
+                            boxShadow: "0px 4px 12px rgba(243, 238, 238, 0.91)",
+                            textAlign: "center",
+                            // backgroundColor:"#71769b",
+                            padding: "5px",
+
+                        }}
+                        className="bgcolur"
+
+                    >
+                        <Text style={{ fontSize: "13px", color: "#fff" }}>
+                            Cost
+                        </Text>
+                    </div>
+                    <Card bordered={false} style={{ marginTop: "5px", backgroundColor: "#d9d6d6" }}>
                         <Form layout="vertical" form={form} onFinish={handleSave}>
                             <Row gutter={[8, 16]}>
                                 <Col xs={8}>
@@ -679,36 +798,41 @@ const TagDetailsForm = ({ lotno, mname, nwt, counter, prefix, manufacturer, coun
                     </Card>
                 </Col>
                 <Col xs={24} sm={4}>
-                    <Card bordered={false} style={{ marginTop: "5px", display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
+                    <Card bordered={false} style={{
+                        marginTop: "36px", display: 'flex', justifyContent: 'center', alignItems: 'center', boxShadow: "0px 4px 12px rgba(189, 187, 187, 0.91)",
+                    }}>
                         <Form onFinish={handleSave}>
                             <Row gutter={[8, 16]} style={{ width: '100%' }}>
                                 <Col xs={24} style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center" }}>
-                                    <div style={{ fontSize: "12px", marginBottom: "8px", fontWeight: "bold" }}>Tag No</div>
-                                    <Input
-                                        size="small"
+                                    <div style={{ fontSize: "16px", marginBottom: "10px", fontWeight: "bold" }}>Tag No</div>
+                                    <div
                                         style={{
                                             width: "50px",
                                             height: "50px",
                                             textAlign: "center",
                                             borderRadius: "8px",
-                                            fontSize: "16px",
+                                            fontSize: "24px",
                                             boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)",
                                             margin: "0 auto",
+                                            display: "flex",
+                                            justifyContent: "center",
+                                            alignItems: "center",
+                                            color: "blue"
                                         }}
-                                        onKeyDown={(e) => {
-                                            if (e.key === "Enter") {
-                                                handleSave();
-                                            } else {
-                                                handleKeyDown(e, counterRef, dealerRef);
-                                            }
-                                        }}
-                                    />
+                                    >
+                                        {tagInfo.barcodePrefix}{tagInfo.maxTagNo !== null ? tagInfo.maxTagNo : "-"}
+                                    </div>
+
                                 </Col>
                             </Row>
                             <Row gutter={[8, 16]} justify="center">
                                 <Col>
                                     <Form.Item>
-                                        <Button type="primary" htmlType="submit" size="small">
+                                        <Button style={{
+                                            backgroundColor: "#0d094e",
+                                            borderColor: "#4A90E2",
+                                            width: '120px', // Make the button full width
+                                        }} type="primary" htmlType="submit" size="large">
                                             Save
                                         </Button>
                                     </Form.Item>
@@ -718,17 +842,40 @@ const TagDetailsForm = ({ lotno, mname, nwt, counter, prefix, manufacturer, coun
                     </Card>
                 </Col>
             </Row>
-            <Row justify="space-between" align="middle" style={{ marginBottom: '10px', marginTop: "5px" }}>
+            <Row justify="space-between" align="middle" style={{ marginBottom: '10px', marginTop: "12px" }}>
+
                 <Col>
-                    <div>
-                        <strong>Total: </strong><Tag color="cyan-inverse"> GWT: {totalGwt}</Tag><Tag color="lime-inverse"> NWT: {totalNwt}</Tag>
-                    </div>
+                    <Space size="small">
+                        <strong>Total:  </strong>
+                        <Tag color="#555E9F" style={tagStyle}>Gross.Wt: {totalGwt}</Tag>
+                        <Tag color="#555E9F" style={tagStyle}>Net.Wt: {totalNwt}</Tag>
+                        <Tag color="#555E9F" style={tagStyle}>Pieces: {totalPieces}</Tag>
+                    </Space>
                 </Col>
+
+                {/* Middle Section: Search Bar */}
                 <Col>
                     <Input
                         placeholder="Search Product"
                         value={searchText}
                         onChange={(e) => setSearchText(e.target.value)}
+                        style={{ width: "200px", borderRadius: "8px" }}
+                    />
+                </Col>
+
+                {/* Right Section: Pagination */}
+                <Col>
+                    <Pagination
+                        current={currentPage}
+                        pageSize={pageSize}
+                        total={filteredData.length}
+                        showSizeChanger
+                        pageSizeOptions={['10', '20', '50', '100']}
+                        onChange={(page, size) => {
+                            setCurrentPage(page);
+                            setPageSize(size);
+                        }}
+                        showTotal={(total, range) => `${range[0]}-${range[1]} of ${total} items`}
                     />
                 </Col>
             </Row>
@@ -742,10 +889,7 @@ const TagDetailsForm = ({ lotno, mname, nwt, counter, prefix, manufacturer, coun
                                 columns={columns}
                                 size="small"
                                 rowClassName="table-row"
-                                pagination={{
-                                    pageSize: 5,
-                                    responsive: true,
-                                }}
+                                pagination={false}
                             />
                         </TableHeaderStyles>
                     </div>

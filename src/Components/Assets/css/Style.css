@@ -72,11 +72,11 @@
 .card-item {
   display: flex;
   justify-content: space-between;
-  background-color: #F5F5F5;
   border-radius: 5px;
   box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.05);
   flex: 1;
   min-width: 120px; /* Ensuring minimum width */
+  background-color: #363668;
 }
 
 /* Ensure text stays on the same line inside each card-item */
@@ -747,3 +747,31 @@ font-weight: bold;
 .react-datepicker__input-container {
   width: 75% !important;
 }
+.bgcolur {
+  background: linear-gradient(90deg, rgba(52,71,204,0.7259278711484594) 0%, rgba(32,15,147,0.7875525210084033) 31%, rgba(110,189,165,0.8239670868347339) 100%);
+}
+
+.ant-upload-wrapper.ant-upload-picture-card-wrapper .ant-upload.ant-upload-select {
+  width: 130px !important;
+  height: 75px !important;
+}
+.bgcolurimg {
+
+  background: linear-gradient(90deg, rgba(131,58,180,0.3981967787114846) 0%, rgba(253,29,29,0.4430147058823529) 50%, rgba(252,176,69,0.5634628851540616) 100%);
+}
+  .bgcolurtag {
+    background: linear-gradient(0deg, rgba(34,145,195,0.4318102240896359) 0%, rgba(253,45,70,0.32816876750700286) 100%);
+
+  }
+  .ant-upload-wrapper.ant-upload-picture-card-wrapper .ant-upload-list.ant-upload-list-picture-card .ant-upload-list-item {
+    height: 100% !important;
+  }
+  /* Apply styles only to the specific table */
+.custom-stone-table .ant-table-thead > tr > th {
+    background-color:rgb(50, 82, 58) !important; /* Blue background */
+    color: rgb(224, 221, 221) !important; /* White text */
+}
+.custom-stone-table .table-row {
+  height: 0px !important; /* Adjust the height as needed */
+}
+

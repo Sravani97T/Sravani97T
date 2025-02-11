@@ -7,7 +7,7 @@ import TagDetailsForm from "./TagDetailesform";
 const { Text } = Typography;
 const { Option } = Select;
 
-const WastageDetails = ({ categoryRef, nwt, mname,setGwt,setBreadsLess,setTotalLess,nwtRef,setSelectedProduct,setPcs,setNwt,pcsRef,gwtRef,breadsLessRef,totalLessRef, counter, prefix, manufacturer, dealername, lotno, productcategory,hsncode, productname, productcode, gwt, bswt, aswt, pieces }) => {
+const WastageDetails = ({ focusProductName, updateTotals, feachTagno, tagInfo, categoryRef, nwt, mname, setGwt, setBreadsLess, setTotalLess, nwtRef, setSelectedProduct, setPcs, setNwt, pcsRef, gwtRef, breadsLessRef, totalLessRef, counter, prefix, manufacturer, dealername, lotno, productcategory, hsncode, productname, productcode, gwt, bswt, aswt, pieces }) => {
     const [wastageData, setWastageData] = useState([
         {
             key: "1",
@@ -19,6 +19,7 @@ const WastageDetails = ({ categoryRef, nwt, mname,setGwt,setBreadsLess,setTotalL
             newField2: "",
         },
     ]);
+    const [stoneData, setStoneData] = useState([]);
 
     const [categories, setCategories] = useState([]);
     const [selectedCategory, setSelectedCategory] = useState(null);
@@ -63,9 +64,9 @@ const WastageDetails = ({ categoryRef, nwt, mname,setGwt,setBreadsLess,setTotalL
         setTimeout(() => {
             setSelectedCategory(value);
         }, 0); // Small delay to ensure state update
-        
+
         setIsEditable(value === "OTHERS");
-    
+
         if (value === "OTHERS") {
             setWastageData([
                 {
@@ -97,7 +98,7 @@ const WastageDetails = ({ categoryRef, nwt, mname,setGwt,setBreadsLess,setTotalL
             }
         }
     };
-    
+
 
     const handleCategorySelect = (value) => {
         setSelectedCategory("");  // Reset first
@@ -119,11 +120,11 @@ const WastageDetails = ({ categoryRef, nwt, mname,setGwt,setBreadsLess,setTotalL
             }
         }, 0); // Ensures state updates correctly
     };
-    
+
     const handleCategoryKeyDown = (event) => {
         if (event.key === 'Enter') {
             event.preventDefault(); // Prevent dropdown from reopening
-            
+
             setTimeout(() => {
                 const selectedOption = categories.find(item => item.categoryname === selectedCategory);
                 if (selectedOption && selectedOption.categoryname !== "OTHERS") {
@@ -134,7 +135,7 @@ const WastageDetails = ({ categoryRef, nwt, mname,setGwt,setBreadsLess,setTotalL
             }, 100);
         }
     };
-    
+
 
     return (
         <>
@@ -147,7 +148,7 @@ const WastageDetails = ({ categoryRef, nwt, mname,setGwt,setBreadsLess,setTotalL
                             style={{
                                 borderRadius: "10px",
                                 padding: "10px",
-                                backgroundColor: "#fff",
+                                backgroundColor: "#d9d6d6",
                                 boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.1)",
                             }}
                         >
@@ -181,14 +182,14 @@ const WastageDetails = ({ categoryRef, nwt, mname,setGwt,setBreadsLess,setTotalL
                                     onKeyDown={handleCategoryKeyDown} // Attach keydown event
                                     dropdownRender={menu => (
                                         <div>
-                                          {menu}
-                                          <style jsx>{`
+                                            {menu}
+                                            <style jsx>{`
                                             .ant-select-item-option-active {
                                               background-color: rgb(125, 248, 156) !important;
                                             }
                                           `}</style>
                                         </div>
-                                      )}
+                                    )}
                                 >
                                     {categories.map((category) => (
                                         <Option key={category.categoryname} value={category.categoryname}>
@@ -203,15 +204,20 @@ const WastageDetails = ({ categoryRef, nwt, mname,setGwt,setBreadsLess,setTotalL
                     <Col xs={24} sm={8}>
                         <div
                             style={{
-                                width: "100%",
+                                width: "150px",
                                 borderRadius: "10px",
                                 marginTop: "5px",
                                 marginBottom: "5px",
                                 boxShadow: "0px 4px 12px rgba(243, 238, 238, 0.91)",
                                 textAlign: "center",
+                                justifyContent: "center",
+                                // backgroundColor:"#71769b",
+                                padding: "5px",
                             }}
+                            className="bgcolur"
+
                         >
-                            <Text style={{ fontSize: "12px", color: "#1890ff" }}>
+                            <Text style={{ fontSize: "13px", color: "#fff" }}>
                                 Wastage
                             </Text>
                         </div>
@@ -219,7 +225,7 @@ const WastageDetails = ({ categoryRef, nwt, mname,setGwt,setBreadsLess,setTotalL
                             style={{
                                 borderRadius: "10px",
                                 padding: "10px",
-                                backgroundColor: "#fff",
+                                backgroundColor: "#d9d6d6",
                                 boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.1)",
                             }}
                         >
@@ -315,15 +321,19 @@ const WastageDetails = ({ categoryRef, nwt, mname,setGwt,setBreadsLess,setTotalL
                     <Col xs={24} sm={8}>
                         <div
                             style={{
-                                width: "100%",
+                                width: "150px",
                                 borderRadius: "10px",
                                 marginTop: "5px",
                                 marginBottom: "5px",
                                 boxShadow: "0px 4px 12px rgba(243, 238, 238, 0.91)",
                                 textAlign: "center",
+                                padding: "5px",
+
                             }}
+                            className="bgcolur"
+
                         >
-                            <Text style={{ fontSize: "12px", color: "#1890ff" }}>
+                            <Text style={{ fontSize: "13px", color: "#fff" }}>
                                 Making Charges
                             </Text>
                         </div>
@@ -331,7 +341,7 @@ const WastageDetails = ({ categoryRef, nwt, mname,setGwt,setBreadsLess,setTotalL
                             style={{
                                 borderRadius: "10px",
                                 padding: "10px",
-                                backgroundColor: "#fff",
+                                backgroundColor: "#d9d6d6",
                                 boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.1)",
                             }}
                         >
@@ -417,55 +427,51 @@ const WastageDetails = ({ categoryRef, nwt, mname,setGwt,setBreadsLess,setTotalL
                         </div>
                     </Col>
                     <Col xs={24} sm={4}>
-                        <div
-                            style={{
-                                backgroundColor: "#e6f7ff", // Light blue background color for header
-                                width: "100%",
-                                borderRadius: "10px",
-                                marginTop: "5px",
-                                marginBottom: "5px",
-                                boxShadow: "0px 4px 12px rgba(243, 238, 238, 0.91)",
-                                textAlign: "center",
-                            }}
-                        >
-                            <Text style={{ fontSize: "12px", color: "#1890ff" }}>
-                                Stone Details
-                            </Text>
-                        </div>
+
                         <div
                             style={{
                                 borderRadius: "10px",
                                 padding: "10px",
-                                backgroundColor: "#fff",
+                                backgroundColor: "#b9bbcf",
                                 boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.1)",
+                                marginTop: "33px"
                             }}
                         >
-                            <StoneDetails />
+                            <StoneDetails
+                                stoneData={stoneData}
+                                setStoneData={setStoneData}
+                            />
                             <div>Stones: 10</div>
                         </div>
                     </Col>
                 </Row>
             </div>
-            <TagDetailsForm 
-            setGwt={setGwt}
-            setBreadsLess={setBreadsLess}
-            setTotalLess ={setTotalLess}
-            setNwt={setNwt}
-            pcsRef={pcsRef}
-            gwtRef={gwtRef}
-            breadsLessRef={breadsLessRef}
-            totalLessRef={totalLessRef}
-            nwtRef={nwtRef}
-            setPcs={setPcs}
-            setSelectedProduct={setSelectedProduct}
-            setWastageData={setWastageData}
-            setSelectedCategory={setSelectedCategory}
-                counterRef={counterRef} 
+            <TagDetailsForm
+            stoneData={stoneData}
+
+                focusProductName={focusProductName}
+                updateTotals={updateTotals}
+                feachTagno={feachTagno}
+                tagInfo={tagInfo}
+                setGwt={setGwt}
+                setBreadsLess={setBreadsLess}
+                setTotalLess={setTotalLess}
+                setNwt={setNwt}
+                pcsRef={pcsRef}
+                gwtRef={gwtRef}
+                breadsLessRef={breadsLessRef}
+                totalLessRef={totalLessRef}
+                nwtRef={nwtRef}
+                setPcs={setPcs}
+                setSelectedProduct={setSelectedProduct}
+                setWastageData={setWastageData}
+                setSelectedCategory={setSelectedCategory}
+                counterRef={counterRef}
                 mname={mname}
-                counter={counter} 
-                prefix={prefix} 
-                lotno={lotno} 
-                manufacturer={manufacturer} 
+                counter={counter}
+                prefix={prefix}
+                lotno={lotno}
+                manufacturer={manufacturer}
                 dealername={dealername}
                 productcategory={productcategory}
                 hsncode={hsncode}
