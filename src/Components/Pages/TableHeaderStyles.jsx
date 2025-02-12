@@ -62,6 +62,12 @@ const TableHeaderStyles = ({ children }) => {
         .header-saturday .ant-table-thead > tr > th {
           background-color: #FDEDEC;
         }
+        /* Common header styles to prevent word wrapping */
+        .ant-table-thead > tr > th {
+          white-space: nowrap !important;
+          text-overflow: ellipsis !important;
+          overflow: hidden !important;
+        }
       `}</style>
     </div>
   );

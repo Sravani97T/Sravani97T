@@ -54,6 +54,7 @@ import StoneDetails from "./Components/Reports/StoneDetailes";
 import DayGlance from "./Components/POSReports/DayGlance";
 import LoginPage from "./Components/Masters/Logins/LoginPage"
 import AvatarUpload from "./Components/Utiles/UploadImg";
+import Estimations from "./Components/Estimation/Estimations";
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
@@ -98,6 +99,7 @@ const App = () => {
                   <Route path="/online-mode" element={<OnlineMode />} />
                   {/* Estimation */}
                   <Route path="/daily-rates" element={<DailyRates />} />
+                  <Route path="/estimations" element={<Estimations />} />
                   {/* Inventory */}
                   <Route path="/lot-creation" element={<LotCreation />} />
                   <Route path="/tag-generation" element={<TagGeneration />} />

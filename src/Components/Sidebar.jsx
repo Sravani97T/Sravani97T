@@ -9,7 +9,8 @@ import {
   DollarOutlined,
   TeamOutlined,
   LineChartOutlined,
-  RightCircleFilled
+  RightCircleFilled,
+  CalculatorOutlined,
 } from "@ant-design/icons";
 import logo from "../Components/Assets/textLogo.png"; // Import the logo
 
@@ -168,6 +169,14 @@ const Sidebar = ({ collapsed }) => {
       children: [
         { key: "7-1", label: <Link to="/analysis-sales" style={{ color: "#fff" }}>Sales Analysis</Link> },
         { key: "7-2", label: <Link to="/upload" style={{ color: "#fff" }}>Upload</Link> },
+      ],
+    },
+    {
+      key: "8",
+      icon: <CalculatorOutlined style={iconStyle} />,
+      label: <span style={{ color: "#fff" }}>Estimations</span>,
+      children: [
+        { key: "8-1", label: <Link to="/estimations" style={{ color: "#fff" }}>Estimations</Link> },
       ],
     },
   ];
