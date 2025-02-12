@@ -10,6 +10,7 @@ import 'jspdf-autotable';
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import "./TableStyles.css";
+import { CREATE_jwel } from "../../Config/Config";
 
 const CustomInput = forwardRef(({ value, onClick, placeholder }, ref) => (
     <div className="custom-date-input" onClick={onClick} ref={ref}>
@@ -154,7 +155,7 @@ const DayGlance = () => {
             const fromDate = moment(dates[0]).format('MM/DD/YYYY');
             const toDate = moment(dates[1]).format('MM/DD/YYYY');
 
-            axios.get(`${CREATE_jwel}`+`/api/POSReports/GetdayGlance?fromDate=${fromDate}&toDate=${toDate}`)
+            axios.get(`${CREATE_jwel}/api/POSReports/GetdayGlance?fromDate=${fromDate}&toDate=${toDate}`)
                 .then(response => {
                     const detailsData = response.data;
                     const grouped = detailsData.reduce((acc, item) => {

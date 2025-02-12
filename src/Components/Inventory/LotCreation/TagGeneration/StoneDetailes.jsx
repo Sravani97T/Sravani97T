@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Row, Col, Typography, Input, Select, Button, Modal, Table, Card, Tag } from "antd";
 import { PlusOutlined, CloseOutlined, EditOutlined } from "@ant-design/icons";
 import axios from "axios";
-
+import { CREATE_jwel } from "../../../../Config/Config";
 const { Text } = Typography;
 const { Option } = Select;
 

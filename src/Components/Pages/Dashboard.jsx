@@ -13,6 +13,7 @@ import TodaysSalesBarGraph from "./TodaysSalesBarGraph";
 import AdvanceDetails from "./AdvanceDetailes";
 import PaymentOverview from "./PaymentOverview";
 import TableHeaderStyles from "./TableHeaderStyles"; // Import the TableHeaderStyles component
+import { CREATE_jwel } from "../../Config/Config";
 
 const { Option } = Select;
 
@@ -42,7 +43,7 @@ const Dashboard = () => {
         // Log filters for debugging
         console.log("Fetching data with filters:", { fromDate, toDate, ...filters });
   
-        const response = await axios.get(`${CREATE_jwel}`+`/api/Erp/GetBillMast`, {
+        const response = await axios.get(`${CREATE_jwel}/api/Erp/GetBillMast`, {
           params: {
             fromDate,
             toDate,

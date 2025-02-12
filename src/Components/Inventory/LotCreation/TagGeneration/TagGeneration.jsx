@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Row, Col, Typography, Select, Breadcrumb } from "antd";
 import ProductDetails from "../TagGeneration/ProductDetailes";
 import axios from 'axios';
+import { CREATE_jwel } from "../../../../Config/Config";
 
 const { Text } = Typography;
 const { Option } = Select;
@@ -22,7 +23,7 @@ const TagGeneration = () => {
     const lotNoRef = useRef(null);
     const productNameRef = useRef(null);
     useEffect(() => {
-        axios.get(`${CREATE_jwel}`+ '/api/Erp/GetLotCreationList')
+        axios.get(`${CREATE_jwel}/api/Erp/GetLotCreationList`)
             .then(response => {
                 const formattedData = response.data.map(item => ({
                     ...item,

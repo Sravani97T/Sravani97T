@@ -6,6 +6,7 @@ import { PrinterOutlined, FilePdfOutlined, FileExcelOutlined, FilterOutlined } f
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { saveAs } from 'file-saver';
+import { CREATE_jwel } from '../../Config/Config';
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;

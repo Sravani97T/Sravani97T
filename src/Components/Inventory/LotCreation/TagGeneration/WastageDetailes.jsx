@@ -3,6 +3,7 @@ import { Row, Col, Typography, Input, Select } from "antd";
 import StoneDetails from "../TagGeneration/StoneDetailes";
 import axios from 'axios';
 import TagDetailsForm from "./TagDetailesform";
+import { CREATE_jwel } from "../../../../Config/Config";
 
 const { Text } = Typography;
 const { Option } = Select;
@@ -38,7 +39,7 @@ const WastageDetails = ({ focusProductName, updateTotals, feachTagno, tagInfo, c
     useEffect(() => {
         const fetchCategories = async () => {
             try {
-                const response = await axios.get(`${CREATE_jwel}`+"/api/Master/MasterCategoryMasterList");
+                const response = await axios.get(`${CREATE_jwel}/api/Master/MasterCategoryMasterList`);
                 setCategories(response.data);
             } catch (error) {
                 console.error("Error fetching categories:", error);

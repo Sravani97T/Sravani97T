@@ -3,7 +3,7 @@ import { Row, Col, Typography, Input, Select, Upload, message } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import axios from 'axios';
 import WastageDetails from "./WastageDetailes";
-
+import { CREATE_jwel } from "../../../../Config/Config";
 const { Option } = Select;
 const { Text } = Typography;
 

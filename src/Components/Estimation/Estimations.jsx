@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import {
   Form,
@@ -18,9 +18,9 @@ import { currencyFormat, currencyToNumber } from "../Utiles/Utiles";
 
 const Estimations = () => {
   const [form] = Form.useForm();
-  const [editingKey, setEditingKey] = useState(false);
-  const tenantNameHeader = "PmlYjF0yAwEjNohFDKjzn/ExL/LMhjzbRDhwXlvos+0=";
-  const refs = useRef({});
+ // const [editingKey, setEditingKey] = useState(false);
+  //const tenantNameHeader = "PmlYjF0yAwEjNohFDKjzn/ExL/LMhjzbRDhwXlvos+0=";
+  //const refs = useRef({});
   const [stoneData, setStoneData] = useState([]);
   const [tagNo, setTagNo] = useState("");
   const [productsData, setProductsData] = useState([]);
@@ -40,47 +40,51 @@ const Estimations = () => {
     totalMc: 0,
     totalAmount: 0,
   });
-  const handleKeyDown = (e, fieldName) => {
-    const fieldNames = Object.keys(refs.current);
-    const currentIndex = fieldNames.indexOf(fieldName);
-    const nextFieldName = fieldNames[currentIndex + 1];
+  // const handleKeyDown = (e, fieldName) => {
+  //   const fieldNames = Object.keys(refs.current);
+  //   const currentIndex = fieldNames.indexOf(fieldName);
+  //   const nextFieldName = fieldNames[currentIndex + 1];
 
-    const handleSave = () => {
-      console.log("Saving...");
-    };
+  //   const handleSave = () => {
+  //     console.log("Saving...");
+  //   };
 
-    const handleCancel = () => {
-      console.log("Cancelling...");
-    };
+  //   const handleCancel = () => {
+  //     console.log("Cancelling...");
+  //   };
 
-    if (e.key === "Enter") {
-      e.preventDefault();
+  //   if (e.key === "Enter") {
+  //     e.preventDefault();
 
-      if (nextFieldName && refs.current[nextFieldName]) {
-        refs.current[nextFieldName].focus();
-      } else if (currentIndex === fieldNames.length - 1) {
-        if (editingKey) {
-          handleSave();
-        } else {
-          form.submit();
-        }
-      }
-    }
+  //     if (nextFieldName && refs.current[nextFieldName]) {
+  //       refs.current[nextFieldName].focus();
+  //     } else if (currentIndex === fieldNames.length - 1) {
+  //       if (editingKey) {
+  //         handleSave();
+  //       } else {
+  //         form.submit();
+  //       }
+  //     }
+  //   }
 
-    if (e.altKey && e.key.toLowerCase() === "s") {
-      e.preventDefault();
-      if (editingKey) {
-        handleSave();
-      } else {
-        form.submit();
-      }
-    }
+  //   if (e.altKey && e.key.toLowerCase() === "s") {
+  //     e.preventDefault();
+  //     if (editingKey) {
+  //       handleSave();
+  //     } else {
+  //       form.submit();
+  //     }
+  //   }
 
-    if (e.altKey && e.key.toLowerCase() === "c") {
-      e.preventDefault();
-      handleCancel();
-    }
-  };
+  //   if (e.altKey && e.key.toLowerCase() === "c") {
+  //     e.preventDefault();
+  //     handleCancel();
+  //   }
+  // };
+
+  useEffect(() => {
+   setStoneData([])
+  }, []);
 
 
   const getProductDetailsByTagNo = async (tagNo) => {

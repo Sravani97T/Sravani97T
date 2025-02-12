@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Table, Space, Button, Breadcrumb, Card, message, Popconfirm, Form, Input, Select, Row, Col, Checkbox, Pagination } from "antd";
 import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import axios from "axios";
+import { CREATE_jwel } from "../../../Config/Config";
 
 const { Option } = Select;
 
@@ -19,7 +20,7 @@ const LotCreation = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(20);
 
-    const baseURL = `${CREATE_jwel}`+"/api/Erp/";
+    const baseURL = `${CREATE_jwel}/api/Erp/`;
 
     const mainProductRef = useRef(null);
     const piecesRef = useRef(null);

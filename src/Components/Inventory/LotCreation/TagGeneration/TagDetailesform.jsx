@@ -4,6 +4,7 @@ import {
 } from 'antd';
 import axios from 'axios';
 import TableHeaderStyles from '../../../Pages/TableHeaderStyles';
+import { CREATE_jwel } from '../../../../Config/Config';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -51,7 +52,7 @@ const TagDetailsForm = ({ stoneData, focusProductName, updateTotals, feachTagno,
         fontWeight: "bold",
         color: "white",
     };
-    const baseURL = `${CREATE_jwel}`+"/api/";
+    const baseURL = `${CREATE_jwel}/api/`;
 
     useEffect(() => {
         fetchOptions();

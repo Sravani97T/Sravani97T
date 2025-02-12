@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Upload, Modal, Button, message } from "antd";
 import { PlusOutlined, EyeOutlined, DeleteOutlined } from "@ant-design/icons";
 import axios from "axios";
-
+import { CREATE_jwel } from "../../Config/Config";
 const AvatarUpload = () => {
   const [imageUrl, setImageUrl] = useState(null); // Preview URL
   const [previewVisible, setPreviewVisible] = useState(false); // Modal visibility

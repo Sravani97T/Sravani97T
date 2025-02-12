@@ -23,6 +23,7 @@ import axios from "axios";
 import "react-datepicker/dist/react-datepicker.css";
 import moment from 'moment';
 import TableHeaderStyles from "../Pages/TableHeaderStyles";
+import { CREATE_jwel } from "../../Config/Config";
 
 const tenantNameHeader = "PmlYjF0yAwEjNohFDKjzn/ExL/LMhjzbRDhwXlvos+0="; // Your tenant name header
 
@@ -58,7 +59,7 @@ const [currentPage, setCurrentPage] = useState(1);
   const fetchData = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${CREATE_jwel}`+"/api/Master/MasterDealerMasterList");
+      const response = await axios.get(`${CREATE_jwel}/api/Master/MasterDealerMasterList`);
       
       const dataWithSerialNumbers = response.data.map((item, index) => ({
         ...item,
