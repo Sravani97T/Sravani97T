@@ -9,9 +9,18 @@ const { Option } = Select;
 const TagGeneration = () => {
     const [data, setData] = useState([]);
     const [selectedLot, setSelectedLot] = useState(null);
+    const [productMasterList, setProductMasterList] = useState([]);
+    const [totalGwt, setTotalGwt] = useState(0);
+    const [, setTotalNwt] = useState(0);
+    const [totalPieces, setTotalPieces] = useState(0);
+    
+    const updateTotals = (gwt, nwt, pieces) => {
+        setTotalGwt(gwt);
+        setTotalNwt(nwt);
+        setTotalPieces(pieces);
+    };
     const lotNoRef = useRef(null);
     const productNameRef = useRef(null);
-console.log("productNameRef",productNameRef)
     useEffect(() => {
         axios.get('http://www.jewelerp.timeserasoftware.in/api/Erp/GetLotCreationList')
             .then(response => {
@@ -30,10 +39,71 @@ console.log("productNameRef",productNameRef)
             lotNoRef.current.focus();
         }
     }, []);
+    const [tagInfo, setTagInfo] = useState({ maxTagNo: null, barcodePrefix: "" });
+    const feachTagno = (lotNo) => {
+        const selectedLotDetails = data.find(item => item.lotno === lotNo);
+        if (!selectedLotDetails) return;
+    
+        const mname = selectedLotDetails.mname;
+        axios.get(`http://www.jewelerp.timeserasoftware.in/api/Scheme/GetSchemeMaxNumberInTableWithOrder?tableName=TAG_GENERATION&column=TAGNO&where=MNAME%3D%27${mname}%27`)
+            .then(response => {
+                const maxNumber = response.data[0]?.Column1 || "00";
+                const numberStr = maxNumber.toString();
+                const remainingPartNumber = parseInt(numberStr.slice(1), 10) || 0;
+    
+                setTagInfo(prevState => ({
+                    ...prevState,
+                    maxTagNo: remainingPartNumber + 1,
+                }));
+    
+                console.log("New Max Tag Number:", remainingPartNumber + 1);
+            })
+            .catch(error => console.error("Failed to fetch max tag number:", error));
+    };
+    
+    useEffect(() => {
+        if (selectedLot) {
+            feachTagno(selectedLot); // Fetch new max tag number when lot changes
+        }
+    }, [selectedLot]); // Runs every time selectedLot changes
+    
+    // useEffect(() => {
+    //     feachTagno();
+    // }, []);
+
+
+
+    console.log("productMasterList", productMasterList)
+    useEffect(() => {
+        axios.get(`http://www.jewelerp.timeserasoftware.in/api/Master/MasterMainProductList`)
+            .then(response => {
+                setProductMasterList(response.data);
+            })
+            .catch(error => {
+                console.error('Failed to fetch product master list', error);
+            });
+    }, []);
+
+    const selectedLotDetails = data.find(item => item.lotno === selectedLot);
+    useEffect(() => {
+        if (selectedLotDetails) {
+            const matchedProduct = productMasterList.find(product => product.MNAME === selectedLotDetails.mname);
+            if (matchedProduct) {
+                setTagInfo(prevState => ({
+                    ...prevState,
+                    barcodePrefix: matchedProduct.BarcodePrefix
+                }));
+
+                console.log("Barcode Prefix:", matchedProduct.BarcodePrefix);
+            }
+        }
+    }, [selectedLotDetails, productMasterList]);
 
     const handleLotChange = (value) => {
         setSelectedLot(value);
+        setTagInfo({ maxTagNo: null, barcodePrefix: "" }); // Reset tag info
     };
+    
 
     const handleKeyDown = (event) => {
         if (event.key === 'Enter') {
@@ -59,7 +129,6 @@ console.log("productNameRef",productNameRef)
         }, 0);
     };
 
-    const selectedLotDetails = data.find(item => item.lotno === selectedLot);
 
     return (
         <div>
@@ -71,13 +140,14 @@ console.log("productNameRef",productNameRef)
                     </Breadcrumb>
                 </Col>
             </Row>
+            
             {/* Combined Lot No and Main Product Card */}
             <Row gutter={[16, 16]} justify="space-between">
                 <Col span={24}>
                     <div
                         style={{
                             borderRadius: "10px",
-                            backgroundColor: "#fff",
+                            backgroundColor: "#040e56f7",
                             padding: "6px",
                             boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)",
                         }}
@@ -88,15 +158,16 @@ console.log("productNameRef",productNameRef)
                                 <div style={{
                                     display: "flex",
                                     alignItems: "center",
-                                   
+
                                     borderRadius: "8px",
-                                    width: "fit-content"
+                                    width: "fit-content",
+                                    marginLeft:"35px"
                                 }}>
                                     {/* Label */}
                                     <Text
                                         style={{
-                                            color: "#8c8c8c",
-                                            marginRight: "10px",
+                                            color: "#ede6e6",
+                                            marginRight: "15px",
                                             whiteSpace: "nowrap"
                                         }}
                                     >
@@ -109,9 +180,10 @@ console.log("productNameRef",productNameRef)
                                         showSearch
                                         value={selectedLot}
                                         onChange={handleLotChange}
+                                      
                                         onSelect={handleSelect}
                                         style={{
-                                            width: "100px",
+                                            width: "170px",
                                             height: "43px",
                                             textAlign: "center",
                                             borderRadius: "4px",
@@ -144,7 +216,7 @@ console.log("productNameRef",productNameRef)
                                         <div className="card-item" style={{ textAlign: "right" }}>
                                             <Text
                                                 style={{
-                                                    color: "#8c8c8c",
+                                                    color: "#ede6e6",
                                                     display: "block",
                                                     marginBottom: "5px",
                                                     fontSize: "12px"
@@ -152,12 +224,12 @@ console.log("productNameRef",productNameRef)
                                             >
                                                 M Product:
                                             </Text>
-                                            <Text strong style={{ fontSize: "12px" }}>{selectedLotDetails ? selectedLotDetails.mname : ''}</Text>
+                                            <Text strong style={{ fontSize: "12px",color:"#ede6e6" }}>{selectedLotDetails ? selectedLotDetails.mname : ''}</Text>
                                         </div>
                                         <div className="card-item" style={{ textAlign: "right" }}>
                                             <Text
                                                 style={{
-                                                    color: "#8c8c8c",
+                                                    color: "#ede6e6",
                                                     display: "block",
                                                     marginBottom: "5px",
                                                     fontSize: "12px"
@@ -165,16 +237,15 @@ console.log("productNameRef",productNameRef)
                                             >
                                                 Dealer:
                                             </Text>
-                                            <Text style={{ fontSize: "12px" }} strong>{selectedLotDetails ? selectedLotDetails.dealerName : ''}</Text>
+                                            <Text style={{ fontSize: "12px" ,color:"#ede6e6" }} strong>{selectedLotDetails ? selectedLotDetails.dealerName : ''}</Text>
                                         </div>
                                     </Col>
 
-                                    {/* Grouped Section: Reduced Lot Pcs and Lot Weight */}
                                     <Col xs={{ span: 24 }} sm={{ span: 12 }} md={{ span: 6 }} lg={{ span: 5 }} order={{ xs: 2, sm: 2, md: 2, lg: 2 }}>
                                         <div className="card-item" style={{ textAlign: "right" }}>
                                             <Text
                                                 style={{
-                                                    color: "#8c8c8c",
+                                                    color: "#ede6e6",
                                                     display: "block",
                                                     marginBottom: "5px",
                                                     fontSize: "12px"
@@ -182,12 +253,12 @@ console.log("productNameRef",productNameRef)
                                             >
                                                 Lot Pcs:
                                             </Text>
-                                            <Text style={{ fontSize: "12px" }} strong>{selectedLotDetails ? selectedLotDetails.pieces : ''}</Text>
+                                            <Text style={{ fontSize: "12px" ,color:"#ede6e6" }} strong>{selectedLotDetails ? selectedLotDetails.pieces : ''}</Text>
                                         </div>
                                         <div className="card-item" style={{ textAlign: "right" }}>
                                             <Text
                                                 style={{
-                                                    color: "#8c8c8c",
+                                                    color: "#ede6e6",
                                                     display: "block",
                                                     marginBottom: "5px",
                                                     fontSize: "12px"
@@ -195,46 +266,18 @@ console.log("productNameRef",productNameRef)
                                             >
                                                 Lot Weight:
                                             </Text>
-                                            <Text style={{ fontSize: "12px" }} strong>{selectedLotDetails ? selectedLotDetails.weight : ''}</Text>
+                                            <Text style={{ fontSize: "12px",color:"#ede6e6"  }} strong>{selectedLotDetails ? selectedLotDetails.weight.toFixed(3) : ''}</Text>
                                         </div>
                                     </Col>
 
-                                    {/* Grouped Section: Reduced Balance Pcs and Balance Weight */}
-                                    <Col xs={{ span: 24 }} sm={{ span: 12 }} md={{ span: 6 }} lg={{ span: 5 }} order={{ xs: 3, sm: 3, md: 3, lg: 3 }}>
-                                        <div className="card-item" style={{ textAlign: "right" }}>
-                                            <Text
-                                                style={{
-                                                    color: "#8c8c8c",
-                                                    display: "block",
-                                                    marginBottom: "5px",
-                                                    fontSize: "12px"
-                                                }}
-                                            >
-                                                Balance Pcs:
-                                            </Text>
-                                            <Text style={{ fontSize: "12px" }} strong>{selectedLotDetails ? selectedLotDetails.balpieces : ''}</Text>
-                                        </div>
-                                        <div className="card-item" style={{ textAlign: "right" }}>
-                                            <Text
-                                                style={{
-                                                    color: "#8c8c8c",
-                                                    display: "block",
-                                                    marginBottom: "5px",
-                                                    fontSize: "12px"
-                                                }}
-                                            >
-                                                Balance Weight:
-                                            </Text>
-                                            <Text style={{ fontSize: "12px" }} strong>{selectedLotDetails ? selectedLotDetails.balweight : ''}</Text>
-                                        </div>
-                                    </Col>
+                                   
 
                                     {/* Grouped Section: Tag Pcs and Tag Weight */}
                                     <Col xs={{ span: 24 }} sm={{ span: 12 }} md={{ span: 6 }} lg={{ span: 5 }} order={{ xs: 4, sm: 4, md: 4, lg: 4 }}>
                                         <div className="card-item" style={{ textAlign: "right" }}>
                                             <Text
                                                 style={{
-                                                    color: "#8c8c8c",
+                                                    color: "#ede6e6",
                                                     display: "block",
                                                     marginBottom: "5px",
                                                     fontSize: "12px"
@@ -242,12 +285,12 @@ console.log("productNameRef",productNameRef)
                                             >
                                                 Tag Pcs:
                                             </Text>
-                                            <Text style={{ fontSize: "12px" }} strong>15</Text>
+                                            <Text style={{ fontSize: "12px" ,color:"#ede6e6" }} strong>{totalPieces}</Text>
                                         </div>
                                         <div className="card-item" style={{ textAlign: "right" }}>
                                             <Text
                                                 style={{
-                                                    color: "#8c8c8c",
+                                                    color: "#ede6e6",
                                                     display: "block",
                                                     marginBottom: "5px",
                                                     fontSize: "12px"
@@ -255,7 +298,39 @@ console.log("productNameRef",productNameRef)
                                             >
                                                 Tag Weight:
                                             </Text>
-                                            <Text style={{ fontSize: "12px" }} strong>12</Text>
+                                            <Text style={{ fontSize: "12px",color:"#ede6e6"  }} strong>{totalGwt}</Text>
+                                            </div>
+                                    </Col>
+                                    <Col xs={{ span: 24 }} sm={{ span: 12 }} md={{ span: 6 }} lg={{ span: 5 }} order={{ xs: 3, sm: 3, md: 3, lg: 3 }}>
+                                        <div className="card-item" style={{ textAlign: "right" }}>
+                                            <Text
+                                                style={{
+                                                    color: "#ede6e6",
+                                                    display: "block",
+                                                    marginBottom: "5px",
+                                                    fontSize: "12px"
+                                                }}
+                                            >
+                                                Balance Pcs:
+                                            </Text>
+                                            <Text style={{ fontSize: "12px" ,color:"#ede6e6" }} strong>
+                                                {selectedLotDetails ? (selectedLotDetails.pieces - totalPieces) : ''}
+                                            </Text>
+                                        </div>
+                                        <div className="card-item" style={{ textAlign: "right" }}>
+                                            <Text
+                                                style={{
+                                                    color: "#ede6e6",
+                                                    display: "block",
+                                                    marginBottom: "5px",
+                                                    fontSize: "12px"
+                                                }}
+                                            >
+                                                Balance Weight:
+                                            </Text>
+                                            <Text style={{ fontSize: "12px" ,color:"#ede6e6" }} strong>
+                                                {selectedLotDetails ? (selectedLotDetails.weight - totalGwt).toFixed(3) : '0.000'}
+                                            </Text>
                                         </div>
                                     </Col>
                                 </Row>
@@ -268,6 +343,9 @@ console.log("productNameRef",productNameRef)
             {/* Product Details */}
             <div>
                 <ProductDetails
+                  updateTotals={updateTotals} 
+                    feachTagno={feachTagno}
+                    tagInfo={tagInfo}
                     lotno={selectedLotDetails ? selectedLotDetails.lotno : ''}
                     counter={selectedLotDetails ? selectedLotDetails.counter : ''}
                     prefix={selectedLotDetails ? selectedLotDetails.prefix : ''}
@@ -276,21 +354,8 @@ console.log("productNameRef",productNameRef)
                     mname={selectedLotDetails ? selectedLotDetails.mname : ''} productNameRef={productNameRef} />
             </div>
 
-            {/* Wastage and Making Charges Section */}
-            {/* <div>
-                <WastageDetails />
-            </div> */}
-            {/* tag detailes */}
-            <div >
-                {/* <TagDetailsForm
-                    lotno={selectedLotDetails ? selectedLotDetails.lotno : ''}
-                    mname={selectedLotDetails ? selectedLotDetails.mname : ''}
-                    counter={selectedLotDetails ? selectedLotDetails.counter : ''}
-                    prefix={selectedLotDetails ? selectedLotDetails.prefix : ''}
-                    manufacturer={selectedLotDetails ? selectedLotDetails.manufacturer : ''}
-                    dealername={selectedLotDetails ? selectedLotDetails.dealerName : ''}
-                /> */}
-            </div>
+
+
 
         </div>
     );

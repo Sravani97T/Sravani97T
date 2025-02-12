@@ -7,7 +7,7 @@ import WastageDetails from "./WastageDetailes";
 const { Option } = Select;
 const { Text } = Typography;
 
-const ProductDetails = ({ mname, productNameRef ,lotno,counter,prefix,manufacturer,dealername,}) => {
+const ProductDetails = ({ updateTotals, mname, productNameRef, lotno, counter, prefix, manufacturer, dealername, tagInfo, feachTagno }) => {
   const [fileList, setFileList] = useState([]);
   const [products, setProducts] = useState([]);
   const [category, setCategory] = useState('');
@@ -22,7 +22,11 @@ const ProductDetails = ({ mname, productNameRef ,lotno,counter,prefix,manufactur
   const totalLessRef = useRef(null);
   const nwtRef = useRef(null);
   const categoryRef = useRef(null);
-
+  const focusProductName = () => {
+    if (productNameRef.current) {
+      productNameRef.current.focus();
+    }
+  };
   // Fetch product data based on mname
   useEffect(() => {
     if (!mname) return;
@@ -111,40 +115,45 @@ const ProductDetails = ({ mname, productNameRef ,lotno,counter,prefix,manufactur
       <div>
         <div
           style={{
-            backgroundColor: "#e6f7ff",
             width: "150px",
             borderRadius: "10px",
             marginTop: "5px",
             boxShadow: "0px 4px 12px rgba(243, 238, 238, 0.91)",
-            padding: "3px",
+            padding: "6px",
             textAlign: "center",
           }}
+          className="bgcolur"
         >
-          <div style={{ fontSize: "12px", color: "#1890ff" }}>Product Details</div>
+          <div style={{ fontSize: "13px", color: "#fff" }}>Product Details</div>
         </div>
 
-        <div
-          style={{
-            borderRadius: "10px",
-            padding: "10px",
-            marginTop: "5px",
-            backgroundColor: "#fff",
-            boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.1)",
-          }}
-        >
-          <Row gutter={16} justify="start" align="middle">
-            <Col xs={24} sm={8} md={6}>
-              <div style={{ textAlign: "center", marginBottom: "8px" }}>
-                <Text style={{ fontSize: "12px" }}>Product Name</Text>
-              </div>
-              <Select
-                ref={productNameRef}
-                placeholder="Select a product"
-                style={{ width: "100%" }}
-                showSearch
-                autoFocus
-                value={selectedProduct || undefined}
-                onSelect={handleSelect}
+
+        <Row gutter={16} justify="start" align="top">
+          {/* First Section - Product Details */}
+          <Col xs={24} sm={20} md={20}>
+            <div
+              style={{
+                borderRadius: "10px",
+                padding: "10px",
+                marginTop: "5px",
+                backgroundColor: "#d9d6d6",
+                boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.1)",
+              }}
+            >
+              <Row gutter={16} justify="start" align="middle">
+                {/* Product Name */}
+                <Col xs={24} sm={10} md={8}>
+                  <div style={{ textAlign: "center", marginBottom: "8px" }}>
+                    <Text style={{ fontSize: "12px" }}>Product Name</Text>
+                  </div>
+                  <Select
+                    ref={productNameRef}
+                    placeholder="Select a product"
+                    style={{ width: "100%" }}
+                    showSearch
+                    autoFocus
+                    value={selectedProduct || undefined}
+                    onSelect={handleSelect}
                 onKeyDown={handleProductNameKeyDown}
                 dropdownRender={menu => (
                   <div>
@@ -156,160 +165,167 @@ const ProductDetails = ({ mname, productNameRef ,lotno,counter,prefix,manufactur
                     `}</style>
                   </div>
                 )}
-              >
-                {products.length > 0 ? (
+                  >
+                    {products.length > 0 ? (
                   products.map(product => (
                     <Option key={product.PRODUCTCODE} value={product.PRODUCTNAME} category={product.CATEGORY} hsncode={product.HSNCODE}>
-                      {product.PRODUCTNAME}
-                    </Option>
-                  ))
-                ) : (
-                  <Option disabled>No products available</Option>
-                )}
-              </Select>
-            </Col>
-
-            {/* PCS */}
-            <Col xs={24} sm={4} md={3}>
-              <div style={{ textAlign: "center", marginBottom: "8px" }}>
-                <Text style={{ fontSize: "12px" }}>PCS</Text>
-              </div>
-              <Input
-                ref={pcsRef}
-                type="number"
-                value={pcs}
-                placeholder="Enter PCS"
-                style={{ width: "100%", textAlign: "right" }}
-                onChange={(e) => setPcs(e.target.value)}
-                onKeyDown={(e) => handleKeyDown(e, gwtRef, null)}
-              />
-            </Col>
-
-            {/* GWT */}
-            <Col xs={24} sm={4} md={3}>
-              <div style={{ textAlign: "center", marginBottom: "8px" }}>
-                <Text style={{ fontSize: "12px" }}>G.wt</Text>
-              </div>
-              <Input
-                ref={gwtRef}
-                type="number"
-                value={gwt === 0 ? '' : gwt}
-                placeholder="Enter GWT"
-                style={{ width: "100%", textAlign: "right" }}
-                onChange={(e) => setGwt(e.target.value)}
-                onKeyDown={(e) => handleKeyDown(e, breadsLessRef, pcsRef)}
-              />
-            </Col>
-
-            {/* Breads Less Weight */}
-            <Col xs={24} sm={4} md={3}>
-              <div style={{ textAlign: "center", marginBottom: "8px" }}>
-                <Text style={{ fontSize: "12px" }}>Breads Less </Text>
-              </div>
-              <Input
-                ref={breadsLessRef}
-                type="number"
-                value={breadsLess === 0 ? '' : breadsLess}
-                placeholder="Enter Breads Less Weight"
-                style={{ width: "100%", textAlign: "right" }}
-                onChange={(e) => setBreadsLess(e.target.value)}
-                onKeyDown={(e) => handleKeyDown(e, totalLessRef, gwtRef)}
-              />
-            </Col>
-
-            {/* Total Less */}
-            <Col xs={24} sm={4} md={3}>
-              <div style={{ textAlign: "center", marginBottom: "8px" }}>
-                <Text style={{ fontSize: "12px" }}>Weight Less</Text>
-              </div>
-              <Input
-                ref={totalLessRef}
-                type="number"
-                value={totalLess === 0 ? '' : totalLess}
-                placeholder="Enter Total Less"
-                style={{ width: "100%", textAlign: "right" }}
-                onChange={(e) => setTotalLess(e.target.value)}
-                onKeyDown={(e) => handleKeyDown(e, nwtRef, breadsLessRef)}
-              />
-            </Col>
-
-            {/* NWT */}
-            <Col xs={24} sm={4} md={3}>
-              <div style={{ textAlign: "center", marginBottom: "8px" }}>
-                <Text style={{ fontSize: "12px" }}>N.wt</Text>
-              </div>
-              <Input
-                ref={nwtRef}
-                type="number"
-                value={nwt === 0 ? '' : nwt}
-                placeholder="Enter NWT"
-                style={{ width: "100%", textAlign: "right" }}
-                readOnly
-                onKeyDown={(e) => handleKeyDown(e, categoryRef, totalLessRef)}
-              />
-            </Col>
-
-            {/* Image Upload */}
-            <Col xs={24} sm={4} md={3}>
-              <div
-                style={{
-                  borderRadius: "10px",
-                  backgroundColor: "#fafafa",
-                  padding: "10px",
-                  textAlign: "center",
-                  width: '80px',
-                  height: "80px",
-                  boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)",
-                }}
-              >
-                <div
-                  style={{
-                    display: "inline-block",
-                    transform: "scale(0.6)",
-                    transformOrigin: "top left",
-                  }}
-                >
-                  <Upload
-                    action="/upload"
-                    listType="picture-card"
-                    fileList={fileList}
-                    onChange={handleChange}
-                    beforeUpload={beforeUpload}
-                    maxCount={1}
-                  >
-                    {fileList.length < 1 && (
-                      <div>
-                        <PlusOutlined style={{ fontSize: '14px' }} />
-                        <div style={{ marginTop: 8, fontSize: '14px' }}>Upload</div>
-                      </div>
+                          {product.PRODUCTNAME}
+                        </Option>
+                      ))
+                    ) : (
+                      <Option disabled>No products available</Option>
                     )}
-                  </Upload>
-                </div>
-              </div>
-            </Col>
-          </Row>
-        </div>
+                  </Select>
+                </Col>
+
+                {/* PCS */}
+                <Col xs={24} sm={3} md={2}>
+                  <div style={{ textAlign: "center", marginBottom: "8px" }}>
+                    <Text style={{ fontSize: "12px" }}>PCS</Text>
+                  </div>
+                  <Input
+                    ref={pcsRef}
+                    type="number"
+                    value={pcs}
+                    placeholder="Enter PCS"
+                    style={{ width: "100%", textAlign: "right" }}
+                    onChange={(e) => setPcs(e.target.value)}
+                onKeyDown={(e) => handleKeyDown(e, gwtRef, null)}
+                  />
+                </Col>
+
+                {/* GWT */}
+                <Col xs={24} sm={5} md={4}>
+                  <div style={{ textAlign: "center", marginBottom: "8px" }}>
+                    <Text style={{ fontSize: "12px" }}>G.wt</Text>
+                  </div>
+                  <Input
+                    ref={gwtRef}
+                    type="number"
+                value={gwt === 0 ? '' : gwt}
+                    placeholder="Enter GWT"
+                    style={{ width: "100%", textAlign: "right" }}
+                    onChange={(e) => setGwt(e.target.value)}
+                onKeyDown={(e) => handleKeyDown(e, breadsLessRef, pcsRef)}
+                  />
+                </Col>
+
+                {/* Breads Less Weight */}
+                <Col xs={24} sm={4} md={3}>
+                  <div style={{ textAlign: "center", marginBottom: "8px" }}>
+                    <Text style={{ fontSize: "12px" }}>Breads Less</Text>
+                  </div>
+                  <Input
+                    ref={breadsLessRef}
+                    type="number"
+                    value={breadsLess === 0 ? "" : breadsLess}
+                    placeholder="Enter Breads Less"
+                    style={{ width: "100%", textAlign: "right" }}
+                    onChange={(e) => setBreadsLess(e.target.value)}
+                onKeyDown={(e) => handleKeyDown(e, totalLessRef, gwtRef)}
+                  />
+                </Col>
+
+                {/* Total Less */}
+                <Col xs={24} sm={4} md={3}>
+                  <div style={{ textAlign: "center", marginBottom: "8px" }}>
+                    <Text style={{ fontSize: "12px" }}>Weight Less</Text>
+                  </div>
+                  <Input
+                    ref={totalLessRef}
+                    type="number"
+                    value={totalLess === 0 ? "" : totalLess}
+                    placeholder="Enter Total Less"
+                    style={{ width: "100%", textAlign: "right" }}
+                    onChange={(e) => setTotalLess(e.target.value)}
+                onKeyDown={(e) => handleKeyDown(e, nwtRef, breadsLessRef)}
+                  />
+                </Col>
+
+                {/* NWT */}
+                <Col xs={24} sm={5} md={4}>
+                  <div style={{ textAlign: "center", marginBottom: "8px" }}>
+                    <Text style={{ fontSize: "12px" }}>N.wt</Text>
+                  </div>
+                  <Input
+                    ref={nwtRef}
+                    type="number"
+                    value={nwt === 0 ? "" : nwt}
+                    placeholder="Enter NWT"
+                    style={{ width: "100%", textAlign: "right" }}
+                    readOnly
+                onKeyDown={(e) => handleKeyDown(e, categoryRef, totalLessRef)}
+                  />
+                </Col>
+              </Row>
+            </div>
+          </Col>
+
+          {/* Second Section - Image Upload */}
+          <Col xs={24} sm={4} md={4}>
+
+            <div
+              style={{
+                borderRadius: "10px",
+                marginTop: "5px",
+                marginBottom: "5px",
+                boxShadow: "0px 4px 12px rgba(243, 238, 238, 0.91)",
+                textAlign: "center",
+                backgroundColor: "#71769b", // Background color added
+                padding: "5px",
+                display: "flex", // Centering content
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+              className="bgcolurimg"
+            >
+              <Upload
+                action="/upload"
+                listType="picture-card"
+                fileList={fileList}
+                onChange={handleChange}
+                beforeUpload={beforeUpload}
+                maxCount={1}
+                style={{ width: "100px", height: "100px" }} // Decreased size
+              >
+                {fileList.length < 1 && (
+                  <div style={{ textAlign: "center" }}>
+                    <PlusOutlined style={{ fontSize: "12px", color: "#fff" }} /> {/* Smaller icon */}
+                    <div style={{ marginTop: 5, fontSize: "12px", color: "#fff" }}>Upload Image</div> {/* Smaller text */}
+                  </div>
+                )}
+              </Upload>
+
+            </div>
+
+
+          </Col>
+        </Row>
       </div>
- 
-      <WastageDetails 
-setGwt={setGwt}
-setBreadsLess={setBreadsLess}
-setTotalLess ={setTotalLess}
-setNwt={setNwt}
-pcsRef={pcsRef}
-gwtRef={gwtRef}
-breadsLessRef={breadsLessRef}
-totalLessRef={totalLessRef}
-nwtRef={nwtRef}
-setPcs={setPcs}
-setSelectedProduct={setSelectedProduct}
-        categoryRef={categoryRef} 
-        nwt={nwt} 
-        lotno={lotno} 
-        counter={counter} 
-        prefix={prefix} 
+
+      <WastageDetails
+        focusProductName={focusProductName}
+        updateTotals={updateTotals}
+        feachTagno={feachTagno}
+        tagInfo={tagInfo}
+        setGwt={setGwt}
+        setBreadsLess={setBreadsLess}
+        setTotalLess={setTotalLess}
+        setNwt={setNwt}
+        pcsRef={pcsRef}
+        gwtRef={gwtRef}
+        breadsLessRef={breadsLessRef}
+        totalLessRef={totalLessRef}
+        nwtRef={nwtRef}
+        setPcs={setPcs}
+        setSelectedProduct={setSelectedProduct}
+        categoryRef={categoryRef}
+        nwt={nwt}
+        lotno={lotno}
+        counter={counter}
+        prefix={prefix}
         manufacturer={manufacturer}
-        dealername={dealername} 
+        dealername={dealername}
         mname={mname}
         productname={selectedProduct}
         productcode={selectedProductCode}
