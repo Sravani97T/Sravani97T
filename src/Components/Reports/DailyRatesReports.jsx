@@ -129,7 +129,7 @@ const DailyRatesReports = () => {
     };
 
     useEffect(() => {
-        axios.get('http://www.jewelerp.timeserasoftware.in/api/Erp/GetDailyRatesList')
+        axios.get(`${CREATE_jwel}`+ '/api/Erp/GetDailyRatesList')
             .then(response => {
                 setData(response.data);
             })

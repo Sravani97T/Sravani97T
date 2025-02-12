@@ -58,7 +58,7 @@ const [currentPage, setCurrentPage] = useState(1);
   const fetchData = async () => {
     try {
       setLoading(true);
-      const response = await axios.get("http://www.jewelerp.timeserasoftware.in/api/Master/MasterDealerMasterList");
+      const response = await axios.get(`${CREATE_jwel}`+"/api/Master/MasterDealerMasterList");
       
       const dataWithSerialNumbers = response.data.map((item, index) => ({
         ...item,
@@ -84,7 +84,7 @@ const [currentPage, setCurrentPage] = useState(1);
     if (!category || !dealerName) return;
 
     axios
-      .get(`http://www.jewelerp.timeserasoftware.in/api/Master/MasterDealerMasterSearch?CustType=${category}&DealerName=${dealerName}`, {
+      .get(`${CREATE_jwel}`+`/api/Master/MasterDealerMasterSearch?CustType=${category}&DealerName=${dealerName}`, {
         headers: {
           "tenantName": tenantNameHeader,
         },
@@ -161,7 +161,7 @@ const [currentPage, setCurrentPage] = useState(1);
     try {
       setLoading(true);
       const response = await axios.post(
-        "http://www.jewelerp.timeserasoftware.in/api/Master/MasterDealerMasterInsert",
+        `${CREATE_jwel}`+"/api/Master/MasterDealerMasterInsert",
         requestBody
       );
       setLoading(false);
@@ -180,7 +180,7 @@ const [currentPage, setCurrentPage] = useState(1);
   };
   const handleDelete = async (record) => {
     try {
-      const url = `http://www.jewelerp.timeserasoftware.in/api/Master/MasterDealerMasterDelete?CustType=${encodeURIComponent(record.CustType)}&DealerName=${encodeURIComponent(record.Dealername)}`;
+      const url = `${CREATE_jwel}`+`/api/Master/MasterDealerMasterDelete?CustType=${encodeURIComponent(record.CustType)}&DealerName=${encodeURIComponent(record.Dealername)}`;
 
       const response = await axios.post(url);
 
@@ -242,7 +242,7 @@ const [currentPage, setCurrentPage] = useState(1);
 
     try {
       // Delete the old record
-      const deleteUrl = `http://www.jewelerp.timeserasoftware.in/api/Master/MasterDealerMasterDelete?CustType=${encodeURIComponent(category)}&DealerName=${encodeURIComponent(dealerName)}`;
+      const deleteUrl = `${CREATE_jwel}`+`/api/Master/MasterDealerMasterDelete?CustType=${encodeURIComponent(category)}&DealerName=${encodeURIComponent(dealerName)}`;
       const deleteResponse = await axios.post(deleteUrl);
 
       if (deleteResponse.data === true) {
@@ -282,7 +282,7 @@ const [currentPage, setCurrentPage] = useState(1);
           entryno: updatedData.entryno || "1",
         };
 
-        const insertUrl = "http://www.jewelerp.timeserasoftware.in/api/Master/MasterDealerMasterInsert";
+        const insertUrl = `${CREATE_jwel}`+"/api/Master/MasterDealerMasterInsert";
         const insertResponse = await axios.post(insertUrl, requestBody);
 
         if (insertResponse.data) {

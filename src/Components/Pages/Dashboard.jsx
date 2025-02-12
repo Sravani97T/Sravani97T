@@ -42,7 +42,7 @@ const Dashboard = () => {
         // Log filters for debugging
         console.log("Fetching data with filters:", { fromDate, toDate, ...filters });
   
-        const response = await axios.get(`http://www.jewelerp.timeserasoftware.in/api/Erp/GetBillMast`, {
+        const response = await axios.get(`${CREATE_jwel}`+`/api/Erp/GetBillMast`, {
           params: {
             fromDate,
             toDate,

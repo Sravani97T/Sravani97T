@@ -88,7 +88,7 @@ const StoneDetails = ({ stoneData, setStoneData }) => {
         }
     };
     useEffect(() => {
-        axios.get("http://www.jewelerp.timeserasoftware.in/api/Master/MasterItemMasterList")
+        axios.get(`${CREATE_jwel}`+"/api/Master/MasterItemMasterList")
             .then(response => {
                 setStoneItems(response.data);
             })

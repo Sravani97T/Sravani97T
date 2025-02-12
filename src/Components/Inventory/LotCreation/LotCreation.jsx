@@ -19,7 +19,7 @@ const LotCreation = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(20);
 
-    const baseURL = "http://www.jewelerp.timeserasoftware.in/api/Erp/";
+    const baseURL = `${CREATE_jwel}`+"/api/Erp/";
 
     const mainProductRef = useRef(null);
     const piecesRef = useRef(null);
@@ -87,10 +87,10 @@ const LotCreation = () => {
             }
         };
     
-        fetchData("http://www.jewelerp.timeserasoftware.in/api/Master/MasterMainProductList", setMainProductOptions);
-        fetchData("http://www.jewelerp.timeserasoftware.in/api/Master/MasterManufacturerMasterList", setManufacturerOptions);
-        fetchData("http://www.jewelerp.timeserasoftware.in/api/Master/MasterPrefixMasterList", setPrefixOptions);
-        fetchData("http://www.jewelerp.timeserasoftware.in/api/Master/MasterCounterMasterList", setCounterOptions);
+        fetchData(`${CREATE_jwel}`+"/api/Master/MasterMainProductList", setMainProductOptions);
+        fetchData(`${CREATE_jwel}`+"/api/Master/MasterManufacturerMasterList", setManufacturerOptions);
+        fetchData(`${CREATE_jwel}`+"/api/Master/MasterPrefixMasterList", setPrefixOptions);
+        fetchData(`${CREATE_jwel}`+"/api/Master/MasterCounterMasterList", setCounterOptions);
     };
 
     const handleMainProductChange = (value) => {

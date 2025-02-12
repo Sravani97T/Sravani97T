@@ -30,7 +30,7 @@ const ProductDetails = ({ updateTotals, mname, productNameRef, lotno, counter, p
   // Fetch product data based on mname
   useEffect(() => {
     if (!mname) return;
-    const url = `http://www.jewelerp.timeserasoftware.in/api/Master/GetDataFromGivenTableNameWithWhereandOrder?tableName=PRODUCT_MASTER&where=MNAME='${mname}'&order=PRODUCTNAME`;
+    const url = `${CREATE_jwel}`+`/api/Master/GetDataFromGivenTableNameWithWhereandOrder?tableName=PRODUCT_MASTER&where=MNAME='${mname}'&order=PRODUCTNAME`;
     axios.get(url)
       .then(response => {
         setProducts(response.data);

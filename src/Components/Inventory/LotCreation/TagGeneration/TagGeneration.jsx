@@ -22,7 +22,7 @@ const TagGeneration = () => {
     const lotNoRef = useRef(null);
     const productNameRef = useRef(null);
     useEffect(() => {
-        axios.get('http://www.jewelerp.timeserasoftware.in/api/Erp/GetLotCreationList')
+        axios.get(`${CREATE_jwel}`+ '/api/Erp/GetLotCreationList')
             .then(response => {
                 const formattedData = response.data.map(item => ({
                     ...item,
@@ -45,7 +45,7 @@ const TagGeneration = () => {
         if (!selectedLotDetails) return;
     
         const mname = selectedLotDetails.mname;
-        axios.get(`http://www.jewelerp.timeserasoftware.in/api/Scheme/GetSchemeMaxNumberInTableWithOrder?tableName=TAG_GENERATION&column=TAGNO&where=MNAME%3D%27${mname}%27`)
+        axios.get(`${CREATE_jwel}`+`/api/Scheme/GetSchemeMaxNumberInTableWithOrder?tableName=TAG_GENERATION&column=TAGNO&where=MNAME%3D%27${mname}%27`)
             .then(response => {
                 const maxNumber = response.data[0]?.Column1 || "00";
                 const numberStr = maxNumber.toString();
@@ -75,7 +75,7 @@ const TagGeneration = () => {
 
     console.log("productMasterList", productMasterList)
     useEffect(() => {
-        axios.get(`http://www.jewelerp.timeserasoftware.in/api/Master/MasterMainProductList`)
+        axios.get(`${CREATE_jwel}`+`/api/Master/MasterMainProductList`)
             .then(response => {
                 setProductMasterList(response.data);
             })

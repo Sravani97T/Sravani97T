@@ -51,7 +51,7 @@ const TagDetailsForm = ({ stoneData, focusProductName, updateTotals, feachTagno,
         fontWeight: "bold",
         color: "white",
     };
-    const baseURL = "http://www.jewelerp.timeserasoftware.in/api/";
+    const baseURL = `${CREATE_jwel}`+"/api/";
 
     useEffect(() => {
         fetchOptions();
@@ -108,7 +108,7 @@ const TagDetailsForm = ({ stoneData, focusProductName, updateTotals, feachTagno,
                 snO1: parseInt(item.snO1, 10) || 0,
             };
 
-            const response = await axios.post(`http://www.jewelerp.timeserasoftware.in/api/Erp/TagItemInsert`, payload);
+            const response = await axios.post(`${CREATE_jwel}`+`/api/Erp/TagItemInsert`, payload);
             if (response.data === true) {
                 message.success('Data saved successfully');
             } else {
@@ -132,7 +132,7 @@ const TagDetailsForm = ({ stoneData, focusProductName, updateTotals, feachTagno,
 
         fetchData(`${baseURL}Master/MasterCounterMasterList`, setCounterOptions);
         fetchData(`${baseURL}Master/MasterManufacturerMasterList`, setManufacturerOptions);
-        fetchData(`http://www.jewelerp.timeserasoftware.in/api/Master/GetDataFromGivenTableNameWithWhereandOrder?tableName=DEALER_MASTER&where=CUSTTYPE%3D%27DEALER%27&order=DEALERNAME
+        fetchData(`${CREATE_jwel}`+`/api/Master/GetDataFromGivenTableNameWithWhereandOrder?tableName=DEALER_MASTER&where=CUSTTYPE%3D%27DEALER%27&order=DEALERNAME
 `, setDealerOptions);
 
         if (mname) {
@@ -146,7 +146,7 @@ const TagDetailsForm = ({ stoneData, focusProductName, updateTotals, feachTagno,
 
     const fetchTableData = async () => {
         try {
-            const response = await axios.get(`http://www.jewelerp.timeserasoftware.in/api/Master/GetDataFromGivenTableNameWithWhereandOrder?tableName=TAG_GENERATION&where=LOTNO%3D${lotno}&order=TAGNO`);
+            const response = await axios.get(`${CREATE_jwel}`+`/api/Master/GetDataFromGivenTableNameWithWhereandOrder?tableName=TAG_GENERATION&where=LOTNO%3D${lotno}&order=TAGNO`);
             setTableData(response.data);
             calculateTotals(response.data); // Call totals calculation
         } catch (error) {

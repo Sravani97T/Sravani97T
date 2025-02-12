@@ -38,7 +38,7 @@ const WastageDetails = ({ focusProductName, updateTotals, feachTagno, tagInfo, c
     useEffect(() => {
         const fetchCategories = async () => {
             try {
-                const response = await axios.get("http://www.jewelerp.timeserasoftware.in/api/Master/MasterCategoryMasterList");
+                const response = await axios.get(`${CREATE_jwel}`+"/api/Master/MasterCategoryMasterList");
                 setCategories(response.data);
             } catch (error) {
                 console.error("Error fetching categories:", error);

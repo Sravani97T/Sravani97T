@@ -10,7 +10,7 @@ const TodaysSalesBarGraph = () => {
       try {
         const today = new Date();
         const formattedDate = `${today.getMonth() + 1}/${today.getDate()}/${today.getFullYear()}`;
-        const response = await axios.get(`http://www.jewelerp.timeserasoftware.in/api/DashBoard/GetTotalSaleValue?billDate=${formattedDate}&saleCode=1`);
+        const response = await axios.get(`${CREATE_jwel}`+`/api/DashBoard/GetTotalSaleValue?billDate=${formattedDate}&saleCode=1`);
         const apiData = response.data.map(item => ({
           category: item.JewelType.split(' ')[0],
           totalSales: item.TotPieces,

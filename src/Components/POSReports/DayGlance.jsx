@@ -154,7 +154,7 @@ const DayGlance = () => {
             const fromDate = moment(dates[0]).format('MM/DD/YYYY');
             const toDate = moment(dates[1]).format('MM/DD/YYYY');
 
-            axios.get(`http://www.jewelerp.timeserasoftware.in/api/POSReports/GetdayGlance?fromDate=${fromDate}&toDate=${toDate}`)
+            axios.get(`${CREATE_jwel}`+`/api/POSReports/GetdayGlance?fromDate=${fromDate}&toDate=${toDate}`)
                 .then(response => {
                     const detailsData = response.data;
                     const grouped = detailsData.reduce((acc, item) => {

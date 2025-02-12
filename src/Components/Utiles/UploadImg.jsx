@@ -77,7 +77,7 @@ const AvatarUpload = () => {
 
     try {
         const response = await axios.post(
-            "http://www.jewelerp.timeserasoftware.in/api/Utilities/SaveClientImages",
+            `${CREATE_jwel}`+"/api/Utilities/SaveClientImages",
             payload,
             {
                 headers: {
