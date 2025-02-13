@@ -25,7 +25,7 @@ const TagDetailsForm = ({ stoneData, focusProductName, updateTotals, feachTagno,
 
     const [form] = Form.useForm();
     const [currentPage, setCurrentPage] = useState(1);
-    const [pageSize, setPageSize] = useState(10);
+    const [pageSize, setPageSize] = useState(20);
     const purityRef = useRef(null);
     const manufacturerRef = useRef(null);
     const dealerRef = useRef(null);
@@ -74,51 +74,7 @@ const TagDetailsForm = ({ stoneData, focusProductName, updateTotals, feachTagno,
             productcategory: productcategory || "",
         });
     }, [counter, prefix, manufacturer, productcategory]);
-    const stonePostFunction = async () => {
-        if (!stoneData || stoneData.length === 0) {
-            message.error('No stone data available to save');
-            return;
-        }
-
-        try {
-            const item = stoneData[0]; // Only take the first object from stoneData
-            const payload = {
-                mname: mname || "defaultMname",
-                productcategory: productcategory || "defaultProductCategory",
-                productcode: productcode || "defaultProductCode",
-                productname: productname || "defaultProductName",
-                tagno: parseInt(`${tagInfo.barcodePrefix}${tagInfo.maxTagNo}`, 10),
-                sno: 0,
-                itemname: item.stoneItem || "",
-                pieces: parseInt(item.pcs, 10) || 0,
-                grms: parseFloat(item.grams) || 0,
-                cts: parseFloat(item.cts) || 0,
-                rate: parseFloat(item.rate) || 0,
-                nopcs: parseInt(item.noPcs, 10) || 0,
-                amount: parseFloat(item.amount) || 0,
-                colour: item.color || "defaultColor",
-                cut: item.cut || "defaultCut",
-                clarity: item.clarity || "defaultClarity",
-                clouD_UPLOAD: true,
-                itemcode: item.itemcode || "defaultItemCode",
-                dprice: parseFloat(item.dprice) || 0,
-                damt: parseFloat(item.damt) || 0,
-                dname: item.dname || "defaultDname",
-                vv: item.vv || "defaultVv",
-                snO1: parseInt(item.snO1, 10) || 0,
-            };
-
-            const response = await axios.post(`http://www.jewelerp.timeserasoftware.in/api/Erp/TagItemInsert`, payload);
-            if (response.data === true) {
-                message.success('Data saved successfully');
-            } else {
-                message.error('Failed to save data');
-            }
-        } catch (error) {
-            console.error('Failed to save data', error);
-            message.error('Failed to save data');
-        }
-    }
+ 
     const fetchOptions = async () => {
         const fetchData = async (url, setState, filterFn = null) => {
             try {
@@ -177,6 +133,50 @@ const TagDetailsForm = ({ stoneData, focusProductName, updateTotals, feachTagno,
             prevRef.current.focus();
         }
     };
+    const stonePostFunction = async () => {
+        if (!stoneData || stoneData.length === 0) {
+            message.error('No stone data available to save');
+            return;
+        }
+
+        try {
+            const payload = stoneData.map((item) => ({
+                mname: mname || "defaultMname",
+                productcategory: productcategory || "defaultProductCategory",
+                productcode: productcode || "defaultProductCode",
+                productname: productname || "defaultProductName",
+                tagno: parseInt(`${tagInfo.barcodePrefix}${tagInfo.maxTagNo}`, 10),
+                sno: item.sno,
+                itemname: item.stoneItem || "",
+                pieces: parseInt(item.pcs, 10) || 0,
+                grms: parseFloat(item.grams) || 0,
+                cts: parseFloat(item.cts) || 0,
+                rate: parseFloat(item.rate) || 0,
+                nopcs: parseInt(item.noPcs, 10) || 0,
+                amount: parseFloat(item.amount) || 0,
+                colour: item.color || "defaultColor",
+                cut: item.cut || "defaultCut",
+                clarity: item.clarity || "defaultClarity",
+                clouD_UPLOAD: true,
+                itemcode: item.itemcode || "defaultItemCode",
+                dprice: parseFloat(item.dprice) || 0,
+                damt: parseFloat(item.damt) || 0,
+                dname: item.dname || "defaultDname",
+                vv: item.vv || "defaultVv",
+                snO1: parseInt(item.snO1, 10) || 0,
+            }));
+
+            const response = await axios.post(`http://www.jewelerp.timeserasoftware.in/api/Erp/TagItemMultiInsert`, payload);
+            if (response.data === true) {
+                message.success('Data saved successfully');
+            } else {
+                message.error('Failed to save data');
+            }
+        } catch (error) {
+            console.error('Failed to save data', error);
+            message.error('Failed to save data');
+        }
+    }
     const handleSave = async () => {
         stonePostFunction();
         try {
@@ -278,6 +278,7 @@ const TagDetailsForm = ({ stoneData, focusProductName, updateTotals, feachTagno,
                 if (focusProductName) {
                     focusProductName(); // Move cursor to Product Name in ProductDetails
                 }
+                
                 fetchTableData(); // Refresh table data after save
                 feachTagno(lotno); // Ensure feachTagno is called after successful save
                 const currentValues = form.getFieldsValue(['counter', 'prefix', 'manufacturer']);
@@ -328,7 +329,7 @@ const TagDetailsForm = ({ stoneData, focusProductName, updateTotals, feachTagno,
             title: 'S.No',
             dataIndex: 'sno',
             key: 'sno',
-            render: (_, __, index) => index + 1,
+            render: (_, __, index) => (currentPage - 1) * pageSize + index + 1,
             align: "center",
             className: 'blue-background-column',
             width: 50,
@@ -885,7 +886,7 @@ const TagDetailsForm = ({ stoneData, focusProductName, updateTotals, feachTagno,
                         <TableHeaderStyles>
 
                             <Table
-                                dataSource={filteredData}
+                                dataSource={filteredData.slice((currentPage - 1) * pageSize, currentPage * pageSize)}
                                 columns={columns}
                                 size="small"
                                 rowClassName="table-row"

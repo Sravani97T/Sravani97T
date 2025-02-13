@@ -3,7 +3,7 @@ import { Row, Col, Typography, Input, Select } from "antd";
 import StoneDetails from "../TagGeneration/StoneDetailes";
 import axios from 'axios';
 import TagDetailsForm from "./TagDetailesform";
-
+import OrderItem from "./OrderItem";
 const { Text } = Typography;
 const { Option } = Select;
 
@@ -20,10 +20,10 @@ const WastageDetails = ({ focusProductName, updateTotals, feachTagno, tagInfo, c
         },
     ]);
     const [stoneData, setStoneData] = useState([]);
-
+    console.log("stonecount", stoneData);
     const [categories, setCategories] = useState([]);
     const [selectedCategory, setSelectedCategory] = useState(null);
-    const [isEditable, setIsEditable] = useState(false);
+    const [, setIsEditable] = useState(false);
 
     const directRef = useRef(null);
     const direct1Ref = useRef(null);
@@ -403,7 +403,7 @@ const WastageDetails = ({ focusProductName, updateTotals, feachTagno, tagInfo, c
                                                     }]);
                                                 }}
                                                 onKeyDown={(e) => handleKeyDown(e, counterRef, perGramRef)}
-                                                onFocus={(e) => e.target.select()} // Select the entire value on focus
+                                            // Select the entire value on focus
                                             />
                                         ) : (
                                             <Input
@@ -427,27 +427,42 @@ const WastageDetails = ({ focusProductName, updateTotals, feachTagno, tagInfo, c
                         </div>
                     </Col>
                     <Col xs={24} sm={4}>
-
                         <div
                             style={{
                                 borderRadius: "10px",
-                                padding: "10px",
+                                marginBottom: "5px",
+                                padding: "13px",
                                 backgroundColor: "#b9bbcf",
                                 boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.1)",
-                                marginTop: "33px"
                             }}
                         >
                             <StoneDetails
+                                lotno={lotno}
+                                productname={productname}
+                                gwt={gwt}
+                                pieces={pieces}
                                 stoneData={stoneData}
                                 setStoneData={setStoneData}
                             />
-                            <div>Stones: 10</div>
                         </div>
+                        <div
+                            style={{
+                                borderRadius: "10px",
+                                padding: "13px",
+                                backgroundColor: "#b9bbcf",
+                                boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.1)",
+                            }}
+                        >
+                          <OrderItem lotno={lotno}
+                                productname={productname}
+                                gwt={gwt}
+                                pieces={pieces}/>                                                                  </div>
                     </Col>
+
                 </Row>
             </div>
             <TagDetailsForm
-            stoneData={stoneData}
+                stoneData={stoneData}
 
                 focusProductName={focusProductName}
                 updateTotals={updateTotals}

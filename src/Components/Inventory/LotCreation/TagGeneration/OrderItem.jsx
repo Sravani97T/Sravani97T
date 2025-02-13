@@ -6,7 +6,7 @@ import axios from "axios";
 const { Text } = Typography;
 const { Option } = Select;
 
-const StoneDetails = ({lotno,productname,pieces,gwt, stoneData, setStoneData }) => {
+const OrderItem = ({ lotno,productname,gwt,pieces,orderId, customerName, orderDate, orderData = [], setOrderData }) => {
     const tagStyle = {
         fontSize: "12px",
         padding: "6px 12px",
@@ -15,7 +15,7 @@ const StoneDetails = ({lotno,productname,pieces,gwt, stoneData, setStoneData }) 
         color: "white",
     };
     const [modalOpen, setModalOpen] = useState(false);
-    const [stoneItems, setStoneItems] = useState([]);
+    const [itemList, setItemList] = useState([]);
     const shapeData = [
         { type: "diamond", top: "10%", left: "15%" },
         { type: "triangle", top: "30%", left: "40%" },
@@ -26,58 +26,48 @@ const StoneDetails = ({lotno,productname,pieces,gwt, stoneData, setStoneData }) 
     ];
 
     const [formValues, setFormValues] = useState({
-        stoneItem: "",
-        pcs: "",
-        cts: "",
-        grams: "",
-        rate: "",
-        amount: "",
-        noPcs: "",
-        color: "",
-        cut: "",
-        clarity: ""
+        itemName: "",
+        quantity: "",
+        price: "",
+        total: "",
+        description: ""
     });
     const [isEditing, setIsEditing] = useState(false);
     const [editingKey, setEditingKey] = useState(null);
-    const stoneItemRef = useRef(null);
-    const pcsRef = useRef(null);
-    const ctsRef = useRef(null);
-    const gramsRef = useRef(null);
-    const rateRef = useRef(null);
-    const noPcsRef = useRef(null);
-    const colorRef = useRef(null);
-    const cutRef = useRef(null);
-    const clarityRef = useRef(null);
-    const [stoneItemInputValue, setStoneItemInputValue] = useState("");
+    const itemNameRef = useRef(null);
+    const quantityRef = useRef(null);
+    const priceRef = useRef(null);
+    const descriptionRef = useRef(null);
+    const [itemNameInputValue, setItemNameInputValue] = useState("");
     const [highlightedIndex, setHighlightedIndex] = useState(0);
-    const handleStoneChange = (value) => {
-        setFormValues({ ...formValues, stoneItem: value });
-        setStoneItemInputValue(""); // ✅ Clears input after selection
+
+    const handleItemChange = (value) => {
+        setFormValues({ ...formValues, itemName: value });
+        setItemNameInputValue(""); // Clears input after selection
     };
 
-    const handleStoneSelect = (value) => {
-        setFormValues({ ...formValues, stoneItem: value });
-        setStoneItemInputValue(""); // ✅ Clears input after selection
+    const handleItemSelect = (value) => {
+        setFormValues({ ...formValues, itemName: value });
+        setItemNameInputValue(""); // Clears input after selection
 
         setTimeout(() => {
-            if (pcsRef.current) {
-                pcsRef.current.focus(); // ✅ Moves focus to next field
+            if (quantityRef.current) {
+                quantityRef.current.focus(); // Moves focus to next field
             }
         }, 100);
     };
-    // Filter options based on input
-    const filteredOptions = stoneItems.filter((item) =>
-        item.ITEMNAME.toLowerCase().includes(stoneItemInputValue.toLowerCase())
+
+    const filteredOptions = (itemList || []).filter((item) =>
+        item.ITEMNAME.toLowerCase().includes(itemNameInputValue.toLowerCase())
     );
 
-    // Handle key down (Enter & Arrow navigation)
-    const handleStoneKeyDown = (e) => {
+    const handleItemKeyDown = (e) => {
         if (e.key === "Enter" && filteredOptions.length > 0) {
             const selectedItem = filteredOptions[highlightedIndex]; // Get highlighted item
             if (selectedItem) {
-                handleStoneChange(selectedItem.ITEMNAME);
-                handleStoneSelect(selectedItem.ITEMNAME);
-                setStoneItemInputValue(selectedItem.ITEMNAME);
+                handleItemChange(selectedItem.ITEMNAME);
+                handleItemSelect(selectedItem.ITEMNAME);
+                setItemNameInputValue(selectedItem.ITEMNAME);
             }
         } else if (e.key === "ArrowDown") {
             setHighlightedIndex((prev) =>
@@ -87,38 +77,24 @@ const StoneDetails = ({lotno,productname,pieces,gwt, stoneData, setStoneData }) 
             setHighlightedIndex((prev) => (prev > 0 ? prev - 1 : 0));
         }
     };
+
     useEffect(() => {
         axios.get("http://www.jewelerp.timeserasoftware.in/api/Master/MasterItemMasterList")
             .then(response => {
-                setStoneItems(response.data);
+                setItemList(response.data);
             })
-            .catch(error => console.error("Error fetching stone items:", error));
+            .catch(error => console.error("Error fetching item list:", error));
     }, []);
-
-    const handleSelectChange = (value) => {
-        setFormValues({ ...formValues, stoneItem: value });
-    };
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         let updatedValues = { ...formValues, [name]: value };
 
-        // Ensure only one of pcs, cts, grams is filled and others are cleared
-        if (name === "pcs" && value) {
-            updatedValues = { ...updatedValues, cts: "", grams: "" };
-        } else if (name === "cts" && value) {
-            updatedValues = { ...updatedValues, pcs: "", grams: "" };
-        } else if (name === "grams" && value) {
-            updatedValues = { ...updatedValues, pcs: "", cts: "" };
-        }
-
-        // Calculate amount
-        const rate = parseFloat(updatedValues.rate) || 0;
-        const pcs = parseFloat(updatedValues.pcs) || 0;
-        const cts = parseFloat(updatedValues.cts) || 0;
-        const grams = parseFloat(updatedValues.grams) || 0;
-        const amount = rate * (pcs + cts + grams);
-        updatedValues.amount = amount.toFixed(2);
+        // Calculate total
+        const price = parseFloat(updatedValues.price) || 0;
+        const quantity = parseFloat(updatedValues.quantity) || 0;
+        const total = price * quantity;
+        updatedValues.total = total.toFixed(2);
 
         setFormValues(updatedValues);
     };
@@ -126,58 +102,46 @@ const StoneDetails = ({lotno,productname,pieces,gwt, stoneData, setStoneData }) 
     const handleEnterPress = (e, field) => {
         if (e.key === "Enter") {
             e.preventDefault(); // Prevent default behavior
-    
+
             const nextFieldMap = {
-                stoneItem: pcsRef,
-                pcs: rateRef,
-                cts: rateRef,
-                grams: rateRef,
-                rate: noPcsRef,
-                noPcs: colorRef,
-                color: cutRef,
-                cut: clarityRef,
-                clarity: null // Submits the form
+                itemName: quantityRef,
+                quantity: priceRef,
+                price: descriptionRef,
+                description: null // Submits the form
             };
-    
+
             const nextField = nextFieldMap[field];
-    
+
             if (nextField && nextField.current) {
                 nextField.current.focus();
             } else {
-                handleAddStone(); // Submit after clarity
+                handleAddItem(); // Submit after description
             }
         }
     };
-    
-    const handleAddStone = () => {
-        if (!formValues.rate) {
+
+    const handleAddItem = () => {
+        if (!formValues.price) {
             alert("Enter fields is required.");
             return;
         }
-    
+
         if (isEditing) {
-            setStoneData(stoneData.map(item => item.key === editingKey ? { ...formValues, key: editingKey } : item));
+            setOrderData(orderData.map(item => item.key === editingKey ? { ...formValues, key: editingKey } : item));
             setIsEditing(false);
             setEditingKey(null);
         } else {
-            const newStone = { ...formValues, key: stoneData.length + 1, sno: stoneData.length + 1 };
-            setStoneData([...stoneData, newStone]);
+            const newItem = { ...formValues, key: orderData.length + 1, sno: orderData.length + 1 };
+            setOrderData([...orderData, newItem]);
         }
-        setFormValues({ stoneItem: "", pcs: "", cts: "", grams: "", rate: "", amount: "", noPcs: "", color: "", cut: "", clarity: "" });
-    
-        // Move cursor back to the stoneItem field
-        if (stoneItemRef.current) {
-            stoneItemRef.current.focus();
-        }
-    };
-    
-
-
-    const handleRemoveStone = (key) => {
-        setStoneData(stoneData.filter(item => item.key !== key));
+        setFormValues({ itemName: "", quantity: "", price: "", total: "", description: "" });
     };
 
-    const handleEditStone = (record) => {
+    const handleRemoveItem = (key) => {
+        setOrderData(orderData.filter(item => item.key !== key));
+    };
+
+    const handleEditItem = (record) => {
         setFormValues(record);
         setIsEditing(true);
         setEditingKey(record.key);
@@ -185,41 +149,35 @@ const StoneDetails = ({lotno,productname,pieces,gwt, stoneData, setStoneData }) 
     };
 
     const handleClearForm = () => {
-        setFormValues({ stoneItem: "", pcs: "", cts: "", grams: "", rate: "", amount: "", noPcs: "", color: "", cut: "", clarity: "" });
+        setFormValues({ itemName: "", quantity: "", price: "", total: "", description: "" });
     };
 
     const columns = [
         { title: "S. No", width: 50, key: "sno", render: (_, __, index) => index + 1 },
-        { title: "Stone Item", width: 130, dataIndex: "stoneItem", key: "stoneItem" },
-        { title: "Pcs", width: 50, dataIndex: "pcs", key: "pcs", align: "right", render: (text) => text || "" },
-        { title: "Cts", dataIndex: "cts", key: "cts", align: "right", render: (text) => text ? parseFloat(text).toFixed(3) : "" },
-        { title: "Grams", dataIndex: "grams", key: "grams", align: "right", render: (text) => text ? parseFloat(text).toFixed(3) : "" },
-        { title: "Rate", dataIndex: "rate", key: "rate", align: "right", render: (text) => text || "" },
-        { title: "Amount", dataIndex: "amount", key: "amount", align: "right", render: (text) => text ? parseFloat(text).toFixed(2) : "" },
-        { title: "No. Pcs", dataIndex: "noPcs", key: "noPcs", render: (text) => text || "" },
-        { title: "Color", dataIndex: "color", key: "color", render: (text) => text || "" },
-        { title: "Cut", dataIndex: "cut", key: "cut", render: (text) => text || "" },
-        { title: "Clarity", dataIndex: "clarity", key: "clarity", render: (text) => text || "" },
+        { title: "Item Name", width: 130, dataIndex: "itemName", key: "itemName" },
+        { title: "Quantity", width: 50, dataIndex: "quantity", key: "quantity", align: "right", render: (text) => text || "" },
+        { title: "Price", dataIndex: "price", key: "price", align: "right", render: (text) => text || "" },
+        { title: "Total", dataIndex: "total", key: "total", align: "right", render: (text) => text ? parseFloat(text).toFixed(2) : "" },
+        { title: "Description", dataIndex: "description", key: "description", render: (text) => text || "" },
         {
             title: "Action", key: "action", render: (_, record) => (
                 <>
-                    <EditOutlined onClick={() => handleEditStone(record)} style={{ color: "blue", cursor: "pointer", marginRight: 8, borderRadius: "50%", padding: "5px", boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)" }} />
-                    <CloseOutlined onClick={() => handleRemoveStone(record.key)} style={{ color: "red", cursor: "pointer", borderRadius: "50%", padding: "5px", boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)" }} />
+                    <EditOutlined onClick={() => handleEditItem(record)} style={{ color: "blue", cursor: "pointer", marginRight: 8, borderRadius: "50%", padding: "5px", boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)" }} />
+                    <CloseOutlined onClick={() => handleRemoveItem(record.key)} style={{ color: "red", cursor: "pointer", borderRadius: "50%", padding: "5px", boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)" }} />
                 </>
             )
         }
     ];
 
-
     useEffect(() => {
-        if (stoneItemRef.current) {
-            stoneItemRef.current.focus();
+        if (itemNameRef.current) {
+            itemNameRef.current.focus();
         }
     }, [modalOpen]);
 
     return (
         <>
-            <Row justify="center" >
+            <Row justify="center">
                 <Col span={24}>
                     <Button
                         type="primary"
@@ -231,10 +189,10 @@ const StoneDetails = ({lotno,productname,pieces,gwt, stoneData, setStoneData }) 
                         style={{ width: "100%", backgroundColor: "#0d094e", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", opacity: lotno && productname && pieces && gwt ? 1 : 0.5, pointerEvents: lotno && productname && pieces && gwt ? "auto" : "none" }}
                     >
                         <PlusOutlined />
-                        Stones
-                        {stoneData.length > 0 && (
+                        Order Item
+                        {orderData.length > 0 && (
                             <Badge
-                                count={stoneData.length}
+                                count={orderData.length}
                                 style={{ backgroundColor: "red", color: "white" }}
                             />
                         )}
@@ -242,15 +200,15 @@ const StoneDetails = ({lotno,productname,pieces,gwt, stoneData, setStoneData }) 
                 </Col>
             </Row>
             <Modal
-                title={isEditing ? "Edit Stone" : "Add Stones"}
+                title={isEditing ? "Edit Item" : "Add Items"}
                 centered
                 open={modalOpen}
                 onCancel={() => setModalOpen(false)}
-                footer={null} // Footer is handled separately inside the modal
+                footer={null}
                 width="80%"
                 onKeyDown={(e) => {
                     if (e.key === "Escape") {
-                        setStoneData([]);
+                        setOrderData([]);
                         handleClearForm();
                         setModalOpen(false);
                     }
@@ -259,9 +217,8 @@ const StoneDetails = ({lotno,productname,pieces,gwt, stoneData, setStoneData }) 
                 <div style={{
                     display: "flex",
                     flexDirection: "column",
-                    height: stoneData.length >= 5 ? "110vh" : "85vh"
+                    height: orderData.length >= 5 ? "110vh" : "85vh"
                 }}>
-                    {/* Content Section */}
                     <div style={{
                         flex: 1,
                         overflowY: "auto",
@@ -277,7 +234,6 @@ const StoneDetails = ({lotno,productname,pieces,gwt, stoneData, setStoneData }) 
                                 padding: "20px"
                             }}
                         >
-                            {/* Background Shapes */}
                             {shapeData.map((shape, index) => {
                                 let shapeStyle = {
                                     position: "absolute",
@@ -308,23 +264,22 @@ const StoneDetails = ({lotno,productname,pieces,gwt, stoneData, setStoneData }) 
                                 return <div key={index} style={shapeStyle}></div>;
                             })}
 
-                            {/* Form Fields */}
                             <Row gutter={[8, 8]} style={{ position: "relative", zIndex: 1 }}>
                                 <Col span={4}>
-                                    <Text style={{ color: "#fff", display: "block" }}>Stone Item</Text>
+                                    <Text style={{ color: "#fff", display: "block" }}>Item Name</Text>
                                     <Select
-                                        ref={stoneItemRef}
+                                        ref={itemNameRef}
                                         showSearch
-                                        value={formValues.stoneItem || stoneItemInputValue}
-                                        placeholder="Select Stone"
-                                        onChange={handleStoneChange}
-                                        onSelect={handleStoneSelect}
+                                        value={formValues.itemName || itemNameInputValue}
+                                        placeholder="Select Item"
+                                        onChange={handleItemChange}
+                                        onSelect={handleItemSelect}
                                         style={{ width: "100%" }}
                                         onSearch={(value) => {
-                                            setStoneItemInputValue(value);
+                                            setItemNameInputValue(value);
                                             setHighlightedIndex(0);
                                         }}
-                                        onKeyDown={handleStoneKeyDown}
+                                        onKeyDown={handleItemKeyDown}
                                         filterOption={false}
                                         defaultActiveFirstOption={false}
                                         dropdownRender={(menu) => (
@@ -350,27 +305,22 @@ const StoneDetails = ({lotno,productname,pieces,gwt, stoneData, setStoneData }) 
                                     </Select>
                                 </Col>
 
-                                {["pcs", "cts", "grams", "rate", "amount", "noPcs", "color", "cut", "clarity"].map((field) => (
+                                {["quantity", "price", "total", "description"].map((field) => (
                                     <Col span={4} key={field}>
                                         <Text style={{ color: "#fff" }}>{field.charAt(0).toUpperCase() + field.slice(1)}</Text>
                                         <Input
-                                            ref={field === "pcs" ? pcsRef : field === "cts" ? ctsRef : field === "grams" ? gramsRef : field === "rate" ? rateRef : field === "noPcs" ? noPcsRef : field === "color" ? colorRef : field === "cut" ? cutRef : field === "clarity" ? clarityRef : null}
+                                            ref={field === "quantity" ? quantityRef : field === "price" ? priceRef : field === "description" ? descriptionRef : null}
                                             name={field}
                                             value={formValues[field]}
                                             placeholder={`Enter ${field}`}
                                             onChange={handleInputChange}
                                             onKeyDown={(e) => handleEnterPress(e, field)}
-                                            readOnly={field === "amount"}
+                                            readOnly={field === "total"}
                                         />
                                     </Col>
                                 ))}
 
-                                <Button type="primary" onClick={() => {
-                                    handleAddStone();
-                                    if (stoneItemRef.current) {
-                                        stoneItemRef.current.focus();
-                                    }
-                                }} style={{ width: "100px", height: "30px", fontSize: "16px", marginTop: "20px" }} htmlType="submit">
+                                <Button type="primary" onClick={handleAddItem} style={{ width: "100px", height: "30px", fontSize: "16px", marginTop: "20px" }} htmlType="submit">
                                     Submit
                                 </Button>
                             </Row>
@@ -378,9 +328,9 @@ const StoneDetails = ({lotno,productname,pieces,gwt, stoneData, setStoneData }) 
 
                         <div style={{ marginTop: "20px" }}>
                             <Table
-                                className="custom-stone-table table-row"
+                                className="custom-order-table table-row"
                                 columns={columns}
-                                dataSource={stoneData}
+                                dataSource={orderData}
                                 size="small"
                                 pagination={false}
                                 scroll={{ y: 300 }}
@@ -397,23 +347,14 @@ const StoneDetails = ({lotno,productname,pieces,gwt, stoneData, setStoneData }) 
                                             <Table.Summary.Cell index={0}>Total</Table.Summary.Cell>
                                             <Table.Summary.Cell index={1}></Table.Summary.Cell>
                                             <Table.Summary.Cell index={2} align="right">
-                                                {stoneData.reduce((sum, item) => sum + (parseFloat(item.pcs) || 0), 0)}
+                                                {orderData.reduce((sum, item) => sum + (parseFloat(item.quantity) || 0), 0)}
                                             </Table.Summary.Cell>
-                                            <Table.Summary.Cell index={3} align="right">
-                                                {stoneData.reduce((sum, item) => sum + (parseFloat(item.cts) || 0), 0).toFixed(3)}
-                                            </Table.Summary.Cell>
+                                            <Table.Summary.Cell index={3}></Table.Summary.Cell>
                                             <Table.Summary.Cell index={4} align="right">
-                                                {stoneData.reduce((sum, item) => sum + (parseFloat(item.grams) || 0), 0).toFixed(3)}
+                                                {orderData.reduce((sum, item) => sum + (parseFloat(item.total) || 0), 0).toFixed(2)}
                                             </Table.Summary.Cell>
                                             <Table.Summary.Cell index={5}></Table.Summary.Cell>
-                                            <Table.Summary.Cell index={6} align="right">
-                                                {stoneData.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0).toFixed(2)}
-                                            </Table.Summary.Cell>
-                                            <Table.Summary.Cell index={7}></Table.Summary.Cell>
-                                            <Table.Summary.Cell index={8}></Table.Summary.Cell>
-                                            <Table.Summary.Cell index={9}></Table.Summary.Cell>
-                                            <Table.Summary.Cell index={10}></Table.Summary.Cell>
-                                            <Table.Summary.Cell index={11}></Table.Summary.Cell>
+                                            <Table.Summary.Cell index={6}></Table.Summary.Cell>
                                         </Table.Summary.Row>
                                     </Table.Summary>
                                 )}
@@ -422,10 +363,9 @@ const StoneDetails = ({lotno,productname,pieces,gwt, stoneData, setStoneData }) 
 
                     </div>
                     <Row justify="start">
-                        <Tag color="#32523A" style={tagStyle}>Total Grams:44.000</Tag>
-                        <Tag color="#32523A" style={tagStyle}>Daimond CTS:00.000</Tag>
+                        <Tag color="#32523A" style={tagStyle}>Total Quantity: {orderData.reduce((sum, item) => sum + (parseFloat(item.quantity) || 0), 0)}</Tag>
+                        <Tag color="#32523A" style={tagStyle}>Total Amount: {orderData.reduce((sum, item) => sum + (parseFloat(item.total) || 0), 0).toFixed(2)}</Tag>
                     </Row>
-                    {/* Footer Section */}
                     <div style={{
                         padding: "10px",
                         borderTop: "1px solid #ccc",
@@ -434,10 +374,10 @@ const StoneDetails = ({lotno,productname,pieces,gwt, stoneData, setStoneData }) 
                         background: "#fff"
                     }}>
                         <Button key="refresh" onClick={() => {
-                            setStoneData([]);
+                            setOrderData([]);
                             handleClearForm();
-                            if (stoneItemRef.current) {
-                                stoneItemRef.current.focus();
+                            if (itemNameRef.current) {
+                                itemNameRef.current.focus();
                             }
                         }}>
                             Refresh
@@ -445,13 +385,12 @@ const StoneDetails = ({lotno,productname,pieces,gwt, stoneData, setStoneData }) 
                         <Button key="ok" type="primary" onClick={() => {
                             setModalOpen(false);
                             handleClearForm();
-                            if (stoneItemRef.current) {
-                                stoneItemRef.current.focus();
+                            if (itemNameRef.current) {
+                                itemNameRef.current.focus();
                             }
                         }} style={{ marginLeft: "8px" }}>
                             OK
                         </Button>
-
                     </div>
                 </div>
             </Modal>
@@ -459,4 +398,4 @@ const StoneDetails = ({lotno,productname,pieces,gwt, stoneData, setStoneData }) 
     );
 };
 
-export default StoneDetails; 
+export default OrderItem;

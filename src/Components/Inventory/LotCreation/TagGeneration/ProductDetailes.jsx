@@ -168,7 +168,7 @@ const ProductDetails = ({ updateTotals, mname, productNameRef, lotno, counter, p
                   >
                     {products.length > 0 ? (
                   products.map(product => (
-                    <Option key={product.PRODUCTCODE} value={product.PRODUCTNAME} category={product.CATEGORY} hsncode={product.HSNCODE}>
+                    <Option key={product.PRODUCTCODE} value={product.PRODUCTNAME} category={product.PRODUCTCATEGORY} hsncode={product.HSNCODE}>
                           {product.PRODUCTNAME}
                         </Option>
                       ))
@@ -261,76 +261,76 @@ const ProductDetails = ({ updateTotals, mname, productNameRef, lotno, counter, p
             </div>
           </Col>
 
-          {/* Second Section - Image Upload */}
-          <Col xs={24} sm={4} md={4}>
+                <Col xs={24} sm={4} md={4}>
 
-            <div
-              style={{
-                borderRadius: "10px",
-                marginTop: "5px",
-                marginBottom: "5px",
-                boxShadow: "0px 4px 12px rgba(243, 238, 238, 0.91)",
-                textAlign: "center",
-                backgroundColor: "#71769b", // Background color added
-                padding: "5px",
-                display: "flex", // Centering content
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-              className="bgcolurimg"
-            >
-              <Upload
-                action="/upload"
-                listType="picture-card"
-                fileList={fileList}
-                onChange={handleChange}
-                beforeUpload={beforeUpload}
-                maxCount={1}
-                style={{ width: "100px", height: "100px" }} // Decreased size
-              >
-                {fileList.length < 1 && (
-                  <div style={{ textAlign: "center" }}>
+                <div
+                  style={{
+                  borderRadius: "10px",
+                  marginTop: "5px",
+                  marginBottom: "5px",
+                  boxShadow: "0px 4px 12px rgba(243, 238, 238, 0.91)",
+                  textAlign: "center",
+                  backgroundColor: "#71769b", // Background color added
+                  padding: "5px",
+                  display: "flex", // Centering content
+                  alignItems: "center",
+                  justifyContent: "center",
+                  }}
+                  className="bgcolurimg"
+                >
+                  <Upload
+                  action="/upload"
+                  listType="picture-card"
+                  fileList={fileList}
+                  onChange={handleChange}
+                  beforeUpload={beforeUpload}
+                  maxCount={1}
+                  style={{ width: "100px", height: "100px" }} // Decreased size
+                  disabled={!lotno || !selectedProduct || gwt === 0 || pcs === 0} // Disable upload if conditions are not met
+                  >
+                  {fileList.length < 1 && (
+                    <div style={{ textAlign: "center" }}>
                     <PlusOutlined style={{ fontSize: "12px", color: "#fff" }} /> {/* Smaller icon */}
                     <div style={{ marginTop: 5, fontSize: "12px", color: "#fff" }}>Upload Image</div> {/* Smaller text */}
-                  </div>
-                )}
-              </Upload>
+                    </div>
+                  )}
+                  </Upload>
 
-            </div>
+                </div>
 
 
-          </Col>
-        </Row>
-      </div>
+                </Col>
+              </Row>
+              </div>
 
-      <WastageDetails
-        focusProductName={focusProductName}
-        updateTotals={updateTotals}
-        feachTagno={feachTagno}
-        tagInfo={tagInfo}
-        setGwt={setGwt}
-        setBreadsLess={setBreadsLess}
-        setTotalLess={setTotalLess}
-        setNwt={setNwt}
-        pcsRef={pcsRef}
-        gwtRef={gwtRef}
-        breadsLessRef={breadsLessRef}
-        totalLessRef={totalLessRef}
-        nwtRef={nwtRef}
-        setPcs={setPcs}
-        setSelectedProduct={setSelectedProduct}
-        categoryRef={categoryRef}
-        nwt={nwt}
-        lotno={lotno}
-        counter={counter}
-        prefix={prefix}
-        manufacturer={manufacturer}
-        dealername={dealername}
-        mname={mname}
-        productname={selectedProduct}
-        productcode={selectedProductCode}
-        productcategory={selectedProductCategory}
-        hsncode={selectedProductHSNCode} // Pass HSN code to WastageDetails
+              <WastageDetails
+              focusProductName={focusProductName}
+              updateTotals={updateTotals}
+              feachTagno={feachTagno}
+              tagInfo={tagInfo}
+              setGwt={setGwt}
+              setBreadsLess={setBreadsLess}
+              setTotalLess={setTotalLess}
+              setNwt={setNwt}
+              pcsRef={pcsRef}
+              gwtRef={gwtRef}
+              breadsLessRef={breadsLessRef}
+              totalLessRef={totalLessRef}
+              nwtRef={nwtRef}
+              setPcs={setPcs}
+              setSelectedProduct={setSelectedProduct}
+              categoryRef={categoryRef}
+              nwt={nwt}
+              lotno={lotno}
+              counter={counter}
+              prefix={prefix}
+              manufacturer={manufacturer}
+              dealername={dealername}
+              mname={mname}
+              productname={selectedProduct}
+              productcode={selectedProductCode}
+              productcategory={selectedProductCategory}
+              hsncode={selectedProductHSNCode} // Pass HSN code to WastageDetails
         gwt={gwt}
         bswt={breadsLess}
         aswt={totalLess}
