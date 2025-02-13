@@ -135,7 +135,12 @@ const WastageDetails = ({ focusProductName, updateTotals, feachTagno, tagInfo, c
             }, 100);
         }
     };
-
+    useEffect(() => {
+        if (selectedCategory === "OTHERS" && percentageRef.current) {
+            percentageRef.current.focus();
+        }
+    }, [selectedCategory]);
+    
 
     return (
         <>
