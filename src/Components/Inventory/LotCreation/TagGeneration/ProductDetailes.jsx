@@ -14,8 +14,10 @@ const ProductDetails = ({ updateTotals, mname, productNameRef, lotno, counter, p
   const [pcs, setPcs] = useState(1);
   const [gwt, setGwt] = useState(0);
   const [breadsLess, setBreadsLess] = useState(0);
-  const [totalLess, setTotalLess] = useState(0);
-  const [nwt, setNwt] = useState(0);
+  const [totalLess, setTotalLess] = useState(() => {
+    return parseFloat(localStorage.getItem("finalTotalGrams")) || 0;
+  }); 
+   const [nwt, setNwt] = useState(0);
   const pcsRef = useRef(null);
   const gwtRef = useRef(null);
   const breadsLessRef = useRef(null);
@@ -41,7 +43,9 @@ const ProductDetails = ({ updateTotals, mname, productNameRef, lotno, counter, p
   }, [mname]);
 
   useEffect(() => {
-    setNwt(gwt - (breadsLess + totalLess));
+    // setNwt(gwt - (breadsLess + totalLess));
+    const finalTotalGramValue = (localStorage.getItem('finalTotalGrams') || "");
+    setTotalLess(finalTotalGramValue);
   }, [gwt, breadsLess, totalLess]);
 
   const handleChange = ({ fileList: newFileList }) => setFileList(newFileList);
@@ -109,7 +113,51 @@ const ProductDetails = ({ updateTotals, mname, productNameRef, lotno, counter, p
       setSelectedProduct(newSelectedProduct);
     }
   };
+ 
+  const prevTotalLessRef = useRef(totalLess); // Store previous value
+  
+  useEffect(() => {
+    const updateTotalLess = () => {
+      const storedTotalGrams = parseFloat(localStorage.getItem("finalTotalGrams")) || 0;
+  
+      if (prevTotalLessRef.current !== storedTotalGrams) {
+        prevTotalLessRef.current = storedTotalGrams;
+        setTotalLess(storedTotalGrams);
+      }
+    };
+  
+    // Initial load
+    updateTotalLess();
+  
+    // Listen for localStorage changes across tabs/windows
+    window.addEventListener("storage", updateTotalLess);
+  
+    // Periodically check for changes in the same tab
+    const interval = setInterval(updateTotalLess, 500); // Check every 500ms
+  
+    return () => {
+      window.removeEventListener("storage", updateTotalLess);
+      clearInterval(interval);
+    };
+  }, []);
+  
+useEffect(() => {
+  // Calculate NWT correctly whenever GWT, Breads Less, or Weight Less changes
+  const calculateNwt = () => {
+    const breadsLessValue = parseFloat(breadsLess) || 0;
+    const totalLessValue = parseFloat(totalLess) || 0;
+    const gwtValue = parseFloat(gwt) || 0;
 
+    const calculatedNwt = gwtValue - (breadsLessValue + totalLessValue);
+
+    // Update NWT only if the new value is different
+    setNwt((prevNwt) => (prevNwt !== calculatedNwt ? calculatedNwt : prevNwt));
+  };
+
+  calculateNwt();
+}, [gwt, breadsLess, totalLess]); // Runs whenever these values change
+
+  
   return (
     <>
       <div>
@@ -178,99 +226,98 @@ const ProductDetails = ({ updateTotals, mname, productNameRef, lotno, counter, p
                   </Select>
                 </Col>
 
-                {/* PCS */}
-                <Col xs={24} sm={3} md={2}>
-                  <div style={{ textAlign: "center", marginBottom: "8px" }}>
-                    <Text style={{ fontSize: "12px" }}>PCS</Text>
-                  </div>
-                  <Input
-                    ref={pcsRef}
-                    type="number"
-                    value={pcs}
-                    placeholder="Enter PCS"
-                    style={{ width: "100%", textAlign: "right" }}
-                    onChange={(e) => setPcs(e.target.value)}
-                onKeyDown={(e) => handleKeyDown(e, gwtRef, null)}
-                  />
-                </Col>
+                        <Col xs={24} sm={3} md={2}>
+                          <div style={{ textAlign: "center", marginBottom: "8px" }}>
+                          <Text style={{ fontSize: "12px" }}>PCS</Text>
+                          </div>
+                          <Input
+                          ref={pcsRef}
+                          type="number"
+                          value={pcs}
+                          placeholder="Enter PCS"
+                          style={{ width: "100%", textAlign: "right" }}
+                          onChange={(e) => setPcs(e.target.value)}
+                          onKeyDown={(e) => handleKeyDown(e, gwtRef, null)}
+                          />
+                        </Col>
 
-                {/* GWT */}
-                <Col xs={24} sm={5} md={4}>
-                  <div style={{ textAlign: "center", marginBottom: "8px" }}>
-                    <Text style={{ fontSize: "12px" }}>G.wt</Text>
-                  </div>
-                  <Input
-                    ref={gwtRef}
-                    type="number"
-                value={gwt === 0 ? '' : gwt}
-                    placeholder="Enter GWT"
-                    style={{ width: "100%", textAlign: "right" }}
-                    onChange={(e) => setGwt(e.target.value)}
-                onKeyDown={(e) => handleKeyDown(e, breadsLessRef, pcsRef)}
-                  />
-                </Col>
+                        <Col xs={24} sm={5} md={4}>
+                          <div style={{ textAlign: "center", marginBottom: "8px" }}>
+                          <Text style={{ fontSize: "12px" }}>G.wt</Text>
+                          </div>
+                          <Input
+                          ref={gwtRef}
+                          type="number"
+                          value={gwt === 0 ? '' : gwt}
+                          placeholder="Enter GWT"
+                          style={{ width: "100%", textAlign: "right" }}
+                          onChange={(e) => setGwt(e.target.value)}
+                          onKeyDown={(e) => handleKeyDown(e, breadsLessRef, pcsRef)}
+                          />
+                        </Col>
 
-                {/* Breads Less Weight */}
-                <Col xs={24} sm={4} md={3}>
-                  <div style={{ textAlign: "center", marginBottom: "8px" }}>
-                    <Text style={{ fontSize: "12px" }}>Breads Less</Text>
-                  </div>
-                  <Input
-                    ref={breadsLessRef}
-                    type="number"
-                    value={breadsLess === 0 ? "" : breadsLess}
-                    placeholder="Enter Breads Less"
-                    style={{ width: "100%", textAlign: "right" }}
-                    onChange={(e) => setBreadsLess(e.target.value)}
-                onKeyDown={(e) => handleKeyDown(e, totalLessRef, gwtRef)}
-                  />
-                </Col>
+                        <Col xs={24} sm={4} md={3}>
+                          <div style={{ textAlign: "center", marginBottom: "8px" }}>
+                          <Text style={{ fontSize: "12px" }}>Breads Less</Text>
+                          </div>
+                          <Input
+                          ref={breadsLessRef}
+                          type="number"
+                          value={breadsLess === 0 ? "" : breadsLess}
+                          placeholder="Enter Breads Less"
+                          style={{ width: "100%", textAlign: "right" }}
+                          onChange={(e) => setBreadsLess(e.target.value)}
+                          onKeyDown={(e) => handleKeyDown(e, totalLessRef, gwtRef)}
+                          />
+                        </Col>
 
-                {/* Total Less */}
-                <Col xs={24} sm={4} md={3}>
-                  <div style={{ textAlign: "center", marginBottom: "8px" }}>
-                    <Text style={{ fontSize: "12px" }}>Weight Less</Text>
-                  </div>
-                  <Input
-                    ref={totalLessRef}
-                    type="number"
-                    value={totalLess === 0 ? "" : totalLess}
-                    placeholder="Enter Total Less"
-                    style={{ width: "100%", textAlign: "right" }}
-                    onChange={(e) => setTotalLess(e.target.value)}
-                onKeyDown={(e) => handleKeyDown(e, nwtRef, breadsLessRef)}
-                  />
-                </Col>
+                        <Col xs={24} sm={4} md={3}>
+                          <div style={{ textAlign: "center", marginBottom: "8px" }}>
+                          <Text style={{ fontSize: "12px" }}>Weight Less</Text>
+                          </div>
+                          <Input
+                          ref={totalLessRef}
+                          type="number"
+                          value={totalLess}
+                          placeholder="Enter Total Less"
+                          style={{ width: "100%", textAlign: "right" }}
+                          onChange={(e) => {
+                            const newValue = e.target.value;
+                            setTotalLess(newValue);
+                            localStorage.setItem("finalTotalGrams", newValue);
+                          }}
+                          onKeyDown={(e) => handleKeyDown(e, nwtRef, breadsLessRef)}
+                          />
+                        </Col>
 
-                {/* NWT */}
-                <Col xs={24} sm={5} md={4}>
-                  <div style={{ textAlign: "center", marginBottom: "8px" }}>
-                    <Text style={{ fontSize: "12px" }}>N.wt</Text>
-                  </div>
-                  <Input
-                    ref={nwtRef}
-                    type="number"
-                    value={nwt === 0 ? "" : nwt}
-                    placeholder="Enter NWT"
-                    style={{ width: "100%", textAlign: "right" }}
-                    readOnly
-                onKeyDown={(e) => handleKeyDown(e, categoryRef, totalLessRef)}
-                  />
-                </Col>
-              </Row>
-            </div>
-          </Col>
+                        <Col xs={24} sm={5} md={4}>
+                          <div style={{ textAlign: "center", marginBottom: "8px" }}>
+                            <Text style={{ fontSize: "12px" }}>N.wt</Text>
+                          </div>
+                          <Input
+                            ref={nwtRef}
+                            type="number"
+                            value={nwt} // Show 3 decimal places
+                            placeholder="Enter NWT"
+                            style={{ width: "100%", textAlign: "right" }}
+                            readOnly
+                            onKeyDown={(e) => handleKeyDown(e, categoryRef, totalLessRef)}
+                          />
+                        </Col>
+                        </Row>
+                        </div>
+                        </Col>
 
-                <Col xs={24} sm={4} md={4}>
+                        <Col xs={24} sm={4} md={4}>
 
-                <div
-                  style={{
-                  borderRadius: "10px",
-                  marginTop: "5px",
-                  marginBottom: "5px",
-                  boxShadow: "0px 4px 12px rgba(243, 238, 238, 0.91)",
-                  textAlign: "center",
-                  backgroundColor: "#71769b", // Background color added
+                        <div
+                          style={{
+                          borderRadius: "10px",
+                          marginTop: "5px",
+                          marginBottom: "5px",
+                          boxShadow: "0px 4px 12px rgba(243, 238, 238, 0.91)",
+                          textAlign: "center",
+                          backgroundColor: "#71769b", // Background color added
                   padding: "5px",
                   display: "flex", // Centering content
                   alignItems: "center",

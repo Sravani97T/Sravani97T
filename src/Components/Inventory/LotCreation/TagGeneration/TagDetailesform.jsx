@@ -9,7 +9,7 @@ const { Option } = Select;
 const { TextArea } = Input;
 const { Text } = Typography;
 
-const TagDetailsForm = ({ stoneData, focusProductName, updateTotals, feachTagno, tagInfo, lotno, mname, nwt, counter, prefix, manufacturer, counterRef, setWastageData, setSelectedProduct, setSelectedCategory,
+const TagDetailsForm = ({ setStoneData, stoneData, focusProductName, updateTotals, feachTagno, tagInfo, lotno, mname, nwt, counter, prefix, manufacturer, counterRef, setWastageData, setSelectedProduct, setSelectedCategory,
     dealername, hsncode, productcategory,
     productname, productcode, gwt, bswt, aswt, pieces, selectedCategory, wastage,
     directwastage, cattotwast, makingcharges, directmc, cattotmc, setGwt, setBreadsLess,
@@ -74,7 +74,7 @@ const TagDetailsForm = ({ stoneData, focusProductName, updateTotals, feachTagno,
             productcategory: productcategory || "",
         });
     }, [counter, prefix, manufacturer, productcategory]);
- 
+
     const fetchOptions = async () => {
         const fetchData = async (url, setState, filterFn = null) => {
             try {
@@ -170,23 +170,21 @@ const TagDetailsForm = ({ stoneData, focusProductName, updateTotals, feachTagno,
             if (response.data === true) {
                 message.success('Data saved successfully');
             } else {
-                message.error('Failed to save data');
+                // message.error('Failed to save data');
             }
         } catch (error) {
             console.error('Failed to save data', error);
-            message.error('Failed to save data');
+            // message.error('Failed to save data');
         }
     }
     const handleSave = async () => {
         stonePostFunction();
         try {
-            const aswtValue = form.getFieldValue('aswt') || 0;
-            const bswtValue = form.getFieldValue('bswt') || 0;
-            const stonewt = parseFloat(aswtValue) + parseFloat(bswtValue); // Calculate stonewt as the sum of aswt and bswt
+            const stonewt = parseFloat(gwt) - parseFloat(nwt); // Calculate stonewt as the difference between gwt and nwt
             console.log("stonewt", stonewt)
             const payload = {
-                ...form.getFieldsValue(), // Get all form values
-                lotno,
+                ...form.getFieldsValue(),
+                                lotno,
                 mname,
                 dealername,
                 productcategory,
@@ -216,18 +214,18 @@ const TagDetailsForm = ({ stoneData, focusProductName, updateTotals, feachTagno,
                 tagno: `${tagInfo.barcodePrefix}` + `${tagInfo.maxTagNo}`,
                 balpieces: 0,
                 balweight: 0,
-                tagdate: "2025-02-05",
-                tagtime: "14:30",
+                tagdate: new Date().toISOString().split('T')[0], // Current date
+                tagtime: new Date().toLocaleTimeString(), // Current time
                 netamt: 0,
                 tagsize: "Medium",
-                iteM_TOTPIECES: 0,
-                iteM_TOTGMS: 0,
-                iteM_TOTCTS: 0,
-                iteM_TOTAMT: 0,
-                iteM_TOTNOPCS: 0,
+                iteM_TOTPIECES: localStorage.getItem('totalPcs') || 0,
+                iteM_TOTGMS: localStorage.getItem('totalGrams') || 0,
+                iteM_TOTCTS: localStorage.getItem('totalCts') || 0,
+                iteM_TOTAMT: localStorage.getItem('totalAmount') || 0,
+                iteM_TOTNOPCS: localStorage.getItem('totalNoPcs') || 0,
                 recycle: "No",
                 suspence: "No",
-                tray: true,
+                tray: false,
                 regenrate: "No",
                 scheck: true,
                 status: "no",
@@ -236,18 +234,18 @@ const TagDetailsForm = ({ stoneData, focusProductName, updateTotals, feachTagno,
                 appname: "-",
                 appsalesman: "-",
                 appinchrg: "-",
-                appDate: "2025-02-05",
-                apptime: "15:00",
+                appDate: new Date().toISOString().split('T')[0], // Current date
+                apptime: new Date().toLocaleTimeString(), // Current time
                 lesS_WPER: 0,
                 imgpath: "/images/necklace.jpg",
                 lesscts: 0,
                 diapcs: 0,
-                diacts: 0,
+                diacts: localStorage.getItem('totalDiamondCts') || 0, // Pass totalDiamondCts from localStorage
+                item_diamonds: localStorage.getItem('totalDiamondCts') || 0,
                 dealerApprovals: true,
                 item_Cts: 0,
-                item_diamonds: 0,
                 item_Uncuts: 0,
-                diamond_Amount: 0,
+                diamond_Amount: localStorage.getItem('totalDiaAmount') || 0,
                 cosT_GWT: 0,
                 cosT_LESS: 0,
                 cosT_NWT: 0,
@@ -278,7 +276,7 @@ const TagDetailsForm = ({ stoneData, focusProductName, updateTotals, feachTagno,
                 if (focusProductName) {
                     focusProductName(); // Move cursor to Product Name in ProductDetails
                 }
-                
+                setStoneData();
                 fetchTableData(); // Refresh table data after save
                 feachTagno(lotno); // Ensure feachTagno is called after successful save
                 const currentValues = form.getFieldsValue(['counter', 'prefix', 'manufacturer']);
@@ -313,6 +311,21 @@ const TagDetailsForm = ({ stoneData, focusProductName, updateTotals, feachTagno,
                         newField2: "",
                     },
                 ]);
+                // Reset localStorage
+                localStorage.removeItem('totalPcs');
+                localStorage.removeItem('totalGrams');
+                localStorage.removeItem('totalCts');
+                localStorage.removeItem('totalAmount');
+                localStorage.removeItem('totalNoPcs');
+                localStorage.removeItem('totalDiamondCts');
+                localStorage.removeItem('totalDiaAmount');
+                localStorage.removeItem('totalCTS');
+                localStorage.removeItem('totalUncuts');
+                localStorage.removeItem('finalTotalGrams');
+
+                
+
+                
             }
         } catch (error) {
             message.error('Failed to save data');

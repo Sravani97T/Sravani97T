@@ -775,3 +775,6 @@ font-weight: bold;
   height: 0px !important; /* Adjust the height as needed */
 }
 
+.ant-modal .ant-modal-content{
+  padding: 7px 15px !important;
+}

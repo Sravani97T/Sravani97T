@@ -468,7 +468,7 @@ const WastageDetails = ({ focusProductName, updateTotals, feachTagno, tagInfo, c
             </div>
             <TagDetailsForm
                 stoneData={stoneData}
-
+                setStoneData={setStoneData}
                 focusProductName={focusProductName}
                 updateTotals={updateTotals}
                 feachTagno={feachTagno}
