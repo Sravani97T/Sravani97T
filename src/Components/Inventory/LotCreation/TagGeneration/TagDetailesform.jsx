@@ -110,6 +110,12 @@ const TagDetailsForm = ({ setStoneData, stoneData, focusProductName, updateTotal
         }
     };
 
+    useEffect(() => {
+        if (lotno) {
+            fetchTableData();
+        }
+    }, [lotno]);
+
     const calculateTotals = (data) => {
         const totalGwt = data.reduce((sum, item) => sum + item.GWT, 0).toFixed(3);
         const totalNwt = data.reduce((sum, item) => sum + item.NWT, 0).toFixed(3);

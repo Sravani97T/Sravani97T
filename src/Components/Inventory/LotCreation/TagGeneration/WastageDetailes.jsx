@@ -247,12 +247,12 @@ const WastageDetails = ({ focusProductName, updateTotals, feachTagno, tagInfo, c
                                         {header}
                                     </Text>
                                 ))}
-                                {wastageData.map((item) => (
+                                {wastageData?.map((item) => (
                                     <React.Fragment key={item.key}>
                                         {selectedCategory === "OTHERS" ? (
                                             <Input
                                                 ref={percentageRef}
-                                                value={wastageData[0].percentage || ""}
+                                                value={wastageData[0]?.percentage || ""}
                                                 placeholder="%"
                                                 style={{ width: "100%", borderRadius: "8px", textAlign: "right" }}
                                                 onChange={(e) => {

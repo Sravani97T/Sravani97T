@@ -22,6 +22,7 @@ const Sidebar = ({ collapsed }) => {
     if (e.key === "1") {
       setOpenKeys([]); // Close all submenus when Dashboard is clicked
     }
+    localStorage.clear(); // Clear local storage on menu item click
     console.log("e", e);
   };
 
@@ -171,6 +172,8 @@ const Sidebar = ({ collapsed }) => {
       ],
     },
   ];
+
+
 
   return (
     <div

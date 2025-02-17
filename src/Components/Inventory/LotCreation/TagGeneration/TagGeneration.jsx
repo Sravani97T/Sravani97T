@@ -1,24 +1,27 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Row, Col, Typography, Select, Breadcrumb } from "antd";
+import { Row, Col, Typography, Select, Breadcrumb, Button, Form } from "antd";
 import ProductDetails from "../TagGeneration/ProductDetailes";
 import axios from 'axios';
+import { RetweetOutlined } from "@ant-design/icons";
 
 const { Text } = Typography;
 const { Option } = Select;
 
 const TagGeneration = () => {
+    const [form] = Form.useForm();
     const [data, setData] = useState([]);
     const [selectedLot, setSelectedLot] = useState(null);
     const [productMasterList, setProductMasterList] = useState([]);
     const [totalGwt, setTotalGwt] = useState(0);
     const [, setTotalNwt] = useState(0);
     const [totalPieces, setTotalPieces] = useState(0);
-    
+    const [resetTrigger, setResetTrigger] = useState(false);
     const updateTotals = (gwt, nwt, pieces) => {
         setTotalGwt(gwt);
         setTotalNwt(nwt);
         setTotalPieces(pieces);
     };
+
     const lotNoRef = useRef(null);
     const productNameRef = useRef(null);
     useEffect(() => {
@@ -43,30 +46,30 @@ const TagGeneration = () => {
     const feachTagno = (lotNo) => {
         const selectedLotDetails = data.find(item => item.lotno === lotNo);
         if (!selectedLotDetails) return;
-    
+
         const mname = selectedLotDetails.mname;
         axios.get(`http://www.jewelerp.timeserasoftware.in/api/Scheme/GetSchemeMaxNumberInTableWithOrder?tableName=TAG_GENERATION&column=TAGNO&where=MNAME%3D%27${mname}%27`)
             .then(response => {
                 const maxNumber = response.data[0]?.Column1 || "00";
                 const numberStr = maxNumber.toString();
                 const remainingPartNumber = parseInt(numberStr.slice(1), 10) || 0;
-    
+
                 setTagInfo(prevState => ({
                     ...prevState,
                     maxTagNo: remainingPartNumber + 1,
                 }));
-    
+
                 console.log("New Max Tag Number:", remainingPartNumber + 1);
             })
             .catch(error => console.error("Failed to fetch max tag number:", error));
     };
-    
+
     useEffect(() => {
         if (selectedLot) {
             feachTagno(selectedLot); // Fetch new max tag number when lot changes
         }
     }, [selectedLot]); // Runs every time selectedLot changes
-    
+
     // useEffect(() => {
     //     feachTagno();
     // }, []);
@@ -103,7 +106,7 @@ const TagGeneration = () => {
         setSelectedLot(value);
         setTagInfo({ maxTagNo: null, barcodePrefix: "" }); // Reset tag info
     };
-    
+
 
     const handleKeyDown = (event) => {
         if (event.key === 'Enter') {
@@ -132,15 +135,46 @@ const TagGeneration = () => {
 
     return (
         <div>
-            <Row justify="start" style={{ marginBottom: "10px" }}>
+            <Row justify="space-between" style={{ marginBottom: "10px" }}>
                 <Col>
                     <Breadcrumb style={{ fontSize: "16px", fontWeight: "500", color: "#0C1154" }}>
                         <Breadcrumb.Item>Masters</Breadcrumb.Item>
                         <Breadcrumb.Item>Tag Generation</Breadcrumb.Item>
                     </Breadcrumb>
                 </Col>
+                <Col>
+                    <Button
+                        shape="circle"
+                        type="primary"
+                        icon={<RetweetOutlined className="rotating-icon" style={{ fontSize: "16px" }} />}
+                        style={{
+                            backgroundColor: "#040250f2", // Light blue
+                            // borderColor: "#ADD8E6",
+                            color: "#fff",
+                        }}
+                        onClick={() => {
+                            form.resetFields();
+                            setSelectedLot(null);
+                            setTagInfo({ maxTagNo: null, barcodePrefix: "" });
+                            setTotalGwt(0);
+                            setTotalNwt(0);
+                            setTotalPieces(0);
+
+                            // Trigger reset for ProductDetails
+                            setResetTrigger(true);
+                            localStorage.removeItem("finalTotalGrams");
+
+                            // Reset focus to Lot No input
+                            setTimeout(() => {
+                                if (lotNoRef.current) {
+                                    lotNoRef.current.focus();
+                                }
+                            }, 0);
+                        }}
+                    />
+                </Col>
+
             </Row>
-            
             {/* Combined Lot No and Main Product Card */}
             <Row gutter={[16, 16]} justify="space-between">
                 <Col span={24}>
@@ -161,7 +195,7 @@ const TagGeneration = () => {
 
                                     borderRadius: "8px",
                                     width: "fit-content",
-                                    marginLeft:"35px"
+                                    marginLeft: "35px"
                                 }}>
                                     {/* Label */}
                                     <Text
@@ -180,7 +214,7 @@ const TagGeneration = () => {
                                         showSearch
                                         value={selectedLot}
                                         onChange={handleLotChange}
-                                      
+
                                         onSelect={handleSelect}
                                         style={{
                                             width: "170px",
@@ -224,7 +258,7 @@ const TagGeneration = () => {
                                             >
                                                 M Product:
                                             </Text>
-                                            <Text strong style={{ fontSize: "12px",color:"#ede6e6" }}>{selectedLotDetails ? selectedLotDetails.mname : ''}</Text>
+                                            <Text strong style={{ fontSize: "12px", color: "#ede6e6" }}>{selectedLotDetails ? selectedLotDetails.mname : ''}</Text>
                                         </div>
                                         <div className="card-item" style={{ textAlign: "right" }}>
                                             <Text
@@ -237,7 +271,7 @@ const TagGeneration = () => {
                                             >
                                                 Dealer:
                                             </Text>
-                                            <Text style={{ fontSize: "12px" ,color:"#ede6e6" }} strong>{selectedLotDetails ? selectedLotDetails.dealerName : ''}</Text>
+                                            <Text style={{ fontSize: "12px", color: "#ede6e6" }} strong>{selectedLotDetails ? selectedLotDetails.dealerName : ''}</Text>
                                         </div>
                                     </Col>
 
@@ -253,7 +287,7 @@ const TagGeneration = () => {
                                             >
                                                 Lot Pcs:
                                             </Text>
-                                            <Text style={{ fontSize: "12px" ,color:"#ede6e6" }} strong>{selectedLotDetails ? selectedLotDetails.pieces : ''}</Text>
+                                            <Text style={{ fontSize: "12px", color: "#ede6e6" }} strong>{selectedLotDetails ? selectedLotDetails.pieces : ''}</Text>
                                         </div>
                                         <div className="card-item" style={{ textAlign: "right" }}>
                                             <Text
@@ -266,11 +300,11 @@ const TagGeneration = () => {
                                             >
                                                 Lot Weight:
                                             </Text>
-                                            <Text style={{ fontSize: "12px",color:"#ede6e6"  }} strong>{selectedLotDetails ? selectedLotDetails.weight.toFixed(3) : ''}</Text>
+                                            <Text style={{ fontSize: "12px", color: "#ede6e6" }} strong>{selectedLotDetails ? selectedLotDetails.weight.toFixed(3) : ''}</Text>
                                         </div>
                                     </Col>
 
-                                   
+
 
                                     {/* Grouped Section: Tag Pcs and Tag Weight */}
                                     <Col xs={{ span: 24 }} sm={{ span: 12 }} md={{ span: 6 }} lg={{ span: 5 }} order={{ xs: 4, sm: 4, md: 4, lg: 4 }}>
@@ -285,7 +319,7 @@ const TagGeneration = () => {
                                             >
                                                 Tag Pcs:
                                             </Text>
-                                            <Text style={{ fontSize: "12px" ,color:"#ede6e6" }} strong>{totalPieces}</Text>
+                                            <Text style={{ fontSize: "12px", color: "#ede6e6" }} strong>{totalPieces}</Text>
                                         </div>
                                         <div className="card-item" style={{ textAlign: "right" }}>
                                             <Text
@@ -298,8 +332,8 @@ const TagGeneration = () => {
                                             >
                                                 Tag Weight:
                                             </Text>
-                                            <Text style={{ fontSize: "12px",color:"#ede6e6"  }} strong>{totalGwt}</Text>
-                                            </div>
+                                            <Text style={{ fontSize: "12px", color: "#ede6e6" }} strong>{totalGwt}</Text>
+                                        </div>
                                     </Col>
                                     <Col xs={{ span: 24 }} sm={{ span: 12 }} md={{ span: 6 }} lg={{ span: 5 }} order={{ xs: 3, sm: 3, md: 3, lg: 3 }}>
                                         <div className="card-item" style={{ textAlign: "right" }}>
@@ -313,7 +347,7 @@ const TagGeneration = () => {
                                             >
                                                 Balance Pcs:
                                             </Text>
-                                            <Text style={{ fontSize: "12px" ,color:"#ede6e6" }} strong>
+                                            <Text style={{ fontSize: "12px", color: "#ede6e6" }} strong>
                                                 {selectedLotDetails ? (selectedLotDetails.pieces - totalPieces) : ''}
                                             </Text>
                                         </div>
@@ -328,7 +362,7 @@ const TagGeneration = () => {
                                             >
                                                 Balance Weight:
                                             </Text>
-                                            <Text style={{ fontSize: "12px" ,color:"#ede6e6" }} strong>
+                                            <Text style={{ fontSize: "12px", color: "#ede6e6" }} strong>
                                                 {selectedLotDetails ? (selectedLotDetails.weight - totalGwt).toFixed(3) : '0.000'}
                                             </Text>
                                         </div>
@@ -343,7 +377,8 @@ const TagGeneration = () => {
             {/* Product Details */}
             <div>
                 <ProductDetails
-                  updateTotals={updateTotals} 
+                    resetTrigger={resetTrigger} setResetTrigger={setResetTrigger}
+                    updateTotals={updateTotals}
                     feachTagno={feachTagno}
                     tagInfo={tagInfo}
                     lotno={selectedLotDetails ? selectedLotDetails.lotno : ''}
