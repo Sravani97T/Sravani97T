@@ -4,7 +4,7 @@ import {
 } from 'antd';
 import axios from 'axios';
 import TableHeaderStyles from '../../../Pages/TableHeaderStyles';
-
+import ResetButton from "../TagGeneration/ResetFormTag";
 const { Option } = Select;
 const { TextArea } = Input;
 const { Text } = Typography;
@@ -338,6 +338,45 @@ const TagDetailsForm = ({ setStoneData, stoneData, focusProductName, updateTotal
         }
     };
 
+    const handleReset = () => {
+        form.resetFields();
+        setSelectedCounter("");
+        setInputValue("");
+        setSelectedPurity("");
+        setPurityInputValue("");
+        setSelectedManufacturer("");
+        setManufacturerInputValue("");
+        setSelectedDealer("");
+        setDealerInputValue("");
+        setGwt("");
+        setBreadsLess("");
+        setTotalLess("");
+        setNwt("");
+        setPcs("");
+        setSelectedProduct("");
+        setSelectedCategory(null);
+        setWastageData([
+            {
+                key: "1",
+                percentage: "",
+                direct: "",
+                total: "",
+                perGram: "",
+                newField1: "",
+                newField2: "",
+            },
+        ]);
+        localStorage.removeItem('totalPcs');
+        localStorage.removeItem('totalGrams');
+        localStorage.removeItem('totalCts');
+        localStorage.removeItem('totalAmount');
+        localStorage.removeItem('totalNoPcs');
+        localStorage.removeItem('totalDiamondCts');
+        localStorage.removeItem('totalDiaAmount');
+        localStorage.removeItem('totalCTS');
+        localStorage.removeItem('totalUncuts');
+        localStorage.removeItem('finalTotalGrams');
+    };
 
     const filteredData = tableData.filter((item) =>
         item.PRODUCTNAME.toLowerCase().includes(searchText.toLowerCase())
@@ -817,50 +856,62 @@ const TagDetailsForm = ({ setStoneData, stoneData, focusProductName, updateTotal
                         </Form>
                     </Card>
                 </Col>
-                <Col xs={24} sm={4}>
-                    <Card bordered={false} style={{
-                        marginTop: "36px", display: 'flex', justifyContent: 'center', alignItems: 'center', boxShadow: "0px 4px 12px rgba(189, 187, 187, 0.91)",
-                    }}>
-                        <Form onFinish={handleSave}>
-                            <Row gutter={[8, 16]} style={{ width: '100%' }}>
-                                <Col xs={24} style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center" }}>
-                                    <div style={{ fontSize: "16px", marginBottom: "10px", fontWeight: "bold" }}>Tag No</div>
-                                    <div
-                                        style={{
-                                            width: "50px",
-                                            height: "50px",
-                                            textAlign: "center",
-                                            borderRadius: "8px",
-                                            fontSize: "24px",
-                                            boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)",
-                                            margin: "0 auto",
-                                            display: "flex",
-                                            justifyContent: "center",
-                                            alignItems: "center",
-                                            color: "blue"
-                                        }}
-                                    >
-                                        {tagInfo.barcodePrefix}{tagInfo.maxTagNo !== null ? tagInfo.maxTagNo : "-"}
-                                    </div>
+                <Col xs={24} sm={4} style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
+    {/* Reset Button aligned to the right */}
+    <div style={{ width: "100%", display: "flex", justifyContent: "flex-end" }}>
+        <ResetButton onReset={handleReset} />
+    </div>
 
-                                </Col>
-                            </Row>
-                            <Row gutter={[8, 16]} justify="center">
-                                <Col>
-                                    <Form.Item>
-                                        <Button style={{
-                                            backgroundColor: "#0d094e",
-                                            borderColor: "#4A90E2",
-                                            width: '120px', // Make the button full width
-                                        }} type="primary" htmlType="submit" size="large">
-                                            Save
-                                        </Button>
-                                    </Form.Item>
-                                </Col>
-                            </Row>
-                        </Form>
-                    </Card>
+    <Card bordered={false} style={{
+        marginTop: "36px",
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        boxShadow: "0px 4px 12px rgba(189, 187, 187, 0.91)",
+    }}>
+        <Form onFinish={handleSave}>
+
+            <Row gutter={[8, 16]} style={{ width: '100%' }}>
+                <Col xs={24} style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center" }}>
+                    <div style={{ fontSize: "16px", marginBottom: "10px", fontWeight: "bold" }}>Tag No</div>
+                    <div
+                        style={{
+                            width: "50px",
+                            height: "50px",
+                            textAlign: "center",
+                            borderRadius: "8px",
+                            fontSize: "24px",
+                            boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)",
+                            margin: "0 auto",
+                            display: "flex",
+                            justifyContent: "center",
+                            alignItems: "center",
+                            color: "blue"
+                        }}
+                    >
+                        {tagInfo.barcodePrefix}{tagInfo.maxTagNo !== null ? tagInfo.maxTagNo : "-"}
+                    </div>
                 </Col>
+            </Row>
+
+            <Row gutter={[8, 16]} justify="center">
+                <Col>
+                    <Form.Item>
+                        <Button style={{
+                            backgroundColor: "#0d094e",
+                            borderColor: "#4A90E2",
+                            width: '120px',
+                        }} type="primary" htmlType="submit" size="large">
+                            Save
+                        </Button>
+                    </Form.Item>
+                </Col>
+            </Row>
+
+        </Form>
+    </Card>
+</Col>
+
             </Row>
             <Row justify="space-between" align="middle" style={{ marginBottom: '10px', marginTop: "12px" }}>
 
@@ -903,7 +954,6 @@ const TagDetailsForm = ({ setStoneData, stoneData, focusProductName, updateTotal
                 <Col xs={24}>
                     <div style={{ overflowX: 'auto' }}>
                         <TableHeaderStyles>
-
                             <Table
                                 dataSource={filteredData.slice((currentPage - 1) * pageSize, currentPage * pageSize)}
                                 columns={columns}

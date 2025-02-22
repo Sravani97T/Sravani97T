@@ -146,11 +146,11 @@ const TagGeneration = () => {
                     <Button
                         shape="circle"
                         type="primary"
-                        icon={<RetweetOutlined className="rotating-icon" style={{ fontSize: "16px" }} />}
+                        icon={<RetweetOutlined className="rotating-icon" style={{ fontSize: "12px" }} />}
                         style={{
-                            backgroundColor: "#040250f2", // Light blue
+                            backgroundColor: "#fff", // Light blue
                             // borderColor: "#ADD8E6",
-                            color: "#fff",
+                            color: "orange",
                         }}
                         onClick={() => {
                             form.resetFields();
@@ -238,6 +238,7 @@ const TagGeneration = () => {
                                             </Option>
                                         ))}
                                     </Select>
+
                                 </div>
                             </Col>
 

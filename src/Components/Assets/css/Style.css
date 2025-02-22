@@ -786,3 +786,6 @@ font-weight: bold;
 .rotating-icon {
     animation: rotate 2s linear infinite;
 }
+.ant-card .ant-card-head {
+  min-height: 30px !important;
+}

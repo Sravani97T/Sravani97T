@@ -19,7 +19,7 @@ import axios from "axios";
 import "../Assets/css/Style.css";
 import { CREATE_jwel } from "../../Config/Config";
 import TableHeaderStyles from "../Pages/TableHeaderStyles";
-import UploadImg  from "../Utiles/UploadImg"
+// import UploadImg  from "../Utiles/UploadImg"
 const MainProduct = () => {
   const [form] = Form.useForm();
   const [data, setData] = useState([]);
@@ -430,7 +430,7 @@ const MainProduct = () => {
             </Col>
           </Row>
         </Form>
-        <UploadImg/>
+        {/* <UploadImg/> */}
 
       </Card>
 

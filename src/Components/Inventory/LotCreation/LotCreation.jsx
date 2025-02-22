@@ -11,6 +11,8 @@ const LotCreation = () => {
     const [currentRecord, setCurrentRecord] = useState(null);
     const [form] = Form.useForm();
     const [mainProductOptions, setMainProductOptions] = useState([]);
+    const [dealerOptions, setDealerOptions] = useState([]);
+
     const [manufacturerOptions, setManufacturerOptions] = useState([]);
     const [prefixOptions, setPrefixOptions] = useState([]);
     const [filteredPrefixOptions, setFilteredPrefixOptions] = useState([]);
@@ -18,7 +20,8 @@ const LotCreation = () => {
     const [lotNumber, setLotNumber] = useState(1);
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(20);
-
+    const [selectedMainProduct, setSelectedMainProduct] = useState(null);
+    const [mainProductInputValue, setMainProductInputValue] = useState("");
     const baseURL = "http://www.jewelerp.timeserasoftware.in/api/Erp/";
 
     const mainProductRef = useRef(null);
@@ -86,18 +89,19 @@ const LotCreation = () => {
                 message.error(`Failed to fetch data from ${url}`);
             }
         };
-    
+
         fetchData("http://www.jewelerp.timeserasoftware.in/api/Master/MasterMainProductList", setMainProductOptions);
         fetchData("http://www.jewelerp.timeserasoftware.in/api/Master/MasterManufacturerMasterList", setManufacturerOptions);
         fetchData("http://www.jewelerp.timeserasoftware.in/api/Master/MasterPrefixMasterList", setPrefixOptions);
         fetchData("http://www.jewelerp.timeserasoftware.in/api/Master/MasterCounterMasterList", setCounterOptions);
+        fetchData("http://www.jewelerp.timeserasoftware.in/api/Master/GetDataFromGivenTableNameWithWhereandOrder?tableName=DEALER_MASTER&where=CUSTTYPE%3D%27DEALER%27&order=DEALERNAME", setDealerOptions);
     };
 
     const handleMainProductChange = (value) => {
         form.setFieldsValue({ prefix: undefined }); // Reset prefix field
         const filteredPrefixes = prefixOptions.filter(prefix => prefix.MAINPRODUCT === value);
         setFilteredPrefixOptions(filteredPrefixes);  // Set the filtered options
-    
+
         // Check if the current prefix is in the filtered options
         const currentPrefix = form.getFieldValue('prefix');
         if (currentPrefix && !filteredPrefixes.some(prefix => prefix.Prefix === currentPrefix)) {
@@ -231,6 +235,33 @@ const LotCreation = () => {
         form.resetFields();
         form.setFieldsValue({ lotno: lotNumber });
     };
+    const handleMainProductKeyDown = (e) => {
+        if (e.key === "Enter") {
+            e.preventDefault(); // ✅ Prevents reopening dropdown
+
+            const typedValue = mainProductInputValue?.trim();
+            if (!typedValue) return;
+
+            const matchedOption = mainProductOptions.find(
+                (p) => p.MNAME?.toLowerCase() === typedValue.toLowerCase()
+            );
+
+            if (matchedOption) {
+                setSelectedMainProduct(matchedOption.MNAME);
+            } else {
+                setSelectedMainProduct(typedValue); // ✅ Allows new entry if not in the list
+            }
+
+            setMainProductInputValue(""); // ✅ Clears input after Enter
+
+            setTimeout(() => {
+                if (prefixRef.current) {
+                    prefixRef.current.focus(); // ✅ Moves focus to next field
+                }
+            }, 100);
+        }
+    };
+
 
     const handleEnterPress = (e, nextFieldRef) => {
         e.preventDefault();
@@ -296,6 +327,7 @@ const LotCreation = () => {
 
     const filteredData = data.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
+
     return (
         <div style={{ backgroundColor: "#f4f6f9" }}>
             <Breadcrumb style={{ fontSize: "16px", fontWeight: "500", color: "#0C1154" }}>
@@ -306,134 +338,421 @@ const LotCreation = () => {
             <Card title={editingKey ? "Edit Lot" : "Add Lot"} style={{ marginBottom: "20px" }}>
                 <Form form={form} layout="vertical" onFinish={handleAddOrUpdate}>
                     <Row gutter={[16, 16]}>
-                        <Col xs={24} sm={12} lg={8}>
-                            <Card style={{ backgroundColor: "#249ac1", color: "#fff" }}>
-                                <Form.Item
-                                    name="lotno"
-                                    label={<span style={{ color: "#fff" }}>Lot No.</span>}
-                                    labelCol={{ span: 10 }}
-                                    wrapperCol={{ span: 18 }}
-                                    style={{ display: 'flex', alignItems: 'center' }}
-                                >
-                                    <Input
-                                        disabled
-                                        style={{
-                                            width: '100%',
-                                            borderRadius: '4px',
-                                            height: '40px',
-                                            paddingLeft: '10px',
-                                            boxSizing: 'border-box',
-                                            color: "#fff"
-                                        }}
-                                    />
-                                </Form.Item>
-                            </Card>
-                        </Col>
-                        <Col xs={24} sm={12} lg={8}>
-                            <Card style={{ backgroundColor: "#249ac1" }}>
-                                <Form.Item name="approvals" valuePropName="checked">
-                                    <Checkbox><span style={{ color: "white" }}>Approval</span></Checkbox>
-                                </Form.Item>
-                            </Card>
-                        </Col>
-                    </Row>
-
-                    <Row gutter={[16, 16]} style={{ marginTop: '10px' }}>
-                        <Col xs={24} sm={12} lg={8}>
-                            <Form.Item name="mainProduct" label="Main Product" rules={[{ required: true }]}>
-                                <Select
-                                    placeholder="Select Main Product"
-                                    ref={mainProductRef}
-                                    onChange={handleMainProductChange}
-                                    onPressEnter={(e) => handleEnterPress(e, piecesRef)}
-                                >
-                                    {mainProductOptions.map((product, index) => (
-                                        <Option key={index} value={product.MNAME}>{product.MNAME}</Option>
-                                    ))}
-                                </Select>
-                            </Form.Item>
-                        </Col>
-                        <Col xs={24} sm={12} lg={8}>
-                            <Form.Item name="pieces" label="Pieces" rules={[{ required: true }]}>
-                                <Input
-                                    placeholder="Enter Pieces"
-                                    ref={piecesRef}
-                                    onPressEnter={(e) => handleEnterPress(e, weightRef)}
-                                />
-                            </Form.Item>
-                        </Col>
-                        <Col xs={24} sm={12} lg={8}>
-                            <Form.Item name="weight" label="Weight" rules={[{ required: true }]}>
-                                <Input
-                                    placeholder="Enter Weight"
-                                    ref={weightRef}
-                                    onPressEnter={(e) => handleEnterPress(e, dealerRef)}
-                                />
-                            </Form.Item>
-                        </Col>
-                    </Row>
-
-                    <Row gutter={[16, 16]} style={{ marginTop: '10px' }}>
-                        <Col xs={24} sm={12} lg={8}>
-                            <Form.Item name="dealer" label="Dealer" rules={[{ required: true }]}>
-                                <Select
-                                    placeholder="Select Dealer"
-                                    ref={dealerRef}
-                                    onPressEnter={(e) => handleEnterPress(e, manufacturerRef)}
-                                >
-                                    <Option value="dealer1">Dealer 1</Option>
-                                    <Option value="dealer2">Dealer 2</Option>
-                                </Select>
-                            </Form.Item>
-                        </Col>
-                        <Col xs={24} sm={12} lg={8}>
-                            <Form.Item name="manufacturer" label="Manufacturer" rules={[{ required: true }]}>
-                                <Select
-                                    placeholder="Select Manufacturer"
-                                    ref={manufacturerRef}
-                                    onPressEnter={(e) => handleEnterPress(e, prefixRef)}
-                                >
-                                    {manufacturerOptions.map((manufacturer, index) => (
-                                        <Option key={index} value={manufacturer.MANUFACTURER}>{manufacturer.MANUFACTURER}</Option>
-                                    ))}
-                                </Select>
-                            </Form.Item>
-                        </Col>
-                        <Col xs={24} sm={12} lg={8}>
-                            <Form.Item name="prefix" label="Prefix" rules={[{ required: true }]}>
-                                <Select
-                                    placeholder="Select Prefix"
-                                    ref={prefixRef}
-                                    onPressEnter={(e) => handleEnterPress(e, counterRef)}
-                                >
-                                    {filteredPrefixOptions.map((prefix, index) => (
-                                        <Option key={index} value={prefix.Prefix}>{prefix.Prefix}</Option>
-                                    ))}
-                                </Select>
-                            </Form.Item>
-                        </Col>
-                    </Row>
-
-                    <Row gutter={[16, 16]} style={{ marginTop: '10px' }}>
-                        <Col xs={24} sm={12} lg={8}>
-                            <Form.Item name="counter" label="Counter" rules={[{ required: true }]}>
-                                <Select
-                                    placeholder="Select Counter"
-                                    ref={counterRef}
-                                    onKeyDown={(e) => {
-                                        if (e.key === "Enter") {
-                                            e.preventDefault(); // Prevent default behavior
-                                            form.submit(); // Submit the form
-                                        }
+                        <Col span={24}>
+                            <Card
+                                style={{
+                                    position: "relative",
+                                    background: "linear-gradient(135deg, #040e56, #1a237e)",
+                                    borderRadius: "8px",
+                                    width: "100%",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    overflow: "hidden",
+                                }}
+                            >
+                                {/* Background Circles */}
+                                {/* Big Circles */}
+                                <div
+                                    style={{
+                                        position: "absolute",
+                                        top: "-40px",
+                                        left: "-50px",
+                                        width: "120px",
+                                        height: "120px",
+                                        backgroundColor: "rgba(255, 255, 255, 0.1)",
+                                        borderRadius: "50%",
                                     }}
-                                >
-                                    {counterOptions.map((counter, index) => (
-                                        <Option key={index} value={counter.COUNTERNAME}>{counter.COUNTERNAME}</Option>
-                                    ))}
-                                </Select>
-                            </Form.Item>
+                                />
+                                <div
+                                    style={{
+                                        position: "absolute",
+                                        bottom: "-50px",
+                                        right: "-60px",
+                                        width: "140px",
+                                        height: "140px",
+                                        backgroundColor: "rgba(255, 255, 255, 0.15)",
+                                        borderRadius: "50%",
+                                        border: "3px solid rgba(255, 255, 255, 0.2)",
+                                    }}
+                                />
+
+                                {/* Medium Circles */}
+                                <div
+                                    style={{
+                                        position: "absolute",
+                                        top: "50px",
+                                        left: "40%",
+                                        width: "80px",
+                                        height: "80px",
+                                        backgroundColor: "rgba(255, 255, 255, 0.1)",
+                                        borderRadius: "50%",
+                                    }}
+                                />
+                                <div
+                                    style={{
+                                        position: "absolute",
+                                        bottom: "30px",
+                                        left: "20%",
+                                        width: "90px",
+                                        height: "90px",
+                                        backgroundColor: "rgba(255, 255, 255, 0.12)",
+                                        borderRadius: "50%",
+                                        border: "2px solid rgba(255, 255, 255, 0.2)",
+                                    }}
+                                />
+
+                                {/* Small Circles */}
+                                <div
+                                    style={{
+                                        position: "absolute",
+                                        top: "10px",
+                                        right: "20%",
+                                        width: "40px",
+                                        height: "40px",
+                                        backgroundColor: "rgba(255, 255, 255, 0.15)",
+                                        borderRadius: "50%",
+                                    }}
+                                />
+                                <div
+                                    style={{
+                                        position: "absolute",
+                                        bottom: "80px",
+                                        right: "10%",
+                                        width: "50px",
+                                        height: "50px",
+                                        backgroundColor: "rgba(255, 255, 255, 0.1)",
+                                        borderRadius: "50%",
+                                    }}
+                                />
+
+                                {/* Content */}
+                                <div style={{ display: "flex", alignItems: "center", gap: "12px", zIndex: 1 }}>
+                                    <span style={{ color: "#fff", whiteSpace: "nowrap" }}>Lot No.</span>
+
+                                    <Form.Item name="lotno" style={{ marginBottom: 0 }}>
+                                        <Input
+                                            disabled
+                                            style={{
+                                                width: "200px",
+                                                borderRadius: "4px",
+                                                height: "40px",
+                                                paddingLeft: "10px",
+                                                boxSizing: "border-box",
+                                                color: "#000",
+                                                backgroundColor: "#fff",
+                                                border: "1px solid #d9d9d9",
+                                                textAlign: "center",
+                                            }}
+                                        />
+                                    </Form.Item>
+
+                                    <Form.Item name="approvals" valuePropName="checked" style={{ marginBottom: 0 }}>
+                                        <Checkbox style={{ color: "white" }}>Approval</Checkbox>
+                                    </Form.Item>
+                                </div>
+                            </Card>
                         </Col>
                     </Row>
+
+                    <Col span={24}>
+                        <Card
+                            style={{
+                                position: "relative",
+                                background: "linear-gradient(135deg, rgb(108, 144, 179) 0%, rgb(182, 189, 180) 100%)",
+                                borderRadius: "8px",
+                                width: "100%",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                overflow: "hidden", // Ensures shapes stay inside
+                            }}
+                        >
+                            {/* Background Shapes */}
+                            {/* Large Circles */}
+                            <div
+                                style={{
+                                    position: "absolute",
+                                    top: "-40px",
+                                    left: "-50px",
+                                    width: "120px",
+                                    height: "120px",
+                                    backgroundColor: "rgba(255, 255, 255, 0.15)",
+                                    borderRadius: "50%",
+                                }}
+                            />
+                            <div
+                                style={{
+                                    position: "absolute",
+                                    bottom: "-50px",
+                                    right: "-60px",
+                                    width: "140px",
+                                    height: "140px",
+                                    backgroundColor: "rgba(255, 255, 255, 0.12)",
+                                    borderRadius: "50%",
+                                    border: "3px solid rgba(255, 255, 255, 0.2)",
+                                }}
+                            />
+
+                            {/* Medium Circles */}
+                            <div
+                                style={{
+                                    position: "absolute",
+                                    top: "50px",
+                                    left: "30%",
+                                    width: "80px",
+                                    height: "80px",
+                                    backgroundColor: "rgba(255, 255, 255, 0.1)",
+                                    borderRadius: "50%",
+                                }}
+                            />
+                            <div
+                                style={{
+                                    position: "absolute",
+                                    bottom: "30px",
+                                    left: "10%",
+                                    width: "90px",
+                                    height: "90px",
+                                    backgroundColor: "rgba(255, 255, 255, 0.15)",
+                                    borderRadius: "50%",
+                                    border: "2px solid rgba(255, 255, 255, 0.2)",
+                                }}
+                            />
+
+                            {/* Small Circles */}
+                            <div
+                                style={{
+                                    position: "absolute",
+                                    top: "10px",
+                                    right: "20%",
+                                    width: "40px",
+                                    height: "40px",
+                                    backgroundColor: "rgba(255, 255, 255, 0.12)",
+                                    borderRadius: "50%",
+                                }}
+                            />
+                            <div
+                                style={{
+                                    position: "absolute",
+                                    bottom: "80px",
+                                    right: "5%",
+                                    width: "50px",
+                                    height: "50px",
+                                    backgroundColor: "rgba(255, 255, 255, 0.08)",
+                                    borderRadius: "50%",
+                                }}
+                            />
+
+                            {/* Content */}
+                            <div style={{ width: "100%", color: "#fff", zIndex: 1 }}>
+                                <div style={{ display: "flex", alignItems: "center", marginBottom: "16px" }}>
+                                    <span style={{ width: "120px", marginRight: "8px" }}>Main Product</span>
+                                    <Form.Item
+                                        name="mainProduct"
+                                        style={{ marginBottom: 0, width: '200px' }}
+                                        rules={[{ required: true, message: 'Please select a main product!' }]}
+                                    >
+                                        <Select
+                                            placeholder="Select Main Product"
+                                            ref={mainProductRef}
+                                            value={selectedMainProduct || mainProductInputValue} // Display the selected or typed value
+                                            onChange={handleMainProductChange} // Update selected value
+                                            onSearch={(value) => setMainProductInputValue(value)} // Capture user input for search
+                                            onKeyDown={handleMainProductKeyDown} // Handle keyboard events like Enter key
+                                            showSearch // Enables search functionality in dropdown
+                                            optionFilterProp="children" // Filter based on option text
+                                            filterOption={(input, option) =>
+                                                option?.children?.toLowerCase().includes(input?.toLowerCase()) // Case-insensitive search
+                                            }
+                                            dropdownRender={(menu) => (
+                                                <div>
+                                                    {menu}
+                                                    <style jsx>{`
+          .ant-select-item-option-active {
+            background-color: rgb(125, 248, 156) !important;
+          }
+        `}</style>
+                                                </div>
+                                            )}
+                                        >
+                                            {mainProductOptions.map((product, index) => (
+                                                <Option key={index} value={product.MNAME}>
+                                                    {product.MNAME}
+                                                </Option>
+                                            ))}
+                                        </Select>
+                                    </Form.Item>
+
+
+                                </div>
+
+                                {/* Pieces */}
+                                <div style={{ display: "flex", alignItems: "center", marginBottom: "16px" }}>
+                                    <span style={{ width: "120px", marginRight: "8px" }}>Pieces</span>
+                                    <Form.Item name="pieces" style={{ marginBottom: 0, width: "200px" }} rules={[{ required: true }]}>
+                                        <Input placeholder="Enter Pieces" ref={piecesRef} onPressEnter={(e) => handleEnterPress(e, weightRef)} />
+                                    </Form.Item>
+                                </div>
+
+                                {/* Weight */}
+                                <div style={{ display: "flex", alignItems: "center", marginBottom: "16px" }}>
+                                    <span style={{ width: "120px", marginRight: "8px" }}>Weight</span>
+                                    <Form.Item name="weight" style={{ marginBottom: 0, width: "200px" }} rules={[{ required: true }]}>
+                                        <Input placeholder="Enter Weight" ref={weightRef} onPressEnter={(e) => handleEnterPress(e, dealerRef)} />
+                                    </Form.Item>
+                                </div>
+
+                                <div style={{ display: "flex", alignItems: "center", marginBottom: "16px" }}>
+                                    <span style={{ width: "120px", marginRight: "8px" }}>Dealer</span>
+                                    <Form.Item
+                                        name="dealer"
+                                        style={{ marginBottom: 0, width: "200px" }}
+                                        rules={[{ required: true }]}
+                                    >
+                                        <Select
+                                            placeholder="Select Dealer"
+                                            ref={dealerRef}
+                                            showSearch
+                                            filterOption={(input, option) =>
+                                                option.children.toLowerCase().includes(input.toLowerCase())
+                                            }
+                                            onPressEnter={(e) => handleEnterPress(e, manufacturerRef)} // Focuses on the next field after pressing Enter
+                                            dropdownRender={(menu) => (
+                                                <div>
+                                                    {menu}
+                                                    <style jsx>{`
+                                                        .ant-select-item-option-active {
+                                                            background-color: rgb(125, 248, 156) !important;
+                                                        }
+                                                    `}</style>
+                                                </div>
+                                            )}
+                                        >
+                                            {dealerOptions.map((dealer, index) => (
+                                                <Option key={index} value={dealer.Dealername}>
+                                                    {dealer.Dealername}
+                                                </Option>
+                                            ))}
+                                        </Select>
+                                    </Form.Item>
+                                </div>
+
+                                {/* Manufacturer */}
+                                <div style={{ display: "flex", alignItems: "center", marginBottom: "16px" }}>
+                                    <span style={{ width: "120px", marginRight: "8px" }}>Manufacturer</span>
+                                    <Form.Item
+                                        name="manufacturer"
+                                        style={{ marginBottom: 0, width: "200px" }}
+                                        rules={[{ required: true }]}
+                                    >
+                                        <Select
+                                            placeholder="Select Manufacturer"
+                                            ref={manufacturerRef}
+                                            showSearch
+                                            filterOption={(input, option) =>
+                                                option.children.toLowerCase().includes(input.toLowerCase())
+                                            }
+                                            onPressEnter={(e) => handleEnterPress(e, prefixRef)}
+                                            dropdownRender={(menu) => (
+                                                <div>
+                                                    {menu}
+                                                    <style jsx>{`
+                    .ant-select-item-option-active {
+                        background-color: rgb(125, 248, 156) !important;
+                    }
+                `}</style>
+                                                </div>
+                                            )}
+                                        >
+                                            {manufacturerOptions.length > 0 ? (
+                                                manufacturerOptions.map((manufacturer, index) => (
+                                                    <Option key={index} value={manufacturer.MANUFACTURER}>
+                                                        {manufacturer.MANUFACTURER}
+                                                    </Option>
+                                                ))
+                                            ) : (
+                                                <Option disabled>No Manufacturers available</Option>
+                                            )}
+                                        </Select>
+                                    </Form.Item>
+                                </div>
+
+                                {/* Prefix */}
+                                <div style={{ display: "flex", alignItems: "center", marginBottom: "16px" }}>
+                                    <span style={{ width: "120px", marginRight: "8px" }}>Prefix</span>
+                                    <Form.Item name="prefix" style={{ marginBottom: 0, width: "200px" }} rules={[{ required: true }]}>
+                                        <Select
+                                            placeholder="Select Prefix"
+                                            ref={prefixRef}
+                                            showSearch
+                                            filterOption={(input, option) =>
+                                                option.children.toLowerCase().includes(input.toLowerCase())
+                                            }
+                                            onPressEnter={(e) => handleEnterPress(e, counterRef)} // Focus on the next field after pressing Enter
+                                            dropdownRender={(menu) => (
+                                                <div>
+                                                    {menu}
+                                                    <style jsx>{`
+                    .ant-select-item-option-active {
+                        background-color: rgb(125, 248, 156) !important;
+                    }
+                `}</style>
+                                                </div>
+                                            )}
+                                        >
+                                            {filteredPrefixOptions.length > 0 ? (
+                                                filteredPrefixOptions.map((prefix, index) => (
+                                                    <Option key={index} value={prefix.Prefix}>{prefix.Prefix}</Option>
+                                                ))
+                                            ) : (
+                                                <Option disabled>No Prefix Available</Option>
+                                            )}
+                                        </Select>
+                                    </Form.Item>
+                                </div>
+
+                                {/* Counter */}
+                                <div style={{ display: "flex", alignItems: "center", marginBottom: "16px" }}>
+                                    <span style={{ width: "120px", marginRight: "8px" }}>Counter</span>
+                                    <Form.Item
+                                        name="counter"
+                                        style={{ marginBottom: 0, width: "200px" }}
+                                        rules={[{ required: true }]}
+                                    >
+                                        <Select
+                                            placeholder="Select Counter"
+                                            ref={counterRef}
+                                            showSearch
+                                            filterOption={(input, option) =>
+                                                option.children.toLowerCase().includes(input.toLowerCase())
+                                            }
+
+                                            dropdownRender={(menu) => (
+                                                <div>
+                                                    {menu}
+                                                    <style jsx>{`
+                    .ant-select-item-option-active {
+                        background-color: rgb(125, 248, 156) !important;
+                    }
+                `}</style>
+                                                </div>
+                                            )}
+                                        >
+                                            {counterOptions.length > 0 ? (
+                                                counterOptions.map((counter, index) => (
+                                                    <Option key={index} value={counter.COUNTERNAME}>
+                                                        {counter.COUNTERNAME}
+                                                    </Option>
+                                                ))
+                                            ) : (
+                                                <Option disabled>No Counters available</Option>
+                                            )}
+                                        </Select>
+                                    </Form.Item>
+                                </div>
+                            </div>
+                        </Card>
+                    </Col>
 
                     <div style={{ textAlign: "right", marginTop: "16px" }}>
                         <Button type="primary" htmlType="submit" style={{ marginRight: "8px" }}>
