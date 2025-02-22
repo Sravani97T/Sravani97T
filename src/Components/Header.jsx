@@ -25,10 +25,17 @@ const Header = ({ collapsed, toggleSidebar }) => {
   }, []);
 
   const handleMenuClick = ({ key }) => {
-    if (key === "1") navigate("/settings");
-    else if (key === "2") navigate("/profile");
-    else if (key === "3") console.log("Logging out...");
-  };
+    if (key === "1") {
+        navigate("/settings");
+    } else if (key === "2") {
+        navigate("/profile");
+    } else if (key === "3") {
+        localStorage.removeItem("isLoggedIn");
+        navigate("/");
+        window.location.reload(); // Ensure fresh login state
+    }
+};
+
 
   const userMenu = {
     items: [

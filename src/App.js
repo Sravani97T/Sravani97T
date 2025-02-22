@@ -57,12 +57,20 @@ import AvatarUpload from "./Components/Utiles/UploadImg";
 import EstimationRegister from "./Components/Inventory/LotCreation/EstimationRegister";
 import EstimationPurchase from "./Components/Inventory/LotCreation/EstimationPurchase";
 const App = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-
+  const [isAuthenticated, setIsAuthenticated] = useState(
+    localStorage.getItem("isLoggedIn") === "true"
+  );
+  
   const handleLogin = () => {
+    localStorage.setItem("isLoggedIn", "true"); // Store login status
     setIsAuthenticated(true);
   };
-
+  
+  const handleLogout = () => {
+    localStorage.removeItem("isLoggedIn"); // Remove login status
+    setIsAuthenticated(false);
+  };
+  
   return (
     <Router>
       <Routes>

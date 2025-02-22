@@ -20,11 +20,19 @@ const Sidebar = ({ collapsed }) => {
   const handleMenuClick = (e) => {
     setSelectedKey(e.key); // Update selected key on click
     if (e.key === "1") {
-      setOpenKeys([]); // Close all submenus when Dashboard is clicked
+        setOpenKeys([]); // Close all submenus when Dashboard is clicked
     }
-    localStorage.clear(); // Clear local storage on menu item click
+
+    // Preserve "isLoggedIn" while clearing other localStorage items
+    const isLoggedIn = localStorage.getItem("isLoggedIn");
+    localStorage.clear(); // Clear all storage
+    if (isLoggedIn) {
+        localStorage.setItem("isLoggedIn", isLoggedIn); // Restore "isLoggedIn"
+    }
+
     console.log("e", e);
-  };
+};
+
 
   const handleSubMenuOpenChange = (keys) => {
     console.log("Submenu open keys:", keys);

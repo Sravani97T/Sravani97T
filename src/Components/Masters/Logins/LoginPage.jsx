@@ -1,4 +1,4 @@
-import React from "react";
+import React,{ useEffect } from "react";
 import { Card, Button, Form, Input, Checkbox } from "antd";
 import { useNavigate } from "react-router-dom";
 import logo from "../../../Components/Assets/textLogo.png";
@@ -7,12 +7,20 @@ import { CREATE_jwel } from "../../../Config/Config";
 const LoginPage = ({ onLogin }) => {
     const navigate = useNavigate();
 
+    useEffect(() => {
+        if (localStorage.getItem("isLoggedIn") === "true") {
+            navigate("/dashboard"); // Redirect to dashboard if already logged in
+        }
+    }, [navigate]);
     const onFinish = async (values) => {
         const { username, password } = values;
         try {
-            const response = await fetch(`${CREATE_jwel}/api/Tenant/CheckValidTenantWithName?userName=${username}&password=${password}&clientName=MADHU`);
+            const response = await fetch(
+                `${CREATE_jwel}/api/Tenant/CheckValidTenantWithName?userName=${username}&password=${password}&clientName=MADHU`
+            );
             const data = await response.json();
             if (data.tenantName) {
+                localStorage.setItem("isLoggedIn", "true"); // Store login status
                 onLogin();
                 navigate("/dashboard");
             } else {
@@ -22,6 +30,7 @@ const LoginPage = ({ onLogin }) => {
             console.error("Error:", error);
         }
     };
+    
 
     const onFinishFailed = (errorInfo) => {
         console.log("Failed:", errorInfo);
