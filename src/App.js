@@ -54,6 +54,8 @@ import StoneDetails from "./Components/Reports/StoneDetailes";
 import DayGlance from "./Components/POSReports/DayGlance";
 import LoginPage from "./Components/Masters/Logins/LoginPage"
 import AvatarUpload from "./Components/Utiles/UploadImg";
+import EstimationRegister from "./Components/Inventory/LotCreation/EstimationRegister";
+import EstimationPurchase from "./Components/Inventory/LotCreation/EstimationPurchase";
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
@@ -128,6 +130,9 @@ const App = () => {
                   <Route path="/counterchart-report" element={<CounterChart />} />
                   <Route path="/stonedetailes-report" element={<StoneDetails />} />
                   <Route path="/day-glance" element={<DayGlance />} />
+                  <Route path="/estimation-register" element={<EstimationRegister />} />
+                  <Route path="/estimation-purchase" element={<EstimationPurchase />} />
+
                 </Routes>
               </DashboardLayout>
             ) : (

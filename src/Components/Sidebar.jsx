@@ -92,6 +92,9 @@ const Sidebar = ({ collapsed }) => {
       children: [
         { key: "3-1", label: <Link to="/lot-creation" style={{ color: "#fff" }}>Lot Creation</Link> },
         { key: "3-2", label: <Link to="/tag-generation" style={{ color: "#fff" }}>Tag Generation</Link> },
+        { key: "3-3", label: <Link to="/estimation-register" style={{ color: "#fff" }}>Estimation Register</Link> },
+        { key: "3-4", label: <Link to="/estimation-purchase" style={{ color: "#fff" }}>Estimation Purchase</Link> },
+
       ],
     },
     {

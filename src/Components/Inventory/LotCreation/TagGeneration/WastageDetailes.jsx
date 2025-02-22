@@ -4,6 +4,7 @@ import StoneDetails from "../TagGeneration/StoneDetailes";
 import axios from 'axios';
 import TagDetailsForm from "./TagDetailesform";
 import OrderItem from "./OrderItem";
+import ResetButton from "../TagGeneration/ResetFormTag"
 const { Text } = Typography;
 const { Option } = Select;
 
@@ -135,12 +136,29 @@ const WastageDetails = ({ focusProductName, updateTotals, feachTagno, tagInfo, c
             }, 100);
         }
     };
+
+    const handleReset = () => {
+        setWastageData([
+            {
+                key: "1",
+                percentage: "",
+                direct: "",
+                total: "",
+                perGram: "",
+                newField1: "",
+                newField2: "",
+            },
+        ]);
+        setStoneData([]);
+        setSelectedCategory(null);
+        setIsEditable(false);
+    };
+
     useEffect(() => {
         if (selectedCategory === "OTHERS" && percentageRef.current) {
             percentageRef.current.focus();
         }
     }, [selectedCategory]);
-    
 
     return (
         <>
@@ -431,14 +449,16 @@ const WastageDetails = ({ focusProductName, updateTotals, feachTagno, tagInfo, c
                             </div>
                         </div>
                     </Col>
-                    <Col xs={24} sm={4}>
+                    <Col xs={24} sm={4} style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
+                        <ResetButton onReset={handleReset} />
                         <div
                             style={{
                                 borderRadius: "10px",
                                 marginBottom: "5px",
-                                padding: "13px",
+                                padding: "7px",
                                 backgroundColor: "#b9bbcf",
                                 boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.1)",
+                                width: "100%"
                             }}
                         >
                             <StoneDetails
@@ -453,17 +473,20 @@ const WastageDetails = ({ focusProductName, updateTotals, feachTagno, tagInfo, c
                         <div
                             style={{
                                 borderRadius: "10px",
-                                padding: "13px",
+                                padding: "7px",
                                 backgroundColor: "#b9bbcf",
                                 boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.1)",
+                                width: "100%"
                             }}
                         >
-                          <OrderItem lotno={lotno}
+                            <OrderItem
+                                lotno={lotno}
                                 productname={productname}
                                 gwt={gwt}
-                                pieces={pieces}/>                                                                  </div>
+                                pieces={pieces}
+                            />
+                        </div>
                     </Col>
-
                 </Row>
             </div>
             <TagDetailsForm

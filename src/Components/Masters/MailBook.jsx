@@ -23,17 +23,14 @@ import axios from "axios";
 import "react-datepicker/dist/react-datepicker.css";
 import moment from 'moment';
 import TableHeaderStyles from "../Pages/TableHeaderStyles";
-
 const tenantNameHeader = "PmlYjF0yAwEjNohFDKjzn/ExL/LMhjzbRDhwXlvos+0="; // Your tenant name header
-
 const { Option } = Select;
-
 const MailBook = () => {
   const [form] = Form.useForm();
   const [data, setData] = useState();
   const [loading, setLoading] = useState(false);
   const [isBrandNameExist, setIsBrandNameExist] = useState(false);
-const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [editingKey, setEditingKey] = useState(null);
   const refs = {
@@ -59,13 +56,13 @@ const [currentPage, setCurrentPage] = useState(1);
     try {
       setLoading(true);
       const response = await axios.get("http://www.jewelerp.timeserasoftware.in/api/Master/MasterDealerMasterList");
-      
+
       const dataWithSerialNumbers = response.data.map((item, index) => ({
         ...item,
         sno: index + 1,
         key: index + 1, // Ensure each item has a unique key
       }));
-      
+
       setData(dataWithSerialNumbers);
       setLoading(false);
     } catch (error) {
@@ -73,8 +70,6 @@ const [currentPage, setCurrentPage] = useState(1);
       setLoading(false);
     }
   };
-
-
   useEffect(() => {
     fetchData();
   }, []);
@@ -135,7 +130,7 @@ const [currentPage, setCurrentPage] = useState(1);
       phonenum: values.phonenum || "-",
       mobilenum: values.mobilenum || "111111111111",
       mobileNum2: values.mobileNum2 || "-",
-      card: values.card ,
+      card: values.card,
       cardno: values.cardno,
       state: values.state,
       district: values.district || "ffff",
@@ -308,18 +303,10 @@ const [currentPage, setCurrentPage] = useState(1);
       setLoading(false); // Reset loading state
     }
   };
-
-
   const handleCancel = useCallback(() => {
     form.resetFields();
     setEditingKey(null);
   }, [form]);
-
-  // const filteredData = data.filter((item) =>
-  //   Object.values(item)
-  //     .join(" ")
-  //     .toLowerCase()
-  // );
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -345,8 +332,8 @@ const [currentPage, setCurrentPage] = useState(1);
       title: "S.No",
       dataIndex: "sno",
       key: "sno",
-      className: 'blue-background-column', 
-      width: 50, 
+      className: 'blue-background-column',
+      width: 50,
     },
     { title: "Category", dataIndex: "CustType", key: "CustType" },
     { title: "Name", dataIndex: "Dealername", key: "Dealername" },
@@ -378,8 +365,8 @@ const [currentPage, setCurrentPage] = useState(1);
   ];
 
   return (
-    <div style={{ backgroundColor: "#f4f6f9" }}>
-      <Row justify="start" style={{ marginBottom: "16px" }}>
+    <div style={{ backgroundColor: "#f4f6f9", }}>
+      <Row justify="start" style={{ marginBottom: "5px" }}>
         <Col>
           <Breadcrumb style={{ fontSize: "16px", fontWeight: "500", color: "#0C1154" }}>
             <Breadcrumb.Item>Masters</Breadcrumb.Item>
@@ -393,289 +380,321 @@ const [currentPage, setCurrentPage] = useState(1);
         style={{
           marginBottom: "20px",
           borderRadius: "8px",
-          boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+          boxShadow: "9px 6px 8px 5px rgba(209, 180, 180, 0.1)",
+          // backgroundColor:"#8abbb9"
         }}
       >
-        <Form form={form} layout="vertical" onFinish={editingKey ? handleSave : handleAdd}>
+        <Form form={form} layout="horizontal" onFinish={editingKey ? handleSave : handleAdd}>
           <Row gutter={16}>
-            <Col xs={24} sm={12}>
-              <Form.Item
-                name="category"
-                label="Category"
-                rules={[{ required: true, message: "Category is required" }]}
-              >
-                <Select
-                  placeholder="Select Category"
-                  showSearch
-                  ref={refs.category}
-                  onChange={(value) => {
-                    const uppercaseValue = value.toUpperCase();
-                    form.setFieldsValue({ category: uppercaseValue });
-                    const dealername = form.getFieldValue("dealername"); // Get dealer name
-                    handleBrandNameCheck(uppercaseValue, dealername); // Call API with category and dealer name
-                  }}
-                  onKeyDown={(e) => e.key === "Enter" && refs.nameRef.current?.focus()}
+            <Col span={12}>
+              <div style={{ display: "flex", alignItems: "center", marginBottom: "16px" }}>
+                <span style={{ width: "120px", marginRight: "8px", paddingLeft: "10px" }}>Category</span>
+                <Form.Item
+                  name="category"
+                  style={{ marginBottom: 0, width: '300px' }}
+                  rules={[{ required: true, message: "Category is required" }]}
                 >
-                  <Option value="CUSTOMER">CUSTOMER</Option>
-                  <Option value="DEALER">DEALER</Option>
-                  <Option value="WORKER">WORKER</Option>
-                  <Option value="INCHARGE">INCHARGE</Option>
-                  <Option value="PERSONAL">PERSONAL</Option>
-                  <Option value="OFFICIAL">OFFICIAL</Option>
-                </Select>
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={12}>
-              <Form.Item
-                name="dealername"
-                label="Name"
-                rules={[{ required: true, message: "Name is required" }]}
-              >
-                <Input
-                  placeholder="Enter Name"
-                  ref={refs.nameRef}
-                  onChange={(e) => {
-                    const uppercaseValue = e.target.value.toUpperCase();
-                    form.setFieldsValue({ dealername: uppercaseValue });
-                    const dealername = form.getFieldValue("dealername");
-                    const category = form.getFieldValue("category"); // Get category
-                    handleBrandNameCheck(category, dealername); // Call API with category and dealer name
-                  }}
-                  onPressEnter={(e) => handleEnterPress(e, refs.mobileNo1Ref)}
-                />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={12}>
-              <Form.Item
-                name="mobilenum"
-                label="Mobile No. 1"
-                rules={[
-                  { required: true, message: "Mobile Number 1 is required" },
-                  {
-                    pattern: /^[0-9]{10}$/,
-                    message: "Enter a valid 10-digit mobile number",
-                  },
-                ]}
-              >
-                <Input
-                  placeholder="Enter Mobile No. 1"
-                  ref={refs.mobileNo1Ref}
-                  type="phone"
-                  maxLength={10}
-                  onPressEnter={(e) => handleEnterPress(e, refs.eMailRef)}
-                />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={12}>
-              <Form.Item
-                name="eMail"
-                label="Email"
-                rules={[
-                  { required: true, message: "Email is required" },
-                  { type: "email", message: "Enter a valid email" },
-                ]}
-              >
-                <Input
-                  placeholder="Enter Email"
-                  ref={refs.eMailRef}
-                  onPressEnter={(e) => handleEnterPress(e, refs.mobileNo2Ref)}
-                />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={12}>
-              <Form.Item
-                name="mobileNum2"
-                label="Mobile No. 2"
-                rules={[
-                  {
-                    pattern: /^[0-9]{10}$/,
-                    message: "Enter a valid 10-digit mobile number",
-                  },
-                ]}
-              >
-                <Input
-                  placeholder="Enter Mobile No. 2"
-                  ref={refs.mobileNo2Ref}
-                  type="phone"
-                  maxLength={10}
-                  onPressEnter={(e) => handleEnterPress(e, refs.cityRef)}
-                />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={12}>
-              <Form.Item
-                name="cityName"
-                label="City"
-                rules={[{ required: true, message: "City is required" }]}
-              >
-                <Select
-                  showSearch
-                  placeholder="Select City"
-                  ref={refs.cityRef}
-                  onKeyDown={(e) =>
-                    e.key === "Enter" && refs.addressRef.current?.focus()
-                  }
+                  <Select
+                    placeholder="Select Category"
+                    showSearch
+                    ref={refs.category}
+                    onChange={(value) => {
+                      const uppercaseValue = value.toUpperCase();
+                      form.setFieldsValue({ category: uppercaseValue });
+                      const dealername = form.getFieldValue("dealername");
+                      handleBrandNameCheck(uppercaseValue, dealername);
+                    }}
+                    onKeyDown={(e) => e.key === "Enter" && refs.nameRef.current?.focus()}
+                  >
+                    <Option value="CUSTOMER">CUSTOMER</Option>
+                    <Option value="DEALER">DEALER</Option>
+                    <Option value="WORKER">WORKER</Option>
+                    <Option value="INCHARGE">INCHARGE</Option>
+                    <Option value="PERSONAL">PERSONAL</Option>
+                    <Option value="OFFICIAL">OFFICIAL</Option>
+                  </Select>
+                </Form.Item>
+              </div>
+
+              <div style={{ display: "flex", alignItems: "center", marginBottom: "16px" }}>
+                <span style={{ width: "120px", marginRight: "8px", paddingLeft: "10px" }}>Name</span>
+                <Form.Item
+                  name="dealername"
+                  style={{ marginBottom: 0, width: '300px' }}
+                  rules={[{ required: true, message: "Name is required" }]}
                 >
-                  <Option value="NELLORE">NELLORE</Option>
-                  <Option value="YANAM">YANAM</Option>
-                </Select>
-              </Form.Item>
-            </Col>
-            <Col xs={24}>
-              <Form.Item
-                name="address1"
-                label="Address"
-                rules={[{ required: true, message: "Address is required" }]}
-              >
-                <Input.TextArea
-                  rows={1}
-                  placeholder="Enter Address"
-                  ref={refs.addressRef}
-                  onPressEnter={(e) => handleEnterPress(e, refs.stateRef)}
-                />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={12}>
-              <Form.Item
-                name="state"
-                label="State"
-                rules={[{ required: true, message: "State is required" }]}
-              >
-                <Select
-                  showSearch
-                  placeholder="Select State"
-                  ref={refs.stateRef}
-                  onKeyDown={(e) =>
-                    e.key === "Enter" && refs.stateCodeRef.current?.focus()
-                  }
+                  <Input
+                    placeholder="Enter Name"
+                    ref={refs.nameRef}
+                    onChange={(e) => {
+                      const uppercaseValue = e.target.value.toUpperCase();
+                      form.setFieldsValue({ dealername: uppercaseValue });
+                      const category = form.getFieldValue("category");
+                      handleBrandNameCheck(category, e.target.value);
+                    }}
+                    onPressEnter={(e) => handleEnterPress(e, refs.mobileNo1Ref)}
+                  />
+                </Form.Item>
+              </div>
+
+              <div style={{ display: "flex", alignItems: "center", marginBottom: "16px" }}>
+                <span style={{ width: "120px", marginRight: "8px", paddingLeft: "10px" }}>Mobile No. 1</span>
+                <Form.Item
+                  name="mobilenum"
+                  style={{ marginBottom: 0, width: '300px' }}
+                  rules={[{ required: true, message: "Mobile Number 1 is required" }, { pattern: /^[0-9]{10}$/, message: "Enter a valid 10-digit mobile number" }]}
                 >
-                  <Option value="AP">AP</Option>
-                  <Option value="TS">TS</Option>
-                </Select>
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={6}>
-              <Form.Item
-                name="statecode"
-                label="State Code"
-                rules={[{ required: true, message: "State Code is required" }]}
-              >
-                <Input
-                  placeholder="Enter State Code"
-                  ref={refs.stateCodeRef}
-                  style={{ width: "120px" }} // Smaller input box for state code
-                  onPressEnter={(e) => handleEnterPress(e, refs.pinCodeRef)}
-                />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={6}>
-              <Form.Item
-                name="pinCode"
-                label="pinCode"
-                rules={[{ required: true, message: "pinCode is required" }]}
-              >
-                <Input
-                  placeholder="Enter  Code"
-                  ref={refs.pinCodeRef}
-                  style={{ width: "120px" }} // Smaller input box for state code
-                  onPressEnter={(e) => handleEnterPress(e, refs.GSTINRef)}
-                />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={12}>
-              <Form.Item
-                name="tinNo"
-                label="GSTIN"
-                rules={[{ required: true, message: "GSTIN is required" }]}
-              >
-                <Input
-                  placeholder="Enter GSTIN"
-                  ref={refs.GSTINRef}
-                  onPressEnter={(e) => handleEnterPress(e, refs.PANRef)}
-                />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={12}>
-              <Form.Item
-                name="card"
-                label="PAN"
-                rules={[{ required: true, message: "PAN is required" }]}
-              >
-                <Input
-                  placeholder="Enter PAN"
-                  ref={refs.PANRef}
-                  onPressEnter={(e) => handleEnterPress(e, refs.proofTypeRef)}
-                />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={12}>
-              <Form.Item
-                name="proofType"
-                label="Proof Type"
-                rules={[{ required: true, message: "Proof Type is required" }]}
-              >
-                <Select
-                  showSearch
-                  ref={refs.proofTypeRef}
-                  onKeyDown={(e) =>
-                    e.key === "Enter" && refs.proofNumberRef.current?.focus()
-                  }
+                  <Input
+                    placeholder="Enter Mobile No. 1"
+                    ref={refs.mobileNo1Ref}
+                    type="phone"
+                    maxLength={10}
+                    onPressEnter={(e) => handleEnterPress(e, refs.eMailRef)}
+                  />
+                </Form.Item>
+              </div>
+
+              <div style={{ display: "flex", alignItems: "center", marginBottom: "16px" }}>
+                <span style={{ width: "120px", marginRight: "8px", paddingLeft: "10px" }}>Email</span>
+                <Form.Item
+                  name="eMail"
+                  style={{ marginBottom: 0, width: '300px' }}
+                  rules={[{ required: true, message: "Email is required" }, { type: "email", message: "Enter a valid email" }]}
                 >
-                  <Option value="Aadhaar">Aadhaar</Option>
-                  <Option value="Voter ID">Voter ID</Option>
-                </Select>
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={12}>
-              <Form.Item
-                name="cardno"
-                label="Proof Number"
-                rules={[{ required: true, message: "Proof Number is required" }]}
-              >
-                <Input
-                  placeholder="Enter Proof Number"
-                  ref={refs.proofNumberRef}
-                  onPressEnter={(e) => handleEnterPress(e, refs.dobRef)}
-                />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={12}>
-              <Form.Item name="dob" label="Date of Birth">
-                <DatePicker
-                  format="YYYY-MM-DD"
-                  ref={refs.dobRef}
-                  onPressEnter={(e) => handleEnterPress(e, refs.anniversaryRef)}
-                />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={12}>
-              <Form.Item name="anniversary" label="Anniversary">
-                <DatePicker
-                  format="YYYY-MM-DD"
-                  ref={refs.anniversaryRef}
-                  onPressEnter={(e) => handleEnterPress(e, refs.locationTypeRef)}
-                />
-              </Form.Item>
-            </Col>
-            <Col xs={24}>
-              <Form.Item
-                name="station"
-                label="Location Type"
-                rules={[{ required: true, message: "Location Type is required" }]}
-              >
-                <Radio.Group
-                  ref={refs.locationTypeRef}
-                  onKeyDown={(e) =>
-                    e.key === "Enter" && handleEnterPress(e, null)
-                  }
+                  <Input
+                    placeholder="Enter Email"
+                    ref={refs.eMailRef}
+                    onPressEnter={(e) => handleEnterPress(e, refs.mobileNo2Ref)}
+                  />
+                </Form.Item>
+              </div>
+
+              <div style={{ display: "flex", alignItems: "center", marginBottom: "16px" }}>
+                <span style={{ width: "120px", marginRight: "8px", paddingLeft: "10px" }}>Mobile No. 2</span>
+                <Form.Item
+                  name="mobileNum2"
+                  style={{ marginBottom: 0, width: '300px' }}
+                  rules={[{ pattern: /^[0-9]{10}$/, message: "Enter a valid 10-digit mobile number" }]}
                 >
-                  <Radio value="Out Station">Out Station</Radio>
-                  <Radio value="Local">Local</Radio>
-                </Radio.Group>
-              </Form.Item>
+                  <Input
+                    placeholder="Enter Mobile No. 2"
+                    ref={refs.mobileNo2Ref}
+                    type="phone"
+                    maxLength={10}
+                    onPressEnter={(e) => handleEnterPress(e, refs.cityRef)}
+                  />
+                </Form.Item>
+              </div>
+
+              <div style={{ display: "flex", alignItems: "center", marginBottom: "16px" }}>
+                <span style={{ width: "120px", marginRight: "8px", paddingLeft: "10px" }}>City</span>
+                <Form.Item
+                  name="cityName"
+                  style={{ marginBottom: 0, width: '300px' }}
+                  rules={[{ required: true, message: "City is required" }]}
+                >
+                  <Select
+                    showSearch
+                    placeholder="Select City"
+                    ref={refs.cityRef}
+                    onKeyDown={(e) => e.key === "Enter" && refs.addressRef.current?.focus()}
+                  >
+                    <Option value="NELLORE">NELLORE</Option>
+                    <Option value="YANAM">YANAM</Option>
+                  </Select>
+                </Form.Item>
+              </div>
+
+              <div style={{ display: "flex", alignItems: "center", marginBottom: "16px" }}>
+                <span style={{ width: "120px", marginRight: "8px", paddingLeft: "10px" }}>Address</span>
+                <Form.Item
+                  name="address1"
+                  style={{ marginBottom: 0, width: '300px' }}
+                  rules={[{ required: true, message: "Address is required" }]}
+                >
+                  <Input.TextArea
+                    rows={1}
+                    placeholder="Enter Address"
+                    ref={refs.addressRef}
+                    onPressEnter={(e) => handleEnterPress(e, refs.stateRef)}
+                  />
+                </Form.Item>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", marginBottom: "16px", gap: "24px" }}>
+                {/* State Field */}
+                <div style={{ display: "flex", alignItems: "center", flex: 1 }}>
+                  <span style={{ width: "120px", marginRight: "8px", paddingLeft: "10px" }}>State</span>
+                  <Form.Item
+                    name="state"
+                    style={{ marginBottom: 0, flex: 1 }}
+                    rules={[{ required: true, message: "State is required" }]}
+                  >
+                    <Select
+                      showSearch
+                      placeholder="Select State"
+                      ref={refs.stateRef}
+                      onKeyDown={(e) => e.key === "Enter" && refs.stateCodeRef.current?.focus()}
+                    >
+                      <Option value="AP">AP</Option>
+                      <Option value="TS">TS</Option>
+                    </Select>
+                  </Form.Item>
+                </div>
+
+                {/* State Code Field */}
+                <div style={{ display: "flex", alignItems: "center", flex: 1 }}>
+                  <span style={{ width: "120px", marginRight: "8px", paddingLeft: "10px" }}>State Code</span>
+                  <Form.Item
+                    name="statecode"
+                    style={{ marginBottom: 0, flex: 1 }}
+                    rules={[{ required: true, message: "State Code is required" }]}
+                  >
+                    <Input
+                      placeholder="Enter State Code"
+                      ref={refs.stateCodeRef}
+                      style={{ width: "120px" }}
+                      onPressEnter={(e) => handleEnterPress(e, refs.pinCodeRef)}
+                    />
+                  </Form.Item>
+                </div>
+              </div>
+
+            </Col>
+
+            <Col span={1}>
+              <div style={{ borderLeft: "1px solid #d9d9d9", height: "100%" }}></div>
+            </Col>
+
+            <Col span={11} >
+
+
+              <div style={{ display: "flex", alignItems: "center", marginBottom: "16px" }}>
+                <span style={{ width: "120px", marginRight: "8px" }}>Pin Code</span>
+                <Form.Item
+                  name="pinCode"
+                  style={{ marginBottom: 0, width: '200px' }}
+                  rules={[{ required: true, message: "Pin Code is required" }]}
+                >
+                  <Input
+                    placeholder="Enter Pin Code"
+                    ref={refs.pinCodeRef}
+                    style={{ width: "120px" }}
+                    onPressEnter={(e) => handleEnterPress(e, refs.GSTINRef)}
+                  />
+                </Form.Item>
+              </div>
+
+              <div style={{ display: "flex", alignItems: "center", marginBottom: "16px" }}>
+                <span style={{ width: "120px", marginRight: "8px" }}>GSTIN</span>
+                <Form.Item
+                  name="tinNo"
+                  style={{ marginBottom: 0, width: '300px' }}
+                  rules={[{ required: true, message: "GSTIN is required" }]}
+                >
+                  <Input
+                    placeholder="Enter GSTIN"
+                    ref={refs.GSTINRef}
+                    onPressEnter={(e) => handleEnterPress(e, refs.PANRef)}
+                  />
+                </Form.Item>
+              </div>
+
+              <div style={{ display: "flex", alignItems: "center", marginBottom: "16px" }}>
+                <span style={{ width: "120px", marginRight: "8px" }}>PAN</span>
+                <Form.Item
+                  name="card"
+                  style={{ marginBottom: 0, width: '300px' }}
+                  rules={[{ required: true, message: "PAN is required" }]}
+                >
+                  <Input
+                    placeholder="Enter PAN"
+                    ref={refs.PANRef}
+                    onPressEnter={(e) => handleEnterPress(e, refs.proofTypeRef)}
+                  />
+                </Form.Item>
+              </div>
+
+              <div style={{ display: "flex", alignItems: "center", marginBottom: "16px" }}>
+                <span style={{ width: "120px", marginRight: "8px" }}>Proof Type</span>
+                <Form.Item
+                  name="proofType"
+                  style={{ marginBottom: 0, width: '300px' }}
+                  rules={[{ required: true, message: "Proof Type is required" }]}
+                >
+                  <Select
+                    showSearch
+                    ref={refs.proofTypeRef}
+                    onKeyDown={(e) => e.key === "Enter" && refs.proofNumberRef.current?.focus()}
+                  >
+                    <Option value="Aadhaar">Aadhaar</Option>
+                    <Option value="Voter ID">Voter ID</Option>
+                  </Select>
+                </Form.Item>
+              </div>
+
+              <div style={{ display: "flex", alignItems: "center", marginBottom: "16px" }}>
+                <span style={{ width: "120px", marginRight: "8px" }}>Proof Number</span>
+                <Form.Item
+                  name="cardno"
+                  style={{ marginBottom: 0, width: '300px' }}
+                  rules={[{ required: true, message: "Proof Number is required" }]}
+                >
+                  <Input
+                    placeholder="Enter Proof Number"
+                    ref={refs.proofNumberRef}
+                    onPressEnter={(e) => handleEnterPress(e, refs.dobRef)}
+                  />
+                </Form.Item>
+              </div>
+
+              <div style={{ display: "flex", alignItems: "center", marginBottom: "16px" }}>
+                <span style={{ width: "120px", marginRight: "8px" }}>Date of Birth</span>
+                <Form.Item
+                  name="dob"
+                  style={{ marginBottom: 0, width: '200px' }}
+                >
+                  <DatePicker
+                    format="YYYY-MM-DD"
+                    ref={refs.dobRef}
+                    onPressEnter={(e) => handleEnterPress(e, refs.anniversaryRef)}
+                  />
+                </Form.Item>
+              </div>
+
+              <div style={{ display: "flex", alignItems: "center", marginBottom: "16px" }}>
+                <span style={{ width: "120px", marginRight: "8px" }}>Anniversary</span>
+                <Form.Item
+                  name="anniversary"
+                  style={{ marginBottom: 0, width: '200px' }}
+                >
+                  <DatePicker
+                    format="YYYY-MM-DD"
+                    ref={refs.anniversaryRef}
+                    onPressEnter={(e) => handleEnterPress(e, refs.locationTypeRef)}
+                  />
+                </Form.Item>
+              </div>
+
+              <div style={{ display: "flex", alignItems: "center", marginBottom: "16px" }}>
+                <span style={{ width: "120px", marginRight: "8px" }}>Location Type</span>
+                <Form.Item
+                  name="station"
+                  style={{ marginBottom: 0, width: '200px' }}
+                  rules={[{ required: true, message: "Location Type is required" }]}
+                >
+                  <Radio.Group
+                    ref={refs.locationTypeRef}
+                    onKeyDown={(e) => e.key === "Enter" && handleEnterPress(e, null)}
+                  >
+                    <Radio value="Out Station">Out Station</Radio>
+                    <Radio value="Local">Local</Radio>
+                  </Radio.Group>
+                </Form.Item>
+              </div>
             </Col>
           </Row>
-          <div style={{ textAlign: "left", marginTop: "16px", float: "right" }}>
+
+          <div style={{ textAlign: "right", marginTop: "16px" }}>
             <Button
               type="primary"
               htmlType="submit"
@@ -698,14 +717,13 @@ const [currentPage, setCurrentPage] = useState(1);
         </Form>
       </Card>
 
-      <div style={{ marginLeft:"5px",float: "right", marginBottom: "10px" }}>
+      <div style={{ marginLeft: "5px", float: "right", marginBottom: "10px" }}>
         <Pagination
           current={currentPage}
           pageSize={pageSize}
           total={data?.length || 0}
           showSizeChanger
           showTotal={(total, range) => `${range[0]}-${range[1]} of ${total} items`}
-
           pageSizeOptions={['10', '20', '50', '100']}
           onChange={(page, size) => {
             setCurrentPage(page);
@@ -715,19 +733,18 @@ const [currentPage, setCurrentPage] = useState(1);
         />
       </div>
       <TableHeaderStyles>
-
-      <Table
-        columns={columns}
-        dataSource={data?.slice((currentPage - 1) * pageSize, currentPage * pageSize)}
-        rowKey="key"
-        size="small"
-        pagination={false}
-        style={{
-          background: "#fff",
-          boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-          borderRadius: "8px",
-        }}
-      />
+        <Table
+          columns={columns}
+          dataSource={data?.slice((currentPage - 1) * pageSize, currentPage * pageSize)}
+          rowKey="key"
+          size="small"
+          pagination={false}
+          style={{
+            background: "#fff",
+            boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+            borderRadius: "8px",
+          }}
+        />
       </TableHeaderStyles>
     </div>
   );
