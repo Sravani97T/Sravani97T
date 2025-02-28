@@ -176,9 +176,9 @@ const Sidebar = ({ collapsed }) => {
     {
       key: "7",
       icon: <LineChartOutlined style={iconStyle} />,
-      label: <span style={{ color: "#fff" }}>Analysis</span>,
+      label: <span style={{ color: "#fff" }}>Estimation</span>,
       children: [
-        { key: "7-1", label: <Link to="/analysis-sales" style={{ color: "#fff" }}>Sales Analysis</Link> },
+        { key: "7-1", label: <Link to="/estimation" style={{ color: "#fff" }}>EST</Link> },
         { key: "7-2", label: <Link to="/upload" style={{ color: "#fff" }}>Upload</Link> },
       ],
     },

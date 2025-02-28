@@ -317,7 +317,7 @@ const WastageDetails = ({ focusProductName, updateTotals, feachTagno, tagInfo, c
                                                     }]);
                                                 }}
                                                 onKeyDown={(e) => handleKeyDown(e, perGramRef, percentageRef)}
-                                                onFocus={(e) => e.target.select()} // Select the entire value on focus
+                                            // Select the entire value on focus
                                             />
                                         ) : (
                                             <Input
@@ -330,7 +330,7 @@ const WastageDetails = ({ focusProductName, updateTotals, feachTagno, tagInfo, c
 
                                         <Input
                                             ref={totalRef}
-                                            value={wastageData[0].total || ""}
+                                            value={parseFloat(wastageData[0].direct) > 0 ? wastageData[0].direct : wastageData[0].total || ""}
                                             placeholder="Total"
                                             style={{ width: "100%", borderRadius: "8px", textAlign: "right" }}
                                             readOnly
@@ -439,11 +439,12 @@ const WastageDetails = ({ focusProductName, updateTotals, feachTagno, tagInfo, c
 
                                         <Input
                                             ref={total1Ref}
-                                            value={wastageData[0].newField1 > 0 ? wastageData[0].newField1 : wastageData[0].newField2 || ""}
+                                            value={parseFloat(wastageData[0].newField1) > 0 ? wastageData[0].newField1 : ((parseFloat(wastageData[0].total) + nwt) * parseFloat(wastageData[0].perGram)).toFixed(2) || ""}
                                             placeholder="Total"
                                             style={{ width: "100%", borderRadius: "8px", textAlign: "right" }}
                                             readOnly
                                         />
+                                      
                                     </React.Fragment>
                                 ))}
                             </div>

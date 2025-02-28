@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState,  } from "react";
 import { BrowserRouter as Router, Route, Routes, Navigate } from "react-router-dom";
 import DashboardLayout from "../src/Components/DashboardLayout";
 import Dashboard from "../src/Components/Pages/Dashboard";
@@ -56,6 +56,7 @@ import LoginPage from "./Components/Masters/Logins/LoginPage"
 import AvatarUpload from "./Components/Utiles/UploadImg";
 import EstimationRegister from "./Components/Inventory/LotCreation/EstimationRegister";
 import EstimationPurchase from "./Components/Inventory/LotCreation/EstimationPurchase";
+import EstimationTable from "./Components/Estimation/EstimationC";
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(
     localStorage.getItem("isLoggedIn") === "true"
@@ -65,11 +66,7 @@ const App = () => {
     localStorage.setItem("isLoggedIn", "true"); // Store login status
     setIsAuthenticated(true);
   };
-  
-  const handleLogout = () => {
-    localStorage.removeItem("isLoggedIn"); // Remove login status
-    setIsAuthenticated(false);
-  };
+
   
   return (
     <Router>
@@ -140,6 +137,8 @@ const App = () => {
                   <Route path="/day-glance" element={<DayGlance />} />
                   <Route path="/estimation-register" element={<EstimationRegister />} />
                   <Route path="/estimation-purchase" element={<EstimationPurchase />} />
+                  <Route path="/estimation" element={<EstimationTable />} />
+
 
                 </Routes>
               </DashboardLayout>

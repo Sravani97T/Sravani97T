@@ -56,7 +56,6 @@ const EstimationPurchase = () => {
         formRef.current.getFieldInstance('mainProduct').focus();
     };
 
-
     // Handle Enter Key Navigation
     const handleKeyDown = (event) => {
         if (event.key === 'Enter') {
@@ -79,18 +78,42 @@ const EstimationPurchase = () => {
         // API call logic here...
     };
 
+    // Calculate Totals
+    const calculateTotals = () => {
+        return data.reduce((totals, item) => {
+            totals.gwt += parseFloat(item.gwt) || 0;
+            totals.touch += parseFloat(item.touch) || 0;
+            totals.nwt += parseFloat(item.nwt) || 0;
+            totals.rate += parseFloat(item.rate) || 0;
+            totals.amount += parseFloat(item.amount) || 0;
+            totals.others += parseFloat(item.others) || 0;
+            totals.total += parseFloat(item.total) || 0;
+            return totals;
+        }, {
+            gwt: 0,
+            touch: 0,
+            nwt: 0,
+            rate: 0,
+            amount: 0,
+            others: 0,
+            total: 0
+        });
+    };
+
+    const totals = calculateTotals();
+
     // Table Columns
     const columns = [
         { title: 'S.No', dataIndex: 'sno', key: 'sno', width: 50 },
         { title: 'Main Product', dataIndex: 'mainProduct', key: 'mainProduct' },
         { title: 'Product Name', dataIndex: 'productName', key: 'productName' },
-        { title: 'GWT', dataIndex: 'gwt', key: 'gwt', align: 'right' },
+        { title: 'GWT', dataIndex: 'gwt', key: 'gwt', align: 'right',render: value => (value ? parseFloat(value).toFixed(3) : '') ,},
         { title: 'Touch (%)', dataIndex: 'touch', key: 'touch', align: 'right' },
-        { title: 'NWT', dataIndex: 'nwt', key: 'nwt', align: 'right', render: value => (typeof value === 'number' ? value.toFixed(3) : '') },
+        { title: 'NWT', dataIndex: 'nwt', key: 'nwt', align: 'right', render: value => (value ? parseFloat(value).toFixed(3) : '') },
         { title: 'Rate', dataIndex: 'rate', key: 'rate', align: 'right' },
-        { title: 'Amount', dataIndex: 'amount', key: 'amount', align: 'right', render: value => (typeof value === 'number' ? value.toFixed(2) : '') },
+        { title: 'Amount', dataIndex: 'amount', key: 'amount', align: 'right', render: value => (value ? parseFloat(value).toFixed(2) : '') },
         { title: 'Others', dataIndex: 'others', key: 'others', align: 'right' },
-        { title: 'Total Amount', dataIndex: 'total', key: 'total', align: 'right', render: value => (typeof value === 'number' ? value.toFixed(2) : '') }
+        { title: 'Total Amount', dataIndex: 'total', key: 'total', align: 'right', render: value => (value ? parseFloat(value).toFixed(2) : '') }
     ];
 
     return (
@@ -118,6 +141,13 @@ const EstimationPurchase = () => {
                 <Card style={{
                     backgroundColor: "#fff", position: 'relative', boxShadow: "5px 4px 8px rgba(29, 26, 26, 0.1)",
                 }}>
+                    <Row>
+                        <Col span={6}>
+                            <Form.Item name="estimationNo" label="Estimation No">
+                                <Input placeholder="Estimation No" />
+                            </Form.Item>
+                        </Col>
+                    </Row>
                     <Row gutter={16}>
                         <Col span={6}>
                             <Form.Item name="mainProduct" label="Main Product">
@@ -174,29 +204,44 @@ const EstimationPurchase = () => {
 
                     <Row justify="end">
                         <Col>
-
-                            {data.length > 0 && (
-                                <Button
-                                    type="primary"
-                                    style={{ right: 10 }}
-                                    onClick={handleSave}
-                                >
-                                    Save
-                                </Button>
-                            )}
-                        </Col>
-                        <Col>
                             <Button type="primary" htmlType="submit">Add</Button>
                         </Col>
                     </Row>
-
-
                 </Card>
             </Form>
             <TableHeaderStyles>
-                <Table dataSource={data} columns={columns} pagination={false} size="small"
-                     />
+                <Table
+                    dataSource={data}
+                    columns={columns}
+                    pagination={false}
+                    size="small"
+                    summary={() => (
+                        <Table.Summary.Row>
+                            <Table.Summary.Cell index={0} colSpan={3}>Total</Table.Summary.Cell>
+                            <Table.Summary.Cell index={1} align="right">{totals.gwt.toFixed(3)}</Table.Summary.Cell>
+                            <Table.Summary.Cell index={2} align="right">{totals.touch.toFixed(2)}</Table.Summary.Cell>
+                            <Table.Summary.Cell index={3} align="right">{totals.nwt.toFixed(3)}</Table.Summary.Cell>
+                            <Table.Summary.Cell index={4} align="right">{totals.rate.toFixed(2)}</Table.Summary.Cell>
+                            <Table.Summary.Cell index={5} align="right">{totals.amount.toFixed(2)}</Table.Summary.Cell>
+                            <Table.Summary.Cell index={6} align="right">{totals.others.toFixed(2)}</Table.Summary.Cell>
+                            <Table.Summary.Cell index={7} align="right">{totals.total.toFixed(2)}</Table.Summary.Cell>
+                        </Table.Summary.Row>
+                    )}
+                />
             </TableHeaderStyles>
+            <Row>
+                <Col>
+                    {data.length > 0 && (
+                        <Button
+                            type="primary"
+                            style={{ right: 10 }}
+                            onClick={handleSave}
+                        >
+                            Save
+                        </Button>
+                    )}
+                </Col>
+            </Row>
         </>
     );
 };

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Form, Input, Button, Radio, Row, Col } from "antd";
 import { EditOutlined } from "@ant-design/icons";
 import axios from "axios";
+import DropdownSearch from "../Context/Dropdown";
 
 const FirmConfigure = () => {
   const [form] = Form.useForm();
@@ -74,7 +75,7 @@ const FirmConfigure = () => {
       />
 
       <h2 style={{ textAlign: "center", marginBottom: 10 }}>FIRM CONFIGURE</h2>
-
+<DropdownSearch/>
       <Form
         form={form}
         layout="horizontal"
@@ -137,6 +138,7 @@ const FirmConfigure = () => {
             </Button>
           </Col>
         </Row>
+        
       </Form>
     </div>
 

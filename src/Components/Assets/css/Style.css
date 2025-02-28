@@ -789,3 +789,103 @@ font-weight: bold;
 .ant-card .ant-card-head {
   min-height: 30px !important;
 }
+.custom-table .ant-table-content {
+    height: 200px;
+    overflow: auto !important;
+}
+.custom-table .ant-table-content[data-records="5"] {
+    height: 300px !important;
+}
+.custom-table .ant-table-body {
+  max-height: 50vh; /* Adjust the height dynamically */
+  overflow-y: auto;
+}
+
+.custom-card .ant-card-body {
+  padding: 5px !important;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f9f9f9; /* Light background */
+  border-radius: 8px;
+  font-weight: bold;
+  margin: 0 5px;
+}
+/* Main container */
+.stone-details-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+/* Heading */
+.stone-details-heading {
+  font-size: 16px;
+  font-weight: bold;
+  white-space: nowrap;
+  margin: 0;
+}
+
+/* Cards wrapper */
+.stone-details-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.customedetailescard .ant-card-body {
+  padding: 12px !important;
+
+}
+/* Individual cards */
+.custom-stone-card .ant-card-body {
+  width: 140px; /* Default fixed width */
+  padding: 5px !important;
+  text-align: center;
+  border-radius: 5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Card labels */
+.custom-stone-label {
+  font-size: 12px;
+  display: block;
+}
+
+/* Card values */
+.custom-stone-value {
+  font-weight: bold;
+  font-size: 16px;
+  margin-top: 5px;
+  display: block;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .stone-details-container {
+      align-items: center; /* Center align on smaller screens */
+  }
+
+  .stone-details-heading {
+      text-align: center; /* Center the heading */
+  }
+
+  .stone-details-cards {
+      justify-content: center; /* Center cards in smaller screens */
+  }
+
+  .custom-stone-card {
+      width: 100px; /* Reduce card width on smaller screens */
+  }
+}
+
+@media (max-width: 480px) {
+  .custom-stone-card {
+      width: 90px; /* Further reduce card size for mobile */
+      font-size: 14px;
+  }
+}
+.customstonedetaile-table .ant-table-thead > tr > th {
+  background-color: rgb(216, 211, 211) !important;
+  font-weight: bold;
+}

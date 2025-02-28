@@ -109,11 +109,8 @@ const StoneDetails = ({ lotno, productname, pieces, gwt, stoneData, setStoneData
             .catch(error => console.error("Error fetching stone items:", error));
     }, []);
 
-    const handleSelectChange = (value) => {
-        setFormValues({ ...formValues, stoneItem: value });
-    };
 
-    const handleInputChange = (e) => {
+   const handleInputChange = (e) => {
         const { name, value } = e.target;
         let updatedValues = { ...formValues, [name]: value };
 
@@ -184,9 +181,6 @@ const StoneDetails = ({ lotno, productname, pieces, gwt, stoneData, setStoneData
             stoneItemRef.current.focus();
         }
     };
-
-
-
     const handleRemoveStone = (key) => {
         setStoneData(stoneData.filter(item => item.key !== key));
     };
