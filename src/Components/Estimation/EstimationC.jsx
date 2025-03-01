@@ -132,7 +132,7 @@ const EstimationTable = () => {
                 });
         }
     }, [selectedMainProduct]);
- 
+
     // Handle key down (Enter & Arrow navigation)
     const handleStoneKeyDown = (e) => {
         if (e.key === "Enter" && filteredOptions?.length > 0) {
@@ -426,7 +426,7 @@ const EstimationTable = () => {
         calculateNwt();
     }, [gwt, breadsLess, totalLess]); // Runs whenever these values change
 
- 
+
     // Close Popover when Escape key is pressed
     useEffect(() => {
         const handleKeyDown = (event) => {
@@ -608,8 +608,10 @@ const EstimationTable = () => {
             const totalStoneCost = stoneData.reduce((sum, record) => sum + (parseFloat(record.amount) || 0), 0);
 
             // Calculate Total Making Charges (totalMC)
-            const totalMC = parseFloat(wastageData[0]?.newField1 || wastageData[0]?.newField2 || 0);
-
+            const totalMC =
+                parseFloat(wastageData[0]?.newField1) > 0
+                    ? parseFloat(wastageData[0]?.newField1)
+                    : ((parseFloat(wastageData[0]?.total || 0) + nwt) * parseFloat(wastageData[0]?.perGram || 0));
             // Calculate Final Amount
             const amount = metalValue + totalMC + totalStoneCost;
 
@@ -692,81 +694,81 @@ const EstimationTable = () => {
 
         return (
             <Popover
-                content={
-                    <>
-                        <Button
-                            type="text"
-                            icon={<CloseOutlined />}
-                            onClick={() => setVisible(false)}
-                            style={{
-                                position: "absolute",
-                                top: 10,
-                                right: 10,
-                                fontSize: "16px",
-                            }}
-                        />
+            content={
+                <>
+                <Button
+                    type="text"
+                    icon={<CloseOutlined />}
+                    onClick={() => setVisible(false)}
+                    style={{
+                    position: "absolute",
+                    top: 10,
+                    right: 10,
+                    fontSize: "16px",
+                    }}
+                />
 
-                        <Card
-                            style={{
-                                width: "100%",
-                                boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)",
-                                borderRadius: "10px",
-                                background: "lightblue",
-                            }}
-                            className="customedetailescard"
+                <Card
+                    style={{
+                    width: "100%",
+                    boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)",
+                    borderRadius: "10px",
+                    background: "lightblue",
+                    }}
+                    className="customedetailescard"
+                >
+                    <h3 className="stone-details-heading">Product Details:</h3>
+
+                    <div style={{ display: "flex", alignItems: "center" }}>
+
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginRight: "20px" }}>
+                        <p style={{ fontSize: "16px", fontWeight: "bold", marginBottom: "5px" }}>Tag No</p>
+                        <div
+                        style={{
+                            width: "80px",
+                            height: "80px",
+                            border: "1px solid black",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontSize: "20px",
+                            fontWeight: "bold",
+                            backgroundColor: "#f8f9fa",
+                            borderRadius: "5px",
+                        }}
                         >
-                            <h3 className="stone-details-heading">Product Details:</h3>
+                        {record?.tagNo || "N/A"}
+                        </div>
+                        <div style={{ marginTop: "10px" }}>
+                        <Button style={{ backgroundColor: record?.TRAY ? "green" : "grey", color: "white" }}>
+                            TRAY
+                        </Button>
+                        </div>
+                    </div>
 
-                            <div style={{ display: "flex", alignItems: "center" }}>
+                    <div
+                        style={{
+                        display: "grid",
+                        gridTemplateColumns: "repeat(3, minmax(250px, 1fr))",
+                        gap: "10px",
+                        alignItems: "center",
+                        }}
+                    >
+                        <div style={{ display: "grid", gridTemplateColumns: "150px 10px auto", gap: "5px", alignItems: "center" }}>
+                        <div style={{ textAlign: "left", fontWeight: "bold" }}>Product Name</div>
+                        <div style={{ textAlign: "left" }}>:</div>
+                        <div style={{ textAlign: "left" }}>{record?.productName || "N/A"}</div>
 
-                                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginRight: "20px" }}>
-                                    <p style={{ fontSize: "16px", fontWeight: "bold", marginBottom: "5px" }}>Tag No</p>
-                                    <div
-                                        style={{
-                                            width: "80px",
-                                            height: "80px",
-                                            border: "1px solid black",
-                                            display: "flex",
-                                            alignItems: "center",
-                                            justifyContent: "center",
-                                            fontSize: "20px",
-                                            fontWeight: "bold",
-                                            backgroundColor: "#f8f9fa",
-                                            borderRadius: "5px",
-                                        }}
-                                    >
-                                        {record?.tagNo || "N/A"}
-                                    </div>
-                                    <div style={{ marginTop: "10px" }}>
-                                        <Button style={{ backgroundColor: record?.TRAY ? "green" : "grey", color: "white" }}>
-                                            TRAY
-                                        </Button>
-                                    </div>
-                                </div>
+                        <div style={{ textAlign: "left", fontWeight: "bold" }}>Gross Weight</div>
+                        <div style={{ textAlign: "left" }}>:</div>
+                        <div style={{ textAlign: "right" }}>{Number(record?.grossWeight)?.toFixed(3) || "0.000"}</div>
 
-                                <div
-                                    style={{
-                                        display: "grid",
-                                        gridTemplateColumns: "repeat(3, minmax(250px, 1fr))",
-                                        gap: "30px",
-                                        alignItems: "center",
-                                    }}
-                                >
-                                    <div style={{ display: "grid", gridTemplateColumns: "150px 10px auto", gap: "5px", alignItems: "center" }}>
-                                        <div style={{ textAlign: "left", fontWeight: "bold" }}>Product Name</div>
-                                        <div style={{ textAlign: "left" }}>:</div>
-                                        <div style={{ textAlign: "right" }}>{record?.productName || "N/A"}</div>
+                        <div style={{ textAlign: "left", fontWeight: "bold" }}>Less Weight</div>
+                        <div style={{ textAlign: "left" }}>:</div>
+                        <div style={{ textAlign: "right" }}>{Number(record?.lessWeight)?.toFixed(3) || "0.000"}</div>
 
-                                        <div style={{ textAlign: "left", fontWeight: "bold" }}>Gross Weight</div>
-                                        <div style={{ textAlign: "left" }}>:</div>
-                                        <div style={{ textAlign: "right" }}>{Number(record?.grossWeight)?.toFixed(3) || "0.000"}</div>
-
-                                        <div style={{ textAlign: "left", fontWeight: "bold" }}>Less Weight</div>
-                                        <div style={{ textAlign: "left" }}>:</div>
-                                        <div style={{ textAlign: "right" }}>{Number(record?.lessWeight)?.toFixed(3) || "0.000"}</div>
-
-                                        <div style={{ textAlign: "left", fontWeight: "bold" }}>Stone Weight</div>
-                                        <div style={{ textAlign: "left" }}>:</div>
+                        <div style={{ textAlign: "left", fontWeight: "bold" }}>Stone Weight</div>
+                        <div style={{ textAlign: "left" }}>:</div>
                                         <div style={{ textAlign: "right" }}>{Number(record?.stoneWeight)?.toFixed(3) || "0.000"}</div>
 
                                         <div style={{ textAlign: "left", fontWeight: "bold" }}>Net Weight</div>
@@ -777,7 +779,7 @@ const EstimationTable = () => {
                                     <div style={{ display: "grid", gridTemplateColumns: "150px 10px auto", gap: "5px", alignItems: "center" }}>
                                         <div style={{ textAlign: "left", fontWeight: "bold" }}>Category</div>
                                         <div style={{ textAlign: "left" }}>:</div>
-                                        <div style={{ textAlign: "right" }}>{record?.CATEGORYNAME || "N/A"}</div>
+                                        <div style={{ textAlign: "left" }}>{record?.CATEGORYNAME || "N/A"}</div>
 
                                         <div style={{ textAlign: "left", fontWeight: "bold" }}>Wastage</div>
                                         <div style={{ textAlign: "left" }}>:</div>
@@ -803,7 +805,7 @@ const EstimationTable = () => {
 
                                         <div style={{ textAlign: "left", fontWeight: "bold" }}>Counter Name</div>
                                         <div style={{ textAlign: "left" }}>:</div>
-                                        <div style={{ textAlign: "right" }}>{record?.counterName || "N/A"}</div>
+                                        <div style={{ textAlign: "left" }}>{record?.counterName || "N/A"}</div>
 
                                         <div style={{ textAlign: "left", fontWeight: "bold" }}>HUID</div>
                                         <div style={{ textAlign: "left" }}>:</div>
@@ -815,7 +817,7 @@ const EstimationTable = () => {
 
                                         <div style={{ textAlign: "left", fontWeight: "bold" }}>Description</div>
                                         <div style={{ textAlign: "left" }}>:</div>
-                                        <div style={{ textAlign: "right" }}>{record?.DESC1 || "N/A"}</div>
+                                        <div style={{ textAlign: "left" }}>{record?.DESC1 || "N/A"}</div>
                                     </div>
                                 </div>
 
@@ -908,22 +910,22 @@ const EstimationTable = () => {
         },
         { title: "Main Product", dataIndex: "mainProduct", key: "mainProduct" },
         { title: "Product Name", dataIndex: "productName", key: "productName" },
-        { title: "Purity", dataIndex: "purity",align: 'center', key: "purity" },
-        { title: "Pieces", dataIndex: "pieces",align: 'right', key: "pieces" },
+        { title: "Purity", dataIndex: "purity", align: 'center', key: "purity" },
+        { title: "Pieces", dataIndex: "pieces", align: 'right', key: "pieces" },
         { title: "Gross W.T", dataIndex: "grossWeight", align: 'right', key: "grossWeight", render: (text) => Number(text)?.toFixed(3) },
         { title: "Less W.T", dataIndex: "lessWeight", align: 'right', key: "lessWeight", render: (text) => Number(text)?.toFixed(3) },
         { title: "Net W.T", dataIndex: "netWeight", align: 'right', key: "netWeight", render: (text) => Number(text)?.toFixed(3) },
-        { title: "Rate", dataIndex: "rate",align: 'right', key: "rate" },
-        { title: "Total Wastage", dataIndex: "totalWastage", align: 'right', key: "totalWastage", render: (text) => Number(text)?.toFixed(2) },
+        { title: "Rate", dataIndex: "rate", align: 'right', key: "rate" },
+        { title: "Total Wastage", dataIndex: "totalWastage", align: 'right', key: "totalWastage", render: (text) => Number(text)?.toFixed(3) },
         { title: "ACT W.T", dataIndex: "actWt", align: 'right', key: "actWt" },
         { title: "Metal Value", dataIndex: "metalValue", align: 'right', key: "metalValue" },
         { title: "Total MC", dataIndex: "totalMC", align: 'right', key: "totalMC" },
         { title: "Stone Cost", dataIndex: "stoneCost", key: "stoneCost" },
         { title: "Amount", dataIndex: "amount", align: 'right', key: "amount" },
-        { title: "Direct Wastage", align: 'right',dataIndex: "directWastage", key: "directWastage" },
-        { title: "Wastage", dataIndex: "wastage",align: 'right', key: "wastage" },
-        { title: "MC/Gram", dataIndex: "makingCharges",align: 'right', key: "makingCharges" },
-        { title: "Direct MC", dataIndex: "directMC",align: 'right', key: "directMC" },
+        { title: "Direct Wastage", align: 'right', dataIndex: "directWastage", key: "directWastage" },
+        { title: "Wastage", dataIndex: "wastage", align: 'right', key: "wastage" },
+        { title: "MC/Gram", dataIndex: "makingCharges", align: 'right', key: "makingCharges" },
+        { title: "Direct MC", dataIndex: "directMC", align: 'right', key: "directMC" },
     ];
     useEffect(() => {
         if (tagNo) {
@@ -1174,16 +1176,17 @@ const EstimationTable = () => {
                 }}
             >
 
-                <Card title="Product Details" bordered={false} style={{ width: "100%" }}>
+                <Card title="Product Details" bordered={false} style={{ width: "100%" }} className="customeproductcard">
                     <Card
                         style={{
                             background: "lightblue", // Matches the uploaded image
                             borderRadius: 10,
                         }}
+                        className="customeproductcard"
                     >
                         <Row gutter={10} align="middle">
                             {/* Main Product */}
-                            <Col span={5}>
+                            <Col span={4}>
                                 <Text>Main Product</Text>
                                 <Select
                                     ref={mainProductRef}
@@ -1208,7 +1211,7 @@ const EstimationTable = () => {
 
 
                             </Col>
-                            <Col span={2}>
+                            <Col span={3}>
                                 <Text>Purity</Text>
                                 <Form.Item name="prefix" rules={[{ message: "Please select purity" }]}>
                                     <Select
@@ -1295,7 +1298,8 @@ const EstimationTable = () => {
                                             e.preventDefault();
                                             setTimeout(() => {
                                                 if (breadsLessRef.current) breadsLessRef.current.focus();
-                                            }, 100);                                        }
+                                            }, 100);
+                                        }
                                     }}
                                 />
                             </Col>
@@ -1314,7 +1318,9 @@ const EstimationTable = () => {
                                             e.preventDefault();
                                             setTimeout(() => {
                                                 if (totalLessRef.current) totalLessRef.current.focus();
-                                            }, 100);                                        }                                        }
+                                            }, 100);
+                                        }
+                                    }
                                     }
                                 />
                             </Col>
@@ -1333,7 +1339,8 @@ const EstimationTable = () => {
                                             e.preventDefault();
                                             setTimeout(() => {
                                                 if (nwtRef.current) nwtRef.current.focus();
-                                            }, 100);                                                                                }
+                                            }, 100);
+                                        }
                                     }}
                                 />
 
@@ -1352,7 +1359,8 @@ const EstimationTable = () => {
                                             e.preventDefault();
                                             setTimeout(() => {
                                                 if (huidRef.current) huidRef.current.focus();
-                                            }, 100);                                          }
+                                            }, 100);
+                                        }
                                     }}
                                 />
                             </Col>
@@ -1369,7 +1377,8 @@ const EstimationTable = () => {
                                             e.preventDefault();
                                             setTimeout(() => {
                                                 if (tagSizeRef.current) tagSizeRef.current.focus();
-                                            }, 100);                                         }
+                                            }, 100);
+                                        }
                                     }}
                                 />
                             </Col>
@@ -1388,7 +1397,8 @@ const EstimationTable = () => {
                                             e.preventDefault();
                                             setTimeout(() => {
                                                 if (descriptionRef.current) descriptionRef.current.focus();
-                                            }, 100);                                        }
+                                            }, 100);
+                                        }
                                     }}
                                 />
                             </Col>
@@ -1402,18 +1412,20 @@ const EstimationTable = () => {
                                     placeholder="Enter Description"
                                     value={description}
                                     onChange={(e) => setDescription(e.target.value)}
-                                     onKeyDown={(e) => {
+                                    onKeyDown={(e) => {
                                         if (e.key === "Enter") {
                                             e.preventDefault();
                                             setTimeout(() => {
                                                 if (categoryRef.current) categoryRef.current.focus();
-                                            }, 100);                                        }
+                                            }, 100);
+                                        }
                                     }}
                                 />
                             </Col>
                         </Row>
                     </Card>
-                    <Card title="Category Details" bordered={false} style={{ backgroundColor: "lightblue" }}>
+                    <Row><span style={{ padding: "6px", fontWeight: "bold" }}>Wastage and Macking Charges</span></Row>
+                    <Card bordered={false} style={{ backgroundColor: "lightblue" }} className="customeproductcard">
                         <Row gutter={16}>
                             {/* Category Dropdown */}
                             <Col xs={24} sm={4} style={{ marginTop: "20px" }}>
@@ -1426,7 +1438,7 @@ const EstimationTable = () => {
                                     onChange={handleCategoryChange}
                                     style={{ width: "100%", borderRadius: "8px" }}
                                     optionFilterProp="children"
-                                  
+
                                     filterOption={(input, option) => option.children.toLowerCase().includes(input.toLowerCase())}
                                 >
                                     {categories.map((category) => (
@@ -1439,7 +1451,7 @@ const EstimationTable = () => {
 
                             {/* Wastage Section */}
                             <Col xs={24} sm={10}>
-                                <Card title="Wastage" bordered={false} style={{ background: "#F0F0F0", borderRadius: "8px", textAlign: "center" }}>
+                                <Card bordered={false} style={{ background: "#F0F0F0", borderRadius: "8px", textAlign: "center" }}>
                                     <Row gutter={8}>
                                         <Col span={8}>
                                             <Text>%</Text>
@@ -1477,7 +1489,7 @@ const EstimationTable = () => {
 
                             {/* Making Charges Section */}
                             <Col xs={24} sm={10}>
-                                <Card title="Making Charges" bordered={false} style={{ background: "#F0F0F0", borderRadius: "8px", textAlign: "center" }}>
+                                <Card bordered={false} style={{ background: "#F0F0F0", borderRadius: "8px", textAlign: "center" }}>
                                     <Row gutter={8}>
                                         <Col span={8}>
                                             <Text>Gram</Text>
@@ -1515,7 +1527,9 @@ const EstimationTable = () => {
                             </Col>
                         </Row>
                     </Card>
-                    <Card title="Stone Details" style={{ backgroundColor: "lightblue" }}>
+                    <Row><span style={{ padding: "6px", fontWeight: "bold" }}>Stone Detailes</span></Row>
+
+                    <Card style={{ backgroundColor: "lightblue" }} className="customeproductcard">
                         <Row gutter={[8, 8]}>
                             <Col span={4}>
                                 <Text style={{ display: "block" }}>Stone Item</Text>
@@ -1585,23 +1599,8 @@ const EstimationTable = () => {
                             </Button>
                         </Row>
                     </Card>
-                    <Card>
-                        <Row justify="start" style={{ marginTop: "5px", marginBottom: "10px" }}>
+                    <Card className="customeproductcard">
 
-                            <Tag color="#32523A" style={tagStyle}>            Total Grms: {finalTotalGrams}
-                            </Tag>
-                            <Tag color="#32523A" style={tagStyle}>            Total Dia Amount: {totalDiaAmount}
-                            </Tag>
-                            <Tag color="#32523A" style={tagStyle}>
-                                Total Diamond Cts: {totalDiamondCts}
-                            </Tag>
-                            <Tag color="#32523A" style={tagStyle}>
-                                Total CTS: {totalCTS}
-                            </Tag>
-                            <Tag color="#32523A" style={tagStyle}>
-                                Total Uncuts: {totalUncuts}
-                            </Tag>
-                        </Row>
                         <Table
                             scroll={{ x: "max-content" }}
                             className="custom-table"
@@ -1631,7 +1630,22 @@ const EstimationTable = () => {
                                 </Table.Summary.Row>
                             )}
                         />
+                        <Row justify="start" style={{ marginTop: "5px", marginBottom: "10px" }}>
 
+                            <Tag color="#32523A" style={tagStyle}>            Total Grms: {finalTotalGrams}
+                            </Tag>
+                            <Tag color="#32523A" style={tagStyle}>            Total Dia Amount: {totalDiaAmount}
+                            </Tag>
+                            <Tag color="#32523A" style={tagStyle}>
+                                Total Diamond Cts: {totalDiamondCts}
+                            </Tag>
+                            <Tag color="#32523A" style={tagStyle}>
+                                Total CTS: {totalCTS}
+                            </Tag>
+                            <Tag color="#32523A" style={tagStyle}>
+                                Total Uncuts: {totalUncuts}
+                            </Tag>
+                        </Row>
                         <Row justify="end" style={{ marginTop: "10px" }}>
                             <Button
                                 type="primary"
