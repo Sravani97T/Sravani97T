@@ -3,12 +3,13 @@ import { Card, Tag, Popover, Table, Input, Button } from "antd";
 import axios from "axios";
 import { CREATE_jwel } from "../../Config/Config";
 
-const TodaysRates = () => {
+const TodaysRates = ({ onRatesCheck }) => {
   const [goldRate, setGoldRate] = useState({ prefix: "18K", rate: 0 });
   const [silverRate, setSilverRate] = useState(0);
   const [currentPrefixIndex, setCurrentPrefixIndex] = useState(0);
   const [ratesData, setRatesData] = useState([]);
   const [visible, setVisible] = useState(false);
+  const [ratesAvailable, setRatesAvailable] = useState(false);
 
   const prefixes = React.useMemo(() => ["18K", "22K", "24K"], []);
 
@@ -33,6 +34,7 @@ const TodaysRates = () => {
         }
 
         setRatesData(todayRates);
+        setRatesAvailable(true);
       } else {
         const masterResponse = await axios.get("http://www.jewelerp.timeserasoftware.in/api/Master/MasterPrefixMasterList");
         const masterData = masterResponse.data.map(item =>({
@@ -42,9 +44,15 @@ const TodaysRates = () => {
           ...item
         }));
         setRatesData(masterData);
+        setRatesAvailable(false);
+
       }
+      onRatesCheck(ratesAvailable);
+
     } catch (error) {
       console.error("Error fetching rates:", error);
+      setRatesAvailable(false);
+      onRatesCheck(false);
     }
   };
 

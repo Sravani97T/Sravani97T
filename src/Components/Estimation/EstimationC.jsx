@@ -15,6 +15,13 @@ const EstimationTable = () => {
         fontWeight: "bold",
         color: "white",
     };
+    const [ratesAvailable, setRatesAvailable] = useState(false); // Track rate availability
+
+    // Function to update rate availability from TodaysRates
+    const handleRatesCheck = (available) => {
+        setRatesAvailable(available);
+    };
+
     const [tagNo, setTagNo] = useState("");
     const [data, setData] = useState([]);
     const [stoneDetailes, setStoneDetailes] = useState([]);
@@ -75,6 +82,8 @@ const EstimationTable = () => {
     const clarityRef = useRef(null);
     const [stoneItemInputValue, setStoneItemInputValue] = useState("");
     const [highlightedIndex, setHighlightedIndex] = useState(0);
+    const [rates, setRates] = useState([]); // Store rates data
+
     const handleStoneChange = (value) => {
         setFormValues({ ...formValues, stoneItem: value });
         setStoneItemInputValue(""); // ✅ Clears input after selection
@@ -481,6 +490,34 @@ const EstimationTable = () => {
     }, [data]);
 
 
+
+    const fetchRates = async () => {
+        try {
+            const currentDate = new Date();
+            const formattedDate = `${(currentDate.getMonth() + 1).toString().padStart(2, "0")}/${currentDate
+                .getDate()
+                .toString()
+                .padStart(2, "0")}/${currentDate.getFullYear()}`;
+    
+            const ratesResponse = await axios.get(
+                `http://www.jewelerp.timeserasoftware.in/api/Master/GetDataFromGivenTableNameWithWhere?tableName=DAILY_RATES&where=RDATE%3D%27${formattedDate}%27`
+            );
+    
+            setRates(ratesResponse.data);
+            setRatesAvailable(ratesResponse.data.length > 0); // Enable input if rates exist
+        } catch (error) {
+            console.error("Error fetching rates:", error);
+            message.error("Error fetching rates");
+        }
+    };
+    
+    // Fetch rates when the page loads
+    useEffect(() => {
+        fetchRates();
+    }, []);
+
+    const [vat, setVat] = useState(0);
+
     const fetchData = async () => {
         if (!tagNo) {
             message.error("Please enter a Tag No.");
@@ -501,12 +538,10 @@ const EstimationTable = () => {
 
             // Get current date in MM/DD/YYYY format
             const currentDate = new Date();
-            const formattedDate = `${(currentDate.getMonth() + 1)
+            const formattedDate = `${(currentDate.getMonth() + 1).toString().padStart(2, "0")}/${currentDate
+                .getDate()
                 .toString()
-                .padStart(2, "0")}/${currentDate
-                    .getDate()
-                    .toString()
-                    .padStart(2, "0")}/${currentDate.getFullYear()}`;
+                .padStart(2, "0")}/${currentDate.getFullYear()}`;
 
             // Fetch tag details
             const response = await axios.get(
@@ -518,27 +553,25 @@ const EstimationTable = () => {
                 message.warning("No data found for this Tag No.");
                 return;
             }
-
+            // Use already fetched rates (no extra API call)
+            if (rates.length === 0) {
+                message.warning("Rates not available. Cannot proceed.");
+                return;
+            }
             // Fetch daily rates using the current date
             const ratesResponse = await axios.get(
                 `http://www.jewelerp.timeserasoftware.in/api/Master/GetDataFromGivenTableNameWithWhere?tableName=DAILY_RATES&where=RDATE%3D%27${formattedDate}%27`
             );
             const allRates = ratesResponse.data;
-
             const processedData = responseData.map((item, index) => {
                 const lessWeight = item.GWT - item.NWT;
-                const totalWastage = item.WASTAGE > 0
-                    ? (item.NWT * item.WASTAGE) / 100
-                    : item.DIRECTWASTAGE;
+                const totalWastage = item.WASTAGE > 0 ? (item.NWT * item.WASTAGE) / 100 : item.DIRECTWASTAGE;
                 const actWt = item.NWT + totalWastage;
-                // Find rate using PREFIX match
                 const rateItem = allRates.find(rate => rate.PREFIX === item.PREFIX);
                 const rate = rateItem ? rateItem.RATE : item.RATE;
 
                 const metalValue = actWt * rate;
-                const totalMC = item.MAKINGCHARGES > 0
-                    ? actWt * item.MAKINGCHARGES
-                    : item.DIRECTMC;
+                const totalMC = item.MAKINGCHARGES > 0 ? actWt * item.MAKINGCHARGES : item.DIRECTMC;
                 const amount = metalValue + totalMC + item.ITEM_TOTAMT;
 
                 return {
@@ -552,7 +585,7 @@ const EstimationTable = () => {
                     grossWeight: item.GWT,
                     lessWeight,
                     netWeight: item.NWT,
-                    rate, // Updated rate from new API
+                    rate,
                     metalValue,
                     stoneCost: item.ITEM_TOTAMT,
                     totalWastage,
@@ -563,22 +596,44 @@ const EstimationTable = () => {
                     wastage: item.WASTAGE,
                     makingCharges: item.MAKINGCHARGES,
                     directMC: item.DIRECTMC,
-                    DEALERNAME: item.DEALERNAME,  // FIXED
+                    DEALERNAME: item.DEALERNAME,
                     counterName: item.COUNTERNAME,
-                    HUID: item.HUID,  // FIXED
+                    HUID: item.HUID,
                     TAGSIZE: item.TAGSIZE,
                     DESC1: item.DESC1,
-                    CATEGORYNAME: item.CATEGORYNAME
+                    CATEGORYNAME: item.CATEGORYNAME,
                 };
             });
+            // Get first record's MNAME in the table
+            const firstRecordMName = data.length > 0 ? data[0].mainProduct : null;
+            const newMName = processedData[0].mainProduct;
 
+            // Allow only if MNAME matches the first record
+            if (firstRecordMName && newMName !== firstRecordMName) {
+                message.error(`Only MNAME "${firstRecordMName}" is allowed. Cannot add different MNAME "${newMName}".`);
+                return;
+            }
             setData((prevData) => [...prevData, ...processedData]);
+
+            // Fetch VAT based on MNAME
+            const vatResponse = await axios.get(
+                `http://www.jewelerp.timeserasoftware.in/api/Master/MasterMainProductSearch?MName=${newMName}`
+            );
+            const vatData = vatResponse.data;
+            const matchedVatRecord = vatData.find(record => record.MNAME === newMName);
+            if (matchedVatRecord) {
+                setVat(matchedVatRecord.VAT); // Set VAT from matched record
+                console.log("Matched VAT Record:", matchedVatRecord.VAT);
+            }
         } catch (error) {
             message.error("Error fetching data");
         } finally {
             setTagNo("");
         }
     };
+    // Ensure calculations use valid numbers
+
+
     const getTotal = (key) => {
         return stoneData.reduce((sum, record) => sum + (parseFloat(record[key]) || 0), 0);
     };
@@ -614,7 +669,14 @@ const EstimationTable = () => {
                     : ((parseFloat(wastageData[0]?.total || 0) + nwt) * parseFloat(wastageData[0]?.perGram || 0));
             // Calculate Final Amount
             const amount = metalValue + totalMC + totalStoneCost;
+            // Get first record's `mainProduct` in the table
+            const firstRecordMainProduct = data.length > 0 ? data[0].mainProduct : null;
 
+            // Allow only if `mainProduct` matches the first record's `mainProduct`
+            if (firstRecordMainProduct && selectedMainProduct !== firstRecordMainProduct) {
+                message.error(`Only mainProduct "${firstRecordMainProduct}" is allowed. Cannot add different mainProduct "${selectedMainProduct}".`);
+                return;
+            }
             // Construct New Data Object
             const newData = {
                 key: `${selectedMainProduct}-${selectedProduct}-${pcs}-${gwt}-${nwt}`,
@@ -632,12 +694,12 @@ const EstimationTable = () => {
                 directMC: wastageData[0]?.newField1 || "",
                 directWastage: wastageData[0]?.direct || "",
                 mcPerGram: wastageData[0]?.perGram || "",
-                totalMC: totalMC?.toFixed(2), // Store total making charges
+                totalMC: totalMC?.toFixed(2), 
                 actWt: actWt?.toFixed(3), // Add ActWt (NetWt + TotalWastage)
                 metalValue: metalValue?.toFixed(2), // Add Metal Value (ActWt * Rate)
-                rate: rate?.toFixed(2), // Store the rate used
-                stoneCost: totalStoneCost?.toFixed(2), // Include total stone amount
-                amount: amount?.toFixed(2), // ✅ Final Amount (Metal Value + MC + Stone Cost)
+                rate: rate, // Store the rate used
+                stoneCost: totalStoneCost, // Include total stone amount
+                amount: amount, // ✅ Final Amount (Metal Value + MC + Stone Cost)
                 stoneData: stoneData, // Include all stone data
                 totals: calculateTotals(), // Include table data and totals
             };
@@ -694,81 +756,81 @@ const EstimationTable = () => {
 
         return (
             <Popover
-            content={
-                <>
-                <Button
-                    type="text"
-                    icon={<CloseOutlined />}
-                    onClick={() => setVisible(false)}
-                    style={{
-                    position: "absolute",
-                    top: 10,
-                    right: 10,
-                    fontSize: "16px",
-                    }}
-                />
+                content={
+                    <>
+                        <Button
+                            type="text"
+                            icon={<CloseOutlined />}
+                            onClick={() => setVisible(false)}
+                            style={{
+                                position: "absolute",
+                                top: 10,
+                                right: 10,
+                                fontSize: "16px",
+                            }}
+                        />
 
-                <Card
-                    style={{
-                    width: "100%",
-                    boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)",
-                    borderRadius: "10px",
-                    background: "lightblue",
-                    }}
-                    className="customedetailescard"
-                >
-                    <h3 className="stone-details-heading">Product Details:</h3>
-
-                    <div style={{ display: "flex", alignItems: "center" }}>
-
-                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginRight: "20px" }}>
-                        <p style={{ fontSize: "16px", fontWeight: "bold", marginBottom: "5px" }}>Tag No</p>
-                        <div
-                        style={{
-                            width: "80px",
-                            height: "80px",
-                            border: "1px solid black",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            fontSize: "20px",
-                            fontWeight: "bold",
-                            backgroundColor: "#f8f9fa",
-                            borderRadius: "5px",
-                        }}
+                        <Card
+                            style={{
+                                width: "100%",
+                                boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)",
+                                borderRadius: "10px",
+                                background: "lightblue",
+                            }}
+                            className="customedetailescard"
                         >
-                        {record?.tagNo || "N/A"}
-                        </div>
-                        <div style={{ marginTop: "10px" }}>
-                        <Button style={{ backgroundColor: record?.TRAY ? "green" : "grey", color: "white" }}>
-                            TRAY
-                        </Button>
-                        </div>
-                    </div>
+                            <h3 className="stone-details-heading">Product Details:</h3>
 
-                    <div
-                        style={{
-                        display: "grid",
-                        gridTemplateColumns: "repeat(3, minmax(250px, 1fr))",
-                        gap: "10px",
-                        alignItems: "center",
-                        }}
-                    >
-                        <div style={{ display: "grid", gridTemplateColumns: "150px 10px auto", gap: "5px", alignItems: "center" }}>
-                        <div style={{ textAlign: "left", fontWeight: "bold" }}>Product Name</div>
-                        <div style={{ textAlign: "left" }}>:</div>
-                        <div style={{ textAlign: "left" }}>{record?.productName || "N/A"}</div>
+                            <div style={{ display: "flex", alignItems: "center" }}>
 
-                        <div style={{ textAlign: "left", fontWeight: "bold" }}>Gross Weight</div>
-                        <div style={{ textAlign: "left" }}>:</div>
-                        <div style={{ textAlign: "right" }}>{Number(record?.grossWeight)?.toFixed(3) || "0.000"}</div>
+                                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginRight: "20px" }}>
+                                    <p style={{ fontSize: "16px", fontWeight: "bold", marginBottom: "5px" }}>Tag No</p>
+                                    <div
+                                        style={{
+                                            width: "80px",
+                                            height: "80px",
+                                            border: "1px solid black",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            fontSize: "20px",
+                                            fontWeight: "bold",
+                                            backgroundColor: "#f8f9fa",
+                                            borderRadius: "5px",
+                                        }}
+                                    >
+                                        {record?.tagNo || "N/A"}
+                                    </div>
+                                    <div style={{ marginTop: "10px" }}>
+                                        <Button style={{ backgroundColor: record?.TRAY ? "green" : "grey", color: "white" }}>
+                                            TRAY
+                                        </Button>
+                                    </div>
+                                </div>
 
-                        <div style={{ textAlign: "left", fontWeight: "bold" }}>Less Weight</div>
-                        <div style={{ textAlign: "left" }}>:</div>
-                        <div style={{ textAlign: "right" }}>{Number(record?.lessWeight)?.toFixed(3) || "0.000"}</div>
+                                <div
+                                    style={{
+                                        display: "grid",
+                                        gridTemplateColumns: "repeat(3, minmax(250px, 1fr))",
+                                        gap: "10px",
+                                        alignItems: "center",
+                                    }}
+                                >
+                                    <div style={{ display: "grid", gridTemplateColumns: "150px 10px auto", gap: "5px", alignItems: "center" }}>
+                                        <div style={{ textAlign: "left", fontWeight: "bold" }}>Product Name</div>
+                                        <div style={{ textAlign: "left" }}>:</div>
+                                        <div style={{ textAlign: "left" }}>{record?.productName || "N/A"}</div>
 
-                        <div style={{ textAlign: "left", fontWeight: "bold" }}>Stone Weight</div>
-                        <div style={{ textAlign: "left" }}>:</div>
+                                        <div style={{ textAlign: "left", fontWeight: "bold" }}>Gross Weight</div>
+                                        <div style={{ textAlign: "left" }}>:</div>
+                                        <div style={{ textAlign: "right" }}>{Number(record?.grossWeight)?.toFixed(3) || "0.000"}</div>
+
+                                        <div style={{ textAlign: "left", fontWeight: "bold" }}>Less Weight</div>
+                                        <div style={{ textAlign: "left" }}>:</div>
+                                        <div style={{ textAlign: "right" }}>{Number(record?.lessWeight)?.toFixed(3) || "0.000"}</div>
+
+                                        <div style={{ textAlign: "left", fontWeight: "bold" }}>Stone Weight</div>
+                                        <div style={{ textAlign: "left" }}>:</div>
                                         <div style={{ textAlign: "right" }}>{Number(record?.stoneWeight)?.toFixed(3) || "0.000"}</div>
 
                                         <div style={{ textAlign: "left", fontWeight: "bold" }}>Net Weight</div>
@@ -838,7 +900,7 @@ const EstimationTable = () => {
 
                                 <div className="stone-details-cards">
                                     {[
-                                        { label: "Stone Cost", value: (parseFloat(record?.stoneCost) || 0).toFixed(2) },
+                                        { label: "Stone Cost", value: (parseFloat(record?.stoneCost) || 0) },
                                         { label: "Total Pieces", value: stoneDetailes.reduce((sum, item) => sum + item.PIECES, 0) },
                                         { label: "Total Cts", value: stoneDetailes.reduce((sum, item) => sum + item.CTS, 0).toFixed(3) },
                                         { label: "Total Grms", value: stoneDetailes.reduce((sum, item) => sum + item.GRMS, 0).toFixed(3) },
@@ -912,15 +974,14 @@ const EstimationTable = () => {
         { title: "Product Name", dataIndex: "productName", key: "productName" },
         { title: "Purity", dataIndex: "purity", align: 'center', key: "purity" },
         { title: "Pieces", dataIndex: "pieces", align: 'right', key: "pieces" },
-        { title: "Gross W.T", dataIndex: "grossWeight", align: 'right', key: "grossWeight", render: (text) => Number(text)?.toFixed(3) },
-        { title: "Less W.T", dataIndex: "lessWeight", align: 'right', key: "lessWeight", render: (text) => Number(text)?.toFixed(3) },
-        { title: "Net W.T", dataIndex: "netWeight", align: 'right', key: "netWeight", render: (text) => Number(text)?.toFixed(3) },
+        { title: "Gross W.T", dataIndex: "grossWeight", align: 'right', key: "grossWeight" },
+        { title: "Less W.T", dataIndex: "lessWeight", align: 'right', key: "lessWeight", render: (text) => Number(text)?.toFixed(3) },        { title: "Net W.T", dataIndex: "netWeight", align: 'right', key: "netWeight" },
         { title: "Rate", dataIndex: "rate", align: 'right', key: "rate" },
         { title: "Total Wastage", dataIndex: "totalWastage", align: 'right', key: "totalWastage", render: (text) => Number(text)?.toFixed(3) },
         { title: "ACT W.T", dataIndex: "actWt", align: 'right', key: "actWt" },
         { title: "Metal Value", dataIndex: "metalValue", align: 'right', key: "metalValue" },
-        { title: "Total MC", dataIndex: "totalMC", align: 'right', key: "totalMC" },
-        { title: "Stone Cost", dataIndex: "stoneCost", key: "stoneCost" },
+        { title: "Total MC", dataIndex: "totalMC", align: 'right', key: "totalMC", },
+        { title: "Stone Cost", dataIndex: "stoneCost", align: 'right', key: "stoneCost" },
         { title: "Amount", dataIndex: "amount", align: 'right', key: "amount" },
         { title: "Direct Wastage", align: 'right', dataIndex: "directWastage", key: "directWastage" },
         { title: "Wastage", dataIndex: "wastage", align: 'right', key: "wastage" },
@@ -1037,7 +1098,11 @@ const EstimationTable = () => {
         justifyContent: "space-between",
         marginBottom: "10px",
     };
-
+    // Function to fetch VAT based on MNAME from API
+    const totalAmount = parseFloat(totals.totalAmount) || 0;
+    const gstAmount = ((totalAmount * vat) / 100).toFixed(2); // ✅ Define gstAmount
+    const grossAmount = (totalAmount + parseFloat(gstAmount)).toFixed(2); // ✅ Define grossAmount
+    const netAmount = (parseFloat(grossAmount) - parseFloat(discount || 0)).toFixed(2); // ✅ Define netAmount
     return (
         <div>
             <Row gutter={16} align="middle" style={{ marginBottom: "0.5rem" }}>
@@ -1053,7 +1118,7 @@ const EstimationTable = () => {
                         onChange={(e) => setTagNo(e.target.value)}
                         onKeyDown={handleKeyPress}
                         ref={tagNoInputRef}
-                    />
+                        disabled={!ratesAvailable} />
                     <Button type="primary" onClick={fetchData}>Fetch</Button>
                     <Button
                         icon={
@@ -1077,7 +1142,7 @@ const EstimationTable = () => {
                 </Col>
 
                 <Col span={6}>
-                    <TodaysRates1 />
+                    <TodaysRates1 onRatesCheck={handleRatesCheck} />
                 </Col>
             </Row>
             <TableHeaderStyles>
@@ -1113,10 +1178,10 @@ const EstimationTable = () => {
 
                             <Col span={11}>
                                 {[
-                                    { label: "Total Wastage", value: totals.totalWastage.toFixed(2) },
-                                    { label: "Making Charges", value: Number(totals.totalMakingCharges).toFixed(2) },
-                                    { label: "Total Amount", value: totals.totalAmount.toFixed(2) },
-                                    { label: "Stone Cost", value: totals.totalStoneCost.toFixed(2) },
+                                    { label: "Total Wastage", value: totals.totalWastage?.toFixed(3) },
+                                    { label: "Making Charges", value: Number(totals.totalMakingCharges) },
+                                    { label: "Total Amount", value: totals.totalAmount },
+                                    { label: "Stone Cost", value: totals.totalStoneCost },
                                 ].map((item, index) => (
                                     <Row key={index} style={rowStyle}>
                                         <Text strong>{item.label}:</Text> <Text>{item.value}</Text>
@@ -1136,26 +1201,26 @@ const EstimationTable = () => {
                 {/* Right Card */}
                 <Col span={8}>
                     <Card style={cardStyle}>
-                        {[
-                            { label: "Total Amount", value: totals.totalAmount.toFixed(2) },
-                            { label: "GST Amount", value: "0" },
-                            { label: "Gross Amount", value: "0" },
-                            {
-                                label: "Discount (%)",
-                                value: (
-                                    <Input
-                                        style={{ width: "80px", textAlign: "right" }}
-                                        value={discount}
-                                        onChange={(e) => setDiscount(e.target.value)}
-                                    />
-                                ),
-                            },
-                            { label: "Net Amount", value: "0", strong: true },
-                        ].map((item, index) => (
-                            <Row key={index} style={rowStyle}>
-                                <Text strong>{item.label}:</Text> {item.value}
-                            </Row>
-                        ))}
+                    {[
+        { label: "Total Amount", value: totals.totalAmount.toFixed(2) },
+        { label: `GST Amount - (${vat}%)`, value: gstAmount }, // Show VAT % in brackets
+        { label: "Gross Amount", value: grossAmount },
+        {
+            label: "Discount (%)",
+            value: (
+                <Input
+                    style={{ width: "80px", textAlign: "right" }}
+                    value={discount}
+                    onChange={(e) => setDiscount(e.target.value)}
+                />
+            ),
+        },
+        { label: "Net Amount", value: netAmount, strong: true },
+    ].map((item, index) => (
+        <Row key={index} style={rowStyle}>
+            <Text strong>{item.label}:</Text> {item.value}
+        </Row>
+    ))}
                     </Card>
                 </Col>
             </Row>
