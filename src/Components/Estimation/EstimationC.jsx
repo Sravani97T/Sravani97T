@@ -6,7 +6,7 @@ import axios from 'axios';
 import TableHeaderStyles from "../Pages/TableHeaderStyles";
 
 const { Option } = Select;
-const { Text, Title } = Typography;
+const { Text,  } = Typography;
 const EstimationTable = () => {
     const tagStyle = {
         fontSize: "12px",
@@ -24,8 +24,8 @@ const EstimationTable = () => {
 
     const [tagNo, setTagNo] = useState("");
     const [data, setData] = useState([]);
-    const [stoneDetailes, setStoneDetailes] = useState([]);
-    const [visible, setVisible] = useState(false);
+    const [, setStoneDetailes] = useState([]);
+    const [, setVisible] = useState(false);
     const [products, setProducts] = useState([]);
     const [mainProductOptions, setMainProductOptions] = useState([]);
     const [selectedMainProduct, setSelectedMainProduct] = useState("");
@@ -351,7 +351,6 @@ const EstimationTable = () => {
     const total1Ref = useRef(null);
     const perGramRef = useRef(null);
     const percentageRef = useRef(null);
-    const counterRef = useRef(null);
 
     useEffect(() => {
         const fetchCategories = async () => {
@@ -481,7 +480,7 @@ const EstimationTable = () => {
                 fetchData();
             }, 300); // 300ms debounce time
         }
-    }, [tagNo, data]);
+    }, [fetchData]);
 
     useEffect(() => {
         if (tagNoInputRef.current) {
@@ -988,11 +987,6 @@ const EstimationTable = () => {
         { title: "MC/Gram", dataIndex: "makingCharges", align: 'right', key: "makingCharges" },
         { title: "Direct MC", dataIndex: "directMC", align: 'right', key: "directMC" },
     ];
-    useEffect(() => {
-        if (tagNo) {
-            fetchStoneDetails(tagNo);
-        }
-    }, [tagNo]);
     const fetchStoneDetails = async (tagNo) => {
         if (!tagNo) return;
 
@@ -1020,6 +1014,12 @@ const EstimationTable = () => {
             console.error("Error fetching stone details:", error.response ? error.response.data : error.message);
         }
     };
+
+    useEffect(() => {
+        if (tagNo) {
+            fetchStoneDetails(tagNo);
+        }
+    }, [tagNo]);
 
     const columns1 = [
         { title: "S.No", dataIndex: "SNO", key: "SNO", width: 50 },
