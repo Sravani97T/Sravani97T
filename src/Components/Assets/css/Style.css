@@ -837,6 +837,10 @@ font-weight: bold;
   padding: 12px !important;
 
 }
+.customeproductcard .ant-card-body {
+  padding: 7px !important;
+
+}
 /* Individual cards */
 .custom-stone-card .ant-card-body {
   width: 140px; /* Default fixed width */
