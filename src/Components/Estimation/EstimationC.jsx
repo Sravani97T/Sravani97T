@@ -498,11 +498,11 @@ const EstimationTable = () => {
                 .getDate()
                 .toString()
                 .padStart(2, "0")}/${currentDate.getFullYear()}`;
-    
+
             const ratesResponse = await axios.get(
                 `http://www.jewelerp.timeserasoftware.in/api/Master/GetDataFromGivenTableNameWithWhere?tableName=DAILY_RATES&where=RDATE%3D%27${formattedDate}%27`
             );
-    
+
             setRates(ratesResponse.data);
             setRatesAvailable(ratesResponse.data.length > 0); // Enable input if rates exist
         } catch (error) {
@@ -510,7 +510,7 @@ const EstimationTable = () => {
             message.error("Error fetching rates");
         }
     };
-    
+
     // Fetch rates when the page loads
     useEffect(() => {
         fetchRates();
@@ -694,7 +694,7 @@ const EstimationTable = () => {
                 directMC: wastageData[0]?.newField1 || "",
                 directWastage: wastageData[0]?.direct || "",
                 mcPerGram: wastageData[0]?.perGram || "",
-                totalMC: totalMC?.toFixed(2), 
+                totalMC: totalMC?.toFixed(2),
                 actWt: actWt?.toFixed(3), // Add ActWt (NetWt + TotalWastage)
                 metalValue: metalValue?.toFixed(2), // Add Metal Value (ActWt * Rate)
                 rate: rate, // Store the rate used
@@ -975,7 +975,7 @@ const EstimationTable = () => {
         { title: "Purity", dataIndex: "purity", align: 'center', key: "purity" },
         { title: "Pieces", dataIndex: "pieces", align: 'right', key: "pieces" },
         { title: "Gross W.T", dataIndex: "grossWeight", align: 'right', key: "grossWeight" },
-        { title: "Less W.T", dataIndex: "lessWeight", align: 'right', key: "lessWeight", render: (text) => Number(text)?.toFixed(3) },        { title: "Net W.T", dataIndex: "netWeight", align: 'right', key: "netWeight" },
+        { title: "Less W.T", dataIndex: "lessWeight", align: 'right', key: "lessWeight", render: (text) => Number(text)?.toFixed(3) }, { title: "Net W.T", dataIndex: "netWeight", align: 'right', key: "netWeight" },
         { title: "Rate", dataIndex: "rate", align: 'right', key: "rate" },
         { title: "Total Wastage", dataIndex: "totalWastage", align: 'right', key: "totalWastage", render: (text) => Number(text)?.toFixed(3) },
         { title: "ACT W.T", dataIndex: "actWt", align: 'right', key: "actWt" },
@@ -1201,26 +1201,26 @@ const EstimationTable = () => {
                 {/* Right Card */}
                 <Col span={8}>
                     <Card style={cardStyle}>
-                    {[
-        { label: "Total Amount", value: totals.totalAmount.toFixed(2) },
-        { label: `GST Amount - (${vat}%)`, value: gstAmount }, // Show VAT % in brackets
-        { label: "Gross Amount", value: grossAmount },
-        {
-            label: "Discount (%)",
-            value: (
-                <Input
-                    style={{ width: "80px", textAlign: "right" }}
-                    value={discount}
-                    onChange={(e) => setDiscount(e.target.value)}
-                />
-            ),
-        },
-        { label: "Net Amount", value: netAmount, strong: true },
-    ].map((item, index) => (
-        <Row key={index} style={rowStyle}>
-            <Text strong>{item.label}:</Text> {item.value}
-        </Row>
-    ))}
+                        {[
+                            { label: "Total Amount", value: totals.totalAmount.toFixed(2) },
+                            { label: `GST Amount - (${vat}%)`, value: gstAmount }, // Show VAT % in brackets
+                            { label: "Gross Amount", value: grossAmount },
+                            {
+                                label: "Discount (%)",
+                                value: (
+                                    <Input
+                                        style={{ width: "80px", textAlign: "right" }}
+                                        value={discount}
+                                        onChange={(e) => setDiscount(e.target.value)}
+                                    />
+                                ),
+                            },
+                            { label: "Net Amount", value: netAmount, strong: true },
+                        ].map((item, index) => (
+                            <Row key={index} style={rowStyle}>
+                                <Text strong>{item.label}:</Text> {item.value}
+                            </Row>
+                        ))}
                     </Card>
                 </Col>
             </Row>
@@ -1242,356 +1242,396 @@ const EstimationTable = () => {
             >
 
                 <Card title="Product Details" bordered={false} style={{ width: "100%" }} className="customeproductcard">
-                    <Card
-                        style={{
-                            background: "lightblue", // Matches the uploaded image
-                            borderRadius: 10,
-                        }}
-                        className="customeproductcard"
-                    >
-                        <Row gutter={10} align="middle">
-                            {/* Main Product */}
-                            <Col span={4}>
-                                <Text>Main Product</Text>
-                                <Select
-                                    ref={mainProductRef}
+
+                    <Row gutter={16}>
+                        {/* First Section: Main Product, Purity, Pieces, Product Name */}
+                        <Col xs={24} sm={8}>
+                            <Card
+                                style={{
+                                    background: "lightblue",
+                                    borderRadius: 10,
+                                }}
+                                className="customeproductcard"
+                            >
+                                <Form
+                                    layout="horizontal"
+                                    labelCol={{ style: { width: "130px", textAlign: "left" } }} // Ensures labels align properly
+                                    wrapperCol={{ style: { flex: 1 } }}
                                     style={{ width: "100%" }}
-                                    showSearch
-                                    placeholder="Select Main Product"
-                                    value={selectedMainProduct || undefined}
-                                    onChange={(value) => {
-                                        setSelectedMainProduct(value);
-                                        setTimeout(() => {
-                                            if (purityRef.current) purityRef.current.focus();
-                                        }, 100); // Small delay to ensure state update before moving focus
-                                    }}
-                                    filterOption={(input, option) =>
-                                        option.label.toLowerCase().includes(input.toLowerCase())
-                                    }
-                                    options={mainProductOptions.map((item) => ({
-                                        value: item,
-                                        label: item,
-                                    }))}
-                                />
-
-
-                            </Col>
-                            <Col span={3}>
-                                <Text>Purity</Text>
-                                <Form.Item name="prefix" rules={[{ message: "Please select purity" }]}>
-                                    <Select
-                                        ref={purityRef}
-                                        showSearch
-                                        placeholder="Select Purity"
-                                        value={selectedPurity || undefined}
-                                        onChange={(value) => {
-                                            setSelectedPurity(value);
-                                            setTimeout(() => {
-                                                if (productNameRef.current) productNameRef.current.focus();
-                                            }, 100);
-                                        }}
-                                        filterOption={(input, option) =>
-                                            option.label.toLowerCase().includes(input.toLowerCase())
-                                        }
-                                        options={purityOptions.map((p) => ({
-                                            value: p.Prefix,
-                                            label: p.Prefix,
-                                        }))}
-                                    />
-
-
-                                </Form.Item>
-                            </Col>
-                            {/* Product Name */}
-                            <Col span={5}>
-                                <Text>Product Name</Text>
-                                <Select
-                                    ref={productNameRef}
-                                    style={{ width: "100%" }}
-                                    showSearch
-                                    placeholder="Select a product"
-                                    value={selectedProduct || undefined}
-                                    onSelect={(value) => {
-                                        setSelectedProduct(value);
-                                        setTimeout(() => {
-                                            if (pcsRef.current) pcsRef.current.focus();
-                                        }, 100);
-                                    }}
-                                    disabled={!selectedMainProduct} // Disable if no main product is selected
-                                    filterOption={(input, option) =>
-                                        option.label.toLowerCase().includes(input.toLowerCase())
-                                    }
-                                    options={products.map((product) => ({
-                                        value: product.PRODUCTNAME,
-                                        label: product.PRODUCTNAME,
-                                    }))}
-                                />
-
-                            </Col>
-
-                            {/* PCS */}
-                            <Col span={2}>
-                                <Text>PCS</Text>
-                                <Input
-                                    ref={pcsRef}
-                                    type="number"
-                                    value={pcs}
-                                    onChange={(e) => setPcs(e.target.value)}
-                                    onKeyDown={(e) => {
-                                        if (e.key === "Enter") {
-                                            e.preventDefault();
-                                            setTimeout(() => {
-                                                if (gwtRef.current) gwtRef.current.focus();
-                                            }, 100);
-                                        }
-                                    }}
-                                />
-
-                            </Col>
-
-                            {/* G.wt */}
-                            <Col span={3}>
-                                <Text>G.wt</Text>
-                                <Input
-                                    ref={gwtRef}
-                                    type="number"
-                                    placeholder="Enter GWT"
-                                    value={gwt}
-                                    onChange={(e) => setGwt(e.target.value)}
-                                    onKeyDown={(e) => {
-                                        if (e.key === "Enter") {
-                                            e.preventDefault();
-                                            setTimeout(() => {
-                                                if (breadsLessRef.current) breadsLessRef.current.focus();
-                                            }, 100);
-                                        }
-                                    }}
-                                />
-                            </Col>
-
-                            {/* Breads Less */}
-                            <Col span={2}>
-                                <Text>Breads Less</Text>
-                                <Input
-                                    ref={breadsLessRef}
-                                    type="number"
-                                    placeholder="Enter..."
-                                    value={breadsLess}
-                                    onChange={(e) => setBreadsLess(e.target.value)}
-                                    onKeyDown={(e) => {
-                                        if (e.key === "Enter") {
-                                            e.preventDefault();
-                                            setTimeout(() => {
-                                                if (totalLessRef.current) totalLessRef.current.focus();
-                                            }, 100);
-                                        }
-                                    }
-                                    }
-                                />
-                            </Col>
-
-                            <Col span={2}>
-                                <Text>Weight Less</Text>
-                                <Input
-                                    ref={totalLessRef}
-                                    type="number"
-                                    placeholder="Enter T..."
-                                    value={finalTotalGrams > 0 ? finalTotalGrams : totalLess}
-                                    onChange={(e) => setTotalLess(e.target.value)}
-                                    readOnly={finalTotalGrams > 0}
-                                    onKeyDown={(e) => {
-                                        if (e.key === "Enter") {
-                                            e.preventDefault();
-                                            setTimeout(() => {
-                                                if (nwtRef.current) nwtRef.current.focus();
-                                            }, 100);
-                                        }
-                                    }}
-                                />
-
-                            </Col>
-
-                            {/* N.wt */}
-                            <Col span={3}>
-                                <Text>N.wt</Text>
-                                <Input
-                                    ref={nwtRef}
-                                    type="number"
-                                    value={nwt}
-                                    readOnly
-                                    onKeyDown={(e) => {
-                                        if (e.key === "Enter") {
-                                            e.preventDefault();
-                                            setTimeout(() => {
-                                                if (huidRef.current) huidRef.current.focus();
-                                            }, 100);
-                                        }
-                                    }}
-                                />
-                            </Col>
-                            <Col span={3}>
-                                <Text>HUID</Text>
-                                <Input
-                                    ref={huidRef}
-                                    type="text"
-                                    placeholder="Enter HUID"
-                                    value={huid}
-                                    onChange={(e) => setHuid(e.target.value)}
-                                    onKeyDown={(e) => {
-                                        if (e.key === "Enter") {
-                                            e.preventDefault();
-                                            setTimeout(() => {
-                                                if (tagSizeRef.current) tagSizeRef.current.focus();
-                                            }, 100);
-                                        }
-                                    }}
-                                />
-                            </Col>
-
-                            {/* Tag Size */}
-                            <Col span={3}>
-                                <Text>Tag Size</Text>
-                                <Input
-                                    ref={tagSizeRef}
-                                    type="text"
-                                    placeholder="Enter Tag Size"
-                                    value={tagSize}
-                                    onChange={(e) => setTagSize(e.target.value)}
-                                    onKeyDown={(e) => {
-                                        if (e.key === "Enter") {
-                                            e.preventDefault();
-                                            setTimeout(() => {
-                                                if (descriptionRef.current) descriptionRef.current.focus();
-                                            }, 100);
-                                        }
-                                    }}
-                                />
-                            </Col>
-
-                            {/* Description */}
-                            <Col span={5}>
-                                <Text>Description</Text>
-
-                                <Input
-                                    ref={descriptionRef}
-                                    placeholder="Enter Description"
-                                    value={description}
-                                    onChange={(e) => setDescription(e.target.value)}
-                                    onKeyDown={(e) => {
-                                        if (e.key === "Enter") {
-                                            e.preventDefault();
-                                            setTimeout(() => {
-                                                if (categoryRef.current) categoryRef.current.focus();
-                                            }, 100);
-                                        }
-                                    }}
-                                />
-                            </Col>
-                        </Row>
-                    </Card>
-                    <Row><span style={{ padding: "6px", fontWeight: "bold" }}>Wastage and Macking Charges</span></Row>
-                    <Card bordered={false} style={{ backgroundColor: "lightblue" }} className="customeproductcard">
-                        <Row gutter={16}>
-                            {/* Category Dropdown */}
-                            <Col xs={24} sm={4} style={{ marginTop: "20px" }}>
-                                <Text strong>Category</Text>
-                                <Select
-                                    showSearch
-                                    ref={categoryRef}
-                                    value={selectedCategory}
-                                    placeholder="%"
-                                    onChange={handleCategoryChange}
-                                    style={{ width: "100%", borderRadius: "8px" }}
-                                    optionFilterProp="children"
-
-                                    filterOption={(input, option) => option.children.toLowerCase().includes(input.toLowerCase())}
                                 >
-                                    {categories.map((category) => (
-                                        <Option key={category.categoryname} value={category.categoryname}>
-                                            {category.categoryname}
-                                        </Option>
-                                    ))}
-                                </Select>
-                            </Col>
+                                    {/* Main Product */}
+                                    <Form.Item label="Main Product:" > {/* Adjusted margin */}
+                                        <Select
+                                            ref={mainProductRef}
+                                            style={{ width: "100%", marginBottom: "7px" }}
+                                            showSearch
+                                            placeholder="Select Main Product"
+                                            value={selectedMainProduct || undefined}
+                                            onChange={(value) => {
+                                                setSelectedMainProduct(value);
+                                                setTimeout(() => {
+                                                    if (purityRef.current) purityRef.current.focus();
+                                                }, 100);
+                                            }}
+                                            filterOption={(input, option) =>
+                                                option.label.toLowerCase().includes(input.toLowerCase())
+                                            }
+                                            options={mainProductOptions.map((item) => ({
+                                                value: item,
+                                                label: item,
+                                            }))}
+                                        />
+                                    </Form.Item>
 
-                            {/* Wastage Section */}
-                            <Col xs={24} sm={10}>
-                                <Card bordered={false} style={{ background: "#F0F0F0", borderRadius: "8px", textAlign: "center" }}>
+                                    {/* Purity */}
+                                    <Form.Item label="Purity:"> {/* Adjusted margin */}
+                                        <Select
+                                            ref={purityRef}
+                                            style={{ marginBottom: "7px" }}
+                                            showSearch
+                                            placeholder="Select Purity"
+                                            value={selectedPurity || undefined}
+                                            onChange={(value) => {
+                                                setSelectedPurity(value);
+                                                setTimeout(() => {
+                                                    if (productNameRef.current) productNameRef.current.focus();
+                                                }, 100);
+                                            }}
+                                            filterOption={(input, option) =>
+                                                option.label.toLowerCase().includes(input.toLowerCase())
+                                            }
+                                            options={purityOptions.map((p) => ({
+                                                value: p.Prefix,
+                                                label: p.Prefix,
+                                            }))}
+                                        />
+                                    </Form.Item>
+
+                                    {/* Product Name */}
+                                    <Form.Item label="Product Name:" > {/* Adjusted margin */}
+                                        <Select
+                                            ref={productNameRef}
+                                            style={{ width: "100%", marginBottom: "7px" }}
+                                            showSearch
+                                            placeholder="Select a product"
+                                            value={selectedProduct || undefined}
+                                            onSelect={(value) => {
+                                                setSelectedProduct(value);
+                                                setTimeout(() => {
+                                                    if (pcsRef.current) pcsRef.current.focus();
+                                                }, 100);
+                                            }}
+                                            disabled={!selectedMainProduct}
+                                            filterOption={(input, option) =>
+                                                option.label.toLowerCase().includes(input.toLowerCase())
+                                            }
+                                            options={products.map((product) => ({
+                                                value: product.PRODUCTNAME,
+                                                label: product.PRODUCTNAME,
+                                            }))}
+                                        />
+                                    </Form.Item>
+
+                                    {/* PCS */}
+                                    <Form.Item label="PCS:" > {/* Adjusted margin */}
+                                        <Input
+                                            ref={pcsRef}
+                                            type="number"
+                                            style={{ marginBottom: "7px" }}
+                                            placeholder="Enter PCS"
+                                            value={pcs}
+                                            onChange={(e) => setPcs(e.target.value)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === "Enter") {
+                                                    e.preventDefault();
+                                                    setTimeout(() => {
+                                                        if (gwtRef.current) gwtRef.current.focus();
+                                                    }, 100);
+                                                }
+                                            }}
+                                        />
+                                    </Form.Item>
+                                    {/* HUID */}
+                                    <Form.Item label="HUID:" >
+                                        <Input
+                                            style={{ marginBottom: "7px" }}
+                                            ref={huidRef}
+                                            type="text"
+                                            placeholder="Enter HUID"
+                                            value={huid}
+                                            onChange={(e) => setHuid(e.target.value)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === "Enter") {
+                                                    e.preventDefault();
+                                                    setTimeout(() => tagSizeRef.current?.focus(), 100);
+                                                }
+                                            }}
+                                        />
+                                    </Form.Item>
+
+                                    {/* Tag Size */}
+                                    <Form.Item label="Tag Size:">
+                                        <Input
+                                            style={{ marginBottom: "7px" }}
+                                            ref={tagSizeRef}
+                                            type="text"
+                                            placeholder="Enter Tag Size"
+                                            value={tagSize}
+                                            onChange={(e) => setTagSize(e.target.value)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === "Enter") {
+                                                    e.preventDefault();
+                                                    setTimeout(() => descriptionRef.current?.focus(), 100);
+                                                }
+                                            }}
+                                        />
+                                    </Form.Item>
+
+
+                                </Form>
+                            </Card>
+                        </Col>
+
+                        {/* Second Section: Remaining Fields */}
+                        <Col xs={24} sm={12} md={8}>
+                            <Card
+                                style={{
+                                    background: "lightblue",
+                                    borderRadius: 10,
+                                }}
+                                className="customproductcard"
+                            >
+                                <Form
+                                    layout="horizontal"
+                                    labelCol={{ span: 10 }} // Label width
+                                    wrapperCol={{ span: 14 }} // Input width
+                                    colon={false}
+                                    labelAlign="left" // Aligns label to left
+                                >
+                                    {/* G.wt */}
+                                    <Form.Item label="G.wt:" >
+                                        <Input
+                                            style={{ marginBottom: "10px" }}
+                                            ref={gwtRef}
+                                            type="number"
+                                            placeholder="Enter GWT"
+                                            value={gwt}
+                                            onChange={(e) => setGwt(e.target.value)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === "Enter") {
+                                                    e.preventDefault();
+                                                    setTimeout(() => breadsLessRef.current?.focus(), 100);
+                                                }
+                                            }}
+                                        />
+                                    </Form.Item>
+
+                                    {/* Breads Less */}
+                                    <Form.Item label="Breads Less:" >
+                                        <Input
+                                            style={{ marginBottom: "10px" }}
+                                            ref={breadsLessRef}
+                                            type="number"
+                                            placeholder="Enter..."
+                                            value={breadsLess}
+                                            onChange={(e) => setBreadsLess(e.target.value)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === "Enter") {
+                                                    e.preventDefault();
+                                                    setTimeout(() => totalLessRef.current?.focus(), 100);
+                                                }
+                                            }}
+                                        />
+                                    </Form.Item>
+
+                                    {/* Weight Less */}
+                                    <Form.Item label="Weight Less:" >
+                                        <Input
+                                            style={{ marginBottom: "10px" }}
+                                            ref={totalLessRef}
+                                            type="number"
+                                            placeholder="Enter..."
+                                            value={finalTotalGrams > 0 ? finalTotalGrams : totalLess}
+                                            onChange={(e) => setTotalLess(e.target.value)}
+                                            readOnly={finalTotalGrams > 0}
+                                            onKeyDown={(e) => {
+                                                if (e.key === "Enter") {
+                                                    e.preventDefault();
+                                                    setTimeout(() => nwtRef.current?.focus(), 100);
+                                                }
+                                            }}
+                                        />
+                                    </Form.Item>
+
+                                    {/* N.wt */}
+                                    <Form.Item label="N.wt:" >
+                                        <Input
+                                            style={{ marginBottom: "10px" }}
+                                            ref={nwtRef}
+                                            type="number"
+                                            value={nwt}
+                                            readOnly
+                                            onKeyDown={(e) => {
+                                                if (e.key === "Enter") {
+                                                    e.preventDefault();
+                                                    setTimeout(() => huidRef.current?.focus(), 100);
+                                                }
+                                            }}
+                                        />
+                                    </Form.Item>
+
+                                    {/* Description */}
+                                    <Form.Item label="Description:" >
+                                        <Input
+                                            style={{ marginBottom: "10px" }}
+                                            ref={descriptionRef}
+                                            placeholder="Enter Description"
+                                            value={description}
+                                            onChange={(e) => setDescription(e.target.value)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === "Enter") {
+                                                    e.preventDefault();
+                                                    setTimeout(() => categoryRef.current?.focus(), 100);
+                                                }
+                                            }}
+                                        />
+                                    </Form.Item>
+                                </Form>
+                            </Card>
+                        </Col>
+
+
+                        {/* Third Section: Wastage and Making Charges */}
+                        <Col xs={24} sm={12} md={8}>
+                            <Card bordered={false} style={{ backgroundColor: "lightblue", }} className="customeproductcard">
+
+                                {/* Category Dropdown */}
+                                <Col xs={24}>
+                                    <Text strong style={{ display: "block", textAlign: "center", marginBottom: "5px" }}>Category</Text>
+                                    <Select
+                                        showSearch
+                                        ref={categoryRef}
+                                        value={selectedCategory}
+                                        placeholder="%"
+                                        onChange={handleCategoryChange}
+                                        style={{ width: "100%", borderRadius: "8px", marginBottom: "10px" }}
+                                        optionFilterProp="children"
+                                        filterOption={(input, option) => option.children.toLowerCase().includes(input.toLowerCase())}
+                                    >
+                                        {categories.map((category) => (
+                                            <Option key={category.categoryname} value={category.categoryname}>
+                                                {category.categoryname}
+                                            </Option>
+                                        ))}
+                                    </Select>
+                                </Col>
+
+                                {/* Wastage Section (First Card) */}
+                                {/* <Card bordered={false} style={{ background: "#F0F0F0", borderRadius: "8px", marginBottom: "10px" }} className="customeproductcard"> */}
                                     <Row gutter={8}>
                                         <Col span={8}>
-                                            <Text>%</Text>
+                                            <Text style={{ display: "block", textAlign: "left", marginBottom: "5px" }}>%</Text>
                                             <Input
                                                 ref={percentageRef}
                                                 value={wastageData[0]?.percentage || ""}
                                                 placeholder="%"
                                                 onChange={(e) => {
                                                     const value = e.target.value;
-                                                    setWastageData([{ ...wastageData[0], percentage: value, total: value ? ((parseFloat(value) * nwt) / 100).toFixed(3) : "" }]);
+                                                    setWastageData([{
+                                                        ...wastageData[0],
+                                                        percentage: value,
+                                                        total: value ? ((parseFloat(value) * nwt) / 100).toFixed(3) : ""
+                                                    }]);
                                                 }}
                                                 onKeyDown={(e) => handleKeyDown(e, directRef, null)}
+                                                style={{ marginBottom: "10px" }}
                                             />
                                         </Col>
                                         <Col span={8}>
-                                            <Text>Direct</Text>
+                                            <Text style={{ display: "block", textAlign: "left", marginBottom: "5px" }}>Direct</Text>
                                             <Input
                                                 ref={directRef}
                                                 value={wastageData[0]?.direct || ""}
                                                 placeholder="Direct"
                                                 onChange={(e) => {
                                                     const value = e.target.value;
-                                                    setWastageData([{ ...wastageData[0], direct: value, total: parseFloat(value).toFixed(3) }]);
+                                                    setWastageData([{
+                                                        ...wastageData[0],
+                                                        direct: value,
+                                                        total: parseFloat(value).toFixed(3)
+                                                    }]);
                                                 }}
                                                 onKeyDown={(e) => handleKeyDown(e, perGramRef, percentageRef)}
+                                                style={{ marginBottom: "10px" }}
                                             />
                                         </Col>
                                         <Col span={8}>
-                                            <Text>Total</Text>
+                                            <Text style={{ display: "block", textAlign: "left", marginBottom: "5px" }}>Total</Text>
                                             <Input ref={totalRef} value={wastageData[0]?.total || ""} placeholder="Total" readOnly />
                                         </Col>
                                     </Row>
-                                </Card>
-                            </Col>
+                                {/* </Card> */}
 
-                            {/* Making Charges Section */}
-                            <Col xs={24} sm={10}>
-                                <Card bordered={false} style={{ background: "#F0F0F0", borderRadius: "8px", textAlign: "center" }}>
+                                {/* Making Charges Section (Below Wastage) */}
+                                {/* <Card bordered={false} style={{ background: "#F0F0F0", borderRadius: "8px", }} className="customeproductcard"> */}
                                     <Row gutter={8}>
                                         <Col span={8}>
-                                            <Text>Gram</Text>
+                                            <Text style={{ display: "block", textAlign: "left", marginBottom: "5px" }}>Gram</Text>
                                             <Input
                                                 ref={perGramRef}
                                                 value={wastageData[0]?.perGram || ""}
                                                 placeholder="Per Gram"
                                                 onChange={(e) => {
                                                     const value = e.target.value;
-                                                    setWastageData([{ ...wastageData[0], perGram: value, newField2: (parseFloat(value) * nwt).toFixed(2) }]);
+                                                    setWastageData([{
+                                                        ...wastageData[0],
+                                                        perGram: value,
+                                                        newField2: (parseFloat(value) * nwt).toFixed(2)
+                                                    }]);
                                                 }}
                                                 onKeyDown={(e) => handleKeyDown(e, direct1Ref, null)}
+                                                style={{ marginBottom: "10px" }}
                                             />
                                         </Col>
                                         <Col span={8}>
-                                            <Text>Direct</Text>
+                                            <Text style={{ display: "block", textAlign: "left", marginBottom: "5px" }}>Direct</Text>
                                             <Input
                                                 ref={direct1Ref}
                                                 value={wastageData[0]?.newField1 || ""}
                                                 placeholder="Direct"
                                                 onChange={(e) => {
                                                     const value = e.target.value;
-                                                    setWastageData([{ ...wastageData[0], newField1: value, newField2: (parseFloat(wastageData[0]?.perGram || 0) * nwt).toFixed(2) }]);
+                                                    setWastageData([{
+                                                        ...wastageData[0],
+                                                        newField1: value,
+                                                        newField2: (parseFloat(wastageData[0]?.perGram || 0) * nwt).toFixed(2)
+                                                    }]);
                                                 }}
                                                 onKeyDown={(e) => handleKeyDown(e, total1Ref, perGramRef)}
+                                                style={{ marginBottom: "10px" }}
                                             />
                                         </Col>
                                         <Col span={8}>
-                                            <Text>Total</Text>
-                                            <Input ref={total1Ref} value={parseFloat(wastageData[0].newField1) > 0 ? wastageData[0].newField1 : ((parseFloat(wastageData[0].total) + nwt) * parseFloat(wastageData[0].perGram)).toFixed(2) || ""}
-                                                placeholder="Total" readOnly />
+                                            <Text style={{ display: "block", textAlign: "left", marginBottom: "5px" }}>Total</Text>
+                                            <Input
+                                                ref={total1Ref}
+                                                value={
+                                                    parseFloat(wastageData[0]?.newField1) > 0
+                                                        ? wastageData[0]?.newField1
+                                                        : ((parseFloat(wastageData[0]?.total) + nwt) * parseFloat(wastageData[0]?.perGram)).toFixed(2) || ""
+                                                }
+                                                placeholder="Total"
+                                                readOnly
+                                            />
                                         </Col>
                                     </Row>
-                                </Card>
-                            </Col>
-                        </Row>
-                    </Card>
+                                {/* </Card> */}
+
+                            </Card>
+                        </Col>
+
+                    </Row>
+
                     <Row><span style={{ padding: "6px", fontWeight: "bold" }}>Stone Detailes</span></Row>
 
                     <Card style={{ backgroundColor: "lightblue" }} className="customeproductcard">
