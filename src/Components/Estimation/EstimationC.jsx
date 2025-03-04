@@ -1,6 +1,6 @@
 import React, { useCallback, useRef, useState, useEffect } from "react";
 import { Form, Table, Button, Col, Row, Input, Card, Typography, Tag, message, Popover, Popconfirm, Modal, Select } from "antd";
-import { DeleteOutlined, InfoCircleOutlined, ReloadOutlined, CloseOutlined, EditOutlined } from "@ant-design/icons";
+import { DeleteOutlined, InfoCircleOutlined, PlusOutlined, ReloadOutlined, CloseOutlined, EditOutlined } from "@ant-design/icons";
 import TodaysRates1 from "./TodaysRate1";
 import axios from 'axios';
 import TableHeaderStyles from "../Pages/TableHeaderStyles";
@@ -16,6 +16,7 @@ const EstimationTable = () => {
         color: "white",
     };
     const [ratesAvailable, setRatesAvailable] = useState(false); // Track rate availability
+    const [showExtraFields, setShowExtraFields] = useState(false);
 
     // Function to update rate availability from TodaysRates
     const handleRatesCheck = (available) => {
@@ -188,32 +189,49 @@ const EstimationTable = () => {
 
         setFormValues(updatedValues);
     };
-
-    const handleEnterPress = (e, field) => {
+    const ctsRef = useRef(null);
+    const gramsRef = useRef(null);
+    const amountRef = useRef(null);
+   
+    const handleEnterPress = (e, fieldName) => {
         if (e.key === "Enter") {
-            e.preventDefault(); // Prevent default behavior
-
-            const nextFieldMap = {
-                stoneItem: pcsRef,
-                pcs: rateRef,
-                cts: rateRef,
-                grams: rateRef,
-                rate: noPcsRef,
-                noPcs: colorRef,
-                color: cutRef,
-                cut: clarityRef,
-                clarity: null // Submits the form
-            };
-
-            const nextField = nextFieldMap[field];
-
-            if (nextField && nextField.current) {
-                nextField.current.focus();
-            } else {
-                handleAddStone(); // Submit after clarity
+            e.preventDefault();
+    
+            if (fieldName === "pcs") {
+                if (!formValues.pcs || formValues.pcs.trim() === "") {
+                    ctsRef.current?.focus(); // Move to Cts if pcs is empty
+                } else {
+                    rateRef.current?.focus(); // Move to Rate if pcs has a value
+                }
+            } else if (fieldName === "cts") {
+                if (!formValues.cts || formValues.cts.trim() === "") {
+                    gramsRef.current?.focus(); // Move to Grams if Cts is empty
+                } else {
+                    rateRef.current?.focus(); // Move to Rate if Cts has a value
+                }
+            } else if (fieldName === "grams") {
+                if (!formValues.grams || formValues.grams.trim() === "") {
+                    rateRef.current?.focus(); // Move to Rate if Grams is empty
+                } else {
+                    amountRef.current?.focus(); // Move to Amount if Grams has a value
+                }
+            } else if (fieldName === "rate") {
+                noPcsRef.current?.focus(); // Move to No Pcs
+            } else if (fieldName === "noPcs") {
+                handleAddStone(); // Submit Form
+                mainProductRef.current?.focus();
+            } else if (fieldName === "cut") {
+                colorRef.current?.focus();
+            } else if (fieldName === "color") {
+                clarityRef.current?.focus();
+            } else if (fieldName === "clarity") {
+                handleAddStone(); // Submit Form
+                mainProductRef.current?.focus();
             }
         }
     };
+    
+    
     const handleAddStone = () => {
         if (!formValues.rate) {
             alert("Enter required fields.");
@@ -474,21 +492,12 @@ const EstimationTable = () => {
         setTagNo(""); // Clear Tag No input
     };
 
-    const handleKeyPress = useCallback((e) => {
-        if (e.key === 'Enter') {
-            if (debounceRef.current) clearTimeout(debounceRef.current);
-            debounceRef.current = setTimeout(() => {
-                fetchData();
-            }, 300); // 300ms debounce time
-        }
-    }, [tagNo, data]);
 
     useEffect(() => {
         if (tagNoInputRef.current) {
             tagNoInputRef.current.focus();
         }
     }, [data]);
-
 
 
     const fetchRates = async () => {
@@ -518,7 +527,7 @@ const EstimationTable = () => {
 
     const [vat, setVat] = useState(0);
 
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         if (!tagNo) {
             message.error("Please enter a Tag No.");
             return;
@@ -630,7 +639,17 @@ const EstimationTable = () => {
         } finally {
             setTagNo("");
         }
-    };
+    }, [tagNo, data, rates]);
+    // Ensure calculations use valid numbers
+
+    const handleKeyPress = useCallback((e) => {
+        if (e.key === 'Enter') {
+            if (debounceRef.current) clearTimeout(debounceRef.current);
+            debounceRef.current = setTimeout(() => {
+                fetchData();
+            }, 300); // 300ms debounce time
+        }
+    }, [fetchData]);
     // Ensure calculations use valid numbers
 
 
@@ -719,7 +738,16 @@ const EstimationTable = () => {
             console.error("Error fetching daily rates:", error);
         }
     };
-
+    useEffect(() => {
+        if (nwt && wastageData.length > 0) {
+            const updatedTotalWastage = ((parseFloat(wastageData[0].percentage || 0) * nwt) / 100).toFixed(3);
+            setWastageData([{ ...wastageData[0], total: updatedTotalWastage }]);
+        }
+    }, [gwt, nwt, wastageData[0]?.percentage]);
+    useEffect(() => {
+        setNwt(gwt - totalLess);
+    }, [gwt, totalLess]);
+    
     const ItemDetailsPopover = ({ record }) => {
         const [visible, setVisible] = useState(false);
         const [stoneDetailes, setStoneDetailes] = useState([]);
@@ -857,7 +885,7 @@ const EstimationTable = () => {
 
                                         <div style={{ textAlign: "left", fontWeight: "bold" }}>MC Amount</div>
                                         <div style={{ textAlign: "left" }}>:</div>
-                                        <div style={{ textAlign: "right" }}>{record?.totalMC || "N/A"}</div>
+                                        <div style={{ textAlign: "right" }}>{record?.totalMC ? Math.round(record.totalMC) : "N/A"}</div>
                                     </div>
 
                                     <div style={{ display: "grid", gridTemplateColumns: "150px 10px auto", gap: "5px", alignItems: "center" }}>
@@ -974,15 +1002,16 @@ const EstimationTable = () => {
         { title: "Product Name", dataIndex: "productName", key: "productName" },
         { title: "Purity", dataIndex: "purity", align: 'center', key: "purity" },
         { title: "Pieces", dataIndex: "pieces", align: 'right', key: "pieces" },
-        { title: "Gross W.T", dataIndex: "grossWeight", align: 'right', key: "grossWeight" },
-        { title: "Less W.T", dataIndex: "lessWeight", align: 'right', key: "lessWeight", render: (text) => Number(text)?.toFixed(3) }, { title: "Net W.T", dataIndex: "netWeight", align: 'right', key: "netWeight" },
+        { title: "Gross W.T", dataIndex: "grossWeight", align: 'right', key: "grossWeight" ,  render: (text) => Number(text)?.toFixed(3) },
+        { title: "Less W.T", dataIndex: "lessWeight", align: 'right', key: "lessWeight", render: (text) => Number(text)?.toFixed(3) },
+         { title: "Net W.T", dataIndex: "netWeight", align: 'right', key: "netWeight", render: (text) =>  Number(text)?.toFixed(3)  },
         { title: "Rate", dataIndex: "rate", align: 'right', key: "rate" },
         { title: "Total Wastage", dataIndex: "totalWastage", align: 'right', key: "totalWastage", render: (text) => Number(text)?.toFixed(3) },
-        { title: "ACT W.T", dataIndex: "actWt", align: 'right', key: "actWt" },
+        { title: "ACT W.T", dataIndex: "actWt", align: 'right', key: "actWt",  render: (text) => Number(text)?.toFixed(3)  },
         { title: "Metal Value", dataIndex: "metalValue", align: 'right', key: "metalValue" },
-        { title: "Total MC", dataIndex: "totalMC", align: 'right', key: "totalMC", },
+        { title: "Total MC", dataIndex: "totalMC", align: 'right', key: "totalMC", render: (text) => Math.round(text) },
         { title: "Stone Cost", dataIndex: "stoneCost", align: 'right', key: "stoneCost" },
-        { title: "Amount", dataIndex: "amount", align: 'right', key: "amount" },
+        { title: "Amount", dataIndex: "amount", align: 'right', key: "amount", render: (text) => Math.round(text) },
         { title: "Direct Wastage", align: 'right', dataIndex: "directWastage", key: "directWastage" },
         { title: "Wastage", dataIndex: "wastage", align: 'right', key: "wastage" },
         { title: "MC/Gram", dataIndex: "makingCharges", align: 'right', key: "makingCharges" },
@@ -1130,6 +1159,8 @@ const EstimationTable = () => {
                                     transition: "transform 1s ease-in-out",
                                     transform: rotating ? "rotate(360deg)" : "rotate(0deg)"
                                 }}
+                                                        onClick={handleRefresh}
+
                             />
                         }
                         onClick={handleRefresh}
@@ -1179,8 +1210,9 @@ const EstimationTable = () => {
                             <Col span={11}>
                                 {[
                                     { label: "Total Wastage", value: totals.totalWastage?.toFixed(3) },
-                                    { label: "Making Charges", value: Number(totals.totalMakingCharges) },
-                                    { label: "Total Amount", value: totals.totalAmount },
+                                    { label: "Making Charges", value: Math.round(Number(totals.totalMakingCharges)) },
+                                    { label: "Total Amount", value: Math.round(Number(totals.totalAmount)) },
+
                                     { label: "Stone Cost", value: totals.totalStoneCost },
                                 ].map((item, index) => (
                                     <Row key={index} style={rowStyle}>
@@ -1202,9 +1234,11 @@ const EstimationTable = () => {
                 <Col span={8}>
                     <Card style={cardStyle}>
                         {[
-                            { label: "Total Amount", value: totals.totalAmount.toFixed(2) },
-                            { label: `GST Amount - (${vat}%)`, value: gstAmount }, // Show VAT % in brackets
-                            { label: "Gross Amount", value: grossAmount },
+                            { label: "Total Amount", value: Math.ceil(Number(totals.totalAmount)) },
+                            { label: `GST Amount - (${vat}%)`, value: Math.ceil(Number(gstAmount)) }, 
+                            { label: "Gross Amount", value: Math.ceil(Number(grossAmount)) },
+
+
                             {
                                 label: "Discount (%)",
                                 value: (
@@ -1215,7 +1249,7 @@ const EstimationTable = () => {
                                     />
                                 ),
                             },
-                            { label: "Net Amount", value: netAmount, strong: true },
+                            { label: "Net Amount", value: Math.ceil(Number(netAmount)), strong: true }
                         ].map((item, index) => (
                             <Row key={index} style={rowStyle}>
                                 <Text strong>{item.label}:</Text> {item.value}
@@ -1233,26 +1267,46 @@ const EstimationTable = () => {
                 onCancel={() => setIsProductModalOpen(false)}
                 footer={null}
                 centered
-                width="80%"
+                width="90%"
                 onKeyDown={(e) => {
                     if (e.key === "Escape") {
                         setIsProductModalOpen(false);
                     }
                 }}
             >
+ {/* Custom Close & Refresh Buttons */}
+ <div style={{ display: "flex", justifyContent: "flex-end", padding: "10px", position: "absolute", top: 0, right: 0, zIndex: 1000 }}>
+        {/* Custom Close Button */}
+       
+        {/* Refresh Button */}
+        <Button
+            type="primary"
+            shape="circle"
+            icon={<ReloadOutlined />}
+            onClick={handleRefresh1}
+            size="mediem"
+            style={{ backgroundColor: "#f5222d", color: "white", border: "none", marginRight: "15px" }}
+        />
+         <Button
+            type="text"
+            onClick={() => setIsProductModalOpen(false)}
+            size="large"
+            style={{ fontSize: "16px", color: "black" }}
+        />
+    </div>
 
                 <Card title="Product Details" bordered={false} style={{ width: "100%" }} className="customeproductcard">
+                    <Card
+                        style={{
+                            background: "lightblue",
+                            borderRadius: 10,
+                        }}
+                        className="customeproductcard"
+                    >
+                        <Row gutter={[16, 16]}>
+                            {/* First Section: Main Product, Purity, Pieces, Product Name */}
+                            <Col xs={24} sm={12} md={7}>
 
-                    <Row gutter={16}>
-                        {/* First Section: Main Product, Purity, Pieces, Product Name */}
-                        <Col xs={24} sm={8}>
-                            <Card
-                                style={{
-                                    background: "lightblue",
-                                    borderRadius: 10,
-                                }}
-                                className="customeproductcard"
-                            >
                                 <Form
                                     layout="horizontal"
                                     labelCol={{ style: { width: "130px", textAlign: "left" } }} // Ensures labels align properly
@@ -1351,56 +1405,13 @@ const EstimationTable = () => {
                                             }}
                                         />
                                     </Form.Item>
-                                    {/* HUID */}
-                                    <Form.Item label="HUID:" >
-                                        <Input
-                                            style={{ marginBottom: "7px" }}
-                                            ref={huidRef}
-                                            type="text"
-                                            placeholder="Enter HUID"
-                                            value={huid}
-                                            onChange={(e) => setHuid(e.target.value)}
-                                            onKeyDown={(e) => {
-                                                if (e.key === "Enter") {
-                                                    e.preventDefault();
-                                                    setTimeout(() => tagSizeRef.current?.focus(), 100);
-                                                }
-                                            }}
-                                        />
-                                    </Form.Item>
-
-                                    {/* Tag Size */}
-                                    <Form.Item label="Tag Size:">
-                                        <Input
-                                            style={{ marginBottom: "7px" }}
-                                            ref={tagSizeRef}
-                                            type="text"
-                                            placeholder="Enter Tag Size"
-                                            value={tagSize}
-                                            onChange={(e) => setTagSize(e.target.value)}
-                                            onKeyDown={(e) => {
-                                                if (e.key === "Enter") {
-                                                    e.preventDefault();
-                                                    setTimeout(() => descriptionRef.current?.focus(), 100);
-                                                }
-                                            }}
-                                        />
-                                    </Form.Item>
-
 
                                 </Form>
-                            </Card>
-                        </Col>
+                            </Col>
 
-                        {/* Second Section: Remaining Fields */}
-                        <Col xs={24} sm={12} md={8}>
-                            <Card
-                                style={{
-                                    background: "lightblue",
-                                    borderRadius: 10,
-                                }}
-                                className="customproductcard"
-                            >
+                            {/* Second Section: Remaining Fields */}
+                            <Col xs={24} sm={12} md={8}>
+                             
                                 <Form
                                     layout="horizontal"
                                     labelCol={{ span: 10 }} // Label width
@@ -1408,302 +1419,389 @@ const EstimationTable = () => {
                                     colon={false}
                                     labelAlign="left" // Aligns label to left
                                 >
-                                    {/* G.wt */}
-                                    <Form.Item label="G.wt:" >
-                                        <Input
-                                            style={{ marginBottom: "10px" }}
-                                            ref={gwtRef}
-                                            type="number"
-                                            placeholder="Enter GWT"
-                                            value={gwt}
-                                            onChange={(e) => setGwt(e.target.value)}
-                                            onKeyDown={(e) => {
-                                                if (e.key === "Enter") {
-                                                    e.preventDefault();
-                                                    setTimeout(() => breadsLessRef.current?.focus(), 100);
-                                                }
-                                            }}
-                                        />
-                                    </Form.Item>
+                                    <Row gutter={8}>
+                                        <Col xs={24} sm={8} md={12}>
+                                            {/* G.wt */}
+                                            <Form.Item label="G.wt:">
+    <Input
+        style={{ width: "100%", marginBottom: "7px" }}
+        ref={gwtRef}
+        type="number"
+        placeholder="Enter GWT"
+        value={gwt}
+        onChange={(e) => {
+            const newGwt = parseFloat(e.target.value) ;
+            setGwt(newGwt);
 
-                                    {/* Breads Less */}
-                                    <Form.Item label="Breads Less:" >
-                                        <Input
-                                            style={{ marginBottom: "10px" }}
-                                            ref={breadsLessRef}
-                                            type="number"
-                                            placeholder="Enter..."
-                                            value={breadsLess}
-                                            onChange={(e) => setBreadsLess(e.target.value)}
-                                            onKeyDown={(e) => {
-                                                if (e.key === "Enter") {
-                                                    e.preventDefault();
-                                                    setTimeout(() => totalLessRef.current?.focus(), 100);
-                                                }
-                                            }}
-                                        />
-                                    </Form.Item>
+            // Update Net Weight (assuming weight loss is deducted)
+            const newNwt = newGwt - (totalLess || 0);
+            setNwt(newNwt);
 
-                                    {/* Weight Less */}
-                                    <Form.Item label="Weight Less:" >
-                                        <Input
-                                            style={{ marginBottom: "10px" }}
-                                            ref={totalLessRef}
-                                            type="number"
-                                            placeholder="Enter..."
-                                            value={finalTotalGrams > 0 ? finalTotalGrams : totalLess}
-                                            onChange={(e) => setTotalLess(e.target.value)}
-                                            readOnly={finalTotalGrams > 0}
-                                            onKeyDown={(e) => {
-                                                if (e.key === "Enter") {
-                                                    e.preventDefault();
-                                                    setTimeout(() => nwtRef.current?.focus(), 100);
-                                                }
-                                            }}
-                                        />
-                                    </Form.Item>
+            // Update Total Wastage based on percentage
+            if (wastageData.length > 0) {
+                const updatedTotalWastage = ((parseFloat(wastageData[0]?.percentage || 0) * newNwt) / 100)?.toFixed(3);
+                setWastageData([{ ...wastageData[0], total: updatedTotalWastage }]);
+            }
+        }}
+    />
+</Form.Item>
 
-                                    {/* N.wt */}
-                                    <Form.Item label="N.wt:" >
-                                        <Input
-                                            style={{ marginBottom: "10px" }}
-                                            ref={nwtRef}
-                                            type="number"
-                                            value={nwt}
-                                            readOnly
-                                            onKeyDown={(e) => {
-                                                if (e.key === "Enter") {
-                                                    e.preventDefault();
-                                                    setTimeout(() => huidRef.current?.focus(), 100);
-                                                }
-                                            }}
-                                        />
-                                    </Form.Item>
+                                        </Col>
+                                        <Col xs={24} sm={8} md={12}>
+                                            {/* Breads Less */}
+                                            <Form.Item label="Breads Less:">
+                                                <Input
+                                                    style={{ width: "100%", marginBottom: "7px" }}
+                                                    ref={breadsLessRef}
+                                                    type="number"
+                                                    placeholder="Enter..."
+                                                    value={breadsLess}
+                                                    onChange={(e) => setBreadsLess(e.target.value)}
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === "Enter") {
+                                                            e.preventDefault();
+                                                            setTimeout(() => totalLessRef.current?.focus(), 100);
+                                                        }
+                                                    }}
+                                                />
+                                            </Form.Item>
+                                        </Col>
+                                    </Row>
 
-                                    {/* Description */}
-                                    <Form.Item label="Description:" >
-                                        <Input
-                                            style={{ marginBottom: "10px" }}
-                                            ref={descriptionRef}
-                                            placeholder="Enter Description"
-                                            value={description}
-                                            onChange={(e) => setDescription(e.target.value)}
-                                            onKeyDown={(e) => {
-                                                if (e.key === "Enter") {
-                                                    e.preventDefault();
-                                                    setTimeout(() => categoryRef.current?.focus(), 100);
-                                                }
-                                            }}
-                                        />
-                                    </Form.Item>
+                                    <Row gutter={8}>
+                                        <Col xs={24} sm={8} md={12}>
+                                            {/* Weight Less */}
+                                            <Form.Item label="Wt Less:">
+                                                <Input
+                                                    style={{ width: "100%", marginBottom: "7px" }}
+                                                    ref={totalLessRef}
+                                                    type="number"
+                                                    placeholder="Enter..."
+                                                    value={finalTotalGrams > 0 ? finalTotalGrams : totalLess}
+                                                    onChange={(e) => setTotalLess(e.target.value)}
+                                                    readOnly={finalTotalGrams > 0}
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === "Enter") {
+                                                            e.preventDefault();
+                                                            setTimeout(() => nwtRef.current?.focus(), 100);
+                                                        }
+                                                    }}
+                                                />
+                                            </Form.Item>
+                                        </Col>
+                                        <Col xs={24} sm={8} md={12}>
+                                            {/* N.wt */}
+                                            <Form.Item label="N.wt:">
+                                                <Input
+                                                    style={{ width: "100%", marginBottom: "7px" }}
+                                                    ref={nwtRef}
+                                                    type="number"
+                                                    value={nwt}
+                                                    readOnly
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === "Enter") {
+                                                            e.preventDefault();
+                                                            setTimeout(() => huidRef.current?.focus(), 100);
+                                                        }
+                                                    }}
+                                                />
+                                            </Form.Item>
+                                        </Col>
+                                    </Row>
+
+                                    <Row gutter={8}>
+                                        <Col xs={24} sm={8} md={12}>
+                                            {/* HUID */}
+                                            <Form.Item label="HUID:">
+                                                <Input
+                                                    style={{ width: "100%", marginBottom: "7px" }}
+                                                    ref={huidRef}
+                                                    type="text"
+                                                    placeholder="Enter HUID"
+                                                    value={huid}
+                                                    onChange={(e) => setHuid(e.target.value)}
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === "Enter") {
+                                                            e.preventDefault();
+                                                            setTimeout(() => tagSizeRef.current?.focus(), 100);
+                                                        }
+                                                    }}
+                                                />
+                                            </Form.Item>
+                                        </Col>
+                                        <Col xs={24} sm={8} md={12}>
+                                            {/* Tag Size */}
+                                            <Form.Item label="Tag Size:">
+                                                <Input
+                                                    style={{ width: "100%", marginBottom: "7px" }}
+                                                    ref={tagSizeRef}
+                                                    type="text"
+                                                    placeholder="Enter Tag Size"
+                                                    value={tagSize}
+                                                    onChange={(e) => setTagSize(e.target.value)}
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === "Enter") {
+                                                            e.preventDefault();
+                                                            setTimeout(() => descriptionRef.current?.focus(), 100);
+                                                        }
+                                                    }}
+                                                />
+                                            </Form.Item>
+                                        </Col>
+                                    </Row>
+
+                                    <Row>
+                                        <Col xs={24} sm={24} md={24}>
+                                            {/* Description */}
+                                            <Form.Item label="Description:">
+                                                <Input
+                                                    style={{ width: "100%", marginBottom: "7px" }}
+                                                    ref={descriptionRef}
+                                                    placeholder="Enter Description"
+                                                    value={description}
+                                                    onChange={(e) => setDescription(e.target.value)}
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === "Enter") {
+                                                            e.preventDefault();
+                                                            setTimeout(() => categoryRef.current?.focus(), 100);
+                                                        }
+                                                    }}
+                                                />
+                                            </Form.Item>
+                                        </Col>
+                                    </Row>
                                 </Form>
-                            </Card>
-                        </Col>
+                            </Col>
 
+                            {/* Third Section: Wastage and Making Charges */}
+                            <Col xs={24} sm={12} md={9}>
+                                {/* <Card bordered={false} style={{ backgroundColor: "lightblue" }} className="customeproductcard"> */}
+                                <Form layout="horizontal" labelCol={{ span: 10 }} wrapperCol={{ span: 14 }} colon={false} labelAlign="left">
+                                    {/* Category Dropdown (Full Width) */}
+                                    <Form.Item label="Category" style={{ marginBottom: "10px" }}>
+                                        <Select
+                                            showSearch
+                                            ref={categoryRef}
+                                            value={selectedCategory}
+                                            placeholder="%"
+                                            onChange={handleCategoryChange}
+                                            style={{ width: "100%", borderRadius: "8px", marginBottom: "10px" }}
+                                            optionFilterProp="children"
+                                            filterOption={(input, option) => option.children.toLowerCase().includes(input.toLowerCase())}
+                                        >
+                                            {categories.map((category) => (
+                                                <Option key={category.categoryname} value={category.categoryname}>
+                                                    {category.categoryname}
+                                                </Option>
+                                            ))}
+                                        </Select>
+                                    </Form.Item>
 
-                        {/* Third Section: Wastage and Making Charges */}
-                        <Col xs={24} sm={12} md={8}>
-                            <Card bordered={false} style={{ backgroundColor: "lightblue", }} className="customeproductcard">
-
-                                {/* Category Dropdown */}
-                                <Col xs={24}>
-                                    <Text strong style={{ display: "block", textAlign: "center", marginBottom: "5px" }}>Category</Text>
-                                    <Select
-                                        showSearch
-                                        ref={categoryRef}
-                                        value={selectedCategory}
-                                        placeholder="%"
-                                        onChange={handleCategoryChange}
-                                        style={{ width: "100%", borderRadius: "8px", marginBottom: "10px" }}
-                                        optionFilterProp="children"
-                                        filterOption={(input, option) => option.children.toLowerCase().includes(input.toLowerCase())}
-                                    >
-                                        {categories.map((category) => (
-                                            <Option key={category.categoryname} value={category.categoryname}>
-                                                {category.categoryname}
-                                            </Option>
-                                        ))}
-                                    </Select>
-                                </Col>
-
-                                {/* Wastage Section (First Card) */}
-                                {/* <Card bordered={false} style={{ background: "#F0F0F0", borderRadius: "8px", marginBottom: "10px" }} className="customeproductcard"> */}
-                                    <Row gutter={8}>
+                                    {/* Wastage Section (3 Fields Per Row) */}
+                                    <Row gutter={10}>
                                         <Col span={8}>
-                                            <Text style={{ display: "block", textAlign: "left", marginBottom: "5px" }}>%</Text>
-                                            <Input
-                                                ref={percentageRef}
-                                                value={wastageData[0]?.percentage || ""}
-                                                placeholder="%"
-                                                onChange={(e) => {
-                                                    const value = e.target.value;
-                                                    setWastageData([{
-                                                        ...wastageData[0],
-                                                        percentage: value,
-                                                        total: value ? ((parseFloat(value) * nwt) / 100).toFixed(3) : ""
-                                                    }]);
-                                                }}
-                                                onKeyDown={(e) => handleKeyDown(e, directRef, null)}
-                                                style={{ marginBottom: "10px" }}
-                                            />
+                                            <Form.Item label="Wast(%)" style={{ marginBottom: "10px" }}>
+                                                <Input
+                                                    ref={percentageRef}
+                                                    value={wastageData[0]?.percentage || ""}
+                                                    placeholder="%"
+                                                    onChange={(e) => {
+                                                        const value = e.target.value;
+                                                        setWastageData([{ ...wastageData[0], percentage: value, total: value ? ((parseFloat(value) * nwt) / 100).toFixed(3) : "" }]);
+                                                    }}
+                                                    onKeyDown={(e) => handleKeyDown(e, directRef, null)}
+                                                    style={{ marginBottom: "10px" }}
+                                                />
+                                            </Form.Item>
                                         </Col>
                                         <Col span={8}>
-                                            <Text style={{ display: "block", textAlign: "left", marginBottom: "5px" }}>Direct</Text>
-                                            <Input
-                                                ref={directRef}
-                                                value={wastageData[0]?.direct || ""}
-                                                placeholder="Direct"
-                                                onChange={(e) => {
-                                                    const value = e.target.value;
-                                                    setWastageData([{
-                                                        ...wastageData[0],
-                                                        direct: value,
-                                                        total: parseFloat(value).toFixed(3)
-                                                    }]);
-                                                }}
-                                                onKeyDown={(e) => handleKeyDown(e, perGramRef, percentageRef)}
-                                                style={{ marginBottom: "10px" }}
-                                            />
+                                            <Form.Item label="Dir.wast" style={{ marginBottom: "10px" }}>
+                                                <Input
+                                                    ref={directRef}
+                                                    value={wastageData[0]?.direct || ""}
+                                                    placeholder="Direct"
+                                                    onChange={(e) => {
+                                                        const value = e.target.value;
+                                                        setWastageData([{ ...wastageData[0], direct: value, total: parseFloat(value).toFixed(3) }]);
+                                                    }}
+                                                    onKeyDown={(e) => handleKeyDown(e, totalRef, percentageRef)}
+                                                    style={{ marginBottom: "10px" }}
+                                                />
+                                            </Form.Item>
                                         </Col>
                                         <Col span={8}>
-                                            <Text style={{ display: "block", textAlign: "left", marginBottom: "5px" }}>Total</Text>
-                                            <Input ref={totalRef} value={wastageData[0]?.total || ""} placeholder="Total" readOnly />
+                                            <Form.Item label="Tot.wast" style={{ marginBottom: "10px" }}>
+                                                <Input ref={totalRef} value={wastageData[0]?.total || ""} 
+                                                placeholder="Total" readOnly style={{ marginBottom: "10px" }} />
+                                            </Form.Item>
                                         </Col>
                                     </Row>
-                                {/* </Card> */}
 
-                                {/* Making Charges Section (Below Wastage) */}
-                                {/* <Card bordered={false} style={{ background: "#F0F0F0", borderRadius: "8px", }} className="customeproductcard"> */}
-                                    <Row gutter={8}>
+                                    {/* Making Charges Section (3 Fields Per Row) */}
+                                    <Row gutter={10}>
                                         <Col span={8}>
-                                            <Text style={{ display: "block", textAlign: "left", marginBottom: "5px" }}>Gram</Text>
-                                            <Input
-                                                ref={perGramRef}
-                                                value={wastageData[0]?.perGram || ""}
-                                                placeholder="Per Gram"
-                                                onChange={(e) => {
-                                                    const value = e.target.value;
-                                                    setWastageData([{
-                                                        ...wastageData[0],
-                                                        perGram: value,
-                                                        newField2: (parseFloat(value) * nwt).toFixed(2)
-                                                    }]);
-                                                }}
-                                                onKeyDown={(e) => handleKeyDown(e, direct1Ref, null)}
-                                                style={{ marginBottom: "10px" }}
-                                            />
+                                            <Form.Item label="Mc/g" style={{ marginBottom: "10px" }}>
+                                                <Input
+                                                    ref={perGramRef}
+                                                    value={wastageData[0]?.perGram || ""}
+                                                    placeholder="Per Gram"
+                                                    onChange={(e) => {
+                                                        const value = e.target.value;
+                                                        setWastageData([{ ...wastageData[0], perGram: value, newField2: (parseFloat(value) * nwt).toFixed(2) }]);
+                                                    }}
+                                                    onKeyDown={(e) => handleKeyDown(e, direct1Ref, null)}
+                                                    style={{ marginBottom: "10px" }}
+                                                />
+                                            </Form.Item>
                                         </Col>
                                         <Col span={8}>
-                                            <Text style={{ display: "block", textAlign: "left", marginBottom: "5px" }}>Direct</Text>
-                                            <Input
-                                                ref={direct1Ref}
-                                                value={wastageData[0]?.newField1 || ""}
-                                                placeholder="Direct"
-                                                onChange={(e) => {
-                                                    const value = e.target.value;
-                                                    setWastageData([{
-                                                        ...wastageData[0],
-                                                        newField1: value,
-                                                        newField2: (parseFloat(wastageData[0]?.perGram || 0) * nwt).toFixed(2)
-                                                    }]);
-                                                }}
-                                                onKeyDown={(e) => handleKeyDown(e, total1Ref, perGramRef)}
-                                                style={{ marginBottom: "10px" }}
-                                            />
+                                            <Form.Item label="Dir.Mc" style={{ marginBottom: "10px" }}>
+                                                <Input
+                                                    ref={direct1Ref}
+                                                    value={wastageData[0]?.newField1 || ""}
+                                                    placeholder="Direct"
+                                                    onChange={(e) => {
+                                                        const value = e.target.value;
+                                                        setWastageData([{ ...wastageData[0], newField1: value, newField2: (parseFloat(wastageData[0]?.perGram || 0) * nwt).toFixed(2) }]);
+                                                    }}
+                                                    onKeyDown={(e) => handleKeyDown(e, total1Ref, perGramRef)}
+                                                    style={{ marginBottom: "10px" }}
+                                                />
+                                            </Form.Item>
                                         </Col>
                                         <Col span={8}>
-                                            <Text style={{ display: "block", textAlign: "left", marginBottom: "5px" }}>Total</Text>
-                                            <Input
-                                                ref={total1Ref}
-                                                value={
-                                                    parseFloat(wastageData[0]?.newField1) > 0
-                                                        ? wastageData[0]?.newField1
-                                                        : ((parseFloat(wastageData[0]?.total) + nwt) * parseFloat(wastageData[0]?.perGram)).toFixed(2) || ""
-                                                }
-                                                placeholder="Total"
-                                                readOnly
-                                            />
+                                            <Form.Item label="Tot.Mc" style={{ marginBottom: "10px" }}>
+                                                <Input
+                                                    ref={total1Ref}
+                                                    value={
+                                                        parseFloat(wastageData[0]?.newField1) > 0
+                                                            ? wastageData[0]?.newField1
+                                                            : ((parseFloat(wastageData[0]?.total) + nwt) * parseFloat(wastageData[0]?.perGram)).toFixed(2) || ""
+                                                    }
+                                                    placeholder="Total"
+                                                    readOnly
+                                                    style={{ marginBottom: "10px" }}
+                                                />
+                                            </Form.Item>
                                         </Col>
                                     </Row>
+                                </Form>
                                 {/* </Card> */}
+                            </Col>
 
-                            </Card>
-                        </Col>
 
-                    </Row>
+                        </Row>
+                    </Card>
 
                     <Row><span style={{ padding: "6px", fontWeight: "bold" }}>Stone Detailes</span></Row>
 
-                    <Card style={{ backgroundColor: "lightblue" }} className="customeproductcard">
-                        <Row gutter={[8, 8]}>
-                            <Col span={4}>
-                                <Text style={{ display: "block" }}>Stone Item</Text>
-                                <Select
-                                    ref={stoneItemRef}
-                                    showSearch
-                                    value={formValues.stoneItem || stoneItemInputValue}
-                                    placeholder="Select Stone"
-                                    onChange={handleStoneChange}
-                                    onSelect={handleStoneSelect}
-                                    style={{ width: "100%" }}
-                                    onSearch={(value) => {
-                                        setStoneItemInputValue(value);
-                                        setHighlightedIndex(0);
-                                    }}
-                                    onKeyDown={handleStoneKeyDown}
-                                    filterOption={false}
-                                    defaultActiveFirstOption={false}
-                                    dropdownRender={(menu) => (
-                                        <div>
-                                            {menu}
-                                            <style jsx>{`
-                                            .ant-select-item-option-active {
-                                                background-color: rgb(125, 248, 156) !important;
-                                            }
-                                        `}</style>
-                                        </div>
-                                    )}
-                                >
-                                    {filteredOptions.map((item, index) => (
-                                        <Option
-                                            key={item.ITEMCODE}
-                                            value={item.ITEMNAME}
-                                            className={index === highlightedIndex ? "highlighted-option" : ""}
-                                        >
-                                            {item.ITEMNAME}
-                                        </Option>
-                                    ))}
-                                </Select>
-                            </Col>
-                            {[
-                                { name: "pcs", placeholder: "Enter Pcs", ref: pcssRef },
-                                { name: "cts", placeholder: "Enter Cts" },
-                                { name: "grams", placeholder: "Enter Grams" },
-                                { name: "rate", placeholder: "Enter Rate", ref: rateRef },
-                                { name: "amount", placeholder: "Auto-calculated", readOnly: true },
-                                { name: "noPcs", placeholder: "Enter No. Pcs", ref: noPcsRef },
-                                { name: "color", placeholder: "Enter Color", ref: colorRef },
-                                { name: "cut", placeholder: "Enter Cut", ref: cutRef },
-                                { name: "clarity", placeholder: "Enter Clarity", ref: clarityRef },
-                            ].map(({ name, placeholder, readOnly = false, ref }) => (
-                                <Col span={4} key={name}>
-                                    <Text>{name.charAt(0).toUpperCase() + name.slice(1)}</Text>
-                                    <Input
-                                        name={name}
-                                        value={formValues[name]}
-                                        onChange={handleInputChange}
-                                        onKeyDown={(e) => handleEnterPress(e, name)}
-                                        placeholder={placeholder}
-                                        readOnly={readOnly}
-                                        ref={ref}
-                                    />
-                                </Col>
-                            ))}
-                            <Button type="primary" onClick={() => { handleAddStone(); mainProductRef.current.focus(); }} style={{ marginTop: "20px" }}>
-                                Submit
-                            </Button>
-                        </Row>
-                    </Card>
+                    <Card style={{ backgroundColor: "lightblue", padding: "10px" }} className="customeproductcard" >
+    <Row gutter={[8, 8]} align="middle">
+        {/* Stone Item */}
+        <Col span={4}>
+            <Typography.Text strong>Stone Item</Typography.Text>
+            <Select
+                ref={stoneItemRef}
+                showSearch
+                value={formValues.stoneItem || stoneItemInputValue}
+                placeholder="Select Stone"
+                onChange={handleStoneChange}
+                onSelect={handleStoneSelect}
+                style={{ width: "100%" }}
+                onSearch={(value) => {
+                    setStoneItemInputValue(value);
+                    setHighlightedIndex(0);
+                }}
+                onKeyDown={handleStoneKeyDown}
+                filterOption={false}
+                defaultActiveFirstOption={false}
+                dropdownRender={(menu) => (
+                    <div>
+                        {menu}
+                        <style jsx>{`
+                            .ant-select-item-option-active {
+                                background-color: rgb(125, 248, 156) !important;
+                            }
+                        `}</style>
+                    </div>
+                )}
+            >
+                {filteredOptions.map((item, index) => (
+                    <Option key={item.ITEMCODE} value={item.ITEMNAME} className={index === highlightedIndex ? "highlighted-option" : ""}>
+                        {item.ITEMNAME}
+                    </Option>
+                ))}
+            </Select>
+        </Col>
+
+        {/* Pcs, Cts, Grams, Rate, Amount, No Pcs */}
+        {[
+            { name: "pcs", label: "Pcs", placeholder: "Pcs", ref: pcssRef },
+            { name: "cts", label: "Cts", placeholder: "Cts", ref: ctsRef },
+            { name: "grams", label: "Grams", placeholder: "Grams", ref: gramsRef },
+            { name: "rate", label: "Rate", placeholder: "Rate", ref: rateRef },
+            { name: "amount", label: "Amount", placeholder: "Amount", readOnly: true, ref: amountRef },
+            { name: "noPcs", label: "No. Pcs", placeholder: "No. Pcs", ref: noPcsRef },
+        ].map(({ name, label, placeholder, readOnly = false, ref }) => (
+            <Col span={2} key={name}>
+                <Typography.Text strong>{label}</Typography.Text>
+                <Input
+                    name={name}
+                    value={formValues[name]}
+                    onChange={handleInputChange}
+                    onKeyDown={(e) => handleEnterPress(e, name)}
+                    placeholder={placeholder}
+                    readOnly={readOnly}
+                    ref={ref}
+                />
+            </Col>
+        ))}
+
+        {/* Cut, Color, Clarity - Show after No Pcs when clicked */}
+        {showExtraFields &&
+            [
+                { name: "cut", label: "Cut", placeholder: "Cut", ref: cutRef },
+                { name: "color", label: "Color", placeholder: "Color", ref: colorRef },
+                { name: "clarity", label: "Clarity", placeholder: "Clarity", ref: clarityRef },
+            ].map(({ name, label, placeholder, ref }) => (
+                <Col span={2} key={name}>
+                    <Typography.Text strong>{label}</Typography.Text>
+                    <Input
+                        name={name}
+                        value={formValues[name]}
+                        onChange={handleInputChange}
+                        onKeyDown={(e) => handleEnterPress(e, name)}
+                        placeholder={placeholder}
+                        ref={ref}
+                    />
+                </Col>
+            ))}
+
+        {/* Plus Icon */}
+        <Col span={1}>
+            <Typography.Text strong>&nbsp;</Typography.Text>
+            <Button
+    type="primary"
+    shape="circle"
+    icon={<PlusOutlined />}
+    onClick={() => {
+        setShowExtraFields(!showExtraFields);
+        setTimeout(() => cutRef.current?.focus(), 100); // Move to Cut after opening fields
+    }}
+/>
+
+        </Col>
+
+        {/* Submit Button */}
+        <Col span={2}>
+            <Typography.Text strong>&nbsp;</Typography.Text>
+            <Button type="primary" onClick={() => { handleAddStone(); mainProductRef.current.focus(); }}>
+                Submit
+            </Button>
+        </Col>
+    </Row>
+</Card>
+
                     <Card className="customeproductcard">
 
                         <Table
@@ -1735,35 +1833,22 @@ const EstimationTable = () => {
                                 </Table.Summary.Row>
                             )}
                         />
-                        <Row justify="start" style={{ marginTop: "5px", marginBottom: "10px" }}>
-
-                            <Tag color="#32523A" style={tagStyle}>            Total Grms: {finalTotalGrams}
-                            </Tag>
-                            <Tag color="#32523A" style={tagStyle}>            Total Dia Amount: {totalDiaAmount}
-                            </Tag>
-                            <Tag color="#32523A" style={tagStyle}>
-                                Total Diamond Cts: {totalDiamondCts}
-                            </Tag>
-                            <Tag color="#32523A" style={tagStyle}>
-                                Total CTS: {totalCTS}
-                            </Tag>
-                            <Tag color="#32523A" style={tagStyle}>
-                                Total Uncuts: {totalUncuts}
-                            </Tag>
-                        </Row>
-                        <Row justify="end" style={{ marginTop: "10px" }}>
-                            <Button
-                                type="primary"
-                                shape="circle"
-                                icon={<ReloadOutlined />}
-                                onClick={handleRefresh1}
-                                style={{ backgroundColor: "#f5222d", color: "white", border: "none", marginRight: "8px" }}
-                            />
-                            <Button type="primary" onClick={handleOk}>
-                                OK
-                            </Button>
-
-                        </Row></Card>
+                     <Row justify="space-between" align="middle" style={{ marginTop: "5px", marginBottom: "10px" }}>
+    <Col>
+        <Tag color="#32523A" style={tagStyle}>Total Grms: {finalTotalGrams}</Tag>
+        <Tag color="#32523A" style={tagStyle}>Total Dia Amount: {totalDiaAmount}</Tag>
+        <Tag color="#32523A" style={tagStyle}>Total Diamond Cts: {totalDiamondCts}</Tag>
+        <Tag color="#32523A" style={tagStyle}>Total CTS: {totalCTS}</Tag>
+        <Tag color="#32523A" style={tagStyle}>Total Uncuts: {totalUncuts}</Tag>
+    </Col>
+    <Col style={{ marginLeft: "auto" }}>
+       
+        <Button type="primary" onClick={handleOk} size="large">
+            OK
+        </Button>
+    </Col>
+</Row>
+</Card>
                 </Card>
 
             </Modal>

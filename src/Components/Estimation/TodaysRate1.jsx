@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Card, Tag, Popover, Table, Input, Button } from "antd";
+import { Card, Tag, Popover, Table, Input, Button ,message} from "antd";
 import axios from "axios";
 import { CREATE_jwel } from "../../Config/Config";
 
@@ -13,7 +13,8 @@ const TodaysRates = ({ onRatesCheck }) => {
 
   const prefixes = React.useMemo(() => ["18K", "22K", "24K"], []);
 
-  const fetchRates = async () => {
+
+  const fetchRates = React.useCallback(async () => {
     try {
       const response = await axios.get(`${CREATE_jwel}/api/Erp/GetDailyRatesList`);
       const data = response.data;
@@ -54,7 +55,7 @@ const TodaysRates = ({ onRatesCheck }) => {
       setRatesAvailable(false);
       onRatesCheck(false);
     }
-  };
+  }, [onRatesCheck, ratesAvailable]);
 
   useEffect(() => {
     fetchRates();
@@ -64,7 +65,7 @@ const TodaysRates = ({ onRatesCheck }) => {
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [prefixes.length]);
+  }, [prefixes.length ,fetchRates]);
 
   useEffect(() => {
     const currentPrefix = prefixes[currentPrefixIndex];
@@ -115,24 +116,26 @@ const TodaysRates = ({ onRatesCheck }) => {
   const handleSubmit = async () => {
     const today = new Date().toISOString().split("T")[0];
     try {
-      await axios.post(`http://www.jewelerp.timeserasoftware.in/api/Erp/DailyRatesDelete?rDate=${today}`);
-      for (const rate of ratesData) {
-        await axios.post("http://www.jewelerp.timeserasoftware.in/api/Erp/DailyRatesInsert", {
-          rdate: today,
-          mainproduct: rate.MAINPRODUCT,
-          rate: rate.RATE || 0,
-          prefix: rate.PREFIX,
-          pureornot: rate.PUREORNOT ,
-          temP_RATE: rate.TEMP_RATE || 0,
-          cloud_upload: rate.cloud_upload,
-        });
-      }
-      setVisible(false);
+        await axios.post(`http://www.jewelerp.timeserasoftware.in/api/Erp/DailyRatesDelete?rDate=${today}`);
+        for (const rate of ratesData) {
+            await axios.post("http://www.jewelerp.timeserasoftware.in/api/Erp/DailyRatesInsert", {
+                rdate: today,
+                mainproduct: rate.MAINPRODUCT,
+                rate: rate.RATE || 0,
+                prefix: rate.PREFIX,
+                pureornot: rate.PUREORNOT,
+                temP_RATE: rate.TEMP_RATE || 0,
+                cloud_upload: rate.cloud_upload,
+            });
+        }
+
+        setVisible(false);
       fetchRates(); // Refresh the rates after submission
     } catch (error) {
-      console.error("Error submitting rates:", error);
+        console.error("Error submitting rates:", error);
     }
-  };
+};
+
 
   const popoverContent = (
     <div>
