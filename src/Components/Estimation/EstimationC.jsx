@@ -492,14 +492,14 @@ const EstimationTable = () => {
     };
 
 
-    const handleKeyPress = useCallback((e) => {
-        if (e.key === 'Enter') {
-            if (debounceRef.current) clearTimeout(debounceRef.current);
-            debounceRef.current = setTimeout(() => {
-                fetchData();
-            }, 300); // 300ms debounce time
-        }
-    }, [fetchData]);
+    // const handleKeyPress = useCallback((e) => {
+    //     if (e.key === 'Enter') {
+    //         if (debounceRef.current) clearTimeout(debounceRef.current);
+    //         debounceRef.current = setTimeout(() => {
+    //             fetchData();
+    //         }, 300); // 300ms debounce time
+    //     }
+    // }, [fetchData]);
 
     useEffect(() => {
         if (tagNoInputRef.current) {
