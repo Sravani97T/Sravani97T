@@ -1,12 +1,12 @@
 import React, { useCallback, useRef, useState, useEffect } from "react";
-import { Form, Table, Button, Col, Row, Input, Card, Typography, Tag, message, Popover, Popconfirm, Modal, Select } from "antd";
-import { DeleteOutlined, InfoCircleOutlined, PlusOutlined, ReloadOutlined, CloseOutlined, EditOutlined } from "@ant-design/icons";
+import { Form, Table, Button, Col, Row, Input, Card, Typography, Tag, message, Popover, Popconfirm, Modal, Select ,Checkbox} from "antd";
+import { DeleteOutlined, InfoCircleOutlined,FolderAddOutlined, PlusOutlined, ReloadOutlined, CloseOutlined, EditOutlined } from "@ant-design/icons";
 import TodaysRates1 from "./TodaysRate1";
 import axios from 'axios';
 import TableHeaderStyles from "../Pages/TableHeaderStyles";
 
 const { Option } = Select;
-const { Text,  } = Typography;
+const { Text, } = Typography;
 const EstimationTable = () => {
     const tagStyle = {
         fontSize: "12px",
@@ -88,6 +88,32 @@ const EstimationTable = () => {
     const handleStoneChange = (value) => {
         setFormValues({ ...formValues, stoneItem: value });
         setStoneItemInputValue(""); // ✅ Clears input after selection
+    };
+    const [estimationNo, setEstimationNo] = useState("");
+
+    useEffect(() => {
+
+
+        fetchEstimationNo();
+    }, []);
+    const fetchEstimationNo = async () => {
+        try {
+            const response = await fetch(
+                "http://www.jewelerp.timeserasoftware.in/api/Scheme/GetSchemeMaxNumberInTable?tableName=ESTIMATION_MAST&column=ESTIMATIONNO",
+                {
+                    headers: {
+                        tenantName: "PmlYjF0yAwEjNohFDKjzn/ExL/LMhjzbRDhwXlvos+0="
+                    }
+                }
+            );
+            const data = await response.json();
+            const maxEstimationNo = parseInt(data[0]?.Column1 ?? 0, 10); // If null, set to 0
+            const newEstimationNo = maxEstimationNo + 1;
+            console.log("Fetched Estimation No:", newEstimationNo); // Log the fetched number
+            setEstimationNo(newEstimationNo); // Increment by 1
+        } catch (error) {
+            console.error("Error fetching estimation number:", error);
+        }
     };
     const handleRefresh1 = () => {
         setSelectedMainProduct(null);
@@ -192,11 +218,11 @@ const EstimationTable = () => {
     const ctsRef = useRef(null);
     const gramsRef = useRef(null);
     const amountRef = useRef(null);
-   
+
     const handleEnterPress = (e, fieldName) => {
         if (e.key === "Enter") {
             e.preventDefault();
-    
+
             if (fieldName === "pcs") {
                 if (!formValues.pcs || formValues.pcs.trim() === "") {
                     ctsRef.current?.focus(); // Move to Cts if pcs is empty
@@ -230,8 +256,8 @@ const EstimationTable = () => {
             }
         }
     };
-    
-    
+
+
     const handleAddStone = () => {
         if (!formValues.rate) {
             alert("Enter required fields.");
@@ -489,8 +515,51 @@ const EstimationTable = () => {
         setTimeout(() => setRotating(false), 1000); // Stop rotation after 1s
         setData([]); // Clear table data
         setTagNo(""); // Clear Tag No input
-    };
+        setEstimationNo();
+        fetchEstimationNo();
 
+    };
+    const [visibleHis, setVisiblehis] = useState(false);
+    const [hisdata, setDatahis] = useState([]);
+    const [filteredData, setFilteredData] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [searchText, setSearchText] = useState("");
+  
+    // Fetch data from API
+    const fetchDataHis = async () => {
+      setLoading(true);
+      try {
+        const response = await axios.get(
+          "http://www.jewelerp.timeserasoftware.in/api/Master/GetDataFromGivenTableNameWithOrder",
+          {
+            params: { tableName: "ESTIMATION_MAST", order: "ESTIMATIONNO" },
+            headers: {
+              tenantName: "PmlYjF0yAwEjNohFDKjzn/ExL/LMhjzbRDhwXlvos+0=",
+            },
+          }
+        );
+        setDatahis(response.data);
+        setFilteredData(response.data);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+      setLoading(false);
+    };
+ // Open modal and fetch data
+ const showModal = () => {
+    setVisiblehis(true);
+    fetchDataHis();
+  };
+
+  // Handle search input change
+  const handleSearch = (e) => {
+    const value = e.target.value.toLowerCase();
+    setSearchText(value);
+    const filtered = data.filter((item) =>
+      item.EstimationNo.toString().includes(value)
+    );
+    setFilteredData(filtered);
+  };
 
     // const handleKeyPress = useCallback((e) => {
     //     if (e.key === 'Enter') {
@@ -553,7 +622,6 @@ const EstimationTable = () => {
         try {
             setTagNo(null);
 
-            // Get current date in MM/DD/YYYY format
             const currentDate = new Date();
             const formattedDate = `${(currentDate.getMonth() + 1).toString().padStart(2, "0")}/${currentDate
                 .getDate()
@@ -570,16 +638,24 @@ const EstimationTable = () => {
                 message.warning("No data found for this Tag No.");
                 return;
             }
-            // Use already fetched rates (no extra API call)
+
             if (rates.length === 0) {
                 message.warning("Rates not available. Cannot proceed.");
                 return;
             }
-            // Fetch daily rates using the current date
+
+            // Fetch daily rates
             const ratesResponse = await axios.get(
                 `http://www.jewelerp.timeserasoftware.in/api/Master/GetDataFromGivenTableNameWithWhere?tableName=DAILY_RATES&where=RDATE%3D%27${formattedDate}%27`
             );
             const allRates = ratesResponse.data;
+
+            // Fetch additional item details for the tag
+            const tagItemsResponse = await axios.get(
+                `http://www.jewelerp.timeserasoftware.in/api/Master/GetDataFromGivenTableNameWithWhereandOrder?tableName=TAG_ITEMS&where=TAGNO%3D${trimmedTagNo}&order=SNO`
+            );
+            const tagItemsData = tagItemsResponse.data;
+
             const processedData = responseData.map((item, index) => {
                 const lessWeight = item.GWT - item.NWT;
                 const totalWastage = item.WASTAGE > 0 ? (item.NWT * item.WASTAGE) / 100 : item.DIRECTWASTAGE;
@@ -590,6 +666,9 @@ const EstimationTable = () => {
                 const metalValue = actWt * rate;
                 const totalMC = item.MAKINGCHARGES > 0 ? actWt * item.MAKINGCHARGES : item.DIRECTMC;
                 const amount = metalValue + totalMC + item.ITEM_TOTAMT;
+
+                // Merge item details from TAG_ITEMS API response
+                const tagItemDetails = tagItemsData.filter(tagItem => tagItem.TAGNO === item.TAGNO);
 
                 return {
                     key: `${trimmedTagNo}-${index}`,
@@ -619,17 +698,27 @@ const EstimationTable = () => {
                     TAGSIZE: item.TAGSIZE,
                     DESC1: item.DESC1,
                     CATEGORYNAME: item.CATEGORYNAME,
+                    productCode: item.PRODUCTCODE,
+                    productCategory: item.PRODUCTCATEGORY,
+                    iteM_CTS: item.Item_Cts,
+                    iteM_DIAMONDS: item.Item_diamonds,
+                    diamonD_AMOUNT: item.diamonD_AMOUNT,
+                    iteM_UNCUTS: item.Item_Uncuts,
+                    hsncode: item.HSNCODE,
+                    brandName: item.BRANDNAME,
+                    tagItemDetails, // Store additional item details
                 };
             });
-            // Get first record's MNAME in the table
+
+            // Ensure all records belong to the same MNAME
             const firstRecordMName = data.length > 0 ? data[0].mainProduct : null;
             const newMName = processedData[0].mainProduct;
 
-            // Allow only if MNAME matches the first record
             if (firstRecordMName && newMName !== firstRecordMName) {
                 message.error(`Only MNAME "${firstRecordMName}" is allowed. Cannot add different MNAME "${newMName}".`);
                 return;
             }
+
             setData((prevData) => [...prevData, ...processedData]);
 
             // Fetch VAT based on MNAME
@@ -639,7 +728,7 @@ const EstimationTable = () => {
             const vatData = vatResponse.data;
             const matchedVatRecord = vatData.find(record => record.MNAME === newMName);
             if (matchedVatRecord) {
-                setVat(matchedVatRecord.VAT); // Set VAT from matched record
+                setVat(matchedVatRecord.VAT);
                 console.log("Matched VAT Record:", matchedVatRecord.VAT);
             }
         } catch (error) {
@@ -664,7 +753,6 @@ const EstimationTable = () => {
     const getTotal = (key) => {
         return stoneData.reduce((sum, record) => sum + (parseFloat(record[key]) || 0), 0);
     };
-
 
     const handleOk = async () => {
         try {
@@ -704,13 +792,28 @@ const EstimationTable = () => {
                 message.error(`Only mainProduct "${firstRecordMainProduct}" is allowed. Cannot add different mainProduct "${selectedMainProduct}".`);
                 return;
             }
-            // Construct New Data Object
+            const generateHomeKey = () => {
+                return Math.floor(1000 + Math.random() * 9000).toString(); // Generates a unique 4-digit number
+            };
+            // Example usage:
+            const homeKey = generateHomeKey();
+            // Find selected product details
+            const selectedProductDetails = products.find(product => product.PRODUCTNAME === selectedProduct);
+            const productCategory = selectedProductDetails?.PRODUCTCATEGORY || "";
+            const productCode = selectedProductDetails?.PRODUCTCODE || "";
+            const hsncode = selectedProductDetails?.HSNCODE || "";
+
             const newData = {
                 key: `${selectedMainProduct}-${selectedProduct}-${pcs}-${gwt}-${nwt}`,
                 sno: data.length + 1,
+                homeKey,
                 mainProduct: selectedMainProduct,
+                categoryName: selectedCategory,
                 purity: selectedPurity, // Store selected purity (prefix)
                 productName: selectedProduct,
+                productCategory,
+                productCode,
+                hsncode,
                 pieces: pcs,
                 grossWeight: gwt,
                 wastage: wastageData[0]?.percentage,
@@ -720,7 +823,6 @@ const EstimationTable = () => {
                 makingCharges: wastageData[0]?.perGram || "",
                 directMC: wastageData[0]?.newField1 || "",
                 directWastage: wastageData[0]?.direct || "",
-                mcPerGram: wastageData[0]?.perGram || "",
                 totalMC: totalMC?.toFixed(2),
                 actWt: actWt?.toFixed(3), // Add ActWt (NetWt + TotalWastage)
                 metalValue: metalValue?.toFixed(2), // Add Metal Value (ActWt * Rate)
@@ -729,6 +831,13 @@ const EstimationTable = () => {
                 amount: amount, // ✅ Final Amount (Metal Value + MC + Stone Cost)
                 stoneData: stoneData, // Include all stone data
                 totals: calculateTotals(), // Include table data and totals
+                huid,
+                tagSize,
+                description,
+                iteM_CTS: totalCTS,
+                iteM_DIAMONDS: totalDiamondCts,
+                diamonD_AMOUNT: totalDiaAmount,
+                iteM_UNCUTS: totalUncuts,
             };
 
             // Update Data State
@@ -755,7 +864,7 @@ const EstimationTable = () => {
     useEffect(() => {
         setNwt(gwt - totalLess);
     }, [gwt, totalLess]);
-    
+
     const ItemDetailsPopover = ({ record }) => {
         const [visible, setVisible] = useState(false);
         const [stoneDetailes, setStoneDetailes] = useState([]);
@@ -982,10 +1091,143 @@ const EstimationTable = () => {
             </Popover>
         );
     };
+    const handleSubmit = async () => {
+        if (selectedRowKeys.length === 0) {
+            message.warning("Please select an estimation record.");
+            return;
+        }
+    
+        const selectedEstimationNo = selectedRowKeys[0];
+    
+        try {
+            // Fetch Estimation Data
+            const response = await axios.get(
+                `http://www.jewelerp.timeserasoftware.in/api/Master/GetDataFromGivenTableNameWithWhere?tableName=ESTIMATION_DATA&where=ESTIMATIONNO%3D${selectedEstimationNo}`
+            );
+    
+            if (!response.data.length) {
+                message.warning("No data found for the selected Estimation No.");
+                return;
+            }
+    
+            // Fetch Daily Rates
+            const currentDate = new Date();
+            const formattedDate = `${(currentDate.getMonth() + 1).toString().padStart(2, "0")}/${currentDate.getDate().toString().padStart(2, "0")}/${currentDate.getFullYear()}`;
+    
+            const ratesResponse = await axios.get(
+                `http://www.jewelerp.timeserasoftware.in/api/Master/GetDataFromGivenTableNameWithWhere?tableName=DAILY_RATES&where=RDATE%3D%27${formattedDate}%27`
+            );
+            const allRates = ratesResponse.data || [];
+    
+            // Fetch Estimation Items (Tag Item Details)
+            const tagItemsResponse = await axios.get(
+                `http://www.jewelerp.timeserasoftware.in/api/Master/GetDataFromGivenTableNameWithWhere?tableName=ESTIMATION_ITEMS&where=ESTIMATIONNO%3D${selectedEstimationNo}`
+            );
+            const tagItems = tagItemsResponse.data || [];
+    
+            setEstimationNo(selectedEstimationNo);
+    
+            // Process Data & Map to Table Structure
+            const processedData = response.data.map((item, index) => {
+                const grossWeight = parseFloat(item.Gwt) || 0;
+                const netWeight = parseFloat(item.Nwt) || 0;
+                const lessWeight = grossWeight - netWeight;
+    
+                const wastagePercent = parseFloat(item.Wastage) || 0;
+                const directWastage = parseFloat(item.DirectWastage) || 0;
+                const totalWastage = wastagePercent > 0 ? (netWeight * wastagePercent) / 100 : directWastage;
+                const actWt = netWeight + totalWastage;
+    
+                const rateItem = allRates.find((rate) => rate.PREFIX === item.Prefix);
+                const rate = parseFloat(rateItem?.RATE) || parseFloat(item.Rate) || 0;
+                const metalValue = actWt * rate;
+    
+                const makingCharges = parseFloat(item.MakingCharges) || 0;
+                const directMC = parseFloat(item.DirectMc) || 0;
+                const totalMC = makingCharges > 0 ? actWt * makingCharges : directMC;
+    
+                const stoneCost = parseFloat(item.Itemamt) || 0;
+                const amount = metalValue + totalMC + stoneCost;
+    
+                return {
+                    key: `${item.EstimationNo}-${index}`,
+                    sno: index + 1,
+                    tagNo: parseFloat(item.TagNo) || 0,
+                    mainProduct: item.Mname || "N/A",
+                    homeKey: Number(item.Homekey),
+                    productName: item.ProductName || "N/A",
+                    productCode: item.ProductCode || "N/A",
+                    productCategory: item.ProductCategory || "N/A", // ✅ Added missing field
+                    purity: item.Prefix || "N/A",
+                    pieces: parseFloat(item.Pieces) || 0,
+                    grossWeight: grossWeight.toFixed(3),
+                    lessWeight: lessWeight.toFixed(3),
+                    netWeight: netWeight.toFixed(3),
+                    rate: rate.toFixed(2),
+                    metalValue: metalValue.toFixed(2),
+                    stoneCost: stoneCost.toFixed(2),
+                    totalWastage: totalWastage.toFixed(3),
+                    actWt: actWt.toFixed(3),
+                    totalMC: Math.round(totalMC),
+                    amount: Math.round(amount),
+                    directWastage: directWastage.toFixed(3),
+                    wastage: wastagePercent.toFixed(2),
+                    makingCharges: makingCharges.toFixed(2),
+                    directMC: directMC.toFixed(2),
+                    counterName: item.CounterName || "N/A",
+                    hsncode: item.HSNCODE || "-",
+                    brandName: item.BrandName || "N/A",
+                    description: item.descrption || "N/A", // ✅ Fixed: Corrected from 'descrption'
+                    tagItemDetails: tagItems.filter((t) => t.TagNo === item.TagNo), 
+                    // ✅ Additional Fields from API (Mapped Correctly)
+                    estimationNo: item.EstimationNo || "N/A",
+                    brandAmount: parseFloat(item.BrandAmt) || 0,
+                    totalAmount: parseFloat(item.Totamt) || 0,
+                    estimationDate: item.EstDate || "N/A",
+                    estimationTime: item.EstTime || "N/A",
+                    tray: item.Tray || false,
+                    tagDate: item.TagDate || "N/A",
+                    dealerName: item.DealerName || "N/A",
+                    counterName: item.CounterName || "N/A",
+                    prefix: item.Prefix || "N/A",
+                    suspence: item.Suspence || "No",
+                    smCode: item.SMCode || "N/A",
+                    less_Wper: parseFloat(item.Less_Wper) || 0,
+                    discountAmount: parseFloat(item.DisAmt) || 0,
+                    itemCts: parseFloat(item.ITEM_CTS) || 0,
+                    itemDiamonds: parseFloat(item.ITEM_DIAMONDS) || 0,
+                    itemUncuts: parseFloat(item.ITEM_UNCUTS) || 0,
+                    diamondAmount: parseFloat(item.DIAMOND_AMOUNT) || 0,
+                    labReport: item.LABREPORT || false,
+                    huid: item.HUID || "N/A",
+                    tagSize: item.tagsize || "N/A",
+                    purchaseNo: parseFloat(item.PURCHNO) || 0,
+                    purchaseAmount: parseFloat(item.PAMT) || 0,
+                };
+            });
+    
+            setData((prevData) => [...prevData, ...processedData]);
+    
+            setVisiblehis(false);
+            setSelectedRowKeys([]);
+        } catch (error) {
+            console.error("Error fetching Estimation data:", error);
+            message.error("Error fetching Estimation data.");
+        }
+    };
+    
     const columns = [
         { title: "S.No", dataIndex: "sno", key: "sno", width: 50, render: (_, __, index) => index + 1 },
         { title: "Tag No", dataIndex: "tagNo", width: 60, key: "tagNo" },
         {
+            title: "Home Key",
+            dataIndex: "homeKey",  // Use the correct key name
+            width: 100,
+            key: "homeKey",
+            align: "center",
+        },
+        
+                {
             title: "Actions",
             key: "actions",
             align: "center",
@@ -1010,12 +1252,12 @@ const EstimationTable = () => {
         { title: "Product Name", dataIndex: "productName", key: "productName" },
         { title: "Purity", dataIndex: "purity", align: 'center', key: "purity" },
         { title: "Pieces", dataIndex: "pieces", align: 'right', key: "pieces" },
-        { title: "Gross W.T", dataIndex: "grossWeight", align: 'right', key: "grossWeight" ,  render: (text) => Number(text)?.toFixed(3) },
+        { title: "Gross W.T", dataIndex: "grossWeight", align: 'right', key: "grossWeight", render: (text) => Number(text)?.toFixed(3) },
         { title: "Less W.T", dataIndex: "lessWeight", align: 'right', key: "lessWeight", render: (text) => Number(text)?.toFixed(3) },
-         { title: "Net W.T", dataIndex: "netWeight", align: 'right', key: "netWeight", render: (text) =>  Number(text)?.toFixed(3)  },
+        { title: "Net W.T", dataIndex: "netWeight", align: 'right', key: "netWeight", render: (text) => Number(text)?.toFixed(3) },
         { title: "Rate", dataIndex: "rate", align: 'right', key: "rate" },
         { title: "Total Wastage", dataIndex: "totalWastage", align: 'right', key: "totalWastage", render: (text) => Number(text)?.toFixed(3) },
-        { title: "ACT W.T", dataIndex: "actWt", align: 'right', key: "actWt",  render: (text) => Number(text)?.toFixed(3)  },
+        { title: "ACT W.T", dataIndex: "actWt", align: 'right', key: "actWt", render: (text) => Number(text)?.toFixed(3) },
         { title: "Metal Value", dataIndex: "metalValue", align: 'right', key: "metalValue" },
         { title: "Total MC", dataIndex: "totalMC", align: 'right', key: "totalMC", render: (text) => Math.round(text) },
         { title: "Stone Cost", dataIndex: "stoneCost", align: 'right', key: "stoneCost" },
@@ -1024,7 +1266,284 @@ const EstimationTable = () => {
         { title: "Wastage", dataIndex: "wastage", align: 'right', key: "wastage" },
         { title: "MC/Gram", dataIndex: "makingCharges", align: 'right', key: "makingCharges" },
         { title: "Direct MC", dataIndex: "directMC", align: 'right', key: "directMC" },
+
     ];
+     // Define table columns
+const columns3 = [
+    {
+        title: "S.No",
+        dataIndex: "sno",
+        width: 50,
+        key: "sno",
+        render: (_, __, index) => index + 1,
+    },
+    {
+        title: "",
+        dataIndex: "checkbox",
+        width: 50,
+        key: "checkbox",
+        render: (_, record) => (
+            <Checkbox
+                checked={selectedRowKeys.includes(record.EstimationNo)}
+                onChange={() => handleCheckboxChange(record.EstimationNo)}
+            />
+        ),
+    },
+    { title: "Esti No", dataIndex: "EstimationNo", key: "EstimationNo" },
+    { title: "Cust Name", dataIndex: "CustName", key: "CustName" },
+    { title: "EstiDate", dataIndex: "EstDate", key: "EstDate", render: (text) => new Date(text).toLocaleDateString() },
+    { title: "Total Pcs", dataIndex: "TotPces", key: "TotPces", align: "right" },
+    { title: "GWt", dataIndex: "GWT", key: "GWT", align: "right", render: (text) => Number(text).toFixed(3) },
+    { title: "NWt", dataIndex: "Nwt", key: "Nwt", align: "right", render: (text) => Number(text).toFixed(3) },
+    { title: "Net Amt", dataIndex: "NetAmt", key: "NetAmt", align: "right" },
+];
+
+const handleCheckboxChange = (estimationNo) => {
+    setSelectedRowKeys((prevSelectedRowKeys) => {
+        if (prevSelectedRowKeys.includes(estimationNo)) {
+            return prevSelectedRowKeys.filter((key) => key !== estimationNo);
+        } else {
+            return [estimationNo]; // Only allow one checkbox to be checked at a time
+        }
+    });
+};
+
+const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+
+    const jewelType = data.length > 0 ? data[0].mainProduct : "";
+    const handleSave = async () => {
+        if (!data || !Array.isArray(data) || data.length === 0) {
+            message.error("No estimation data found.");
+            return;
+        }
+
+        // Master Payload
+        const payloadMaster = {
+            estimationNo: String(estimationNo), // Convert estimationNo to string
+            gold: 0,
+            platinum: 0,
+            silver: 0,
+            pure: 0,
+            nonKDM: 0,
+            cT_18: 0,
+            grandTotal: Math.ceil(Number(totals.totalAmount)),
+            vatAmt: Math.ceil(Number(gstAmount)),
+            grossAmt: Math.ceil(Number(grossAmount)),
+            discountPer: discount || 0,
+            discountAmt: discount ? (grossAmount * discount) / 100 : 0,
+            netAmt: Math.ceil(Number(netAmount)),
+            estDate: new Date().toISOString(),
+            estTime: new Date().toISOString(),
+            totPces: totals.totalPcs,
+            gwt: totals.totalGrossWeight?.toFixed(3),
+            nwt: totals.totalNetWeight?.toFixed(3),
+            watage: totals.totalWastage?.toFixed(3),
+            totMc: Math.round(Number(totals.totalMakingCharges)),
+            totAmount: Math.round(Number(totals.totalAmount)),
+            itemAmount: totals.totalStoneCost,
+            custName: "string",
+            jewelType,
+            billNo: 0,
+            saleCode: 0,
+            e_PREFIX: "string",
+            smCode: "string",
+            descrption: "string",
+            iteM_CTS: 0,
+            iteM_DIAMONDS: 0,
+            iteM_UNCUTS: 0,
+            diamonD_AMOUNT: 0,
+            exciseduty: 0,
+            exciseamount: 0,
+            totadvance: 0,
+            totpaid: 0,
+            totbalance: 0,
+            purchamt: 0,
+            city: "string",
+            mobileno: "string",
+            purchno: 0,
+            pamt: 0,
+        };
+
+        // Details Payload
+        const payloadDataInsert = data.map((item) => ({
+            estimationNo: String(estimationNo), // Use the fetched estimation number
+            tagNo: Number(item.tagNo) || 0,
+            homekey: item.homeKey ?? 0,
+            mname: item.mainProduct || "string",
+            productName: item.productName || "string",
+            pieces: Number(item.pieces) || 0,
+            gwt: Number(item.grossWeight) || 0,
+            nwt: Number(item.netWeight) || 0,
+            categoryName: item.categoryName || "string",
+            wastage: String(item.wastage || "0"),
+            directWastage: String(item.directWastage || "0"),
+            cattotwast: String(item.totalWastage || "0"),
+            makingCharges: String(item.makingCharges || "0"),
+            directMc: String(item.directMC || "0"),
+            cattotMc: String(item.totalMC || "0"),
+            brandName: item.brandName || "string",
+            brandAmt: Number(item.brandAmt) || 0,
+            amount: Number(item.amount) || 0,
+            itemamt: Number(item.stoneCost) || 0,
+            totamt: Number(item.amount) || 0,
+            estDate: new Date().toISOString(),
+            estTime: new Date().toISOString(),
+            rate: Number(item.rate) || 0,
+            tray: !!item.tray,
+            tagDate: new Date().toISOString(),
+            productCategory: item.productCategory || "string",
+            productCode: item.productCode || "string",
+            counterName: item.counterName || "string",
+            prefix: item.purity || "string",
+            suspence: item.suspence || "No",
+            smCode: item.smCode || "sravs",
+            less_Wper: Number(item.less_Wper) || 0,
+            disAmt: Number(item.disAmt) || 0,
+            descrption: item.description || item.DESC1 || "Default Description", 
+                        huid: item.huid || "string",
+            tagsize: item.tagSize || "string",
+            hsncode: item.hsncode || "string",
+            pvalue: Number(item.pvalue) || 0,
+            purchno: Number(item.purchno) || 0,
+            pamt: Number(item.pamt) || 0,
+            iteM_CTS: Number(item.iteM_CTS) || 0,
+            iteM_DIAMONDS: Number(item.iteM_DIAMONDS) || 0,
+            diamonD_AMOUNT: Number(item.diamonD_AMOUNT) || 0,
+            iteM_UNCUTS: Number(item.iteM_UNCUTS) || 0,
+            labreport: Boolean(item.labreport),
+            dealerName: item?.DEALERNAME || "string",
+        }));
+
+        // Third API Payload (Estimation Items)
+        const payloadItemsInsert = data.flatMap((item) => [
+            // Include stoneData
+            ...(item.stoneData && item.stoneData.length > 0
+                ? item.stoneData.map((stone, index) => ({
+                    estimationNo: String(estimationNo),// Use the fetched estimation number
+                    tagNo: Number(item.tagNo) || 0,
+                    sno: index + 1,
+                    itemName: stone.stoneItem || "string",
+                    pieces: Number(stone.pcs) || 0,
+                    cts: Number(stone.cts) || 0,
+                    grms: Number(stone.grams) || 0,
+                    rate: Number(stone.rate) || 0,
+                    amount: Number(stone.amount) || 0,
+                    homeKey: Number(item.homeKey) || 0,
+                    cut: stone.cut || "N/A",
+                    colour: stone.color || "N/A",
+                    clarity: stone.clarity || "N/A",
+                    noPcs: Number(stone.noPcs) || 0, // Added noPcs field
+                }))
+                : []
+            ),
+
+            // Include tagItemDetails
+            ...(item.tagItemDetails?.map((tagItem, index) => ({
+                estimationNo: String(estimationNo), // Use the fetched estimation number
+                tagNo: Number(item.tagNo) || 0,
+                sno: (item.stoneData?.length || 0) + index + 1, // Ensure unique sno
+                itemName: tagItem.ITEMNAME || "string",
+                pieces: Number(tagItem.PIECES) || 0,
+                cts: Number(tagItem.CTS) || 0,
+                grms: Number(tagItem.GRMS) || 0,
+                rate: Number(tagItem.RATE) || 0,
+                amount: Number(tagItem.AMOUNT) || 0,
+                noPcs: Number(tagItem.NO_PCS) || 0,
+                colour: tagItem.COLOUR || "N/A", // Ensure Colour is provided
+                cut: tagItem.CUT || "N/A", // Ensure Cut is provided
+                clarity: tagItem.CLARITY || "N/A", // Ensure Clarity is provided
+                homeKey: Number(item.homeKey) || 0,
+            })) || [])
+        ]);
+
+        try {
+            const headers = {
+                "Content-Type": "application/json",
+                "tenantName": "PmlYjF0yAwEjNohFDKjzn/ExL/LMhjzbRDhwXlvos+0=",
+            };
+              // 🔹 Step 1: Delete Existing Estimation Data (Ensuring Clean Insert)
+        await axios.post(
+            `http://www.jewelerp.timeserasoftware.in/api/Master/DeleteDataFromGivenTableNameWithWhere?tableName=ESTIMATION_ITEMS&where=ESTIMATIONNO%3D${estimationNo}`,
+            { headers }
+        );
+        await axios.post(
+            `http://www.jewelerp.timeserasoftware.in/api/Master/DeleteDataFromGivenTableNameWithWhere?tableName=ESTIMATION_DATA&where=ESTIMATIONNO%3D${estimationNo}`,
+            { headers }
+        );
+        await axios.post(
+            `http://www.jewelerp.timeserasoftware.in/api/Master/DeleteDataFromGivenTableNameWithWhere?tableName=ESTIMATION_MAST&where=ESTIMATIONNO%3D${estimationNo}`,
+            { headers }
+        );
+            // 1st API Call - Save Master Data
+            const responseMaster = await axios.post(
+                "http://www.jewelerp.timeserasoftware.in/api/Master/EstimationMastInsert",
+                payloadMaster,
+                { headers }
+            );
+
+            if (responseMaster.status === 200) {
+                console.log("Master Data Saved:", responseMaster.data);
+                const headers = {
+                    "Content-Type": "application/json",
+                    "tenantName": "PmlYjF0yAwEjNohFDKjzn/ExL/LMhjzbRDhwXlvos+0=",
+                };
+                // 2nd API Call - Save Estimation Details
+                const responseDetails = await axios.post(
+                    "http://www.jewelerp.timeserasoftware.in/api/Master/EstimationDataMultiInsert",
+                    payloadDataInsert,
+                    { headers }
+                );
+
+                if (responseDetails.status === 200) {
+                    console.log("Estimation Details Saved:", responseDetails.data);
+
+                    // 3rd API Call - Save Estimation Items
+                    if (payloadItemsInsert.length > 0) {
+                        const responseItems = await axios.post(
+                            "http://www.jewelerp.timeserasoftware.in/api/Master/EstimationItemsMultiInsert",
+                            payloadItemsInsert,
+                            { headers: { "Content-Type": "application/json" } }
+                        );
+
+                        if (responseItems.status === 200) {
+                            message.success("Estimation, details, and items saved successfully!");
+                            // window.location.reload(); // Refresh the window after successful save
+                            fetchEstimationNo();
+                            setEstimationNo();
+                            setData([]);
+
+
+
+                        } else {
+                            console.error("Error saving estimation items:", responseItems.data);
+                            message.error(`Error: ${responseItems.data.message || "Failed to save estimation items"}`);
+                        }
+                    } else {
+                        message.success("Estimation and details saved successfully! No items to save.");
+                        // window.location.reload(); // Refresh the window after successful save
+                        fetchEstimationNo();
+                        setEstimationNo();
+                        setData([]);
+
+
+
+                    }
+                } else {
+                    console.error("Error saving estimation details:", responseDetails.data);
+                    message.error(`Error: ${responseDetails.data.message || "Failed to save estimation details"}`);
+                }
+            } else {
+                console.error("Error saving estimation:", responseMaster.data);
+                message.error(`Error: ${responseMaster.data.message || "Failed to save estimation"}`);
+            }
+        } catch (error) {
+            console.error("Network error:", error.response?.data || error);
+            message.error(error.response?.data?.message || "Network error, please try again.");
+        }
+    };
+
+
+
     const fetchStoneDetails = async (tagNo) => {
         if (!tagNo) return;
 
@@ -1143,63 +1662,131 @@ const EstimationTable = () => {
     const netAmount = (parseFloat(grossAmount) - parseFloat(discount || 0)).toFixed(2); // ✅ Define netAmount
     return (
         <div>
-            <Row gutter={16} align="middle" style={{ marginBottom: "0.5rem" }}>
-                <Col span={6} style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                    <h2 style={{ fontSize: "1rem", lineHeight: "1.2", margin: 0, whiteSpace: "nowrap" }}>
+            <Row gutter={[16, 8]} align="middle" style={{ marginBottom: "0.5rem", flexWrap: "wrap" }}>
+                {/* Tag No */}
+                <Col
+                    xs={24} sm={12} md={8} lg={7} xl={7}
+                    style={{
+                        display: "grid",
+                        gridTemplateColumns: "auto 1fr auto auto",
+                        alignItems: "center",
+                        gap: "8px",
+                        order: 1,
+                    }}
+                >
+                    <h2 style={{ fontSize: "1rem", margin: 0, whiteSpace: "nowrap" }}>
                         TAG NO
                     </h2>
                     <Input
                         placeholder="Enter Tag No"
                         size="large"
-                        style={{ height: "40px", fontSize: "16px", fontWeight: "bold", flex: 1, minWidth: "150px" }}
+                        style={{ height: "40px", fontSize: "16px", fontWeight: "bold", minWidth: "120px" }}
                         value={tagNo}
                         onChange={(e) => setTagNo(e.target.value)}
                         onKeyDown={handleKeyPress}
                         ref={tagNoInputRef}
-                        disabled={!ratesAvailable} />
+                        disabled={!ratesAvailable}
+                    />
                     <Button type="primary" onClick={fetchData}>Fetch</Button>
                     <Button
                         icon={
                             <ReloadOutlined
                                 style={{
                                     color: "orange",
-                                    padding: "10px",
                                     fontSize: "15px",
                                     transition: "transform 1s ease-in-out",
-                                    transform: rotating ? "rotate(360deg)" : "rotate(0deg)"
+                                    transform: rotating ? "rotate(360deg)" : "rotate(0deg)",
                                 }}
-                                                        onClick={handleRefresh}
-
                             />
                         }
                         onClick={handleRefresh}
                     />
                 </Col>
-                <Col span={12} style={{ textAlign: "center" }}>
-                    <h2 style={{ fontSize: "1rem", lineHeight: "1.2", margin: 0 }}>
-                        Estimation No. 1344
-                    </h2>
-                </Col>
 
-                <Col span={6}>
-                    <TodaysRates1 onRatesCheck={handleRatesCheck} />
-                </Col>
-            </Row>
-            <TableHeaderStyles>
-                <Table
-                    columns={columns}
-                    dataSource={data}
-                    pagination={false}
-                    size="small"
-                    scroll={{ x: "max-content" }}
-                    className="custom-table"
-                />
-            </TableHeaderStyles>
-            <Row gutter={[16, 16]} style={{ marginTop: "1rem" }}>
-                <Col span={10}>
+                {/* Estimation No */}
+                                                <Col xs={24} sm={12} md={8} lg={10} xl={10}
+                                                    style={{
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        justifyContent: "center",
+                                                        order: 2,
+                                                        textAlign: "right",
+                                                    }}
+                                                >
+                                                    <h2 style={{ fontSize: "1rem", margin: 0, whiteSpace: "nowrap" }}>
+                                                        Estimation No:
+                                                    </h2>
+
+                                                    <Input
+                                                        value={estimationNo}
+                                                        readOnly
+                                                        style={{ textAlign: "center", fontSize: "16px", lineHeight: "2", width: "100px", marginLeft: "8px" }}
+                                                    />
+                                                    <Button icon={<FolderAddOutlined onClick={showModal} />} onClick={showModal} shape="circle" style={{ fontSize: "18px", marginLeft: "8px" }} />
+                                                    <Modal
+                                                        title="Estimation Details"
+                                                        open={visibleHis}
+                                                        onCancel={() => setVisiblehis(false)}
+                                                        footer={null}
+                                                        width={800}
+                                                    >
+                                                        <Row justify="space-between" align="middle" style={{ marginBottom: 10 }}>
+                                                            <Col>
+                                                                <Input
+                                                                    placeholder="Search Estimation No"
+                                                                    value={searchText}
+                                                                    onChange={handleSearch}
+                                                                />
+                                                            </Col>
+                                                           
+                                                        </Row>
+                                                        <Table
+                                                            dataSource={filteredData}
+                                                            columns={columns3}
+                                                            rowKey="EstimationNo"
+                                                            size="small"
+                                                            loading={loading}
+                                                            pagination={false} // Disable pagination
+                                                            scroll={{ y: 300 }} // Enable vertical scroll
+                                                        />
+                                                         <Row justify="end" style={{ marginTop: 10 }}>
+        <Col>
+            <Button type="primary" onClick={handleSubmit}>
+                Submit
+            </Button>
+        </Col>
+    </Row>
+                                                    </Modal>
+                                                </Col>
+                                                <Col xs={24} sm={24} md={8} lg={7} xl={7}
+                                                    style={{
+                                                        justifyContent: "flex-end",
+                                                        alignItems: "center",
+                                                        order: 3,
+                                                    }}
+                                                >
+                                                    <TodaysRates1 onRatesCheck={handleRatesCheck} />
+                                                </Col>
+                                            </Row>
+
+                                            <TableHeaderStyles>
+                                                <Table
+                                                    columns={columns}
+                                                    dataSource={data}
+                                                    pagination={false}
+                                                    size="small"
+                                                    scroll={{ x: "max-content" }}
+                                                    className="custom-table"
+                                                />
+                                            </TableHeaderStyles>
+                                           
+                                            <Row gutter={[16, 16]} style={{ marginTop: "1rem" }}>
+                                                {/* Left Card - Total Summary */}
+                <Col xs={24} sm={24} md={12} lg={10} xl={10}>
                     <Card style={cardStyle}>
                         <Row gutter={[16, 16]}>
-                            <Col span={12}>
+                            {/* Left Column */}
+                            <Col span={11}>
                                 {[
                                     { label: "Total Pcs", value: totals.totalPcs },
                                     { label: "Gross Weight", value: totals.totalGrossWeight.toFixed(3) },
@@ -1212,16 +1799,17 @@ const EstimationTable = () => {
                                 ))}
                             </Col>
 
+                            {/* Divider */}
                             <Col span={1}>
                                 <div style={{ borderLeft: "1px solid #d9d9d9", height: "100%" }}></div>
                             </Col>
 
+                            {/* Right Column */}
                             <Col span={11}>
                                 {[
                                     { label: "Total Wastage", value: totals.totalWastage?.toFixed(3) },
                                     { label: "Making Charges", value: Math.round(Number(totals.totalMakingCharges)) },
                                     { label: "Total Amount", value: Math.round(Number(totals.totalAmount)) },
-
                                     { label: "Stone Cost", value: totals.totalStoneCost },
                                 ].map((item, index) => (
                                     <Row key={index} style={rowStyle}>
@@ -1233,21 +1821,20 @@ const EstimationTable = () => {
                     </Card>
                 </Col>
 
-                <Col span={5}>
+                {/* Middle Empty Section */}
+                <Col xs={24} sm={12} md={6} lg={5} xl={5}>
                     <Card style={cardStyle}>
                         <Text type="secondary">Empty Section</Text>
                     </Card>
                 </Col>
 
-                {/* Right Card */}
-                <Col span={8}>
+                {/* Right Card - Amount Details */}
+                <Col xs={24} sm={12} md={6} lg={8} xl={8}>
                     <Card style={cardStyle}>
                         {[
                             { label: "Total Amount", value: Math.ceil(Number(totals.totalAmount)) },
-                            { label: `GST Amount - (${vat}%)`, value: Math.ceil(Number(gstAmount)) }, 
+                            { label: `GST Amount - (${vat}%)`, value: Math.ceil(Number(gstAmount)) },
                             { label: "Gross Amount", value: Math.ceil(Number(grossAmount)) },
-
-
                             {
                                 label: "Discount (%)",
                                 value: (
@@ -1267,8 +1854,9 @@ const EstimationTable = () => {
                     </Card>
                 </Col>
             </Row>
+
             <Row justify="end" style={{ marginTop: "1rem" }}>
-                <Button type="primary" style={{ marginRight: "8px" }}>Save</Button>
+                <Button type="primary" style={{ marginRight: "8px" }} onClick={handleSave}>Save</Button>
                 <Button type="default">Print</Button>
             </Row>
             <Modal
@@ -1283,26 +1871,26 @@ const EstimationTable = () => {
                     }
                 }}
             >
- {/* Custom Close & Refresh Buttons */}
- <div style={{ display: "flex", justifyContent: "flex-end", padding: "10px", position: "absolute", top: 0, right: 0, zIndex: 1000 }}>
-        {/* Custom Close Button */}
-       
-        {/* Refresh Button */}
-        <Button
-            type="primary"
-            shape="circle"
-            icon={<ReloadOutlined />}
-            onClick={handleRefresh1}
-            size="mediem"
-            style={{ backgroundColor: "#f5222d", color: "white", border: "none", marginRight: "15px" }}
-        />
-         <Button
-            type="text"
-            onClick={() => setIsProductModalOpen(false)}
-            size="large"
-            style={{ fontSize: "16px", color: "black" }}
-        />
-    </div>
+                {/* Custom Close & Refresh Buttons */}
+                <div style={{ display: "flex", justifyContent: "flex-end", padding: "10px", position: "absolute", top: 0, right: 0, zIndex: 1000 }}>
+                    {/* Custom Close Button */}
+
+                    {/* Refresh Button */}
+                    <Button
+                        type="primary"
+                        shape="circle"
+                        icon={<ReloadOutlined />}
+                        onClick={handleRefresh1}
+                        size="mediem"
+                        style={{ backgroundColor: "#f5222d", color: "white", border: "none", marginRight: "15px" }}
+                    />
+                    <Button
+                        type="text"
+                        onClick={() => setIsProductModalOpen(false)}
+                        size="large"
+                        style={{ fontSize: "16px", color: "black" }}
+                    />
+                </div>
 
                 <Card title="Product Details" bordered={false} style={{ width: "100%" }} className="customeproductcard">
                     <Card
@@ -1315,15 +1903,14 @@ const EstimationTable = () => {
                         <Row gutter={[16, 16]}>
                             {/* First Section: Main Product, Purity, Pieces, Product Name */}
                             <Col xs={24} sm={12} md={7}>
-
                                 <Form
                                     layout="horizontal"
-                                    labelCol={{ style: { width: "130px", textAlign: "left" } }} // Ensures labels align properly
-                                    wrapperCol={{ style: { flex: 1 } }}
+                                    labelCol={{ xs: { span: 24 }, sm: { flex: "130px" } }}
+                                    wrapperCol={{ xs: { span: 24 }, sm: { flex: 1 } }}
                                     style={{ width: "100%" }}
                                 >
                                     {/* Main Product */}
-                                    <Form.Item label="Main Product:" > {/* Adjusted margin */}
+                                    <Form.Item label="Main Product:" labelAlign="left">
                                         <Select
                                             ref={mainProductRef}
                                             style={{ width: "100%", marginBottom: "7px" }}
@@ -1347,10 +1934,10 @@ const EstimationTable = () => {
                                     </Form.Item>
 
                                     {/* Purity */}
-                                    <Form.Item label="Purity:"> {/* Adjusted margin */}
+                                    <Form.Item label="Purity:" labelAlign="left">
                                         <Select
                                             ref={purityRef}
-                                            style={{ marginBottom: "7px" }}
+                                            style={{ width: "100%", marginBottom: "7px" }}
                                             showSearch
                                             placeholder="Select Purity"
                                             value={selectedPurity || undefined}
@@ -1371,7 +1958,7 @@ const EstimationTable = () => {
                                     </Form.Item>
 
                                     {/* Product Name */}
-                                    <Form.Item label="Product Name:" > {/* Adjusted margin */}
+                                    <Form.Item label="Product Name:" labelAlign="left">
                                         <Select
                                             ref={productNameRef}
                                             style={{ width: "100%", marginBottom: "7px" }}
@@ -1396,11 +1983,11 @@ const EstimationTable = () => {
                                     </Form.Item>
 
                                     {/* PCS */}
-                                    <Form.Item label="PCS:" > {/* Adjusted margin */}
+                                    <Form.Item label="PCS:" labelAlign="left">
                                         <Input
                                             ref={pcsRef}
                                             type="number"
-                                            style={{ marginBottom: "7px" }}
+                                            style={{ width: "100%", marginBottom: "7px" }}
                                             placeholder="Enter PCS"
                                             value={pcs}
                                             onChange={(e) => setPcs(e.target.value)}
@@ -1414,13 +2001,13 @@ const EstimationTable = () => {
                                             }}
                                         />
                                     </Form.Item>
-
                                 </Form>
                             </Col>
 
+
                             {/* Second Section: Remaining Fields */}
                             <Col xs={24} sm={12} md={8}>
-                             
+
                                 <Form
                                     layout="horizontal"
                                     labelCol={{ span: 10 }} // Label width
@@ -1432,28 +2019,34 @@ const EstimationTable = () => {
                                         <Col xs={24} sm={8} md={12}>
                                             {/* G.wt */}
                                             <Form.Item label="G.wt:">
-    <Input
-        style={{ width: "100%", marginBottom: "7px" }}
-        ref={gwtRef}
-        type="number"
-        placeholder="Enter GWT"
-        value={gwt}
-        onChange={(e) => {
-            const newGwt = parseFloat(e.target.value) ;
-            setGwt(newGwt);
+                                                <Input
+                                                    style={{ width: "100%", marginBottom: "7px" }}
+                                                    ref={gwtRef}
+                                                    type="number"
+                                                    placeholder="Enter GWT"
+                                                    value={gwt}
+                                                    onChange={(e) => {
+                                                        const newGwt = parseFloat(e.target.value);
+                                                        setGwt(newGwt);
 
-            // Update Net Weight (assuming weight loss is deducted)
-            const newNwt = newGwt - (totalLess || 0);
-            setNwt(newNwt);
+                                                        // Update Net Weight (assuming weight loss is deducted)
+                                                        const newNwt = newGwt - (totalLess || 0);
+                                                        setNwt(newNwt);
 
-            // Update Total Wastage based on percentage
-            if (wastageData.length > 0) {
-                const updatedTotalWastage = ((parseFloat(wastageData[0]?.percentage || 0) * newNwt) / 100)?.toFixed(3);
-                setWastageData([{ ...wastageData[0], total: updatedTotalWastage }]);
-            }
-        }}
-    />
-</Form.Item>
+                                                        // Update Total Wastage based on percentage
+                                                        if (wastageData.length > 0) {
+                                                            const updatedTotalWastage = ((parseFloat(wastageData[0]?.percentage || 0) * newNwt) / 100)?.toFixed(3);
+                                                            setWastageData([{ ...wastageData[0], total: updatedTotalWastage }]);
+                                                        }
+                                                    }}
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === "Enter") {
+                                                            e.preventDefault();
+                                                            setTimeout(() => breadsLessRef.current?.focus(), 100);
+                                                        }
+                                                    }}
+                                                />
+                                            </Form.Item>
 
                                         </Col>
                                         <Col xs={24} sm={8} md={12}>
@@ -1584,7 +2177,6 @@ const EstimationTable = () => {
 
                             {/* Third Section: Wastage and Making Charges */}
                             <Col xs={24} sm={12} md={9}>
-                                {/* <Card bordered={false} style={{ backgroundColor: "lightblue" }} className="customeproductcard"> */}
                                 <Form layout="horizontal" labelCol={{ span: 10 }} wrapperCol={{ span: 14 }} colon={false} labelAlign="left">
                                     {/* Category Dropdown (Full Width) */}
                                     <Form.Item label="Category" style={{ marginBottom: "10px" }}>
@@ -1640,8 +2232,8 @@ const EstimationTable = () => {
                                         </Col>
                                         <Col span={8}>
                                             <Form.Item label="Tot.wast" style={{ marginBottom: "10px" }}>
-                                                <Input ref={totalRef} value={wastageData[0]?.total || ""} 
-                                                placeholder="Total" readOnly style={{ marginBottom: "10px" }} />
+                                                <Input ref={totalRef} value={wastageData[0]?.total || ""}
+                                                    placeholder="Total" readOnly style={{ marginBottom: "10px" }} />
                                             </Form.Item>
                                         </Col>
                                     </Row>
@@ -1695,7 +2287,6 @@ const EstimationTable = () => {
                                         </Col>
                                     </Row>
                                 </Form>
-                                {/* </Card> */}
                             </Col>
 
 
@@ -1704,112 +2295,112 @@ const EstimationTable = () => {
 
                     <Row><span style={{ padding: "6px", fontWeight: "bold" }}>Stone Detailes</span></Row>
 
-                    <Card style={{ backgroundColor: "lightblue", padding: "10px" }} className="customeproductcard" >
-    <Row gutter={[8, 8]} align="middle">
-        {/* Stone Item */}
-        <Col span={4}>
-            <Typography.Text strong>Stone Item</Typography.Text>
-            <Select
-                ref={stoneItemRef}
-                showSearch
-                value={formValues.stoneItem || stoneItemInputValue}
-                placeholder="Select Stone"
-                onChange={handleStoneChange}
-                onSelect={handleStoneSelect}
-                style={{ width: "100%" }}
-                onSearch={(value) => {
-                    setStoneItemInputValue(value);
-                    setHighlightedIndex(0);
-                }}
-                onKeyDown={handleStoneKeyDown}
-                filterOption={false}
-                defaultActiveFirstOption={false}
-                dropdownRender={(menu) => (
-                    <div>
-                        {menu}
-                        <style jsx>{`
-                            .ant-select-item-option-active {
-                                background-color: rgb(125, 248, 156) !important;
-                            }
-                        `}</style>
-                    </div>
-                )}
-            >
-                {filteredOptions.map((item, index) => (
-                    <Option key={item.ITEMCODE} value={item.ITEMNAME} className={index === highlightedIndex ? "highlighted-option" : ""}>
-                        {item.ITEMNAME}
-                    </Option>
-                ))}
-            </Select>
-        </Col>
+                    <Card style={{ backgroundColor: "lightblue", padding: "10px" }} className="customeproductcard">
+                        <Row gutter={[8, 8]} align="middle">
+                            {/* Stone Item */}
+                            <Col xs={24} sm={12} md={6} lg={4}>
+                                <Typography.Text strong>Stone Item</Typography.Text>
+                                <Select
+                                    ref={stoneItemRef}
+                                    showSearch
+                                    value={formValues.stoneItem || stoneItemInputValue}
+                                    placeholder="Select Stone"
+                                    onChange={handleStoneChange}
+                                    onSelect={handleStoneSelect}
+                                    style={{ width: "100%" }}
+                                    onSearch={(value) => {
+                                        setStoneItemInputValue(value);
+                                        setHighlightedIndex(0);
+                                    }}
+                                    onKeyDown={handleStoneKeyDown}
+                                    filterOption={false}
+                                    defaultActiveFirstOption={false}
+                                    dropdownRender={(menu) => (
+                                        <div>
+                                            {menu}
+                                            <style jsx>{`
+              .ant-select-item-option-active {
+                background-color: rgb(125, 248, 156) !important;
+              }
+            `}</style>
+                                        </div>
+                                    )}
+                                >
+                                    {filteredOptions.map((item, index) => (
+                                        <Option key={item.ITEMCODE} value={item.ITEMNAME} className={index === highlightedIndex ? "highlighted-option" : ""}>
+                                            {item.ITEMNAME}
+                                        </Option>
+                                    ))}
+                                </Select>
+                            </Col>
 
-        {/* Pcs, Cts, Grams, Rate, Amount, No Pcs */}
-        {[
-            { name: "pcs", label: "Pcs", placeholder: "Pcs", ref: pcssRef },
-            { name: "cts", label: "Cts", placeholder: "Cts", ref: ctsRef },
-            { name: "grams", label: "Grams", placeholder: "Grams", ref: gramsRef },
-            { name: "rate", label: "Rate", placeholder: "Rate", ref: rateRef },
-            { name: "amount", label: "Amount", placeholder: "Amount", readOnly: true, ref: amountRef },
-            { name: "noPcs", label: "No. Pcs", placeholder: "No. Pcs", ref: noPcsRef },
-        ].map(({ name, label, placeholder, readOnly = false, ref }) => (
-            <Col span={2} key={name}>
-                <Typography.Text strong>{label}</Typography.Text>
-                <Input
-                    name={name}
-                    value={formValues[name]}
-                    onChange={handleInputChange}
-                    onKeyDown={(e) => handleEnterPress(e, name)}
-                    placeholder={placeholder}
-                    readOnly={readOnly}
-                    ref={ref}
-                />
-            </Col>
-        ))}
+                            {/* Pcs, Cts, Grams, Rate, Amount, No Pcs */}
+                            {[
+                                { name: "pcs", label: "Pcs", placeholder: "Pcs", ref: pcssRef },
+                                { name: "cts", label: "Cts", placeholder: "Cts", ref: ctsRef },
+                                { name: "grams", label: "Grams", placeholder: "Grams", ref: gramsRef },
+                                { name: "rate", label: "Rate", placeholder: "Rate", ref: rateRef },
+                                { name: "amount", label: "Amount", placeholder: "Amount", readOnly: true, ref: amountRef },
+                                { name: "noPcs", label: "No. Pcs", placeholder: "No. Pcs", ref: noPcsRef },
+                            ].map(({ name, label, placeholder, readOnly = false, ref }) => (
+                                <Col xs={12} sm={6} md={4} lg={2} key={name}>
+                                    <Typography.Text strong>{label}</Typography.Text>
+                                    <Input
+                                        name={name}
+                                        value={formValues[name]}
+                                        onChange={handleInputChange}
+                                        onKeyDown={(e) => handleEnterPress(e, name)}
+                                        placeholder={placeholder}
+                                        readOnly={readOnly}
+                                        ref={ref}
+                                    />
+                                </Col>
+                            ))}
 
-        {/* Cut, Color, Clarity - Show after No Pcs when clicked */}
-        {showExtraFields &&
-            [
-                { name: "cut", label: "Cut", placeholder: "Cut", ref: cutRef },
-                { name: "color", label: "Color", placeholder: "Color", ref: colorRef },
-                { name: "clarity", label: "Clarity", placeholder: "Clarity", ref: clarityRef },
-            ].map(({ name, label, placeholder, ref }) => (
-                <Col span={2} key={name}>
-                    <Typography.Text strong>{label}</Typography.Text>
-                    <Input
-                        name={name}
-                        value={formValues[name]}
-                        onChange={handleInputChange}
-                        onKeyDown={(e) => handleEnterPress(e, name)}
-                        placeholder={placeholder}
-                        ref={ref}
-                    />
-                </Col>
-            ))}
+                            {/* Cut, Color, Clarity - Show after No Pcs when clicked */}
+                            {showExtraFields &&
+                                [
+                                    { name: "cut", label: "Cut", placeholder: "Cut", ref: cutRef },
+                                    { name: "color", label: "Color", placeholder: "Color", ref: colorRef },
+                                    { name: "clarity", label: "Clarity", placeholder: "Clarity", ref: clarityRef },
+                                ].map(({ name, label, placeholder, ref }) => (
+                                    <Col xs={12} sm={6} md={4} lg={2} key={name}>
+                                        <Typography.Text strong>{label}</Typography.Text>
+                                        <Input
+                                            name={name}
+                                            value={formValues[name]}
+                                            onChange={handleInputChange}
+                                            onKeyDown={(e) => handleEnterPress(e, name)}
+                                            placeholder={placeholder}
+                                            ref={ref}
+                                        />
+                                    </Col>
+                                ))}
 
-        {/* Plus Icon */}
-        <Col span={1}>
-            <Typography.Text strong>&nbsp;</Typography.Text>
-            <Button
-    type="primary"
-    shape="circle"
-    icon={<PlusOutlined />}
-    onClick={() => {
-        setShowExtraFields(!showExtraFields);
-        setTimeout(() => cutRef.current?.focus(), 100); // Move to Cut after opening fields
-    }}
-/>
+                            {/* Plus Icon */}
+                            <Col xs={6} sm={4} md={3} lg={1}>
+                                <Typography.Text strong>&nbsp;</Typography.Text>
+                                <Button
+                                    type="primary"
+                                    shape="circle"
+                                    icon={<PlusOutlined />}
+                                    onClick={() => {
+                                        setShowExtraFields(!showExtraFields);
+                                        setTimeout(() => cutRef.current?.focus(), 100); // Move to Cut after opening fields
+                                    }}
+                                />
+                            </Col>
 
-        </Col>
+                            {/* Submit Button */}
+                            <Col xs={12} sm={6} md={4} lg={2}>
+                                <Typography.Text strong>&nbsp;</Typography.Text>
+                                <Button type="primary" onClick={() => { handleAddStone(); mainProductRef.current.focus(); }}>
+                                    Submit
+                                </Button>
+                            </Col>
+                        </Row>
+                    </Card>
 
-        {/* Submit Button */}
-        <Col span={2}>
-            <Typography.Text strong>&nbsp;</Typography.Text>
-            <Button type="primary" onClick={() => { handleAddStone(); mainProductRef.current.focus(); }}>
-                Submit
-            </Button>
-        </Col>
-    </Row>
-</Card>
 
                     <Card className="customeproductcard">
 
@@ -1842,22 +2433,22 @@ const EstimationTable = () => {
                                 </Table.Summary.Row>
                             )}
                         />
-                     <Row justify="space-between" align="middle" style={{ marginTop: "5px", marginBottom: "10px" }}>
-    <Col>
-        <Tag color="#32523A" style={tagStyle}>Total Grms: {finalTotalGrams}</Tag>
-        <Tag color="#32523A" style={tagStyle}>Total Dia Amount: {totalDiaAmount}</Tag>
-        <Tag color="#32523A" style={tagStyle}>Total Diamond Cts: {totalDiamondCts}</Tag>
-        <Tag color="#32523A" style={tagStyle}>Total CTS: {totalCTS}</Tag>
-        <Tag color="#32523A" style={tagStyle}>Total Uncuts: {totalUncuts}</Tag>
-    </Col>
-    <Col style={{ marginLeft: "auto" }}>
-       
-        <Button type="primary" onClick={handleOk} size="large">
-            OK
-        </Button>
-    </Col>
-</Row>
-</Card>
+                        <Row justify="space-between" align="middle" style={{ marginTop: "5px", marginBottom: "10px" }}>
+                            <Col>
+                                <Tag color="#32523A" style={tagStyle}>Total Grms: {finalTotalGrams}</Tag>
+                                <Tag color="#32523A" style={tagStyle}>Total Dia Amount: {totalDiaAmount}</Tag>
+                                <Tag color="#32523A" style={tagStyle}>Total Diamond Cts: {totalDiamondCts}</Tag>
+                                <Tag color="#32523A" style={tagStyle}>Total CTS: {totalCTS}</Tag>
+                                <Tag color="#32523A" style={tagStyle}>Total Uncuts: {totalUncuts}</Tag>
+                            </Col>
+                            <Col style={{ marginLeft: "auto" }}>
+
+                                <Button type="primary" onClick={handleOk} size="large">
+                                    OK
+                                </Button>
+                            </Col>
+                        </Row>
+                    </Card>
                 </Card>
 
             </Modal>
