@@ -25,6 +25,7 @@ const EstimationTable = () => {
 
     const [tagNo, setTagNo] = useState("");
     const [data, setData] = useState([]);
+    console.log("Data",data)
     const [, setStoneDetailes] = useState([]);
     const [, setVisible] = useState(false);
     const [products, setProducts] = useState([]);
@@ -714,6 +715,7 @@ const EstimationTable = () => {
             const firstRecordMName = data.length > 0 ? data[0].mainProduct : null;
             const newMName = processedData[0].mainProduct;
 
+
             if (firstRecordMName && newMName !== firstRecordMName) {
                 message.error(`Only MNAME "${firstRecordMName}" is allowed. Cannot add different MNAME "${newMName}".`);
                 return;
@@ -829,8 +831,10 @@ const EstimationTable = () => {
                 rate: rate, // Store the rate used
                 stoneCost: totalStoneCost, // Include total stone amount
                 amount: amount, // ✅ Final Amount (Metal Value + MC + Stone Cost)
-                stoneData: stoneData, // Include all stone data
-                totals: calculateTotals(), // Include table data and totals
+  stoneData: stoneData.map(stone => ({
+        ...stone,
+        homeKey // ✅ Assign the same homeKey to all stone items
+    })),                totals: calculateTotals(), // Include table data and totals
                 huid,
                 tagSize,
                 description,
@@ -1178,8 +1182,11 @@ const EstimationTable = () => {
                     hsncode: item.HSNCODE || "-",
                     brandName: item.BrandName || "N/A",
                     description: item.descrption || "N/A", // ✅ Fixed: Corrected from 'descrption'
-                    tagItemDetails: tagItems.filter((t) => t.TagNo === item.TagNo), 
-                    // ✅ Additional Fields from API (Mapped Correctly)
+                    tagItemDetails: tagItems.filter((t) => 
+                        t.EstimationNo === item.EstimationNo && 
+                        // t.TagNo === item.TagNo &&
+                        t.HomeKey === item.Homekey
+                    ),                          // ✅ Additional Fields from API (Mapped Correctly)
                     estimationNo: item.EstimationNo || "N/A",
                     brandAmount: parseFloat(item.BrandAmt) || 0,
                     totalAmount: parseFloat(item.Totamt) || 0,
@@ -1438,21 +1445,21 @@ const [selectedRowKeys, setSelectedRowKeys] = useState([]);
             ),
 
             // Include tagItemDetails
-            ...(item.tagItemDetails?.map((tagItem, index) => ({
+            ...(item && item.tagItemDetails && item.tagItemDetails?.map((tagItem, index) => ({
                 estimationNo: String(estimationNo), // Use the fetched estimation number
-                tagNo: Number(item.tagNo) || 0,
+                tagNo: Number(item.tagNo) || Number(item.TagNo) ||  0,
                 sno: (item.stoneData?.length || 0) + index + 1, // Ensure unique sno
-                itemName: tagItem.ITEMNAME || "string",
-                pieces: Number(tagItem.PIECES) || 0,
-                cts: Number(tagItem.CTS) || 0,
-                grms: Number(tagItem.GRMS) || 0,
-                rate: Number(tagItem.RATE) || 0,
-                amount: Number(tagItem.AMOUNT) || 0,
-                noPcs: Number(tagItem.NO_PCS) || 0,
-                colour: tagItem.COLOUR || "N/A", // Ensure Colour is provided
-                cut: tagItem.CUT || "N/A", // Ensure Cut is provided
-                clarity: tagItem.CLARITY || "N/A", // Ensure Clarity is provided
-                homeKey: Number(item.homeKey) || 0,
+                itemName: tagItem.ITEMNAME || tagItem.ItemName || "string",
+                pieces: Number(tagItem.PIECES || tagItem.pieces) || 0,
+                cts: Number(tagItem.CTS) || Number(tagItem.Cts) ||  0,
+                grms: Number(tagItem.GRMS) ||  Number(tagItem.Grms) ||  0,
+                rate: Number(tagItem.RATE) || Number(tagItem.Rate) ||  0,
+                amount: Number(tagItem.AMOUNT) || Number(tagItem.Amount) ||  0,
+                noPcs: Number(tagItem.NO_PCS) || Number(tagItem.NoPcs) ||  0,
+                colour: tagItem.COLOUR || tagItem.Colour ||  "N/A", // Ensure Colour is provided
+                cut: tagItem.CUT || tagItem.Cut ||  "N/A", // Ensure Cut is provided
+                clarity: tagItem.CLARITY || tagItem.Clarity ||  "N/A", // Ensure Clarity is provided
+                homeKey: Number(item.homeKey) || Number(item.HomeKey) ||  0,
             })) || [])
         ]);
 
