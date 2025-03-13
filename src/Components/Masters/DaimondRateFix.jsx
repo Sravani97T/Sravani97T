@@ -1,60 +1,94 @@
-import React, { useState, useEffect } from "react";
-import { Input, Button, Table, Space, Popconfirm, Row, Col, message, Breadcrumb } from "antd";
-import { DeleteOutlined } from "@ant-design/icons";
-import axios from "axios";
+import React, { useState, useEffect, useCallback,  } from "react";
+import {
+    Form,
+    Input,
+    Button,
+    Table,
+    Space,
+    Popconfirm,
+    Row,
+    Col,
+    Card,
+    message,
+    Breadcrumb,
+} from "antd";
+import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
 
 const DaimondRate = () => {
-    // const [form] = Form.useForm();
-    const [data, setData] = useState([]);
+    const [form] = Form.useForm();
+    const [data, setData] = useState([
+        { key: 1, Manufacturer: "abcd" },
+        { key: 2, Manufacturer: "efgh" },
+    ]);
+    const [editingKey, setEditingKey] = useState(null);
     const [searchText, setSearchText] = useState("");
 
-    useEffect(() => {
-        fetchData();
-    }, []);
-
-    const fetchData = async () => {
-        try {
-            const response = await axios.get(
-                "http://www.jewelerp.timeserasoftware.in/api/Wholesal/GetDataFromGivenTableNameWithWhere?tableName=TAG_GENERATION&where=TAGNO%3D9904",
-                {
-                    headers: {
-                        tenantName: "fd7V0CCCS3URhSfa/g6drA=="
-                    }
-                }
-            );
-            console.log(response.data); // Log the response data to the console
-            setData(response.data.map((item, index) => ({ key: index, ...item })));
-        } catch (error) {
-            message.error("Failed to fetch data");
-        }
+    const handleAdd = (values) => {
+        const newData = { key: Date.now(), ...values };
+        setData([...data, newData]);
+        form.resetFields();
+        message.success("Brand added successfully!");
     };
-    
+
     const handleDelete = (key) => {
         setData(data.filter((item) => item.key !== key));
-        message.success("Record deleted successfully!");
+        message.success("Brand deleted successfully!");
+    };
+
+    const handleEdit = (record) => {
+        setEditingKey(record.key);
+        form.setFieldsValue(record);
+        window.scrollTo(0, 0);
+    };
+
+    const handleSave = () => {
+        const updatedData = form.getFieldsValue();
+        setData((prevData) =>
+            prevData.map((item) =>
+                item.key === editingKey ? { ...item, ...updatedData } : item
+            )
+        );
+        setEditingKey(null);
+        form.resetFields();
+        message.success("Brand updated successfully!");
+    };
+
+    const handleCancel = useCallback(() => {
+        form.resetFields();
+        setEditingKey(null);
+    }, [form]);
+
+    const handleEnterPress = (e) => {
+        if (e.key === "Enter") {
+            form.submit(); // Trigger form submission on Enter key press
+        }
     };
 
     const filteredData = data.filter((item) =>
-        Object.values(item).join(" ").toLowerCase().includes(searchText.toLowerCase())
+        Object.values(item)
+            .join(" ")
+            .toLowerCase()
+            .includes(searchText.toLowerCase())
     );
 
     const columns = [
-        { title: "Serial No", dataIndex: "SERIALNO", key: "SERIALNO" },
-        { title: "Slip No", dataIndex: "SLIPNO", key: "SLIPNO" },
-        { title: "Worker Name", dataIndex: "workername", key: "workername" },
-        { title: "Tag No", dataIndex: "TAGNO", key: "TAGNO" },
-        { title: "Product Name", dataIndex: "PRODNAME", key: "PRODNAME" },
-        { title: "Gross Weight", dataIndex: "GWT", key: "GWT" },
-        { title: "Net Weight", dataIndex: "NWT", key: "NWT" },
-        { title: "Total Pieces", dataIndex: "TOTPCS", key: "TOTPCS" },
-        { title: "Total Gross Weight", dataIndex: "TOTGWT", key: "TOTGWT" },
-        { title: "Total Stone Weight", dataIndex: "TOTSTONEWT", key: "TOTSTONEWT" },
-        { title: "Total Net Weight", dataIndex: "TOTNWT", key: "TOTNWT" },
+        {
+            title: "Daimond Rate",
+            dataIndex: "Manufacturer",
+            key: "counterName",
+            sorter: (a, b) => a.Manufacturer.localeCompare(b.Manufacturer),
+        },
         {
             title: "Action",
             key: "action",
             render: (_, record) => (
                 <Space size="middle">
+                    <Button
+                        type="link"
+                        icon={<EditOutlined />}
+                        onClick={() => handleEdit(record)}
+                        disabled={editingKey === record.key}
+                    />
                     <Popconfirm
                         title="Are you sure to delete this record?"
                         onConfirm={() => handleDelete(record.key)}
@@ -66,8 +100,28 @@ const DaimondRate = () => {
         },
     ];
 
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.altKey && e.key === "s") {
+                e.preventDefault();
+                form.submit(); // Trigger form submission
+            }
+            if (e.altKey && e.key === "c") {
+                e.preventDefault();
+                handleCancel(); // Reset the form
+            }
+        };
+
+        window.addEventListener("keydown", handleKeyDown);
+
+        return () => {
+            window.removeEventListener("keydown", handleKeyDown);
+        };
+    }, [form, handleCancel]);
+
     return (
         <div style={{ padding: "5px", backgroundColor: "#f4f6f9" }}>
+            {/* Breadcrumb */}
             <Row justify="start" style={{ marginBottom: "16px" }}>
                 <Col>
                     <Breadcrumb style={{ fontSize: "16px", fontWeight: "500", color: "#0C1154" }}>
@@ -76,6 +130,41 @@ const DaimondRate = () => {
                     </Breadcrumb>
                 </Col>
             </Row>
+
+            <Card
+                title={editingKey ? "Edit Brand" : "Add Brand"}
+                style={{ marginBottom: "20px", borderRadius: "8px", boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)" }}
+            >
+                <Form form={form} layout="vertical" onFinish={editingKey ? handleSave : handleAdd}>
+                    <Row gutter={16}>
+                        <Col xs={24} sm={12} lg={12}>
+                            <Form.Item
+                                name="Manufacturer"
+                                label="Daimond Rate"
+                                rules={[{ required: true, message: "Daimond Rate is required" }]}
+                            >
+                                <Input
+                                    placeholder="Enter Daimond Rate"
+                                    onKeyDown={handleEnterPress} // Submit form on Enter key press
+                                />
+                            </Form.Item>
+                        </Col>
+                    </Row>
+
+                    <div style={{ textAlign: "left", marginTop: "16px", float: "right" }}>
+                        <Button
+                            type="primary"
+                            htmlType="submit"
+                            style={{ marginRight: 8, backgroundColor: "#0C1154", borderColor: "#0C1154" }}
+                        >
+                            {editingKey ? "Save" : "Submit"}
+                        </Button>
+                        <Button htmlType="button" onClick={handleCancel} style={{ backgroundColor: "#f0f0f0" }}>
+                            Cancel
+                        </Button>
+                    </div>
+                </Form>
+            </Card>
 
             <Row gutter={16}>
                 <Col xs={24} sm={16} lg={12}>
@@ -93,7 +182,11 @@ const DaimondRate = () => {
                 rowKey="key"
                 pagination={{ pageSize: 5 }}
                 scroll={{ x: 1000 }}
-                style={{ background: "#fff", boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)", borderRadius: "8px" }}
+                style={{
+                    background: "#fff",
+                    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+                    borderRadius: "8px",
+                }}
             />
         </div>
     );

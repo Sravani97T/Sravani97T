@@ -222,11 +222,11 @@
 
 .custom-table .ant-table-thead > tr > th,
 .custom-table .ant-table-tbody > tr > td {
-  font-size: 12px;
-}
+  font-size: 12px !important;
+  }
 
 .custom-table .ant-table-thead > tr > th {
-  background-color: #fafafa;
+  background-color: #78ec95;
   font-weight: bold;
 }
 
@@ -837,9 +837,17 @@ font-weight: bold;
   padding: 12px !important;
 
 }
+.custometagnocard .ant-card-body {
+  padding: 5px !important;
+
+}
+
 .customeproductcard .ant-card-body {
   padding: 7px !important;
 
+}
+.customestonetbale .ant-card-head {
+  background-color: #236c48 !important;
 }
 /* Individual cards */
 .custom-stone-card .ant-card-body {
@@ -893,3 +901,4 @@ font-weight: bold;
   background-color: rgb(216, 211, 211) !important;
   font-weight: bold;
 }
+

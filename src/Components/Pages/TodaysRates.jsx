@@ -70,7 +70,19 @@ const TodaysRates = () => {
   const handleVisibleChange = visible => {
     setVisible(visible);
   };
-
+  const handleKeyDown = (e, index) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const inputs = document.querySelectorAll(".rate-input");
+      
+      if (index < inputs.length - 1) {
+        inputs[index + 1].focus(); // Move to the next input
+      } else {
+        handleSubmit(); // Submit if it's the last input field
+      }
+    }
+  };
+  
   const columns = [
     {
       title: 'Main Product',
@@ -86,7 +98,7 @@ const TodaysRates = () => {
       title: 'Rate',
       dataIndex: 'RATE',
       key: 'RATE',
-      render: (text, record) => (
+      render: (text, record, index) => (
         <Input
           defaultValue={text}
           onChange={e => {
@@ -99,6 +111,8 @@ const TodaysRates = () => {
             });
             setRatesData(newData);
           }}
+          onKeyDown={e => handleKeyDown(e, index)}
+
         />
       ),
     },

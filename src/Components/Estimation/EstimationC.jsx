@@ -1,9 +1,9 @@
 import React, { useCallback, useRef, useState, useEffect } from "react";
-import { Form, Table, Button, Col, Row, Input, Card, Typography, Tag, message, Popover, Popconfirm, Modal, Select ,Checkbox} from "antd";
-import { DeleteOutlined, InfoCircleOutlined,FolderAddOutlined, PlusOutlined, ReloadOutlined, CloseOutlined, EditOutlined } from "@ant-design/icons";
+import { Form, Table, Button, Col, Row, Input, Card, Typography, Tag, message, Popover, Popconfirm, Modal, Select, Checkbox, } from "antd";
+import { DeleteOutlined, InfoCircleOutlined, FolderAddOutlined, PlusOutlined, ReloadOutlined, CloseOutlined, EditOutlined, LoadingOutlined } from "@ant-design/icons";
 import TodaysRates1 from "./TodaysRate1";
 import axios from 'axios';
-import TableHeaderStyles from "../Pages/TableHeaderStyles";
+const loadingIcon = <LoadingOutlined style={{ color: "red", fontSize: 16 }} spin />; // Customize color and size
 
 const { Option } = Select;
 const { Text, } = Typography;
@@ -15,17 +15,29 @@ const EstimationTable = () => {
         fontWeight: "bold",
         color: "white",
     };
+    const snostyle = {
+        backgroundColor: "#78ec95", // Light gray background
+        fontWeight: "bold",
+        textAlign: "center"
+
+    };
     const [ratesAvailable, setRatesAvailable] = useState(false); // Track rate availability
     const [showExtraFields, setShowExtraFields] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
     // Function to update rate availability from TodaysRates
-    const handleRatesCheck = (available) => {
-        setRatesAvailable(available);
+    const handleRatesCheck = (fetchedRates) => {
+        if (fetchedRates.length > 0 && rates.length === 0) {
+            setRates(fetchedRates);
+            setRatesAvailable(true);
+        }
     };
+
 
     const [tagNo, setTagNo] = useState("");
     const [data, setData] = useState([]);
-    console.log("Data",data)
+    console.log("Data", data)
     const [, setStoneDetailes] = useState([]);
     const [, setVisible] = useState(false);
     const [products, setProducts] = useState([]);
@@ -226,7 +238,7 @@ const EstimationTable = () => {
 
             if (fieldName === "pcs") {
                 if (!formValues.pcs || formValues.pcs.trim() === "") {
-                    ctsRef.current?.focus(); // Move to Cts if pcs is empty
+                    ctsRef.current?.focus();
                 } else {
                     rateRef.current?.focus(); // Move to Rate if pcs has a value
                 }
@@ -240,30 +252,32 @@ const EstimationTable = () => {
                 if (!formValues.grams || formValues.grams.trim() === "") {
                     rateRef.current?.focus(); // Move to Rate if Grams is empty
                 } else {
-                    amountRef.current?.focus(); // Move to Amount if Grams has a value
+                    rateRef.current?.focus(); // Move to Rate if Cts has a value
                 }
             } else if (fieldName === "rate") {
                 noPcsRef.current?.focus(); // Move to No Pcs
             } else if (fieldName === "noPcs") {
+
                 handleAddStone(); // Submit Form
-                mainProductRef.current?.focus();
+                stoneItemRef.current?.focus();
+
             } else if (fieldName === "cut") {
                 colorRef.current?.focus();
             } else if (fieldName === "color") {
                 clarityRef.current?.focus();
             } else if (fieldName === "clarity") {
                 handleAddStone(); // Submit Form
-                mainProductRef.current?.focus();
+                stoneItemRef.current?.focus();
             }
         }
     };
 
 
     const handleAddStone = () => {
-        if (!formValues.rate) {
-            alert("Enter required fields.");
-            return;
-        }
+        // if (!formValues.rate) {
+        //     alert("Enter required fields.");
+        //     return;
+        // }
 
         if (isEditing) {
             setStoneData((stoneData || []).map(item => item.key === editingKey ? { ...formValues, key: editingKey } : item));
@@ -285,59 +299,63 @@ const EstimationTable = () => {
         setEditingKey(record.key);
     };
     const columns2 = [
-        { title: "S. No", key: "sno", render: (_, __, index) => index + 1 },
+        {
+            title: "S.No", key: "sno", onHeaderCell: () => ({ style: snostyle }),
+            onCell: () => ({ style: snostyle }), render: (_, __, index) => index + 1
+        },
         { title: "Stone Item", dataIndex: "stoneItem", key: "stoneItem" },
         { title: "Pcs", dataIndex: "pcs", key: "pcs", align: "right" },
         { title: "Cts", dataIndex: "cts", key: "cts", align: "right", render: (text) => text ? parseFloat(text)?.toFixed(3) : "" },
         { title: "Grams", dataIndex: "grams", key: "grams", align: "right", render: (text) => text ? parseFloat(text)?.toFixed(3) : "" },
         { title: "Rate", dataIndex: "rate", key: "rate", align: "right" },
-        { title: "Amount", dataIndex: "amount", key: "amount", align: "right" },
         { title: "No. Pcs", dataIndex: "noPcs", key: "noPcs", align: "right" },
         { title: "Color", dataIndex: "color", key: "color" },
         { title: "Cut", dataIndex: "cut", key: "cut" },
         { title: "Clarity", dataIndex: "clarity", key: "clarity" },
-        {
-            title: "Cts-Grams",
-            key: "ctsToGrams",
-            align: "right",
-            render: (_, record) => {
-                const item = stoneItems.find(i => i.ITEMNAME === record.stoneItem);
-                if (item && item.DIAMONDS) {
-                    return "0.000"; // Show zero if diamonds exist
-                }
-                if (!isNaN(parseFloat(record.grams)) && parseFloat(record.grams) !== 0) {
-                    return "0.000"; // Show zero if grams exist
-                }
-                if (item && item.EFFECTON_GOLD) {
-                    return (parseFloat(record.cts) / 5)?.toFixed(3) || "0.000";
-                }
-                return !isNaN(parseFloat(record.cts)) ? parseFloat(record.cts)?.toFixed(3) : "0.000";
-            },
-        },
-        {
-            title: "Dia Cts", key: "diaCts", align: "right", render: (_, record) => {
-                const item = stoneItems.find(i => i.ITEMNAME === record.stoneItem);
-                return item && item.DIAMONDS ? parseFloat(record.cts)?.toFixed(3) : "";
-            }
-        },
-        {
-            title: "Dia Amt", key: "diaAmount", align: "right", render: (_, record) => {
-                const item = stoneItems.find(i => i.ITEMNAME === record.stoneItem);
-                return item && item.DIAMONDS ? parseFloat(record.amount)?.toFixed(2) : "";
-            }
-        },
-        {
-            title: "CTS", key: "ctsCol", align: "right", render: (_, record) => {
-                const item = stoneItems.find(i => i.ITEMNAME === record.stoneItem);
-                return item && item.CTS ? parseFloat(record.cts)?.toFixed(3) : "";
-            }
-        },
-        {
-            title: "Uncuts", key: "uncutsCol", align: "right", render: (_, record) => {
-                const item = stoneItems.find(i => i.ITEMNAME === record.stoneItem);
-                return item && item.UNCUTS ? parseFloat(record.cts)?.toFixed(3) : "";
-            }
-        },
+        { title: "Amount", dataIndex: "amount", key: "amount", align: "right", render: (value) => Math.ceil(value) },
+
+        // {
+        //     title: "Cts-Grams",
+        //     key: "ctsToGrams",
+        //     align: "right",
+        //     render: (_, record) => {
+        //         const item = stoneItems.find(i => i.ITEMNAME === record.stoneItem);
+        //         if (item && item.DIAMONDS) {
+        //             return "0.000"; // Show zero if diamonds exist
+        //         }
+        //         if (!isNaN(parseFloat(record.grams)) && parseFloat(record.grams) !== 0) {
+        //             return "0.000"; // Show zero if grams exist
+        //         }
+        //         if (item && item.EFFECTON_GOLD) {
+        //             return (parseFloat(record.cts) / 5)?.toFixed(3) || "0.000";
+        //         }
+        //         return !isNaN(parseFloat(record.cts)) ? parseFloat(record.cts)?.toFixed(3) : "0.000";
+        //     },
+        // },
+        // {
+        //     title: "Dia Cts", key: "diaCts", align: "right", render: (_, record) => {
+        //         const item = stoneItems.find(i => i.ITEMNAME === record.stoneItem);
+        //         return item && item.DIAMONDS ? parseFloat(record.cts)?.toFixed(3) : "";
+        //     }
+        // },
+        // {
+        //     title: "Dia Amt", key: "diaAmount", align: "right", render: (_, record) => {
+        //         const item = stoneItems.find(i => i.ITEMNAME === record.stoneItem);
+        //         return item && item.DIAMONDS ? parseFloat(record.amount)?.toFixed(2) : "";
+        //     }
+        // },
+        // {
+        //     title: "CTS", key: "ctsCol", align: "right", render: (_, record) => {
+        //         const item = stoneItems.find(i => i.ITEMNAME === record.stoneItem);
+        //         return item && item.CTS ? parseFloat(record.cts)?.toFixed(3) : "";
+        //     }
+        // },
+        // {
+        //     title: "Uncuts", key: "uncutsCol", align: "right", render: (_, record) => {
+        //         const item = stoneItems.find(i => i.ITEMNAME === record.stoneItem);
+        //         return item && item.UNCUTS ? parseFloat(record.cts)?.toFixed(3) : "";
+        //     }
+        // },
         {
             title: "Action", key: "action", render: (_, record) => (
                 <>
@@ -426,6 +444,7 @@ const EstimationTable = () => {
             setWastageData([{ key: "1", percentage: "", direct: "", total: "", perGram: "", newField1: "", newField2: "" }]);
         } else {
             const selectedOption = categories.find(item => item.categoryname === value);
+            console.log("selectedOption", selectedOption)
             if (selectedOption) {
                 setWastageData([{ key: "1", percentage: selectedOption.wastage, direct: selectedOption.directwastage?.toFixed(3), total: parseFloat(selectedOption.directwastage) > 0 ? selectedOption.directwastage?.toFixed(3) : ((selectedOption.wastage * nwt) / 100 + selectedOption.directwastage)?.toFixed(3), perGram: selectedOption.makingcharges?.toFixed(2), newField1: selectedOption.directmc?.toFixed(2), newField2: (selectedOption.makingcharges * nwt)?.toFixed(2) }]);
             }
@@ -434,6 +453,9 @@ const EstimationTable = () => {
     useEffect(() => {
         if (selectedCategory === "OTHERS" && percentageRef.current) {
             percentageRef.current.focus();
+        }
+        if (selectedCategory !== "OTHERS" && stoneItemRef.current) {
+            stoneItemRef.current.focus();
         }
     }, [selectedCategory]);
     useEffect(() => {
@@ -521,46 +543,46 @@ const EstimationTable = () => {
 
     };
     const [visibleHis, setVisiblehis] = useState(false);
-    const [hisdata, setDatahis] = useState([]);
+    const [, setDatahis] = useState([]);
     const [filteredData, setFilteredData] = useState([]);
     const [loading, setLoading] = useState(false);
     const [searchText, setSearchText] = useState("");
-  
+
     // Fetch data from API
     const fetchDataHis = async () => {
-      setLoading(true);
-      try {
-        const response = await axios.get(
-          "http://www.jewelerp.timeserasoftware.in/api/Master/GetDataFromGivenTableNameWithOrder",
-          {
-            params: { tableName: "ESTIMATION_MAST", order: "ESTIMATIONNO" },
-            headers: {
-              tenantName: "PmlYjF0yAwEjNohFDKjzn/ExL/LMhjzbRDhwXlvos+0=",
-            },
-          }
-        );
-        setDatahis(response.data);
-        setFilteredData(response.data);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-      setLoading(false);
+        setLoading(true);
+        try {
+            const response = await axios.get(
+                "http://www.jewelerp.timeserasoftware.in/api/Master/GetDataFromGivenTableNameWithOrder",
+                {
+                    params: { tableName: "ESTIMATION_MAST", order: "ESTIMATIONNO" },
+                    headers: {
+                        tenantName: "PmlYjF0yAwEjNohFDKjzn/ExL/LMhjzbRDhwXlvos+0=",
+                    },
+                }
+            );
+            setDatahis(response.data);
+            setFilteredData(response.data);
+        } catch (error) {
+            console.error("Error fetching data:", error);
+        }
+        setLoading(false);
     };
- // Open modal and fetch data
- const showModal = () => {
-    setVisiblehis(true);
-    fetchDataHis();
-  };
+    // Open modal and fetch data
+    const showModal = () => {
+        setVisiblehis(true);
+        fetchDataHis();
+    };
 
-  // Handle search input change
-  const handleSearch = (e) => {
-    const value = e.target.value.toLowerCase();
-    setSearchText(value);
-    const filtered = data.filter((item) =>
-      item.EstimationNo.toString().includes(value)
-    );
-    setFilteredData(filtered);
-  };
+    // Handle search input change
+    const handleSearch = (e) => {
+        const value = e.target.value.toLowerCase();
+        setSearchText(value);
+        const filtered = data.filter((item) =>
+            item.EstimationNo.toString().includes(value)
+        );
+        setFilteredData(filtered);
+    };
 
     // const handleKeyPress = useCallback((e) => {
     //     if (e.key === 'Enter') {
@@ -570,13 +592,16 @@ const EstimationTable = () => {
     //         }, 300); // 300ms debounce time
     //     }
     // }, [fetchData]);
-
     useEffect(() => {
         if (tagNoInputRef.current) {
             tagNoInputRef.current.focus();
         }
-    }, [data]);
+    });
 
+
+    useEffect(() => {
+        fetchRates();
+    }, []);
 
     const fetchRates = async () => {
         try {
@@ -590,39 +615,40 @@ const EstimationTable = () => {
                 `http://www.jewelerp.timeserasoftware.in/api/Master/GetDataFromGivenTableNameWithWhere?tableName=DAILY_RATES&where=RDATE%3D%27${formattedDate}%27`
             );
 
+            const hasRates = ratesResponse.data.length > 0;
             setRates(ratesResponse.data);
-            setRatesAvailable(ratesResponse.data.length > 0); // Enable input if rates exist
+            setRatesAvailable(hasRates);  // Only set true if rates exist
         } catch (error) {
-            console.error("Error fetching rates:", error);
             message.error("Error fetching rates");
+            setRatesAvailable(false);  // Ensure it's disabled on error
         }
     };
 
-    // Fetch rates when the page loads
-    useEffect(() => {
-        fetchRates();
-    }, []);
-
     const [vat, setVat] = useState(0);
 
+    const trimmedTagNo = parseInt(tagNo);
+    const existingTagNos = data.map((item) => item.tagNo);
     const fetchData = useCallback(async () => {
         if (!tagNo) {
             message.error("Please enter a Tag No.");
             return;
         }
 
-        const trimmedTagNo = tagNo.trim();
-        const existingTagNos = new Set(data.map((item) => item.tagNo));
-
-        if (existingTagNos.has(trimmedTagNo)) {
+        console.log("existingTagNos", existingTagNos)
+        if (existingTagNos.includes(trimmedTagNo)) {
             message.warning("This Tag No. is already added to the table.");
             setTagNo("");
             return;
         }
 
         try {
+            setIsLoading(true);
             setTagNo(null);
-
+            // Ensure rates are available before proceeding
+            if (rates.length === 0 && !ratesAvailable) {
+                message.warning("Fetching rates. Please wait...");
+                return;
+            }
             const currentDate = new Date();
             const formattedDate = `${(currentDate.getMonth() + 1).toString().padStart(2, "0")}/${currentDate
                 .getDate()
@@ -703,7 +729,7 @@ const EstimationTable = () => {
                     productCategory: item.PRODUCTCATEGORY,
                     iteM_CTS: item.Item_Cts,
                     iteM_DIAMONDS: item.Item_diamonds,
-                    diamonD_AMOUNT: item.diamonD_AMOUNT,
+                    diamonD_AMOUNT: item.diamonD_AMOUNT || item.Diamond_Amount || 0,
                     iteM_UNCUTS: item.Item_Uncuts,
                     hsncode: item.HSNCODE,
                     brandName: item.BRANDNAME,
@@ -736,6 +762,7 @@ const EstimationTable = () => {
         } catch (error) {
             message.error("Error fetching data");
         } finally {
+            setIsLoading(false);
             setTagNo("");
         }
     }, [tagNo, data, rates]);
@@ -831,10 +858,10 @@ const EstimationTable = () => {
                 rate: rate, // Store the rate used
                 stoneCost: totalStoneCost, // Include total stone amount
                 amount: amount, // ✅ Final Amount (Metal Value + MC + Stone Cost)
-  stoneData: stoneData.map(stone => ({
-        ...stone,
-        homeKey // ✅ Assign the same homeKey to all stone items
-    })),                totals: calculateTotals(), // Include table data and totals
+                stoneData: stoneData.map(stone => ({
+                    ...stone,
+                    homeKey // ✅ Assign the same homeKey to all stone items
+                })), totals: calculateTotals(), // Include table data and totals
                 huid,
                 tagSize,
                 description,
@@ -1100,59 +1127,59 @@ const EstimationTable = () => {
             message.warning("Please select an estimation record.");
             return;
         }
-    
+
         const selectedEstimationNo = selectedRowKeys[0];
-    
+
         try {
             // Fetch Estimation Data
             const response = await axios.get(
                 `http://www.jewelerp.timeserasoftware.in/api/Master/GetDataFromGivenTableNameWithWhere?tableName=ESTIMATION_DATA&where=ESTIMATIONNO%3D${selectedEstimationNo}`
             );
-    
+
             if (!response.data.length) {
                 message.warning("No data found for the selected Estimation No.");
                 return;
             }
-    
+
             // Fetch Daily Rates
             const currentDate = new Date();
             const formattedDate = `${(currentDate.getMonth() + 1).toString().padStart(2, "0")}/${currentDate.getDate().toString().padStart(2, "0")}/${currentDate.getFullYear()}`;
-    
+
             const ratesResponse = await axios.get(
                 `http://www.jewelerp.timeserasoftware.in/api/Master/GetDataFromGivenTableNameWithWhere?tableName=DAILY_RATES&where=RDATE%3D%27${formattedDate}%27`
             );
             const allRates = ratesResponse.data || [];
-    
+
             // Fetch Estimation Items (Tag Item Details)
             const tagItemsResponse = await axios.get(
                 `http://www.jewelerp.timeserasoftware.in/api/Master/GetDataFromGivenTableNameWithWhere?tableName=ESTIMATION_ITEMS&where=ESTIMATIONNO%3D${selectedEstimationNo}`
             );
             const tagItems = tagItemsResponse.data || [];
-    
+
             setEstimationNo(selectedEstimationNo);
-    
+
             // Process Data & Map to Table Structure
             const processedData = response.data.map((item, index) => {
                 const grossWeight = parseFloat(item.Gwt) || 0;
                 const netWeight = parseFloat(item.Nwt) || 0;
                 const lessWeight = grossWeight - netWeight;
-    
+
                 const wastagePercent = parseFloat(item.Wastage) || 0;
                 const directWastage = parseFloat(item.DirectWastage) || 0;
                 const totalWastage = wastagePercent > 0 ? (netWeight * wastagePercent) / 100 : directWastage;
                 const actWt = netWeight + totalWastage;
-    
+
                 const rateItem = allRates.find((rate) => rate.PREFIX === item.Prefix);
                 const rate = parseFloat(rateItem?.RATE) || parseFloat(item.Rate) || 0;
                 const metalValue = actWt * rate;
-    
+
                 const makingCharges = parseFloat(item.MakingCharges) || 0;
                 const directMC = parseFloat(item.DirectMc) || 0;
                 const totalMC = makingCharges > 0 ? actWt * makingCharges : directMC;
-    
+
                 const stoneCost = parseFloat(item.Itemamt) || 0;
                 const amount = metalValue + totalMC + stoneCost;
-    
+
                 return {
                     key: `${item.EstimationNo}-${index}`,
                     sno: index + 1,
@@ -1178,12 +1205,12 @@ const EstimationTable = () => {
                     wastage: wastagePercent.toFixed(2),
                     makingCharges: makingCharges.toFixed(2),
                     directMC: directMC.toFixed(2),
-                    counterName: item.CounterName || "N/A",
+                    // counterName: item.CounterName || "N/A",
                     hsncode: item.HSNCODE || "-",
                     brandName: item.BrandName || "N/A",
                     description: item.descrption || "N/A", // ✅ Fixed: Corrected from 'descrption'
-                    tagItemDetails: tagItems.filter((t) => 
-                        t.EstimationNo === item.EstimationNo && 
+                    tagItemDetails: tagItems.filter((t) =>
+                        t.EstimationNo === item.EstimationNo &&
                         // t.TagNo === item.TagNo &&
                         t.HomeKey === item.Homekey
                     ),                          // ✅ Additional Fields from API (Mapped Correctly)
@@ -1212,9 +1239,9 @@ const EstimationTable = () => {
                     purchaseAmount: parseFloat(item.PAMT) || 0,
                 };
             });
-    
-            setData((prevData) => [...prevData, ...processedData]);
-    
+
+            setData(processedData);
+
             setVisiblehis(false);
             setSelectedRowKeys([]);
         } catch (error) {
@@ -1222,21 +1249,26 @@ const EstimationTable = () => {
             message.error("Error fetching Estimation data.");
         }
     };
-    
+
     const columns = [
-        { title: "S.No", dataIndex: "sno", key: "sno", width: 50, render: (_, __, index) => index + 1 },
-        { title: "Tag No", dataIndex: "tagNo", width: 60, key: "tagNo" },
         {
-            title: "Home Key",
-            dataIndex: "homeKey",  // Use the correct key name
-            width: 100,
-            key: "homeKey",
-            align: "center",
+            title: "S.No", className: 'blue-background-column',
+            dataIndex: "sno", key: "sno", render: (_, __, index) => index + 1
         },
-        
-                {
+        {
+            title: "Tag No", dataIndex: "tagNo", key: "tagNo", render: (text) => <strong>{text}</strong>,
+        },
+        // {
+        //     title: "HM",
+        //     dataIndex: "homeKey",  // Use the correct key name
+        //     key: "homeKey",
+        //     align: "center",
+        // },
+
+        {
             title: "Actions",
             key: "actions",
+
             align: "center",
             render: (_, record) => {
                 console.log("Row Data:", record); // Debugging missing fields
@@ -1259,68 +1291,85 @@ const EstimationTable = () => {
         { title: "Product Name", dataIndex: "productName", key: "productName" },
         { title: "Purity", dataIndex: "purity", align: 'center', key: "purity" },
         { title: "Pieces", dataIndex: "pieces", align: 'right', key: "pieces" },
-        { title: "Gross W.T", dataIndex: "grossWeight", align: 'right', key: "grossWeight", render: (text) => Number(text)?.toFixed(3) },
+        {
+            title: "Gross.WT", className: 'blue-background-column',
+            dataIndex: "grossWeight", align: 'right', key: "grossWeight", render: (text) => <strong>{Number(text)?.toFixed(3)}</strong>
+        },
         { title: "Less W.T", dataIndex: "lessWeight", align: 'right', key: "lessWeight", render: (text) => Number(text)?.toFixed(3) },
-        { title: "Net W.T", dataIndex: "netWeight", align: 'right', key: "netWeight", render: (text) => Number(text)?.toFixed(3) },
+        {
+            title: "Net.WT", className: 'blue-background-column',
+            dataIndex: "netWeight", align: 'right', key: "netWeight", render: (text) => <strong>{Number(text)?.toFixed(3)}</strong>
+        },
         { title: "Rate", dataIndex: "rate", align: 'right', key: "rate" },
-        { title: "Total Wastage", dataIndex: "totalWastage", align: 'right', key: "totalWastage", render: (text) => Number(text)?.toFixed(3) },
-        { title: "ACT W.T", dataIndex: "actWt", align: 'right', key: "actWt", render: (text) => Number(text)?.toFixed(3) },
+        // { title: "Total Wastage", dataIndex: "totalWastage", align: 'right', key: "totalWastage", render: (text) => Number(text)?.toFixed(3) },
+        // { title: "ACT W.T", dataIndex: "actWt", align: 'right', key: "actWt", render: (text) => Number(text)?.toFixed(3) },
         { title: "Metal Value", dataIndex: "metalValue", align: 'right', key: "metalValue" },
-        { title: "Total MC", dataIndex: "totalMC", align: 'right', key: "totalMC", render: (text) => Math.round(text) },
+        // { title: "Total MC", dataIndex: "totalMC", align: 'right', key: "totalMC", render: (text) => Math.round(text) },
         { title: "Stone Cost", dataIndex: "stoneCost", align: 'right', key: "stoneCost" },
-        { title: "Amount", dataIndex: "amount", align: 'right', key: "amount", render: (text) => Math.round(text) },
-        { title: "Direct Wastage", align: 'right', dataIndex: "directWastage", key: "directWastage" },
-        { title: "Wastage", dataIndex: "wastage", align: 'right', key: "wastage" },
-        { title: "MC/Gram", dataIndex: "makingCharges", align: 'right', key: "makingCharges" },
-        { title: "Direct MC", dataIndex: "directMC", align: 'right', key: "directMC" },
+        {
+            title: "Amount", className: 'blue-background-column',
+            dataIndex: "amount", align: 'right', key: "amount", render: (text) => <strong>{Math.round(text)}</strong>
+        },
+        // { title: "Direct Wastage", align: 'right', dataIndex: "directWastage", key: "directWastage" },
+        // { title: "Wastage", dataIndex: "wastage", align: 'right', key: "wastage" },
+        // { title: "MC/Gram", dataIndex: "makingCharges", align: 'right', key: "makingCharges" },
+        // { title: "Direct MC", dataIndex: "directMC", align: 'right', key: "directMC" },
 
     ];
-     // Define table columns
-const columns3 = [
-    {
-        title: "S.No",
-        dataIndex: "sno",
-        width: 50,
-        key: "sno",
-        render: (_, __, index) => index + 1,
-    },
-    {
-        title: "",
-        dataIndex: "checkbox",
-        width: 50,
-        key: "checkbox",
-        render: (_, record) => (
-            <Checkbox
-                checked={selectedRowKeys.includes(record.EstimationNo)}
-                onChange={() => handleCheckboxChange(record.EstimationNo)}
-            />
-        ),
-    },
-    { title: "Esti No", dataIndex: "EstimationNo", key: "EstimationNo" },
-    { title: "Cust Name", dataIndex: "CustName", key: "CustName" },
-    { title: "EstiDate", dataIndex: "EstDate", key: "EstDate", render: (text) => new Date(text).toLocaleDateString() },
-    { title: "Total Pcs", dataIndex: "TotPces", key: "TotPces", align: "right" },
-    { title: "GWt", dataIndex: "GWT", key: "GWT", align: "right", render: (text) => Number(text).toFixed(3) },
-    { title: "NWt", dataIndex: "Nwt", key: "Nwt", align: "right", render: (text) => Number(text).toFixed(3) },
-    { title: "Net Amt", dataIndex: "NetAmt", key: "NetAmt", align: "right" },
-];
+    // Define table columns
+    const columns3 = [
+        {
+            title: "S.No",
+            dataIndex: "sno",
+            width: 50,
+            key: "sno",
+            className: 'blue-background-column',
+            render: (_, __, index) => index + 1,
+        },
+        {
+            title: "",
+            dataIndex: "checkbox",
+            width: 50,
+            key: "checkbox",
+            render: (_, record) => (
+                <Checkbox
+                    checked={selectedRowKeys.includes(record.EstimationNo)}
+                    onChange={() => handleCheckboxChange(record.EstimationNo)}
+                />
+            ),
+        },
+        {
+            title: "Estimation No", dataIndex: "EstimationNo", key: "EstimationNo", className: 'blue-background-column', render: (text) => (
+                <span style={{ fontWeight: "bold", fontSize: "16px" }}>{text}</span>
+            ),
+        },
+        { title: "Cust Name", dataIndex: "CustName", key: "CustName" },
+        { title: "EstiDate", dataIndex: "EstDate", key: "EstDate", render: (text) => new Date(text).toLocaleDateString() },
+        { title: "Total Pcs", dataIndex: "TotPces", key: "TotPces", align: "right" },
+        { title: "GWt", dataIndex: "GWT", key: "GWT", align: "right", render: (text) => Number(text).toFixed(3) },
+        { title: "NWt", dataIndex: "Nwt", key: "Nwt", align: "right", render: (text) => Number(text).toFixed(3) },
+        { title: "Net Amt", dataIndex: "NetAmt", key: "NetAmt", align: "right" },
+    ];
 
-const handleCheckboxChange = (estimationNo) => {
-    setSelectedRowKeys((prevSelectedRowKeys) => {
-        if (prevSelectedRowKeys.includes(estimationNo)) {
-            return prevSelectedRowKeys.filter((key) => key !== estimationNo);
-        } else {
-            return [estimationNo]; // Only allow one checkbox to be checked at a time
-        }
-    });
-};
+    const handleCheckboxChange = (estimationNo) => {
+        setSelectedRowKeys((prevSelectedRowKeys) => {
+            if (prevSelectedRowKeys.includes(estimationNo)) {
+                return prevSelectedRowKeys.filter((key) => key !== estimationNo);
+            } else {
+                return [estimationNo]; // Only allow one checkbox to be checked at a time
+            }
+        });
+    };
 
-const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+    const [selectedRowKeys, setSelectedRowKeys] = useState([]);
 
     const jewelType = data.length > 0 ? data[0].mainProduct : "";
     const handleSave = async () => {
+        setIsSaving(true); // Disable button to prevent duplicate requests
+
         if (!data || !Array.isArray(data) || data.length === 0) {
             message.error("No estimation data found.");
+            setIsSaving(false);
             return;
         }
 
@@ -1406,8 +1455,8 @@ const [selectedRowKeys, setSelectedRowKeys] = useState([]);
             smCode: item.smCode || "sravs",
             less_Wper: Number(item.less_Wper) || 0,
             disAmt: Number(item.disAmt) || 0,
-            descrption: item.description || item.DESC1 || "Default Description", 
-                        huid: item.huid || "string",
+            descrption: item.description || item.DESC1 || "Default Description",
+            huid: item.huid || "string",
             tagsize: item.tagSize || "string",
             hsncode: item.hsncode || "string",
             pvalue: Number(item.pvalue) || 0,
@@ -1415,7 +1464,8 @@ const [selectedRowKeys, setSelectedRowKeys] = useState([]);
             pamt: Number(item.pamt) || 0,
             iteM_CTS: Number(item.iteM_CTS) || 0,
             iteM_DIAMONDS: Number(item.iteM_DIAMONDS) || 0,
-            diamonD_AMOUNT: Number(item.diamonD_AMOUNT) || 0,
+            diamonD_AMOUNT: Number(item.diamonD_AMOUNT) || Number(item.Diamond_Amount
+            ) || 0,
             iteM_UNCUTS: Number(item.iteM_UNCUTS) || 0,
             labreport: Boolean(item.labreport),
             dealerName: item?.DEALERNAME || "string",
@@ -1447,19 +1497,19 @@ const [selectedRowKeys, setSelectedRowKeys] = useState([]);
             // Include tagItemDetails
             ...(item && item.tagItemDetails && item.tagItemDetails?.map((tagItem, index) => ({
                 estimationNo: String(estimationNo), // Use the fetched estimation number
-                tagNo: Number(item.tagNo) || Number(item.TagNo) ||  0,
+                tagNo: Number(item.tagNo) || Number(item.TagNo) || 0,
                 sno: (item.stoneData?.length || 0) + index + 1, // Ensure unique sno
                 itemName: tagItem.ITEMNAME || tagItem.ItemName || "string",
                 pieces: Number(tagItem.PIECES || tagItem.pieces) || 0,
-                cts: Number(tagItem.CTS) || Number(tagItem.Cts) ||  0,
-                grms: Number(tagItem.GRMS) ||  Number(tagItem.Grms) ||  0,
-                rate: Number(tagItem.RATE) || Number(tagItem.Rate) ||  0,
-                amount: Number(tagItem.AMOUNT) || Number(tagItem.Amount) ||  0,
-                noPcs: Number(tagItem.NO_PCS) || Number(tagItem.NoPcs) ||  0,
-                colour: tagItem.COLOUR || tagItem.Colour ||  "N/A", // Ensure Colour is provided
-                cut: tagItem.CUT || tagItem.Cut ||  "N/A", // Ensure Cut is provided
-                clarity: tagItem.CLARITY || tagItem.Clarity ||  "N/A", // Ensure Clarity is provided
-                homeKey: Number(item.homeKey) || Number(item.HomeKey) ||  0,
+                cts: Number(tagItem.CTS) || Number(tagItem.Cts) || 0,
+                grms: Number(tagItem.GRMS) || Number(tagItem.Grms) || 0,
+                rate: Number(tagItem.RATE) || Number(tagItem.Rate) || 0,
+                amount: Number(tagItem.AMOUNT) || Number(tagItem.Amount) || 0,
+                noPcs: Number(tagItem.NO_PCS) || Number(tagItem.NoPcs) || 0,
+                colour: tagItem.COLOUR || tagItem.Colour || "N/A", // Ensure Colour is provided
+                cut: tagItem.CUT || tagItem.Cut || "N/A", // Ensure Cut is provided
+                clarity: tagItem.CLARITY || tagItem.Clarity || "N/A", // Ensure Clarity is provided
+                homeKey: Number(item.homeKey) || Number(item.HomeKey) || 0,
             })) || [])
         ]);
 
@@ -1468,19 +1518,19 @@ const [selectedRowKeys, setSelectedRowKeys] = useState([]);
                 "Content-Type": "application/json",
                 "tenantName": "PmlYjF0yAwEjNohFDKjzn/ExL/LMhjzbRDhwXlvos+0=",
             };
-              // 🔹 Step 1: Delete Existing Estimation Data (Ensuring Clean Insert)
-        await axios.post(
-            `http://www.jewelerp.timeserasoftware.in/api/Master/DeleteDataFromGivenTableNameWithWhere?tableName=ESTIMATION_ITEMS&where=ESTIMATIONNO%3D${estimationNo}`,
-            { headers }
-        );
-        await axios.post(
-            `http://www.jewelerp.timeserasoftware.in/api/Master/DeleteDataFromGivenTableNameWithWhere?tableName=ESTIMATION_DATA&where=ESTIMATIONNO%3D${estimationNo}`,
-            { headers }
-        );
-        await axios.post(
-            `http://www.jewelerp.timeserasoftware.in/api/Master/DeleteDataFromGivenTableNameWithWhere?tableName=ESTIMATION_MAST&where=ESTIMATIONNO%3D${estimationNo}`,
-            { headers }
-        );
+            // 🔹 Step 1: Delete Existing Estimation Data (Ensuring Clean Insert)
+            await axios.post(
+                `http://www.jewelerp.timeserasoftware.in/api/Master/DeleteDataFromGivenTableNameWithWhere?tableName=ESTIMATION_ITEMS&where=ESTIMATIONNO%3D${estimationNo}`,
+                { headers }
+            );
+            await axios.post(
+                `http://www.jewelerp.timeserasoftware.in/api/Master/DeleteDataFromGivenTableNameWithWhere?tableName=ESTIMATION_DATA&where=ESTIMATIONNO%3D${estimationNo}`,
+                { headers }
+            );
+            await axios.post(
+                `http://www.jewelerp.timeserasoftware.in/api/Master/DeleteDataFromGivenTableNameWithWhere?tableName=ESTIMATION_MAST&where=ESTIMATIONNO%3D${estimationNo}`,
+                { headers }
+            );
             // 1st API Call - Save Master Data
             const responseMaster = await axios.post(
                 "http://www.jewelerp.timeserasoftware.in/api/Master/EstimationMastInsert",
@@ -1513,6 +1563,8 @@ const [selectedRowKeys, setSelectedRowKeys] = useState([]);
                         );
 
                         if (responseItems.status === 200) {
+                            setIsSaving(false);
+
                             message.success("Estimation, details, and items saved successfully!");
                             // window.location.reload(); // Refresh the window after successful save
                             fetchEstimationNo();
@@ -1547,9 +1599,10 @@ const [selectedRowKeys, setSelectedRowKeys] = useState([]);
             console.error("Network error:", error.response?.data || error);
             message.error(error.response?.data?.message || "Network error, please try again.");
         }
+        finally {
+            setIsSaving(false); // Re-enable button after request completion
+        }
     };
-
-
 
     const fetchStoneDetails = async (tagNo) => {
         if (!tagNo) return;
@@ -1660,7 +1713,7 @@ const [selectedRowKeys, setSelectedRowKeys] = useState([]);
     const rowStyle = {
         display: "flex",
         justifyContent: "space-between",
-        marginBottom: "10px",
+        marginBottom: "5px",
     };
     // Function to fetch VAT based on MNAME from API
     const totalAmount = parseFloat(totals.totalAmount) || 0;
@@ -1668,128 +1721,222 @@ const [selectedRowKeys, setSelectedRowKeys] = useState([]);
     const grossAmount = (totalAmount + parseFloat(gstAmount)).toFixed(2); // ✅ Define grossAmount
     const netAmount = (parseFloat(grossAmount) - parseFloat(discount || 0)).toFixed(2); // ✅ Define netAmount
     return (
-        <div>
-            <Row gutter={[16, 8]} align="middle" style={{ marginBottom: "0.5rem", flexWrap: "wrap" }}>
-                {/* Tag No */}
-                <Col
-                    xs={24} sm={12} md={8} lg={7} xl={7}
+        <div >
+            <Card bordered className="custometagnocard"
+                style={{
+                    position: "relative",
+                    background: "linear-gradient(135deg,rgb(130, 139, 219),rgb(205, 207, 233))",
+                    borderRadius: "8px",
+                    width: "100%",
+
+                    overflow: "hidden",
+                }}>
+                {/* Background Circles */}
+                {/* Big Circles */}
+                <div
                     style={{
-                        display: "grid",
-                        gridTemplateColumns: "auto 1fr auto auto",
-                        alignItems: "center",
-                        gap: "8px",
-                        order: 1,
+                        position: "absolute",
+                        top: "50px",
+                        left: "40%",
+                        width: "50px",
+                        height: "50px",
+                        backgroundColor: "rgba(255, 255, 255, 0.1)",
+                        borderRadius: "50%",
                     }}
-                >
-                    <h2 style={{ fontSize: "1rem", margin: 0, whiteSpace: "nowrap" }}>
-                        TAG NO
-                    </h2>
-                    <Input
-                        placeholder="Enter Tag No"
-                        size="large"
-                        style={{ height: "40px", fontSize: "16px", fontWeight: "bold", minWidth: "120px" }}
-                        value={tagNo}
-                        onChange={(e) => setTagNo(e.target.value)}
-                        onKeyDown={handleKeyPress}
-                        ref={tagNoInputRef}
-                        disabled={!ratesAvailable}
-                    />
-                    <Button type="primary" onClick={fetchData}>Fetch</Button>
-                    <Button
-                        icon={
-                            <ReloadOutlined
-                                style={{
-                                    color: "orange",
-                                    fontSize: "15px",
-                                    transition: "transform 1s ease-in-out",
-                                    transform: rotating ? "rotate(360deg)" : "rotate(0deg)",
-                                }}
+                />
+                <div
+                    style={{
+                        position: "absolute",
+                        top: "50px",
+                        left: "-2px",
+                        width: "60px",
+                        height: "60px",
+                        backgroundColor: "rgba(123, 135, 150, 0.15)",
+                        borderRadius: "50%",
+                        border: "3px solid rgba(255, 255, 255, 0.2)",
+                    }}
+                />
+
+                {/* Medium Circles */}
+                <div
+                    style={{
+                        position: "absolute",
+                        top: "-4px",
+                        left: "40%",
+                        width: "80px",
+                        height: "80px",
+                        backgroundColor: "rgba(255, 255, 255, 0.1)",
+                        borderRadius: "50%",
+                    }}
+                />
+                <div
+                    style={{
+                        position: "absolute",
+                        bottom: "10px",
+                        left: "50%",
+                        width: "76px",
+                        height: "62px",
+                        backgroundColor: "rgba(255, 255, 255, 0.12)",
+                        borderRadius: "50%",
+                        border: "2px solid rgba(255, 255, 255, 0.2)",
+                    }}
+                />
+
+                {/* Small Circles */}
+                <div
+                    style={{
+                        position: "absolute",
+                        top: "10px",
+                        right: "20%",
+                        width: "40px",
+                        height: "40px",
+                        backgroundColor: "rgba(255, 255, 255, 0.15)",
+                        borderRadius: "50%",
+                    }}
+                />
+                <div
+                    style={{
+                        position: "absolute",
+
+                        backgroundColor: "rgba(255, 255, 255, 0.1)",
+                        borderRadius: "50%",
+                    }}
+                />
+                <Row gutter={[16, 8]} align="middle" style={{ marginBottom: "0.5rem", flexWrap: "wrap" }}>
+
+                    {/* Tag No */}
+                    <Col
+                        xs={24} sm={12} md={8} lg={8} xl={8}
+
+                        style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "flex-start", gap: "16px", order: 1,
+                        }}
+                    >
+                        <h2 style={{ fontSize: "1rem", margin: 0, whiteSpace: "nowrap", paddingLeft: "25px" }}>
+                            Esti No:
+                        </h2>
+
+                        <span style={{ fontSize: "28px", fontWeight: "bold", }}>
+                            {estimationNo}
+                        </span>
+                        <Button icon={<FolderAddOutlined onClick={showModal} />} onClick={showModal} shape="circle" style={{ fontSize: "18px", backgroundColor: "lightgreen" }} />
+                        <Modal
+                            title="Estimation Details"
+                            open={visibleHis}
+                            onCancel={() => setVisiblehis(false)}
+                            footer={null}
+                            width={900}
+                        >
+                            <Row justify="space-between" align="middle" style={{ marginBottom: 10 }}>
+                                <Col>
+                                    <Input
+                                        placeholder="Search Estimation No"
+                                        value={searchText}
+                                        onChange={handleSearch}
+                                    />
+                                </Col>
+
+                            </Row>
+                            <Table
+                                dataSource={filteredData}
+                                columns={columns3}
+                                rowKey="EstimationNo"
+                                size="small"
+                                className="custom-table"
+
+                                loading={loading}
+                                pagination={false} // Disable pagination
+                                scroll={{ y: 300 }} // Enable vertical scroll
                             />
-                        }
-                        onClick={handleRefresh}
-                    />
-                </Col>
+                            <Row justify="end" style={{ marginTop: 10 }}>
+                                <Col>
+                                    <Button type="primary" onClick={handleSubmit}>
+                                        Submit
+                                    </Button>
+                                </Col>
+                            </Row>
+                        </Modal>
+                    </Col>
 
-                {/* Estimation No */}
-                                                <Col xs={24} sm={12} md={8} lg={10} xl={10}
-                                                    style={{
-                                                        display: "flex",
-                                                        alignItems: "center",
-                                                        justifyContent: "center",
-                                                        order: 2,
-                                                        textAlign: "right",
-                                                    }}
-                                                >
-                                                    <h2 style={{ fontSize: "1rem", margin: 0, whiteSpace: "nowrap" }}>
-                                                        Estimation No:
-                                                    </h2>
+                    {/* Estimation No */}
+                    <Col
+    xs={24} sm={12} md={10} lg={10} xl={10}
+    style={{
+        display: "flex",  // Flexbox for better alignment
+        alignItems: "center",
+        gap: "10px", // Adds spacing between elements
+        order: 2,
+    }}
+>
+    <h2 style={{ fontSize: "1rem", margin: 0, whiteSpace: "nowrap" }}>
+        TAG NO
+    </h2>
 
-                                                    <Input
-                                                        value={estimationNo}
-                                                        readOnly
-                                                        style={{ textAlign: "center", fontSize: "16px", lineHeight: "2", width: "100px", marginLeft: "8px" }}
-                                                    />
-                                                    <Button icon={<FolderAddOutlined onClick={showModal} />} onClick={showModal} shape="circle" style={{ fontSize: "18px", marginLeft: "8px" }} />
-                                                    <Modal
-                                                        title="Estimation Details"
-                                                        open={visibleHis}
-                                                        onCancel={() => setVisiblehis(false)}
-                                                        footer={null}
-                                                        width={800}
-                                                    >
-                                                        <Row justify="space-between" align="middle" style={{ marginBottom: 10 }}>
-                                                            <Col>
-                                                                <Input
-                                                                    placeholder="Search Estimation No"
-                                                                    value={searchText}
-                                                                    onChange={handleSearch}
-                                                                />
-                                                            </Col>
-                                                           
-                                                        </Row>
-                                                        <Table
-                                                            dataSource={filteredData}
-                                                            columns={columns3}
-                                                            rowKey="EstimationNo"
-                                                            size="small"
-                                                            loading={loading}
-                                                            pagination={false} // Disable pagination
-                                                            scroll={{ y: 300 }} // Enable vertical scroll
-                                                        />
-                                                         <Row justify="end" style={{ marginTop: 10 }}>
-        <Col>
-            <Button type="primary" onClick={handleSubmit}>
-                Submit
-            </Button>
-        </Col>
-    </Row>
-                                                    </Modal>
-                                                </Col>
-                                                <Col xs={24} sm={24} md={8} lg={7} xl={7}
-                                                    style={{
-                                                        justifyContent: "flex-end",
-                                                        alignItems: "center",
-                                                        order: 3,
-                                                    }}
-                                                >
-                                                    <TodaysRates1 onRatesCheck={handleRatesCheck} />
-                                                </Col>
-                                            </Row>
+    <Input
+        placeholder="Enter Tag No"
+        size="large"
+        style={{
+            height: "40px",
+            fontSize: "16px",
+            fontWeight: "bold",
+            width: "200px",
+            textAlign: "center",
+        }}
+        value={tagNo}
+        onChange={(e) => setTagNo(e.target.value)}
+        onKeyDown={handleKeyPress}
+        ref={tagNoInputRef}
+        disabled={rates.length === 0}
+    />
 
-                                            <TableHeaderStyles>
-                                                <Table
-                                                    columns={columns}
-                                                    dataSource={data}
-                                                    pagination={false}
-                                                    size="small"
-                                                    scroll={{ x: "max-content" }}
-                                                    className="custom-table"
-                                                />
-                                            </TableHeaderStyles>
-                                           
-                                            <Row gutter={[16, 16]} style={{ marginTop: "1rem" }}>
-                                                {/* Left Card - Total Summary */}
-                <Col xs={24} sm={24} md={12} lg={10} xl={10}>
+    <Button type="primary" onClick={fetchData} loading={isLoading}>
+        Fetch
+    </Button>
+
+    <Button
+        icon={
+            <ReloadOutlined
+                style={{
+                    color: "orange",
+                    fontSize: "15px",
+                    transition: "transform 1s ease-in-out",
+                    transform: rotating ? "rotate(360deg)" : "rotate(0deg)",
+                }}
+            />
+        }
+        onClick={handleRefresh}
+    />
+</Col>
+
+                    <Col xs={24} sm={24} md={6} lg={6} xl={6}
+                        style={{
+                            justifyContent: "flex-end",
+                            alignItems: "center",
+                            order: 3,
+                            marginBottom: "-6px"
+
+                        }}
+                    >
+                        <TodaysRates1 onRatesCheck={handleRatesCheck} />
+                    </Col>
+                </Row>
+            </Card>
+            <div style={{ marginTop: "5px" }}>
+                <Table
+                    columns={columns}
+                    dataSource={data}
+                    pagination={false}
+                    size="small"
+                    loading={isLoading}
+                    // scroll={{ x: "max-content" }}
+                    className="custom-table"
+                />
+            </div>
+            <Row gutter={[16, 16]} style={{ marginTop: "5px" }}>
+                {/* Left Card - Total Summary (Increased width) */}
+                <Col xs={24} sm={24} md={14} lg={12} xl={12}>
                     <Card style={cardStyle}>
                         <Row gutter={[16, 16]}>
                             {/* Left Column */}
@@ -1800,8 +1947,16 @@ const [selectedRowKeys, setSelectedRowKeys] = useState([]);
                                     { label: "Less Weight", value: totals.totalLessWeight.toFixed(3) },
                                     { label: "Net Weight", value: totals.totalNetWeight.toFixed(3) },
                                 ].map((item, index) => (
-                                    <Row key={index} style={rowStyle}>
-                                        <Text strong>{item.label}:</Text> <Text>{item.value}</Text>
+                                    <Row key={index} style={rowStyle} align="middle">
+                                        <Col span={14}>
+                                            <Text strong style={{ fontSize: 16 }}>{item.label}</Text>
+                                        </Col>
+                                        <Col span={1} style={{ textAlign: "center" }}>
+                                            <Text strong style={{ fontSize: 16 }}>:</Text>
+                                        </Col>
+                                        <Col span={9} style={{ textAlign: "right" }}>
+                                            <Text strong style={{ fontSize: 16 }}>{item.value}</Text>
+                                        </Col>
                                     </Row>
                                 ))}
                             </Col>
@@ -1819,29 +1974,48 @@ const [selectedRowKeys, setSelectedRowKeys] = useState([]);
                                     { label: "Total Amount", value: Math.round(Number(totals.totalAmount)) },
                                     { label: "Stone Cost", value: totals.totalStoneCost },
                                 ].map((item, index) => (
-                                    <Row key={index} style={rowStyle}>
-                                        <Text strong>{item.label}:</Text> <Text>{item.value}</Text>
+                                    <Row key={index} style={rowStyle} align="middle">
+                                        <Col span={14}>
+                                            <Text strong style={{ fontSize: 16 }}>{item.label}</Text>
+                                        </Col>
+                                        <Col span={1} style={{ textAlign: "center" }}>
+                                            <Text strong style={{ fontSize: 16 }}>:</Text>
+                                        </Col>
+                                        <Col span={9} style={{ textAlign: "right" }}>
+                                            <Text strong style={{ fontSize: 16 }}>{item.value}</Text>
+                                        </Col>
                                     </Row>
                                 ))}
                             </Col>
                         </Row>
                     </Card>
+
+
                 </Col>
 
                 {/* Middle Empty Section */}
-                <Col xs={24} sm={12} md={6} lg={5} xl={5}>
+                <Col xs={24} sm={12} md={4} lg={4} xl={4}>
                     <Card style={cardStyle}>
                         <Text type="secondary">Empty Section</Text>
                     </Card>
                 </Col>
 
-                {/* Right Card - Amount Details */}
-                <Col xs={24} sm={12} md={6} lg={8} xl={8}>
+                {/* Right Card - Amount Details (Aligned to right corner) */}
+                <Col xs={24} sm={12} md={6} lg={8} xl={8} style={{ marginLeft: "auto" }}>
                     <Card style={cardStyle}>
                         {[
-                            { label: "Total Amount", value: Math.ceil(Number(totals.totalAmount)) },
-                            { label: `GST Amount - (${vat}%)`, value: Math.ceil(Number(gstAmount)) },
-                            { label: "Gross Amount", value: Math.ceil(Number(grossAmount)) },
+                            {
+                                label: "Total Amount",
+                                value: Math.ceil(Number(totals.totalAmount)),
+                            },
+                            {
+                                label: `GST Amount - (${vat}%)`,
+                                value: Math.ceil(Number(gstAmount)),
+                            },
+                            {
+                                label: "Gross Amount",
+                                value: Math.ceil(Number(grossAmount)),
+                            },
                             {
                                 label: "Discount (%)",
                                 value: (
@@ -1852,20 +2026,51 @@ const [selectedRowKeys, setSelectedRowKeys] = useState([]);
                                     />
                                 ),
                             },
-                            { label: "Net Amount", value: Math.ceil(Number(netAmount)), strong: true }
+                            {
+                                label: "Net Amount",
+                                value: (
+                                    <Typography.Text strong style={{ fontSize: 25 }}>
+                                        {Math.ceil(Number(netAmount))}
+                                    </Typography.Text>
+                                ),
+                            },
                         ].map((item, index) => (
-                            <Row key={index} style={rowStyle}>
-                                <Text strong>{item.label}:</Text> {item.value}
+                            <Row key={index} style={rowStyle} align="middle">
+                                <Col span={14}>
+                                    <Text strong style={{ fontSize: 16 }}>{item.label}</Text>
+                                </Col>
+                                <Col span={1} style={{ textAlign: "center" }}>
+                                    <Text strong style={{ fontSize: 16 }}>:</Text>
+                                </Col>
+                                <Col span={9} style={{ textAlign: "right" }}>
+                                    {typeof item.value === "number" ? (
+                                        <Typography.Text strong style={{ fontSize: 16 }}>
+                                            {item.value}
+                                        </Typography.Text>
+                                    ) : (
+                                        item.value
+                                    )}
+                                </Col>
                             </Row>
                         ))}
                     </Card>
+
                 </Col>
             </Row>
 
+
             <Row justify="end" style={{ marginTop: "1rem" }}>
-                <Button type="primary" style={{ marginRight: "8px" }} onClick={handleSave}>Save</Button>
+                <Button
+                    type="primary"
+                    style={{ marginRight: "8px" }}
+                    disabled={isSaving}
+                    loading={isSaving ? { indicator: loadingIcon } : false} onClick={handleSave}
+                >
+                    Save
+                </Button>
                 <Button type="default">Print</Button>
             </Row>
+
             <Modal
                 open={isProductModalOpen}
                 onCancel={() => setIsProductModalOpen(false)}
@@ -1885,12 +2090,14 @@ const [selectedRowKeys, setSelectedRowKeys] = useState([]);
                     {/* Refresh Button */}
                     <Button
                         type="primary"
-                        shape="circle"
-                        icon={<ReloadOutlined />}
+                        icon={<ReloadOutlined />} // Icon in front
                         onClick={handleRefresh1}
-                        size="mediem"
-                        style={{ backgroundColor: "#f5222d", color: "white", border: "none", marginRight: "15px" }}
-                    />
+                        size="medium"
+                        style={{ backgroundColor: "#f5222d", color: "white", border: "none", marginRight: "15px", width: "150px" }}
+                    >
+                        Refresh
+                    </Button>
+
                     <Button
                         type="text"
                         onClick={() => setIsProductModalOpen(false)}
@@ -1909,7 +2116,7 @@ const [selectedRowKeys, setSelectedRowKeys] = useState([]);
                     >
                         <Row gutter={[16, 16]}>
                             {/* First Section: Main Product, Purity, Pieces, Product Name */}
-                            <Col xs={24} sm={12} md={7}>
+                            <Col xs={24} sm={12} md={7} style={{ borderRight: "1px solid #4096ff", paddingRight: "16px" }}>
                                 <Form
                                     layout="horizontal"
                                     labelCol={{ xs: { span: 24 }, sm: { flex: "130px" } }}
@@ -1926,6 +2133,8 @@ const [selectedRowKeys, setSelectedRowKeys] = useState([]);
                                             value={selectedMainProduct || undefined}
                                             onChange={(value) => {
                                                 setSelectedMainProduct(value);
+                                                setSelectedPurity(null);  // Clear Purity
+                                                setSelectedProduct(null); // Clear Product Name
                                                 setTimeout(() => {
                                                     if (purityRef.current) purityRef.current.focus();
                                                 }, 100);
@@ -1939,6 +2148,7 @@ const [selectedRowKeys, setSelectedRowKeys] = useState([]);
                                             }))}
                                         />
                                     </Form.Item>
+
 
                                     {/* Purity */}
                                     <Form.Item label="Purity:" labelAlign="left">
@@ -2013,7 +2223,7 @@ const [selectedRowKeys, setSelectedRowKeys] = useState([]);
 
 
                             {/* Second Section: Remaining Fields */}
-                            <Col xs={24} sm={12} md={8}>
+                            <Col xs={24} sm={12} md={8} style={{ borderRight: "1px solid #4096ff", paddingRight: "16px" }}>
 
                                 <Form
                                     layout="horizontal"
@@ -2027,7 +2237,7 @@ const [selectedRowKeys, setSelectedRowKeys] = useState([]);
                                             {/* G.wt */}
                                             <Form.Item label="G.wt:">
                                                 <Input
-                                                    style={{ width: "100%", marginBottom: "7px" }}
+                                                    style={{ width: "100%", marginBottom: "7px", textAlign: "right" }}
                                                     ref={gwtRef}
                                                     type="number"
                                                     placeholder="Enter GWT"
@@ -2060,7 +2270,7 @@ const [selectedRowKeys, setSelectedRowKeys] = useState([]);
                                             {/* Breads Less */}
                                             <Form.Item label="Breads Less:">
                                                 <Input
-                                                    style={{ width: "100%", marginBottom: "7px" }}
+                                                    style={{ width: "100%", marginBottom: "7px", textAlign: "right" }}
                                                     ref={breadsLessRef}
                                                     type="number"
                                                     placeholder="Enter..."
@@ -2082,7 +2292,7 @@ const [selectedRowKeys, setSelectedRowKeys] = useState([]);
                                             {/* Weight Less */}
                                             <Form.Item label="Wt Less:">
                                                 <Input
-                                                    style={{ width: "100%", marginBottom: "7px" }}
+                                                    style={{ width: "100%", marginBottom: "7px", textAlign: "right" }}
                                                     ref={totalLessRef}
                                                     type="number"
                                                     placeholder="Enter..."
@@ -2102,7 +2312,7 @@ const [selectedRowKeys, setSelectedRowKeys] = useState([]);
                                             {/* N.wt */}
                                             <Form.Item label="N.wt:">
                                                 <Input
-                                                    style={{ width: "100%", marginBottom: "7px" }}
+                                                    style={{ width: "100%", marginBottom: "7px", textAlign: "right" }}
                                                     ref={nwtRef}
                                                     type="number"
                                                     value={nwt}
@@ -2123,7 +2333,7 @@ const [selectedRowKeys, setSelectedRowKeys] = useState([]);
                                             {/* HUID */}
                                             <Form.Item label="HUID:">
                                                 <Input
-                                                    style={{ width: "100%", marginBottom: "7px" }}
+                                                    style={{ width: "100%", marginBottom: "7px", textAlign: "right" }}
                                                     ref={huidRef}
                                                     type="text"
                                                     placeholder="Enter HUID"
@@ -2142,7 +2352,7 @@ const [selectedRowKeys, setSelectedRowKeys] = useState([]);
                                             {/* Tag Size */}
                                             <Form.Item label="Tag Size:">
                                                 <Input
-                                                    style={{ width: "100%", marginBottom: "7px" }}
+                                                    style={{ width: "100%", marginBottom: "7px", textAlign: "right" }}
                                                     ref={tagSizeRef}
                                                     type="text"
                                                     placeholder="Enter Tag Size"
@@ -2195,6 +2405,7 @@ const [selectedRowKeys, setSelectedRowKeys] = useState([]);
                                             onChange={handleCategoryChange}
                                             style={{ width: "100%", borderRadius: "8px", marginBottom: "10px" }}
                                             optionFilterProp="children"
+
                                             filterOption={(input, option) => option.children.toLowerCase().includes(input.toLowerCase())}
                                         >
                                             {categories.map((category) => (
@@ -2218,7 +2429,7 @@ const [selectedRowKeys, setSelectedRowKeys] = useState([]);
                                                         setWastageData([{ ...wastageData[0], percentage: value, total: value ? ((parseFloat(value) * nwt) / 100).toFixed(3) : "" }]);
                                                     }}
                                                     onKeyDown={(e) => handleKeyDown(e, directRef, null)}
-                                                    style={{ marginBottom: "10px" }}
+                                                    style={{ marginBottom: "10px", textAlign: "right" }}
                                                 />
                                             </Form.Item>
                                         </Col>
@@ -2232,15 +2443,15 @@ const [selectedRowKeys, setSelectedRowKeys] = useState([]);
                                                         const value = e.target.value;
                                                         setWastageData([{ ...wastageData[0], direct: value, total: parseFloat(value).toFixed(3) }]);
                                                     }}
-                                                    onKeyDown={(e) => handleKeyDown(e, totalRef, percentageRef)}
-                                                    style={{ marginBottom: "10px" }}
+                                                    onKeyDown={(e) => handleKeyDown(e, perGramRef)}
+                                                    style={{ marginBottom: "10px", textAlign: "right" }}
                                                 />
                                             </Form.Item>
                                         </Col>
                                         <Col span={8}>
                                             <Form.Item label="Tot.wast" style={{ marginBottom: "10px" }}>
                                                 <Input ref={totalRef} value={wastageData[0]?.total || ""}
-                                                    placeholder="Total" readOnly style={{ marginBottom: "10px" }} />
+                                                    placeholder="Total" readOnly style={{ marginBottom: "10px", textAlign: "right" }} />
                                             </Form.Item>
                                         </Col>
                                     </Row>
@@ -2257,8 +2468,8 @@ const [selectedRowKeys, setSelectedRowKeys] = useState([]);
                                                         const value = e.target.value;
                                                         setWastageData([{ ...wastageData[0], perGram: value, newField2: (parseFloat(value) * nwt).toFixed(2) }]);
                                                     }}
-                                                    onKeyDown={(e) => handleKeyDown(e, direct1Ref, null)}
-                                                    style={{ marginBottom: "10px" }}
+                                                    onKeyDown={(e) => handleKeyDown(e, direct1Ref)}
+                                                    style={{ marginBottom: "10px", textAlign: "right" }}
                                                 />
                                             </Form.Item>
                                         </Col>
@@ -2272,8 +2483,8 @@ const [selectedRowKeys, setSelectedRowKeys] = useState([]);
                                                         const value = e.target.value;
                                                         setWastageData([{ ...wastageData[0], newField1: value, newField2: (parseFloat(wastageData[0]?.perGram || 0) * nwt).toFixed(2) }]);
                                                     }}
-                                                    onKeyDown={(e) => handleKeyDown(e, total1Ref, perGramRef)}
-                                                    style={{ marginBottom: "10px" }}
+                                                    onKeyDown={(e) => handleKeyDown(e, stoneItemRef)}
+                                                    style={{ marginBottom: "10px", textAlign: "right" }}
                                                 />
                                             </Form.Item>
                                         </Col>
@@ -2288,7 +2499,8 @@ const [selectedRowKeys, setSelectedRowKeys] = useState([]);
                                                     }
                                                     placeholder="Total"
                                                     readOnly
-                                                    style={{ marginBottom: "10px" }}
+
+                                                    style={{ marginBottom: "10px", textAlign: "right" }}
                                                 />
                                             </Form.Item>
                                         </Col>
@@ -2319,17 +2531,37 @@ const [selectedRowKeys, setSelectedRowKeys] = useState([]);
                                         setStoneItemInputValue(value);
                                         setHighlightedIndex(0);
                                     }}
-                                    onKeyDown={handleStoneKeyDown}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter") {
+                                            e.preventDefault();
+                                            const highlightedOption = filteredOptions[highlightedIndex];
+
+                                            if (highlightedOption && stoneItemInputValue) {
+                                                handleStoneSelect(highlightedOption.ITEMNAME);
+                                            } else {
+                                                if (formValues.stoneItem.trim() === "") {
+                                                    handleOk();
+                                                } else {
+                                                    handleAddStone(); // Submit Form
+                                                    setTimeout(() => {
+                                                        stoneItemRef.current?.focus();
+                                                    }, 100);
+                                                }
+                                            }
+                                        } else {
+                                            handleStoneKeyDown(e);
+                                        }
+                                    }}
                                     filterOption={false}
                                     defaultActiveFirstOption={false}
                                     dropdownRender={(menu) => (
                                         <div>
                                             {menu}
                                             <style jsx>{`
-              .ant-select-item-option-active {
-                background-color: rgb(125, 248, 156) !important;
-              }
-            `}</style>
+          .ant-select-item-option-active {
+            background-color: rgb(125, 248, 156) !important;
+          }
+        `}</style>
                                         </div>
                                     )}
                                 >
@@ -2400,8 +2632,8 @@ const [selectedRowKeys, setSelectedRowKeys] = useState([]);
 
                             {/* Submit Button */}
                             <Col xs={12} sm={6} md={4} lg={2}>
-                                <Typography.Text strong>&nbsp;</Typography.Text>
-                                <Button type="primary" onClick={() => { handleAddStone(); mainProductRef.current.focus(); }}>
+                                {/* <Typography.Text strong>&nbsp;</Typography.Text> */}
+                                <Button type="primary" onClick={() => { handleAddStone(); mainProductRef.current.focus(); }} style={{ width: "150px" }}>
                                     Submit
                                 </Button>
                             </Col>
@@ -2419,38 +2651,34 @@ const [selectedRowKeys, setSelectedRowKeys] = useState([]);
                             dataSource={stoneData}
                             pagination={false}
                             summary={() => (
-                                <Table.Summary.Row>
+                                <Table.Summary.Row style={{ backgroundColor: "#6aa8bd", color: "white", fontWeight: "bold" }}>
                                     <Table.Summary.Cell index={0}><b>Total</b></Table.Summary.Cell>
-                                    <Table.Summary.Cell index={1} />
-                                    <Table.Summary.Cell index={2} align="right"><b>{getTotal("pcs")}</b></Table.Summary.Cell>
-                                    <Table.Summary.Cell index={3} align="right"><b>{getTotal("cts")}</b></Table.Summary.Cell>
-                                    <Table.Summary.Cell index={4} align="right"><b>{getTotal("grams")}</b></Table.Summary.Cell>
-                                    <Table.Summary.Cell index={5} />
-                                    <Table.Summary.Cell index={6} align="right"><b>{getTotal("amount")}</b></Table.Summary.Cell>
-                                    <Table.Summary.Cell index={7} align="right"><b>{getTotal("noPcs")}</b></Table.Summary.Cell>
-                                    <Table.Summary.Cell index={8} />
-                                    <Table.Summary.Cell index={9} />
-                                    <Table.Summary.Cell index={10} />
-                                    <Table.Summary.Cell index={11} />
-                                    <Table.Summary.Cell index={12} />
-                                    <Table.Summary.Cell index={13} />
-                                    <Table.Summary.Cell index={14} />
-                                    <Table.Summary.Cell index={15} />
-                                    <Table.Summary.Cell index={16} />
+                                    <Table.Summary.Cell index={1} /> {/* Stone Item */}
+                                    <Table.Summary.Cell index={2} align="right"><b>{getTotal("pcs")}</b></Table.Summary.Cell> {/* Pcs */}
+                                    <Table.Summary.Cell index={3} align="right"><b>{getTotal("cts").toFixed(3)}</b></Table.Summary.Cell> {/* Cts */}
+                                    <Table.Summary.Cell index={4} align="right"><b>{getTotal("grams").toFixed(3)}</b></Table.Summary.Cell> {/* Grams */}
+                                    <Table.Summary.Cell index={5} /> {/* Rate */}
+                                    <Table.Summary.Cell index={6} align="right"><b>{getTotal("noPcs")}</b></Table.Summary.Cell> {/* No. Pcs */}
+                                    <Table.Summary.Cell index={7} /> {/* Color */}
+                                    <Table.Summary.Cell index={8} /> {/* Cut */}
+                                    <Table.Summary.Cell index={9} /> {/* Clarity */}
+                                    <Table.Summary.Cell index={10} align="right"><b>{Math.ceil(getTotal("amount"))}</b></Table.Summary.Cell> {/* Amount */}
+                                    <Table.Summary.Cell index={11} /> {/* Action */}
                                 </Table.Summary.Row>
                             )}
                         />
+
                         <Row justify="space-between" align="middle" style={{ marginTop: "5px", marginBottom: "10px" }}>
                             <Col>
-                                <Tag color="#32523A" style={tagStyle}>Total Grms: {finalTotalGrams}</Tag>
-                                <Tag color="#32523A" style={tagStyle}>Total Dia Amount: {totalDiaAmount}</Tag>
-                                <Tag color="#32523A" style={tagStyle}>Total Diamond Cts: {totalDiamondCts}</Tag>
-                                <Tag color="#32523A" style={tagStyle}>Total CTS: {totalCTS}</Tag>
-                                <Tag color="#32523A" style={tagStyle}>Total Uncuts: {totalUncuts}</Tag>
+                                <Tag color="#55b76d" style={tagStyle}>Total Grms: {finalTotalGrams}</Tag>
+                                <Tag color="#55b76d" style={tagStyle}>Total Dia Amount: {totalDiaAmount}</Tag>
+                                <Tag color="#55b76d" style={tagStyle}>Total Diamond Cts: {totalDiamondCts}</Tag>
+                                <Tag color="#55b76d" style={tagStyle}>Total CTS: {totalCTS}</Tag>
+                                <Tag color="#55b76d" style={tagStyle}>Total Uncuts: {totalUncuts}</Tag>
                             </Col>
                             <Col style={{ marginLeft: "auto" }}>
 
-                                <Button type="primary" onClick={handleOk} size="large">
+                                <Button type="primary" onClick={handleOk} size="large" style={{ width: "150px" }}>
                                     OK
                                 </Button>
                             </Col>

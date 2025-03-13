@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Card, Tag, Popover, Table, Input, Button ,message} from "antd";
+import { Card, Tag, Popover, Table, Input, Button } from "antd";
 import axios from "axios";
 import { CREATE_jwel } from "../../Config/Config";
 
@@ -80,6 +80,19 @@ const TodaysRates = ({ onRatesCheck }) => {
     setVisible(visible);
   };
 
+  const handleKeyDown = (e, index) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const inputs = document.querySelectorAll(".rate-input");
+      
+      if (index < inputs.length - 1) {
+        inputs[index + 1].focus(); // Move to the next input
+      } else {
+        handleSubmit(); // Submit if it's the last input field
+      }
+    }
+  };
+  
   const columns = [
     {
       title: 'Main Product',
@@ -95,19 +108,21 @@ const TodaysRates = ({ onRatesCheck }) => {
       title: 'Rate',
       dataIndex: 'RATE',
       key: 'RATE',
-      render: (text, record) => (
+      render: (text, record, index) => (
         <Input
+          className="rate-input"
           defaultValue={text}
           onChange={e => {
             const newRate = e.target.value || 0;
             const newData = ratesData.map(item => {
               if (item.PREFIX === record.PREFIX) {
-                return { ...item, RATE: newRate }; // Update all matching PREFIX values
+                return { ...item, RATE: newRate };
               }
               return item;
             });
             setRatesData(newData);
           }}
+          onKeyDown={e => handleKeyDown(e, index)}
         />
       ),
     },
@@ -178,7 +193,7 @@ const TodaysRates = ({ onRatesCheck }) => {
         </Popover>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center",}}>
           <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: "12px", fontWeight: "bold", marginBottom: "5px", color: "#c0c0c0" }}>
+            <div style={{ fontSize: "12px",marginTop:"10px", fontWeight: "bold", marginBottom: "5px", color: "#c0c0c0" }}>
             Gold - ₹{goldRate.rate}{" "}{goldRate.prefix}
               <span style={{ fontSize: "12px", fontWeight: "bold", color: goldRate.rate > 0 ? "red" : "green" }}>
                {goldRate.rate > 0 ? "↑" : "↓"}
@@ -187,7 +202,7 @@ const TodaysRates = ({ onRatesCheck }) => {
             {/* <div style={{ fontSize: "12px", opacity: 0.8 }}>Gold - {goldRate.prefix}</div> */}
           </div>
           <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: "12px", fontWeight: "bold", color: "#c0c0c0" }}>
+            <div style={{ fontSize: "12px",marginTop:"10px", fontWeight: "bold", color: "#c0c0c0" }}>
             Silver ₹{silverRate}{" "}
               <span style={{ fontSize: "12px", fontWeight: "bold", color: silverRate > 0 ? "red" : "green" }}>
                 {silverRate > 0 ? "↑" : "↓"}
