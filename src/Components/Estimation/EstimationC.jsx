@@ -94,9 +94,38 @@ const EstimationTable = () => {
     const colorRef = useRef(null);
     const cutRef = useRef(null);
     const clarityRef = useRef(null);
+    const custNameRef = useRef(null);
+    const mobileRef = useRef(null);
+    const [customerData, setCustomerData] = useState(null);
+    const [form] = Form.useForm();
     const [stoneItemInputValue, setStoneItemInputValue] = useState("");
     const [highlightedIndex, setHighlightedIndex] = useState(0);
     const [rates, setRates] = useState([]); // Store rates data
+    const [visibleDetailes, setVisibleDetailes] = useState(false);
+
+    useEffect(() => {
+        if (visibleDetailes) {
+            setTimeout(() => {
+                custNameRef.current?.focus();
+            }, 100); // Small delay to ensure focus after modal opens
+        }
+    }, [visibleDetailes]);
+    const handleKeyPressc = (event, nextFieldRef) => {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            if (nextFieldRef) {
+                nextFieldRef.current.focus();
+            } else {
+                form.submit();
+            }
+        }
+    };
+
+    const handleSubmit1 = (values) => {
+        setCustomerData(values);
+        setVisibleDetailes(false);
+        form.resetFields();
+    };
 
     const handleStoneChange = (value) => {
         setFormValues({ ...formValues, stoneItem: value });
@@ -539,9 +568,10 @@ const EstimationTable = () => {
         setTagNo(""); // Clear Tag No input
         setEstimationNo();
         fetchEstimationNo();
-
+        setCustomerData("");
     };
     const [visibleHis, setVisiblehis] = useState(false);
+
     const [datahis, setDatahis] = useState([]);
     const [filteredData, setFilteredData] = useState([]);
     console.log("filterData", filteredData)
@@ -573,6 +603,9 @@ const EstimationTable = () => {
         setVisiblehis(true);
         fetchDataHis();
     };
+    const showModal1 = () => {
+        setVisibleDetailes(true);
+    };
     // Handle search input change
 
 
@@ -591,7 +624,7 @@ const EstimationTable = () => {
         if (tagNoInputRef.current) {
             tagNoInputRef.current.focus();
         }
-    }, [estimationNo,data]);
+    }, [estimationNo, data]);
 
 
     useEffect(() => {
@@ -772,7 +805,6 @@ const EstimationTable = () => {
         }
     }, [fetchData]);
     // Ensure calculations use valid numbers
-
 
     const getTotal = (key) => {
         return stoneData.reduce((sum, record) => sum + (parseFloat(record[key]) || 0), 0);
@@ -1371,7 +1403,9 @@ const EstimationTable = () => {
             ),
         },
         { title: "Cust Name", dataIndex: "CustName", key: "CustName" },
-        { title: "Est Date", dataIndex: "EstDate", key: "EstDate", render: (text) => new Date(text).toLocaleDateString() },
+            { title: "Mobile No", dataIndex: "MOBILENO", key: "MOBILENO" },
+
+        { title: "Est Date", dataIndex: "EstDate", key: "EstDate", render: (text) => text ? new Date(text).toLocaleDateString('en-GB').replace(/\//g, '-') : "N/A" },
         { title: "Total Pcs", dataIndex: "TotPces", key: "TotPces", align: "right" },
         { title: "GWt", dataIndex: "GWT", key: "GWT", align: "right", render: (text) => Number(text).toFixed(3) },
         { title: "NWt", dataIndex: "Nwt", key: "Nwt", align: "right", render: (text) => Number(text).toFixed(3) },
@@ -1428,7 +1462,7 @@ const EstimationTable = () => {
             totMc: Math.round(Number(totals.totalMakingCharges)),
             totAmount: Math.round(Number(totals.totalAmount)),
             itemAmount: totals.totalStoneCost,
-            custName: "string",
+            custName: customerData?.customerName || "N/A",
             jewelType,
             billNo: 0,
             saleCode: 0,
@@ -1446,8 +1480,7 @@ const EstimationTable = () => {
             totbalance: 0,
             purchamt: 0,
             city: "string",
-            mobileno: "string",
-            purchno: 0,
+            mobileno: customerData?.mobileNumber || "N/A", purchno: 0,
             pamt: 0,
         };
 
@@ -1604,6 +1637,7 @@ const EstimationTable = () => {
                             // window.location.reload(); // Refresh the window after successful save
                             fetchEstimationNo();
                             setEstimationNo();
+                            setCustomerData();
                             setData([]);
 
 
@@ -1845,18 +1879,42 @@ const EstimationTable = () => {
 
                         style={{
                             display: "flex",
-                            alignItems: "center",
-                            justifyContent: "flex-start", gap: "16px", order: 1,
+                            flexDirection: "column", /* Stack items vertically */
+                            alignItems: "flex-start",
+                            justifyContent: "center",
+                            gap: "5px",
+                            order: 1,
                         }}
                     >
-                        <h2 style={{ fontSize: "1rem", margin: 0, whiteSpace: "nowrap", paddingLeft: "25px" }}>
-                            Est No:
-                        </h2>
+                        {/* Current Date */}
+                        <p style={{ fontSize: "14px", fontWeight: "bold", margin: 0, paddingLeft: "25px" }}>
+                            {data.length > 0 && data[0].estimationDate !== "N/A"
+                                ? new Date(data[0].estimationDate).toLocaleDateString('en-GB')
+                                : new Date().toLocaleDateString('en-GB')}
+                        </p>
 
-                        <span style={{ fontSize: "28px", fontWeight: "bold", }}>
-                            {estimationNo}
-                        </span>
-                        <Button icon={<FolderAddOutlined onClick={showModal} />} onClick={showModal} shape="circle" style={{ fontSize: "18px", backgroundColor: "#52BD91" }} />
+
+                        {/* Est No and Buttons */}
+                        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+                            <h2 style={{ fontSize: "1rem", margin: 0, whiteSpace: "nowrap", paddingLeft: "25px" }}>
+                                Est No:
+                            </h2>
+
+                            <span style={{ fontSize: "28px", fontWeight: "bold" }}>
+                                {estimationNo}
+                            </span>
+                            <Button icon={<FolderAddOutlined onClick={showModal} />} onClick={showModal} shape="circle" style={{ fontSize: "18px", backgroundColor: "#52BD91" }} />
+                            <Button icon={<InfoCircleOutlined onClick={showModal1} />} onClick={showModal1} shape="circle" disabled={data.length === 0}
+                                style={{ fontSize: "18px", backgroundColor: "#52BD91" }} />
+                        </div>
+                        {customerData && (
+                            <div style={{ paddingLeft: "25px", fontSize: "14px", fontWeight: "bold" }}>
+                                {customerData.customerName},&nbsp;
+                                {customerData.mobileNumber}
+                            </div>
+                        )}
+
+
                         <Modal
                             title="Estimation Details"
                             open={visibleHis}
@@ -1868,12 +1926,12 @@ const EstimationTable = () => {
                                 <Col>
                                     <Form.Item label="Estimation No" style={{ fontWeight: "bold", marginBottom: 0 }}>
 
-                                    <Input
-                                        placeholder="Search Estimation No"
-                                        value={searchText}
-                                        onChange={(e) => handleSearch(e.target.value)}
-                                        style={{ fontWeight: "bold" }} 
-                                    />
+                                        <Input
+                                            placeholder="Search Estimation No"
+                                            value={searchText}
+                                            onChange={(e) => handleSearch(e.target.value)}
+                                            style={{ fontWeight: "bold" }}
+                                        />
                                     </Form.Item>
                                 </Col>
                                 <Col>
@@ -1896,6 +1954,57 @@ const EstimationTable = () => {
                             />
 
                         </Modal>
+                        <Modal
+                            title="Customer Details"
+                            open={visibleDetailes}
+                            onCancel={() => setVisibleDetailes(false)}
+                            footer={null}
+                            width={400}
+                        >
+                            <Form form={form} onFinish={handleSubmit1} layout="vertical">
+                                <Row style={{ marginBottom: 10 }}>
+                                    <Col span={24}>
+                                        <Form.Item
+                                            label="Customer Name"
+                                            name="customerName"
+                                            rules={[{ required: true, message: "Please enter customer name" }]}
+                                        >
+                                            <Input
+                                                placeholder="Customer Name"
+                                                ref={custNameRef}
+                                                onKeyDown={(e) => handleKeyPressc(e, mobileRef)}
+                                            />
+                                        </Form.Item>
+                                    </Col>
+                                </Row>
+
+                                <Row style={{ marginBottom: 10 }}>
+                                    <Col span={24}>
+                                        <Form.Item
+                                            label="Mobile Number"
+                                            name="mobileNumber"
+                                            rules={[{ required: true, message: "Please enter mobile number" }]}
+                                        >
+                                            <Input
+                                                placeholder="Mobile Number"
+                                                ref={mobileRef}
+                                                onKeyDown={(e) => handleKeyPressc(e, null)}
+                                            />
+                                        </Form.Item>
+                                    </Col>
+                                </Row>
+
+                                {/* Button aligned to the right */}
+                                <Row justify="end">
+                                    <Col>
+                                        <Button type="primary" htmlType="submit">
+                                            Submit
+                                        </Button>
+                                    </Col>
+                                </Row>
+                            </Form>
+                        </Modal>
+
                     </Col>
 
                     {/* Estimation No */}
