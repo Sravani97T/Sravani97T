@@ -25,14 +25,9 @@ const EstimationTable = () => {
     const [showExtraFields, setShowExtraFields] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const searchInputRef = useRef(null);
 
-    // Function to update rate availability from TodayRates
-    const handleRatesCheck = (fetchedRates) => {
-        if (fetchedRates.length > 0 && rates.length === 0) {
-            setRates(fetchedRates);
-            setRatesAvailable(true);
-        }
-    };
+
     const [tagNo, setTagNo] = useState("");
     const [data, setData] = useState([]);
     console.log("Data", data)
@@ -630,7 +625,7 @@ const EstimationTable = () => {
         if (tagNoInputRef.current) {
             tagNoInputRef.current.focus();
         }
-    }, [estimationNo, data]);
+    }, [estimationNo,]);
 
 
     useEffect(() => {
@@ -651,10 +646,8 @@ const EstimationTable = () => {
 
             const hasRates = ratesResponse.data.length > 0;
             setRates(ratesResponse.data);
-            setRatesAvailable(hasRates);  // Only set true if rates exist
         } catch (error) {
             message.error("Error fetching rates");
-            setRatesAvailable(false);  // Ensure it's disabled on error
         }
     };
 
@@ -799,7 +792,7 @@ const EstimationTable = () => {
             setIsLoading(false);
             setTagNo("");
         }
-    }, [tagNo, data, rates, existingTagNos, ratesAvailable, trimmedTagNo]);
+    }, [tagNo, data, rates, existingTagNos, trimmedTagNo]);
     // Ensure calculations use valid numbers
 
     const handleKeyPress = useCallback((e) => {
@@ -1367,6 +1360,16 @@ const EstimationTable = () => {
 
     ];
     const [searchText, setSearchText] = useState("");
+        // Auto-focus search field when modal opens
+        // Auto-focus search field when modal opens (with delay to ensure rendering)
+    useEffect(() => {
+        if (visibleHis) {
+            setTimeout(() => {
+                searchInputRef.current?.focus();
+            }, 100); // Small delay ensures React renders input before focusing
+        }
+    }, [visibleHis]);
+       
     const handleSearch = (value) => {
         setSearchText(value);
 
@@ -1897,10 +1900,21 @@ const EstimationTable = () => {
                     >
                         {/* Current Date */}
                         <p style={{ fontSize: "14px", fontWeight: "bold", margin: 0, paddingLeft: "25px" }}>
-                            {data.length > 0 && data[0].estimationDate !== "N/A"
-                                ? new Date(data[0].estimationDate).toLocaleDateString('en-GB')
-                                : new Date().toLocaleDateString('en-GB')}
-                        </p>
+    {data.length > 0 && data[0].estimationDate !== "N/A"
+        ? new Date(data[0].estimationDate).toLocaleDateString("en-GB", {
+              weekday: "long",
+              day: "2-digit",
+              month: "long",
+              year: "numeric",
+          })
+        : new Date().toLocaleDateString("en-GB", {
+              weekday: "long",
+              day: "2-digit",
+              month: "long",
+              year: "numeric",
+          })}
+</p>
+
 
 
                         {/* Est No and Buttons */}
@@ -1936,10 +1950,13 @@ const EstimationTable = () => {
                                     <Form.Item label="Estimation No" style={{ fontWeight: "bold", marginBottom: 0 }}>
 
                                         <Input
+                                                                    ref={searchInputRef}
+
                                             placeholder="Search Estimation No"
                                             value={searchText}
                                             onChange={(e) => handleSearch(e.target.value)}
                                             style={{ fontWeight: "bold" }}
+                                            
                                         />
                                     </Form.Item>
                                 </Col>
