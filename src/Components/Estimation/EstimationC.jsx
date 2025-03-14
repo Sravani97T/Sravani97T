@@ -26,15 +26,13 @@ const EstimationTable = () => {
     const [isSaving, setIsSaving] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
-    // Function to update rate availability from TodaysRates
+    // Function to update rate availability from TodayRates
     const handleRatesCheck = (fetchedRates) => {
         if (fetchedRates.length > 0 && rates.length === 0) {
             setRates(fetchedRates);
             setRatesAvailable(true);
         }
     };
-
-
     const [tagNo, setTagNo] = useState("");
     const [data, setData] = useState([]);
     console.log("Data", data)
