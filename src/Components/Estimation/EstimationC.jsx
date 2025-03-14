@@ -1299,20 +1299,14 @@ const EstimationTable = () => {
         {
             title: "Tag No", dataIndex: "tagNo", key: "tagNo", render: (text) => <strong>{text}</strong>,
         },
-        // {
-        //     title: "HM",
-        //     dataIndex: "homeKey",  // Use the correct key name
-        //     key: "homeKey",
-        //     align: "center",
-        // },
-
+        
         {
             title: "Actions",
             key: "actions",
 
             align: "center",
             render: (_, record) => {
-                console.log("Row Data:", record); // Debugging missing fields
+                console.log("Row data:", record); // Debugging missing fields
                 return (
                     <>
                         <ItemDetailsPopover record={record} />
