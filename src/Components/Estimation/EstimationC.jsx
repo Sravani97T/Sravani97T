@@ -105,8 +105,6 @@ const EstimationTable = () => {
     const [estimationNo, setEstimationNo] = useState("");
 
     useEffect(() => {
-
-
         fetchEstimationNo();
     }, []);
     const fetchEstimationNo = async () => {
@@ -529,6 +527,7 @@ const EstimationTable = () => {
         };
     }, []);
     const [discount, setDiscount] = useState(0);
+
     const tagNoInputRef = useRef(null);
     const debounceRef = useRef(null);
     const [rotating, setRotating] = useState(false);
@@ -543,10 +542,11 @@ const EstimationTable = () => {
 
     };
     const [visibleHis, setVisiblehis] = useState(false);
-    const [, setDatahis] = useState([]);
+    const [datahis, setDatahis] = useState([]);
     const [filteredData, setFilteredData] = useState([]);
+    console.log("filterData", filteredData)
+
     const [loading, setLoading] = useState(false);
-    const [searchText, setSearchText] = useState("");
 
     // Fetch data from API
     const fetchDataHis = async () => {
@@ -573,16 +573,10 @@ const EstimationTable = () => {
         setVisiblehis(true);
         fetchDataHis();
     };
-
     // Handle search input change
-    const handleSearch = (e) => {
-        const value = e.target.value.toLowerCase();
-        setSearchText(value);
-        const filtered = data.filter((item) =>
-            item.EstimationNo.toString().includes(value)
-        );
-        setFilteredData(filtered);
-    };
+
+
+
 
     // const handleKeyPress = useCallback((e) => {
     //     if (e.key === 'Enter') {
@@ -592,11 +586,12 @@ const EstimationTable = () => {
     //         }, 300); // 300ms debounce time
     //     }
     // }, [fetchData]);
+
     useEffect(() => {
         if (tagNoInputRef.current) {
             tagNoInputRef.current.focus();
         }
-    });
+    }, [estimationNo,data]);
 
 
     useEffect(() => {
@@ -765,7 +760,7 @@ const EstimationTable = () => {
             setIsLoading(false);
             setTagNo("");
         }
-    }, [tagNo, data, rates]);
+    }, [tagNo, data, rates, existingTagNos, ratesAvailable, trimmedTagNo]);
     // Ensure calculations use valid numbers
 
     const handleKeyPress = useCallback((e) => {
@@ -886,12 +881,23 @@ const EstimationTable = () => {
             console.error("Error fetching daily rates:", error);
         }
     };
+    // useEffect(() => {
+    //     if (nwt && wastageData.length > 0) {
+    //         const updatedTotalWastage = ((parseFloat(wastageData[0].percentage || 0) * nwt) / 100).toFixed(3);
+    //         setWastageData([{ ...wastageData[0], total: updatedTotalWastage }]);
+    //     }
+    // }, [gwt, nwt, wastageData[0]?.percentage]);
     useEffect(() => {
         if (nwt && wastageData.length > 0) {
             const updatedTotalWastage = ((parseFloat(wastageData[0].percentage || 0) * nwt) / 100).toFixed(3);
-            setWastageData([{ ...wastageData[0], total: updatedTotalWastage }]);
+            setWastageData((prevWastageData) =>
+                prevWastageData.length > 0
+                    ? [{ ...prevWastageData[0], total: updatedTotalWastage }]
+                    : prevWastageData
+            );
         }
-    }, [gwt, nwt, wastageData[0]?.percentage]);
+    }, [gwt, nwt, wastageData]);
+
     useEffect(() => {
         setNwt(gwt - totalLess);
     }, [gwt, totalLess]);
@@ -1244,6 +1250,9 @@ const EstimationTable = () => {
 
             setVisiblehis(false);
             setSelectedRowKeys([]);
+            setSearchText("");
+            setFilteredData(datahis);
+
         } catch (error) {
             console.error("Error fetching Estimation data:", error);
             message.error("Error fetching Estimation data.");
@@ -1316,6 +1325,24 @@ const EstimationTable = () => {
         // { title: "Direct MC", dataIndex: "directMC", align: 'right', key: "directMC" },
 
     ];
+    const [searchText, setSearchText] = useState("");
+    const handleSearch = (value) => {
+        setSearchText(value);
+
+        if (!datahis || datahis.length === 0) return; // Ensure data exists
+
+        const filtered = datahis.filter(item =>
+            item.EstimationNo?.toString().toLowerCase().includes(value.toLowerCase()) // Case-insensitive search
+        );
+
+        setFilteredData(filtered);
+
+        // Automatically select the matching record if there's an exact match
+        const exactMatch = datahis.find(item => item.EstimationNo?.toString() === value);
+        setSelectedRowKeys(exactMatch ? [exactMatch.EstimationNo] : []);
+    };
+
+
     // Define table columns
     const columns3 = [
         {
@@ -1344,7 +1371,7 @@ const EstimationTable = () => {
             ),
         },
         { title: "Cust Name", dataIndex: "CustName", key: "CustName" },
-        { title: "EstiDate", dataIndex: "EstDate", key: "EstDate", render: (text) => new Date(text).toLocaleDateString() },
+        { title: "Est Date", dataIndex: "EstDate", key: "EstDate", render: (text) => new Date(text).toLocaleDateString() },
         { title: "Total Pcs", dataIndex: "TotPces", key: "TotPces", align: "right" },
         { title: "GWt", dataIndex: "GWT", key: "GWT", align: "right", render: (text) => Number(text).toFixed(3) },
         { title: "NWt", dataIndex: "Nwt", key: "Nwt", align: "right", render: (text) => Number(text).toFixed(3) },
@@ -1353,13 +1380,17 @@ const EstimationTable = () => {
 
     const handleCheckboxChange = (estimationNo) => {
         setSelectedRowKeys((prevSelectedRowKeys) => {
+            let newKeys;
             if (prevSelectedRowKeys.includes(estimationNo)) {
-                return prevSelectedRowKeys.filter((key) => key !== estimationNo);
+                newKeys = prevSelectedRowKeys.filter((key) => key !== estimationNo);
             } else {
-                return [estimationNo]; // Only allow one checkbox to be checked at a time
+                newKeys = [estimationNo]; // Allow only one selection
             }
+            setSearchText(newKeys.join(", ")); // Update input field
+            return newKeys;
         });
     };
+
 
     const [selectedRowKeys, setSelectedRowKeys] = useState([]);
 
@@ -1495,22 +1526,26 @@ const EstimationTable = () => {
             ),
 
             // Include tagItemDetails
-            ...(item && item.tagItemDetails && item.tagItemDetails?.map((tagItem, index) => ({
-                estimationNo: String(estimationNo), // Use the fetched estimation number
-                tagNo: Number(item.tagNo) || Number(item.TagNo) || 0,
-                sno: (item.stoneData?.length || 0) + index + 1, // Ensure unique sno
-                itemName: tagItem.ITEMNAME || tagItem.ItemName || "string",
-                pieces: Number(tagItem.PIECES || tagItem.pieces) || 0,
-                cts: Number(tagItem.CTS) || Number(tagItem.Cts) || 0,
-                grms: Number(tagItem.GRMS) || Number(tagItem.Grms) || 0,
-                rate: Number(tagItem.RATE) || Number(tagItem.Rate) || 0,
-                amount: Number(tagItem.AMOUNT) || Number(tagItem.Amount) || 0,
-                noPcs: Number(tagItem.NO_PCS) || Number(tagItem.NoPcs) || 0,
-                colour: tagItem.COLOUR || tagItem.Colour || "N/A", // Ensure Colour is provided
-                cut: tagItem.CUT || tagItem.Cut || "N/A", // Ensure Cut is provided
-                clarity: tagItem.CLARITY || tagItem.Clarity || "N/A", // Ensure Clarity is provided
-                homeKey: Number(item.homeKey) || Number(item.HomeKey) || 0,
-            })) || [])
+            ...(item && item.tagItemDetails
+                ? item.tagItemDetails.map((tagItem, index) => ({
+                    estimationNo: String(estimationNo), // Use the fetched estimation number
+                    tagNo: Number(item.tagNo) || Number(item.TagNo) || 0,
+                    sno: (item.stoneData?.length || 0) + index + 1, // Ensure unique sno
+                    itemName: tagItem.ITEMNAME || tagItem.ItemName || "string",
+                    pieces: Number(tagItem.PIECES || tagItem.pieces) || 0,
+                    cts: Number(tagItem.CTS) || Number(tagItem.Cts) || 0,
+                    grms: Number(tagItem.GRMS) || Number(tagItem.Grms) || 0,
+                    rate: Number(tagItem.RATE) || Number(tagItem.Rate) || 0,
+                    amount: Number(tagItem.AMOUNT) || Number(tagItem.Amount) || 0,
+                    noPcs: Number(tagItem.NO_PCS) || Number(tagItem.NoPcs) || 0,
+                    colour: tagItem.COLOUR || tagItem.Colour || "N/A", // Ensure Colour is provided
+                    cut: tagItem.CUT || tagItem.Cut || "N/A", // Ensure Cut is provided
+                    clarity: tagItem.CLARITY || tagItem.Clarity || "N/A", // Ensure Clarity is provided
+                    homeKey: Number(item.homeKey) || Number(item.HomeKey) || 0,
+                }))
+                : []
+            )
+
         ]);
 
         try {
@@ -1815,13 +1850,13 @@ const EstimationTable = () => {
                         }}
                     >
                         <h2 style={{ fontSize: "1rem", margin: 0, whiteSpace: "nowrap", paddingLeft: "25px" }}>
-                            Esti No:
+                            Est No:
                         </h2>
 
                         <span style={{ fontSize: "28px", fontWeight: "bold", }}>
                             {estimationNo}
                         </span>
-                        <Button icon={<FolderAddOutlined onClick={showModal} />} onClick={showModal} shape="circle" style={{ fontSize: "18px", backgroundColor: "lightgreen" }} />
+                        <Button icon={<FolderAddOutlined onClick={showModal} />} onClick={showModal} shape="circle" style={{ fontSize: "18px", backgroundColor: "#52BD91" }} />
                         <Modal
                             title="Estimation Details"
                             open={visibleHis}
@@ -1829,18 +1864,27 @@ const EstimationTable = () => {
                             footer={null}
                             width={900}
                         >
-                            <Row justify="space-between" align="middle" style={{ marginBottom: 10 }}>
+                            <Row justify="center" align="middle" gutter={16} style={{ marginBottom: 10 }}>
                                 <Col>
+                                    <Form.Item label="Estimation No" style={{ fontWeight: "bold", marginBottom: 0 }}>
+
                                     <Input
                                         placeholder="Search Estimation No"
                                         value={searchText}
-                                        onChange={handleSearch}
+                                        onChange={(e) => handleSearch(e.target.value)}
+                                        style={{ fontWeight: "bold" }} 
                                     />
+                                    </Form.Item>
                                 </Col>
-
+                                <Col>
+                                    <Button type="primary" onClick={handleSubmit}>
+                                        Submit
+                                    </Button>
+                                </Col>
                             </Row>
+
                             <Table
-                                dataSource={filteredData}
+                                dataSource={filteredData.length > 0 || searchText ? filteredData : datahis} // Use filteredData if available
                                 columns={columns3}
                                 rowKey="EstimationNo"
                                 size="small"
@@ -1850,65 +1894,59 @@ const EstimationTable = () => {
                                 pagination={false} // Disable pagination
                                 scroll={{ y: 300 }} // Enable vertical scroll
                             />
-                            <Row justify="end" style={{ marginTop: 10 }}>
-                                <Col>
-                                    <Button type="primary" onClick={handleSubmit}>
-                                        Submit
-                                    </Button>
-                                </Col>
-                            </Row>
+
                         </Modal>
                     </Col>
 
                     {/* Estimation No */}
                     <Col
-    xs={24} sm={12} md={10} lg={10} xl={10}
-    style={{
-        display: "flex",  // Flexbox for better alignment
-        alignItems: "center",
-        gap: "10px", // Adds spacing between elements
-        order: 2,
-    }}
->
-    <h2 style={{ fontSize: "1rem", margin: 0, whiteSpace: "nowrap" }}>
-        TAG NO
-    </h2>
+                        xs={24} sm={12} md={10} lg={10} xl={10}
+                        style={{
+                            display: "flex",  // Flexbox for better alignment
+                            alignItems: "center",
+                            gap: "10px", // Adds spacing between elements
+                            order: 2,
+                        }}
+                    >
+                        <h2 style={{ fontSize: "1rem", margin: 0, whiteSpace: "nowrap" }}>
+                            TAG NO
+                        </h2>
 
-    <Input
-        placeholder="Enter Tag No"
-        size="large"
-        style={{
-            height: "40px",
-            fontSize: "16px",
-            fontWeight: "bold",
-            width: "200px",
-            textAlign: "center",
-        }}
-        value={tagNo}
-        onChange={(e) => setTagNo(e.target.value)}
-        onKeyDown={handleKeyPress}
-        ref={tagNoInputRef}
-        disabled={rates.length === 0}
-    />
+                        <Input
+                            placeholder="Enter Tag No"
+                            size="large"
+                            style={{
+                                height: "40px",
+                                fontSize: "16px",
+                                fontWeight: "bold",
+                                width: "200px",
+                                textAlign: "center",
+                            }}
+                            value={tagNo}
+                            onChange={(e) => setTagNo(e.target.value)}
+                            onKeyDown={handleKeyPress}
+                            ref={tagNoInputRef}
+                            disabled={rates.length === 0}
+                        />
 
-    <Button type="primary" onClick={fetchData} loading={isLoading}>
-        Fetch
-    </Button>
+                        <Button type="primary" onClick={fetchData} loading={isLoading}>
+                            Fetch
+                        </Button>
 
-    <Button
-        icon={
-            <ReloadOutlined
-                style={{
-                    color: "orange",
-                    fontSize: "15px",
-                    transition: "transform 1s ease-in-out",
-                    transform: rotating ? "rotate(360deg)" : "rotate(0deg)",
-                }}
-            />
-        }
-        onClick={handleRefresh}
-    />
-</Col>
+                        <Button
+                            icon={
+                                <ReloadOutlined
+                                    style={{
+                                        color: "orange",
+                                        fontSize: "15px",
+                                        transition: "transform 1s ease-in-out",
+                                        transform: rotating ? "rotate(360deg)" : "rotate(0deg)",
+                                    }}
+                                />
+                            }
+                            onClick={handleRefresh}
+                        />
+                    </Col>
 
                     <Col xs={24} sm={24} md={6} lg={6} xl={6}
                         style={{
@@ -2009,7 +2047,7 @@ const EstimationTable = () => {
                                 value: Math.ceil(Number(totals.totalAmount)),
                             },
                             {
-                                label: `GST Amount - (${vat}%)`,
+                                label: `GST Amount @ ${vat}%`,
                                 value: Math.ceil(Number(gstAmount)),
                             },
                             {

@@ -226,7 +226,7 @@
   }
 
 .custom-table .ant-table-thead > tr > th {
-  background-color: #78ec95;
+  background-color: #52BD91 !important;
   font-weight: bold;
 }
 
