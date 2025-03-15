@@ -42,7 +42,7 @@ const TodaysRates = ({setRatesAvailable }) => {
         }
 
         setRatesData(todayRates);
-        setRatesAvailable(false);
+       
       } else {
         const masterResponse = await axios.get("http://www.jewelerp.timeserasoftware.in/api/Master/MasterPrefixMasterList");
         const masterData = masterResponse.data.map(item => ({
