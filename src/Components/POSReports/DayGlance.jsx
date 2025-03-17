@@ -1,5 +1,5 @@
 import React, { useState, useEffect, forwardRef } from 'react';
-import { Row, Col, Breadcrumb, Card, Button ,Form } from 'antd';
+import { Row, Col, Breadcrumb, Card, Button, Form } from 'antd';
 import axios from 'axios';
 import moment from 'moment';
 import DatePicker from 'react-datepicker';
@@ -10,7 +10,7 @@ import 'jspdf-autotable';
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import "./TableStyles.css";
-import {FileExcelOutlined ,FilePdfOutlined ,PrinterOutlined} from "@ant-design/icons";
+import { FileExcelOutlined, FilePdfOutlined, PrinterOutlined } from "@ant-design/icons";
 
 const CustomInput = forwardRef(({ value, onClick, placeholder }, ref) => (
     <div className="custom-date-input" onClick={onClick} ref={ref}>
@@ -24,12 +24,13 @@ const DayGlance = () => {
     const [dates, setDates] = useState([
         moment().startOf("day").toDate(), // Default From Date: Today
         moment().endOf("day").toDate(),   // Default To Date: Today
-    ]);    const handlePrint = () => {
+    ]);
+    const handlePrint = () => {
         const printWindow = window.open('', '', 'height=700,width=900');
         const currentDate = new Date().toLocaleDateString();
 
         printWindow.document.write('<html><head><title>Day Glance Report</title><style>');
-        
+
         // Your custom print styles
         printWindow.document.write(`
             body {
@@ -55,8 +56,8 @@ const DayGlance = () => {
             }
             th, td {
                 padding: 3px 3px;
-                text-align: left;
-                border: 1px solid #3b3b3b;
+   text-align: right; 
+                   border: 1px solid #3b3b3b;
                 width: 100px;
                 font-size: 10px;
             }
@@ -69,6 +70,9 @@ const DayGlance = () => {
                 font-weight: bold;
                 height: 10px;
             }
+                 th:first-child, td:first-child {
+            text-align: left; /* Keep first column left-aligned */
+        }
             td.description {
                 text-align: center;
             }
@@ -88,7 +92,7 @@ const DayGlance = () => {
         `);
 
         printWindow.document.write('</style></head><body>');
-        
+
         // Header with report title and date
         printWindow.document.write(`
             <div class="header">
@@ -100,13 +104,13 @@ const DayGlance = () => {
         // Iterate over each key in groupedData (e.g., groupedData["DESCRIPTION-TRANSTYPE"])
         Object.keys(groupedData).forEach((key) => {
             const [DESCRIPTION, TRANSTYPE] = key.split('-');
-            
+
             // Create a header for each group
             printWindow.document.write(`<div class="group-header">${DESCRIPTION} - ${TRANSTYPE}</div>`);
-            
+
             // Start the table for the current group
             printWindow.document.write('<div class="table-container"><table>');
-            
+
             // Add the table headers
             printWindow.document.write(`
                 <thead>
@@ -127,7 +131,10 @@ const DayGlance = () => {
                 groupedData[key].forEach(item => {
                     printWindow.document.write(`
                         <tr>
-                            <td>${item.BNO || ''}</td><td>${item.PCS || ''}</td><td>${item.GWT || ''}</td><td>${item.NWT || ''}</td><td>${item.TOTAMT || ''}</td>
+                            <td>${item.BNO || ''}</td><td>${item.PCS || ''}</td>
+                             <td>${item.GWT ? parseFloat(item.GWT)?.toFixed(3) : ''}</td>
+                        <td>${item.NWT ? parseFloat(item.NWT)?.toFixed(3) : ''}</td>
+                            <td>${item.TOTAMT || ''}</td>
                             <td>${item.CGST || ''}</td><td>${item.SGST || ''}</td><td>${item.IGST || ''}</td><td>${item.NETAMT || ''}</td><td>${item.DIACTS || ''}</td>
                             <td>${item.OLDGOLD || ''}</td><td>${item.OLDSILVER || ''}</td><td>${item.SALERTN || ''}</td><td>${item.UPI || ''}</td>
                             <td>${item.CUSTADV || ''}</td><td>${item.CHEQUE || ''}</td><td>${item.CARD || ''}</td><td>${item.CASH || ''}</td><td>${item.SCHEME || ''}</td>
@@ -150,8 +157,8 @@ const DayGlance = () => {
         printWindow.document.close();
         printWindow.print();
     };
-    
-   
+
+
     useEffect(() => {
         if (dates[0] && dates[1]) {
             const fromDate = moment(dates[0]).format('MM/DD/YYYY');
@@ -178,149 +185,147 @@ const DayGlance = () => {
         }
     }, [dates]);
 
- 
 
-const handlePDFDownload = () => {
-    const doc = new jsPDF('l', 'mm', 'a4'); // Landscape mode
+    const handlePDFDownload = () => {
+        const doc = new jsPDF('l', 'mm', 'a4'); // Landscape mode
 
-    doc.setFontSize(14);
-    doc.text('Day Glance Report', 140, 10, null, null, 'center');
-    doc.setFontSize(10);
-    doc.text(`Date Range: ${moment(dates[0]).format("DD-MM-YYYY")} - ${moment(dates[1]).format("DD-MM-YYYY")}`, 140, 18, null, null, 'center');
-
-    let y = 25;
-
-    Object.keys(groupedData).forEach((key) => {
-        const [DESCRIPTION, TRANSTYPE] = key.split('-');
-
-        // Section Title
+        doc.setFontSize(14);
+        doc.text('Day Glance Report', 140, 10, null, null, 'center');
         doc.setFontSize(10);
-        doc.text(`${DESCRIPTION} - ${TRANSTYPE}`, 15, y);
-        y += 5;
+        doc.text(`Date Range: ${moment(dates[0]).format("DD-MM-YYYY")} - ${moment(dates[1]).format("DD-MM-YYYY")}`, 140, 18, null, null, 'center');
 
-        const tableData = groupedData[key].map((item) => [
-            item.BNO || '',
-            item.PCS || '',
-            item.GWT || '',
-            item.NWT || '',
-            item.TOTAMT || '',
-            item.CGST || '',
-            item.SGST || '',
-            item.IGST || '',
-            item.NETAMT || '',
-            item.DIACTS || '',
-            item.OLDGOLD || '',
-            item.OLDSILVER || '',
-            item.SALERTN || '',
-            item.UPI || '',
-            item.CUSTADV || '',
-            item.CHEQUE || '',
-            item.CARD || '',
-            item.CASH || '',
-            item.SCHEME || '',
-            item.BALANCE || '',
-            item.ONLINE || '',
-        ]);
+        let y = 25;
 
-        doc.autoTable({
-            startY: y,
-            head: [[
-                'BNO', 'PCS', 'G.WT', 'N.WT', 'TOT AMT', 'CGST', 'SGST', 'IGST', 'NET AMT',
-                'DIA CTS', 'OLD GOLD', 'OLD SILVER', 'SALE RTN', 'UPI', 'CUST ADV', 'CHEQUE',
-                'CARD', 'CASH', 'SCHEME', 'BALANCE', 'ONLINE'
-            ]],
-            body: tableData,
-            theme: 'grid',
-            styles: { fontSize: 7 }, // Reduce font size for table content
-            headStyles: { fontSize: 7, fillColor: [80, 80, 80] }, // Smaller header font size
-            margin: { top: 30 },
+        Object.keys(groupedData).forEach((key) => {
+            const [DESCRIPTION, TRANSTYPE] = key.split('-');
+
+            // Section Title
+            doc.setFontSize(10);
+            doc.text(`${DESCRIPTION} - ${TRANSTYPE}`, 15, y);
+            y += 5;
+
+            const tableData = groupedData[key].map((item) => [
+                item.BNO || '',
+                item.PCS || '',
+                (item.GWT || 0)?.toFixed(3),  // 3 decimal places
+                (item.NWT || 0)?.toFixed(3),
+                item.TOTAMT || '',
+                item.CGST || '',
+                item.SGST || '',
+                item.IGST || '',
+                item.NETAMT || '',
+                item.DIACTS || '',
+                item.OLDGOLD || '',
+                item.OLDSILVER || '',
+                item.SALERTN || '',
+                item.UPI || '',
+                item.CUSTADV || '',
+                item.CHEQUE || '',
+                item.CARD || '',
+                item.CASH || '',
+                item.SCHEME || '',
+                item.BALANCE || '',
+                item.ONLINE || '',
+            ]);
+
+            doc.autoTable({
+                startY: y,
+                head: [[
+                    'BNO', 'PCS', 'G.WT', 'N.WT', 'TOT AMT', 'CGST', 'SGST', 'IGST', 'NET AMT',
+                    'DIA CTS', 'OLD GOLD', 'OLD SILVER', 'SALE RTN', 'UPI', 'CUST ADV', 'CHEQUE',
+                    'CARD', 'CASH', 'SCHEME', 'BALANCE', 'ONLINE'
+                ]],
+                body: tableData,
+                theme: 'grid',
+                styles: { fontSize: 7, halign: 'right' },
+                headStyles: { fontSize: 7, fillColor: [80, 80, 80] }, // Smaller header font size
+                margin: { top: 30 },
+            });
+
+            y = doc.autoTable.previous.finalY + 10; // Adjust position for next table
         });
 
-        y = doc.autoTable.previous.finalY + 10; // Adjust position for next table
-    });
+        doc.save(`Day_Glance_Report_${moment().format("DD-MM-YYYY")}.pdf`);
+    };
+    const handleExcelDownload = async () => {
+        const workbook = new ExcelJS.Workbook();
+        workbook.creator = "My App";
+        workbook.created = new Date();
 
-    doc.save(`Day_Glance_Report_${moment().format("DD-MM-YYYY")}.pdf`);
-};
-const handleExcelDownload = async () => {
-    const workbook = new ExcelJS.Workbook();
-    workbook.creator = "My App";
-    workbook.created = new Date();
-    
-    Object.keys(groupedData).forEach((key) => {
-      const [DESCRIPTION, TRANSTYPE] = key.split("-");
-      const sheet = workbook.addWorksheet(`${DESCRIPTION} - ${TRANSTYPE}`);
+        Object.keys(groupedData).forEach((key) => {
+            const [DESCRIPTION, TRANSTYPE] = key.split("-");
+            const sheet = workbook.addWorksheet(`${DESCRIPTION} - ${TRANSTYPE}`);
 
-      // Define Columns
-      sheet.columns = [
-        { header: "BNO", key: "BNO", width: 10 },
-        { header: "PCS", key: "PCS", width: 8 },
-        { header: "G.WT", key: "GWT", width: 10 },
-        { header: "N.WT", key: "NWT", width: 10 },
-        { header: "TOT AMT", key: "TOTAMT", width: 12 },
-        { header: "CGST", key: "CGST", width: 10 },
-        { header: "SGST", key: "SGST", width: 10 },
-        { header: "IGST", key: "IGST", width: 10 },
-        { header: "NET AMT", key: "NETAMT", width: 12 },
-        { header: "DIA CTS", key: "DIACTS", width: 10 },
-        { header: "OLD GOLD", key: "OLDGOLD", width: 12 },
-        { header: "OLD SILVER", key: "OLDSILVER", width: 12 },
-        { header: "SALE RTN", key: "SALERTN", width: 12 },
-        { header: "UPI", key: "UPI", width: 10 },
-        { header: "CUST ADV", key: "CUSTADV", width: 12 },
-        { header: "CHEQUE", key: "CHEQUE", width: 12 },
-        { header: "CARD", key: "CARD", width: 10 },
-        { header: "CASH", key: "CASH", width: 10 },
-        { header: "SCHEME", key: "SCHEME", width: 12 },
-        { header: "BALANCE", key: "BALANCE", width: 12 },
-        { header: "ONLINE", key: "ONLINE", width: 10 },
-      ];
+            // Define Columns
+            sheet.columns = [
+                { header: "BNO", key: "BNO", width: 10 },
+                { header: "PCS", key: "PCS", width: 8 },
+                { header: "G.WT", key: "GWT", width: 10 },
+                { header: "N.WT", key: "NWT", width: 10 },
+                { header: "TOT AMT", key: "TOTAMT", width: 12 },
+                { header: "CGST", key: "CGST", width: 10 },
+                { header: "SGST", key: "SGST", width: 10 },
+                { header: "IGST", key: "IGST", width: 10 },
+                { header: "NET AMT", key: "NETAMT", width: 12 },
+                { header: "DIA CTS", key: "DIACTS", width: 10 },
+                { header: "OLD GOLD", key: "OLDGOLD", width: 12 },
+                { header: "OLD SILVER", key: "OLDSILVER", width: 12 },
+                { header: "SALE RTN", key: "SALERTN", width: 12 },
+                { header: "UPI", key: "UPI", width: 10 },
+                { header: "CUST ADV", key: "CUSTADV", width: 12 },
+                { header: "CHEQUE", key: "CHEQUE", width: 12 },
+                { header: "CARD", key: "CARD", width: 10 },
+                { header: "CASH", key: "CASH", width: 10 },
+                { header: "SCHEME", key: "SCHEME", width: 12 },
+                { header: "BALANCE", key: "BALANCE", width: 12 },
+                { header: "ONLINE", key: "ONLINE", width: 10 },
+            ];
 
-      // Add Header Styling
-      sheet.getRow(1).font = { bold: true, size: 11, color: { argb: "FFFFFF" } };
-      sheet.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "4F81BD" } };
+            // Add Header Styling
+            sheet.getRow(1).font = { bold: true, size: 11, color: { argb: "FFFFFF" } };
+            sheet.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "4F81BD" } };
 
-      // Add Data Rows
-      groupedData[key].forEach((item) => {
-        sheet.addRow({
-          BNO: item.BNO || "",
-          PCS: item.PCS || "",
-          GWT: item.GWT || "",
-          NWT: item.NWT || "",
-          TOTAMT: item.TOTAMT || "",
-          CGST: item.CGST || "",
-          SGST: item.SGST || "",
-          IGST: item.IGST || "",
-          NETAMT: item.NETAMT || "",
-          DIACTS: item.DIACTS || "",
-          OLDGOLD: item.OLDGOLD || "",
-          OLDSILVER: item.OLDSILVER || "",
-          SALERTN: item.SALERTN || "",
-          UPI: item.UPI || "",
-          CUSTADV: item.CUSTADV || "",
-          CHEQUE: item.CHEQUE || "",
-          CARD: item.CARD || "",
-          CASH: item.CASH || "",
-          SCHEME: item.SCHEME || "",
-          BALANCE: item.BALANCE || "",
-          ONLINE: item.ONLINE || "",
+            // Add Data Rows
+            groupedData[key].forEach((item) => {
+                sheet.addRow({
+                    BNO: item.BNO || "",
+                    PCS: item.PCS || "",
+                    GWT: (item.GWT || 0)?.toFixed(3),  // 3 decimal places
+                    NWT: (item.NWT || 0)?.toFixed(3),  // 3 decimal places
+                    TOTAMT: item.TOTAMT || "",
+                    CGST: item.CGST || "",
+                    SGST: item.SGST || "",
+                    IGST: item.IGST || "",
+                    NETAMT: item.NETAMT || "",
+                    DIACTS: item.DIACTS || "",
+                    OLDGOLD: item.OLDGOLD || "",
+                    OLDSILVER: item.OLDSILVER || "",
+                    SALERTN: item.SALERTN || "",
+                    UPI: item.UPI || "",
+                    CUSTADV: item.CUSTADV || "",
+                    CHEQUE: item.CHEQUE || "",
+                    CARD: item.CARD || "",
+                    CASH: item.CASH || "",
+                    SCHEME: item.SCHEME || "",
+                    BALANCE: item.BALANCE || "",
+                    ONLINE: item.ONLINE || "",
+                });
+            });
+
+            // Apply Right Alignment for Numeric Columns
+            sheet.eachRow((row, rowNumber) => {
+                if (rowNumber > 1) {  // Ignore header row
+                    row.eachCell((cell) => {
+                        cell.alignment = { horizontal: "right" };
+                    });
+                }
+            });
         });
-      });
 
-      // Auto-size Columns
-      sheet.columns.forEach((column) => {
-        let maxLength = 0;
-        column.eachCell({ includeEmpty: true }, (cell) => {
-          const columnLength = cell.value ? cell.value.toString().length : 10;
-          maxLength = Math.max(maxLength, columnLength);
-        });
-        column.width = maxLength + 2;
-      });
-    });
-
-    // Generate Excel File
-    const buffer = await workbook.xlsx.writeBuffer();
-    saveAs(new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }), `Day_Glance_Report_${moment().format("DD-MM-YYYY")}.xlsx`);
-  };
+        // Generate Excel File
+        const buffer = await workbook.xlsx.writeBuffer();
+        saveAs(new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }), `Day_Glance_Report_${moment().format("DD-MM-YYYY")}.xlsx`);
+    };
 
     return (
         <div id="printableArea" style={{ backgroundColor: '#f9f9f9', borderRadius: '8px' }}>
@@ -331,10 +336,10 @@ const handleExcelDownload = async () => {
                         <Breadcrumb.Item>Day Glance</Breadcrumb.Item>
                     </Breadcrumb>
                 </Col>
-               
+
             </Row>
 
-                   <Card
+            <Card
                 className="day-glance-card"
                 style={{
                     position: 'relative', // For positioning the triangular and diamond designs
@@ -349,7 +354,7 @@ const handleExcelDownload = async () => {
                 <div
                     style={{
                         position: 'absolute',
-                      
+
                         width: '0',
                         height: '0',
                         borderLeft: '75px solid transparent',
@@ -380,54 +385,56 @@ const handleExcelDownload = async () => {
                         borderLeft: '100px solid transparent',
                         borderRight: '100px solid transparent',
                         borderTop: '200px solid rgba(255, 255, 255, 0.15)',
-                        
+
                     }}
                 />
 
                 <Row justify="center" gutter={16} style={{ marginBottom: 16 }}>
                     <Col>
-                    <Form.Item label={<span style={{ color: "white" }}>From Date</span>}>
+                        <Form.Item label={<span style={{ color: "white" }}>From Date</span>}>
 
-                        <DatePicker
-                            selected={dates[0]}
-                            onChange={(date) => setDates([date, dates[1]])}
-                            selectsStart
-                            startDate={dates[0]}
-                            endDate={dates[1]}
-                            placeholderText="From Date"
-                            customInput={<CustomInput />}
-                            popperProps={{ positionFixed: true, style: { zIndex: 2 } }}
-                        />
+                            <DatePicker
+                                selected={dates[0]}
+                                dateFormat="dd MMM yyyy"
+                                onChange={(date) => setDates([date, dates[1]])}
+                                selectsStart
+                                startDate={dates[0]}
+                                endDate={dates[1]}
+                                placeholderText="From Date"
+                                customInput={<CustomInput />}
+                                popperProps={{ positionFixed: true, style: { zIndex: 2 } }}
+                            />
                         </Form.Item>
                     </Col>
                     <Col>
-                    <Form.Item label={<span style={{ color: "white" }}>To Date</span>}>
+                        <Form.Item label={<span style={{ color: "white" }}>To Date</span>}>
 
-                        <DatePicker
-                            selected={dates[1]}
-                            onChange={(date) => setDates([dates[0], date])}
-                            selectsEnd
-                            startDate={dates[0]}
-                            endDate={dates[1]}
-                            placeholderText="To Date"
-                            customInput={<CustomInput />}
-                            popperProps={{ positionFixed: true, style: { zIndex: 2 } }}
-                        />
+                            <DatePicker
+                                selected={dates[1]}
+                                  dateFormat="dd MMM yyyy"
+                                onChange={(date) => setDates([dates[0], date])}
+                                selectsEnd
+                                startDate={dates[0]}
+                                endDate={dates[1]}
+                                placeholderText="To Date"
+                                customInput={<CustomInput />}
+                                popperProps={{ positionFixed: true, style: { zIndex: 2 } }}
+                            />
                         </Form.Item>
                     </Col>
                 </Row>
                 <Row justify="center" style={{ marginBottom: 16 }}>
                     <Col>
-                        <Button onClick={handlePrint}  style={{
-                                marginLeft: 8,
-                                backgroundColor: '#0052cc',
-                                color: '#fff',
-                                border: 'none',
-                            }} type="primary" icon={<PrinterOutlined />}>
+                        <Button onClick={handlePrint} style={{
+                            marginLeft: 8,
+                            backgroundColor: '#0052cc',
+                            color: '#fff',
+                            border: 'none',
+                        }} type="primary" icon={<PrinterOutlined />}>
                             Print
                         </Button>
                         <Button
-  onClick={handlePDFDownload}                             style={{
+                            onClick={handlePDFDownload} style={{
                                 marginLeft: 8,
                                 backgroundColor: '#0052cc',
                                 color: '#fff',
@@ -436,20 +443,20 @@ const handleExcelDownload = async () => {
                         >
                             PDF
                         </Button>
-                        <Button onClick={handleExcelDownload}style={{
-                                marginLeft: 8,
-                                backgroundColor: '#0052cc',
-                                color: '#fff',
-                                border: 'none',
-                            }} icon={<FileExcelOutlined />} type="default">
-       Excel
-      </Button>
+                        <Button onClick={handleExcelDownload} style={{
+                            marginLeft: 8,
+                            backgroundColor: '#0052cc',
+                            color: '#fff',
+                            border: 'none',
+                        }} icon={<FileExcelOutlined />} type="default">
+                            Excel
+                        </Button>
                     </Col>
                 </Row>
             </Card>
 
             {Object.keys(groupedData).map((key, index) => {
-                const [ DESCRIPTION, TRANSTYPE] = key.split('-');
+                const [DESCRIPTION, TRANSTYPE] = key.split('-');
                 return (
                     <div key={index} className="table-container">
                         <h3>{`${DESCRIPTION} - ${TRANSTYPE}`}</h3>
@@ -485,25 +492,25 @@ const handleExcelDownload = async () => {
                                         <tr>
                                             <td>{item.BNO}</td>
                                             <td>{item.PCS}</td>
-                                            <td>{item.GWT}</td>
-                                            <td>{item.NWT}</td>
-                                            <td>{item.TOTAMT}</td>
-                                            <td>{item.CGST}</td>
-                                            <td>{item.SGST}</td>
-                                            <td>{item.IGST}</td>
-                                            <td>{item.NETAMT}</td>
+                                            <td style={{ textAlign: 'right' }}>{parseFloat(item.GWT)?.toFixed(3)}</td>
+                                            <td style={{ textAlign: 'right' }}>{parseFloat(item.NWT)?.toFixed(3)}</td>
+                                            <td style={{ textAlign: 'right' }}>{item.TOTAMT}</td>
+                                            <td style={{ textAlign: 'right' }}>{item.CGST}</td>
+                                            <td style={{ textAlign: 'right' }}>{item.SGST}</td>
+                                            <td style={{ textAlign: 'right' }}>{item.IGST}</td>
+                                            <td style={{ textAlign: 'right' }}>{item.NETAMT}</td>
                                             <td>{item.DIACTS}</td>
                                             <td>{item.OLDGOLD}</td>
                                             <td>{item.OLDSILVER}</td>
                                             <td>{item.SALERTN}</td>
-                                            <td>{item.UPI}</td>
+                                            <td style={{ textAlign: 'right' }}>{item.UPI}</td>
                                             <td>{item.CUSTADV}</td>
                                             <td>{item.CHEQUE}</td>
                                             <td>{item.CARD}</td>
-                                            <td>{item.CASH}</td>
+                                            <td style={{ textAlign: 'right' }}>{item.CASH}</td>
                                             <td>{item.SCHEME}</td>
-                                            <td>{item.BALANCE}</td>
-                                            <td>{item.ONLINE}</td>
+                                            <td style={{ textAlign: 'right' }}>{item.BALANCE}</td>
+                                            <td style={{ textAlign: 'right' }}>{item.ONLINE}</td>
                                         </tr>
                                         <tr>
                                             <td colSpan="1" className="empty-border">{moment(item.DATE).format('MM/DD/YYYY')}</td>

@@ -27,7 +27,7 @@ const EstimationTable = () => {
     const [isLoading, setIsLoading] = useState(false);
     const searchInputRef = useRef(null);
 
-
+    const modalRef = useRef(null);
     const [tagNo, setTagNo] = useState("");
     const [data, setData] = useState([]);
     console.log("Data", data)
@@ -555,11 +555,11 @@ const EstimationTable = () => {
     const debounceRef = useRef(null);
     const [rotating, setRotating] = useState(false);
     useEffect(() => {
-    form.setFieldsValue({
-        customerName: customerData?.customerName,
-        mobileNumber: customerData?.mobileNumber
-    });
-}, [customerData, form]);
+        form.setFieldsValue({
+            customerName: customerData?.customerName,
+            mobileNumber: customerData?.mobileNumber
+        });
+    }, [customerData, form]);
 
     // Function to reset table data and totals
     const handleRefresh = () => {
@@ -603,9 +603,16 @@ const EstimationTable = () => {
     const showModal = () => {
         setVisiblehis(true);
         fetchDataHis();
+        if (tagNoInputRef.current) {
+            tagNoInputRef.current.focus();
+        }
+        
     };
     const showModal1 = () => {
         setVisibleDetailes(true);
+        if (tagNoInputRef.current) {
+            tagNoInputRef.current.focus();
+        }
     };
     // Handle search input change
 
@@ -621,13 +628,30 @@ const EstimationTable = () => {
     //     }
     // }, [fetchData]);
 
+    // useEffect(() => {
+    //     if (tagNoInputRef.current) {
+    //         tagNoInputRef.current.focus();
+    //     }
+    // }, [estimationNo,]);
+
     useEffect(() => {
         if (tagNoInputRef.current) {
             tagNoInputRef.current.focus();
         }
-    }, [estimationNo,]);
+    }, [estimationNo, visibleHis, visibleDetailes, isProductModalOpen,]);
+    useEffect(() => {
+        const handleClick = (event) => {
+            if (tagNoInputRef.current && modalRef.current && !modalRef.current.contains(event.target)) {
+                tagNoInputRef.current.focus();
+            }
+        };
 
+        document.addEventListener("click", handleClick);
 
+        return () => {
+            document.removeEventListener("click", handleClick);
+        };
+    }, []);
     useEffect(() => {
         fetchRates();
     }, []);
@@ -1282,6 +1306,10 @@ const EstimationTable = () => {
             });
 
             setData(processedData);
+            // tagNoInputRef.current.focus();
+            if (tagNoInputRef.current) {
+                tagNoInputRef.current.focus();
+            }
             setCustomerData(() => ({
                 customerName: custData[0].CustName,
                 mobileNumber: custData[0].MOBILENO
@@ -1360,8 +1388,8 @@ const EstimationTable = () => {
 
     ];
     const [searchText, setSearchText] = useState("");
-        // Auto-focus search field when modal opens
-        // Auto-focus search field when modal opens (with delay to ensure rendering)
+    // Auto-focus search field when modal opens
+    // Auto-focus search field when modal opens (with delay to ensure rendering)
     useEffect(() => {
         if (visibleHis) {
             setTimeout(() => {
@@ -1369,7 +1397,7 @@ const EstimationTable = () => {
             }, 100); // Small delay ensures React renders input before focusing
         }
     }, [visibleHis]);
-       
+
     const handleSearch = (value) => {
         setSearchText(value);
 
@@ -1900,20 +1928,20 @@ const EstimationTable = () => {
                     >
                         {/* Current Date */}
                         <p style={{ fontSize: "14px", fontWeight: "bold", margin: 0, paddingLeft: "25px" }}>
-    {data.length > 0 && data[0].estimationDate !== "N/A"
-        ? new Date(data[0].estimationDate).toLocaleDateString("en-GB", {
-              weekday: "long",
-              day: "2-digit",
-              month: "long",
-              year: "numeric",
-          })
-        : new Date().toLocaleDateString("en-GB", {
-              weekday: "long",
-              day: "2-digit",
-              month: "long",
-              year: "numeric",
-          })}
-</p>
+                            {data.length > 0 && data[0].estimationDate !== "N/A"
+                                ? new Date(data[0].estimationDate).toLocaleDateString("en-GB", {
+                                    weekday: "long",
+                                    day: "2-digit",
+                                    month: "long",
+                                    year: "numeric",
+                                })
+                                : new Date().toLocaleDateString("en-GB", {
+                                    weekday: "long",
+                                    day: "2-digit",
+                                    month: "long",
+                                    year: "numeric",
+                                })}
+                        </p>
 
 
 
@@ -1926,7 +1954,7 @@ const EstimationTable = () => {
                             <span style={{ fontSize: "28px", fontWeight: "bold" }}>
                                 {estimationNo}
                             </span>
-                            <Button icon={<FolderAddOutlined onClick={showModal} />} onClick={showModal} shape="circle" style={{ fontSize: "18px", backgroundColor: "#52BD91" }} />
+                            <Button icon={<FolderAddOutlined  />} onClick={showModal} shape="circle" style={{ fontSize: "18px", backgroundColor: "#52BD91" }} />
                             <Button icon={<InfoCircleOutlined onClick={showModal1} />} onClick={showModal1} shape="circle" disabled={data.length === 0}
                                 style={{ fontSize: "18px", backgroundColor: "#52BD91" }} />
                         </div>
@@ -1950,13 +1978,18 @@ const EstimationTable = () => {
                                     <Form.Item label="Estimation No" style={{ fontWeight: "bold", marginBottom: 0 }}>
 
                                         <Input
-                                                                    ref={searchInputRef}
+                                            ref={searchInputRef}
 
                                             placeholder="Search Estimation No"
                                             value={searchText}
+                                            onKeyDown={(e) => {
+                                                if (e.key === "Enter") {
+                                                    handleSubmit();
+                                                }
+                                            }}
                                             onChange={(e) => handleSearch(e.target.value)}
                                             style={{ fontWeight: "bold" }}
-                                            
+
                                         />
                                     </Form.Item>
                                 </Col>
@@ -1987,10 +2020,10 @@ const EstimationTable = () => {
                             footer={null}
                             width={400}
                         >
-                            <Form form={form} onFinish={handleSubmit1} layout="vertical"  initialValues={{
-        customerName: customerData?.customerName,
-        mobileNumber: customerData?.mobileNumber
-    }}>
+                            <Form form={form} onFinish={handleSubmit1} layout="vertical" initialValues={{
+                                customerName: customerData?.customerName,
+                                mobileNumber: customerData?.mobileNumber
+                            }}>
                                 <Row style={{ marginBottom: 10 }}>
                                     <Col span={24}>
                                         <Form.Item
@@ -2097,7 +2130,7 @@ const EstimationTable = () => {
 
                         }}
                     >
-                        <TodaysRates1  setRatesAvailable={setRatesAvailable}/>
+                        <TodaysRates1 setRatesAvailable={setRatesAvailable} tagNoInputRef={tagNoInputRef}/>
                     </Col>
                 </Row>
             </Card>
