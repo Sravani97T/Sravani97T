@@ -3,13 +3,13 @@ import { Card, Tag, Popover, Table, Input, Button } from "antd";
 import axios from "axios";
 import { CREATE_jwel } from "../../Config/Config";
 
-const TodaysRates = ({ onRatesCheck }) => {
+const TodaysRates = ({setRatesAvailable }) => {
   const [goldRate, setGoldRate] = useState({ prefix: "18K", rate: 0 });
   const [silverRate, setSilverRate] = useState(0);
   const [currentPrefixIndex, setCurrentPrefixIndex] = useState(0);
   const [ratesData, setRatesData] = useState([]);
   const [visible, setVisible] = useState(false);
-  const [ratesAvailable, setRatesAvailable] = useState(false);
+  // const [ratesAvailable, setRatesAvailable] = useState(false);
 
   const prefixes = React.useMemo(() => ["18K", "22K", "24K"], []);
 
@@ -21,7 +21,11 @@ const TodaysRates = ({ onRatesCheck }) => {
       const today = new Date().toISOString().split("T")[0];
 
       const todayRates = data.filter(item => item.RDATE.split("T")[0] === today);
-
+      const allRatesZero = todayRates.every(item => item.RATE === 0);
+      if (allRatesZero) {
+        setRatesAvailable(true);
+      }
+console.log(allRatesZero);
       if (todayRates.length > 0) {
         const goldRates = todayRates.filter(item => item.MAINPRODUCT === "GOLD");
         const silverRates = todayRates.filter(item => item.MAINPRODUCT === "SILVER");
@@ -35,7 +39,7 @@ const TodaysRates = ({ onRatesCheck }) => {
         }
 
         setRatesData(todayRates);
-        setRatesAvailable(true);
+        setRatesAvailable(false);
       } else {
         const masterResponse = await axios.get("http://www.jewelerp.timeserasoftware.in/api/Master/MasterPrefixMasterList");
         const masterData = masterResponse.data.map(item =>({
@@ -45,17 +49,15 @@ const TodaysRates = ({ onRatesCheck }) => {
           ...item
         }));
         setRatesData(masterData);
-        setRatesAvailable(false);
+        setRatesAvailable(true);
 
       }
-      onRatesCheck(ratesAvailable);
 
     } catch (error) {
       console.error("Error fetching rates:", error);
       setRatesAvailable(false);
-      onRatesCheck(false);
     }
-  }, [onRatesCheck, ratesAvailable]);
+  }, [ ]);
 
   useEffect(() => {
     fetchRates();

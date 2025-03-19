@@ -95,6 +95,7 @@ const EstimationTable = () => {
     const custNameRef = useRef(null);
     const mobileRef = useRef(null);
     const [customerData, setCustomerData] = useState(null);
+    console.log("customerData", customerData);
     const [form] = Form.useForm();
     const [stoneItemInputValue, setStoneItemInputValue] = useState("");
     const [highlightedIndex, setHighlightedIndex] = useState(0);
@@ -558,6 +559,13 @@ const EstimationTable = () => {
     const tagNoInputRef = useRef(null);
     const debounceRef = useRef(null);
     const [rotating, setRotating] = useState(false);
+    useEffect(() => {
+    form.setFieldsValue({
+        customerName: customerData?.customerName,
+        mobileNumber: customerData?.mobileNumber
+    });
+}, [customerData, form]);
+
     // Function to reset table data and totals
     const handleRefresh = () => {
         setRotating(true); // Start rotation effect
@@ -1165,13 +1173,15 @@ const EstimationTable = () => {
         }
 
         const selectedEstimationNo = selectedRowKeys[0];
-
+        const custData = filteredData.filter(item => item.EstimationNo === selectedEstimationNo);
+        console.log("custData", custData);
         try {
             // Fetch Estimation Data
+
             const response = await axios.get(
                 `http://www.jewelerp.timeserasoftware.in/api/Master/GetDataFromGivenTableNameWithWhere?tableName=ESTIMATION_DATA&where=ESTIMATIONNO%3D${selectedEstimationNo}`
             );
-
+            console.log("resp", response);
             if (!response.data.length) {
                 message.warning("No data found for the selected Estimation No.");
                 return;
@@ -1193,6 +1203,7 @@ const EstimationTable = () => {
             const tagItems = tagItemsResponse.data || [];
 
             setEstimationNo(selectedEstimationNo);
+
 
             // Process Data & Map to Table Structure
             const processedData = response.data.map((item, index) => {
@@ -1251,6 +1262,7 @@ const EstimationTable = () => {
                         t.HomeKey === item.Homekey
                     ),                          // ✅ Additional Fields from API (Mapped Correctly)
                     estimationNo: item.EstimationNo || "N/A",
+
                     brandAmount: parseFloat(item.BrandAmt) || 0,
                     totalAmount: parseFloat(item.Totamt) || 0,
                     estimationDate: item.EstDate || "N/A",
@@ -1277,6 +1289,11 @@ const EstimationTable = () => {
             });
 
             setData(processedData);
+            setCustomerData(() => ({
+                customerName: custData[0].CustName,
+                mobileNumber: custData[0].MOBILENO
+            }));
+
 
             setVisiblehis(false);
             setSelectedRowKeys([]);
@@ -1297,7 +1314,7 @@ const EstimationTable = () => {
         {
             title: "Tag No", dataIndex: "tagNo", key: "tagNo", render: (text) => <strong>{text}</strong>,
         },
-        
+
         {
             title: "Actions",
             key: "actions",
@@ -1395,7 +1412,7 @@ const EstimationTable = () => {
             ),
         },
         { title: "Cust Name", dataIndex: "CustName", key: "CustName" },
-            { title: "Mobile No", dataIndex: "MOBILENO", key: "MOBILENO" },
+        { title: "Mobile No", dataIndex: "MOBILENO", key: "MOBILENO" },
 
         { title: "Est Date", dataIndex: "EstDate", key: "EstDate", render: (text) => text ? new Date(text).toLocaleDateString('en-GB').replace(/\//g, '-') : "N/A" },
         { title: "Total Pcs", dataIndex: "TotPces", key: "TotPces", align: "right" },
@@ -1953,12 +1970,16 @@ const EstimationTable = () => {
                             footer={null}
                             width={400}
                         >
-                            <Form form={form} onFinish={handleSubmit1} layout="vertical">
+                            <Form form={form} onFinish={handleSubmit1} layout="vertical"  initialValues={{
+        customerName: customerData?.customerName,
+        mobileNumber: customerData?.mobileNumber
+    }}>
                                 <Row style={{ marginBottom: 10 }}>
                                     <Col span={24}>
                                         <Form.Item
                                             label="Customer Name"
                                             name="customerName"
+
                                             rules={[{ required: true, message: "Please enter customer name" }]}
                                         >
                                             <Input
@@ -1980,6 +2001,7 @@ const EstimationTable = () => {
                                             <Input
                                                 placeholder="Mobile Number"
                                                 ref={mobileRef}
+
                                                 onKeyDown={(e) => handleKeyPressc(e, null)}
                                             />
                                         </Form.Item>
@@ -2027,7 +2049,7 @@ const EstimationTable = () => {
                             onChange={(e) => setTagNo(e.target.value)}
                             onKeyDown={handleKeyPress}
                             ref={tagNoInputRef}
-                            disabled={rates.length === 0}
+                            disabled={ratesAvailable === true}
                         />
 
                         <Button type="primary" onClick={fetchData} loading={isLoading}>
@@ -2058,7 +2080,7 @@ const EstimationTable = () => {
 
                         }}
                     >
-                        <TodaysRates1 onRatesCheck={handleRatesCheck} />
+                        <TodaysRates1  setRatesAvailable={setRatesAvailable}/>
                     </Col>
                 </Row>
             </Card>
