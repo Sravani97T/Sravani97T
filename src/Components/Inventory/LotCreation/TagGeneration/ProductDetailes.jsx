@@ -3,6 +3,7 @@ import { Row, Col, Typography, Input, Select, Upload, message } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import axios from 'axios';
 import WastageDetails from "./WastageDetailes";
+import { CREATE_jwel } from "../../../../Config/Config";
 
 const { Option } = Select;
 const { Text } = Typography;
@@ -51,7 +52,7 @@ const ProductDetails = ({resetFields, resetTrigger, setResetTrigger, updateTotal
   // Fetch product data based on mname
   useEffect(() => {
     if (!mname) return;
-    const url = `http://www.jewelerp.timeserasoftware.in/api/Master/GetDataFromGivenTableNameWithWhereandOrder?tableName=PRODUCT_MASTER&where=MNAME='${mname}'&order=PRODUCTNAME`;
+    const url = `${CREATE_jwel}/api/Master/GetDataFromGivenTableNameWithWhereandOrder?tableName=PRODUCT_MASTER&where=MNAME='${mname}'&order=PRODUCTNAME`;
     axios.get(url)
       .then(response => {
         setProducts(response.data);

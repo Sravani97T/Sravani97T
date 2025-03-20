@@ -48,7 +48,7 @@ const TodaysRates = ({setRatesAvailable ,tagNoInputRef}) => {
         setRatesData(todayRates);
        
       } else {
-        const masterResponse = await axios.get("http://www.jewelerp.timeserasoftware.in/api/Master/MasterPrefixMasterList");
+        const masterResponse = await axios.get(`${CREATE_jwel}/api/Master/MasterPrefixMasterList`);
         const masterData = masterResponse.data.map(item => ({
           MAINPRODUCT: item.MAINPRODUCT,
           PREFIX: item.Prefix,
@@ -140,9 +140,9 @@ const TodaysRates = ({setRatesAvailable ,tagNoInputRef}) => {
   const handleSubmit = async () => {
     const today = new Date().toISOString().split("T")[0];
     try {
-      await axios.post(`http://www.jewelerp.timeserasoftware.in/api/Erp/DailyRatesDelete?rDate=${today}`);
+      await axios.post(`${CREATE_jwel}/api/Erp/DailyRatesDelete?rDate=${today}`);
       for (const rate of ratesData) {
-        await axios.post("http://www.jewelerp.timeserasoftware.in/api/Erp/DailyRatesInsert", {
+        await axios.post(`${CREATE_jwel}/api/Erp/DailyRatesInsert`, {
           rdate: today,
           mainproduct: rate.MAINPRODUCT,
           rate: rate.RATE || 0,

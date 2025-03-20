@@ -6,6 +6,7 @@ import { PrinterOutlined, FilePdfOutlined, FileExcelOutlined, FilterOutlined } f
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { saveAs } from 'file-saver';
+import { CREATE_jwel } from '../../Config/Config';
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
@@ -129,14 +130,15 @@ const DailyRatesReports = () => {
     };
 
     useEffect(() => {
-        axios.get('http://www.jewelerp.timeserasoftware.in/api/Erp/GetDailyRatesList')
+        axios.get(`${CREATE_jwel}/api/Erp/GetDailyRatesList`) // Corrected template literal
             .then(response => {
                 setData(response.data);
             })
             .catch(error => {
-                console.error('There was an error fetching the data!', error);
+                console.error('Error fetching the data:', error);
             });
     }, []);
+    
 
     useEffect(() => {
         let filtered = data;

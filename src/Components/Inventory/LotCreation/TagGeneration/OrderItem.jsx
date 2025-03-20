@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Row, Col, Typography, Input, Select, Button, Modal, Table, Card, Tag, Badge } from "antd";
 import { PlusOutlined, CloseOutlined, EditOutlined } from "@ant-design/icons";
 import axios from "axios";
+import { CREATE_jwel } from "../../../../Config/Config";
 
 const { Text } = Typography;
 const { Option } = Select;
@@ -79,7 +80,7 @@ const OrderItem = ({ lotno,productname,gwt,pieces,orderId, customerName, orderDa
     };
 
     useEffect(() => {
-        axios.get("http://www.jewelerp.timeserasoftware.in/api/Master/MasterItemMasterList")
+        axios.get(`${CREATE_jwel}/api/Master/MasterItemMasterList`)
             .then(response => {
                 setItemList(response.data);
             })

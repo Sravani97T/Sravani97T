@@ -31,7 +31,7 @@ const OldGoldBookOpening = () => {
     const [pageSize, setPageSize] = useState(20);
 
     useEffect(() => {
-        axios.get(`http://www.jewelerp.timeserasoftware.in/api/POSReports/GetGS11ParticularsList`)
+        axios.get(`${CREATE_jwel}/api/POSReports/GetGS11ParticularsList`)
             .then(response => {
                 setParticularsList(response.data);
             })

@@ -7,6 +7,7 @@ import 'react-datepicker/dist/react-datepicker.css';
 import { FaCalendarAlt } from 'react-icons/fa';
 import PdfExcelPrint from '../../Utiles/PdfExcelPrint';
 import TableHeaderStyles from '../../Pages/TableHeaderStyles';
+import { CREATE_jwel } from "../../../Config/Config";
 
 const CustomInput = forwardRef(({ value, onClick, placeholder }, ref) => {
     const formattedValue = value ? moment(value).format('DD/MM/YYYY') : '';
@@ -31,7 +32,7 @@ const EstimationRegister = () => {
         setLoading(true);
         const startDate = moment(dates[0]).format('MM/DD/YYYY');
         const endDate = moment(dates[1]).format('MM/DD/YYYY');
-        const apiUrl = `http://www.jewelerp.timeserasoftware.in/api/Master/GetDataFromGivenTableNameWithWhereandOrder?tableName=Estimation_mast&where=ESTDATE%3E%3D%27${startDate}%27%20AND%20ESTDATE%3C%3D%27${endDate}%27&order=ESTIMATIONNO`;
+        const apiUrl = `${CREATE_jwel}/api/Master/GetDataFromGivenTableNameWithWhereandOrder?tableName=Estimation_mast&where=ESTDATE%3E%3D%27${startDate}%27%20AND%20ESTDATE%3C%3D%27${endDate}%27&order=ESTIMATIONNO`;
 
         axios.get(apiUrl)
             .then(response => {

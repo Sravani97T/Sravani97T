@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Form, Input, Button, Select, Row, Col, Checkbox, Card, message } from "antd";
 import axios from "axios";
+import { CREATE_jwel } from "../../../Config/Config";
 
 const { Option } = Select;
 
@@ -17,7 +18,7 @@ const LotForm = ({ onSubmit, onCancel, initialValues, tenantNameHeader }) => {
         const fetchLotNumber = async () => {
             try {
                 const response = await axios.get(
-                    "http://www.jewelerp.timeserasoftware.in/api/Erp/LotCreationMaxNumber"
+                    `${CREATE_jwel}/api/Erp/LotCreationMaxNumber`
                 );
     
                 // If API returns null, default to 1
@@ -47,10 +48,10 @@ const LotForm = ({ onSubmit, onCancel, initialValues, tenantNameHeader }) => {
             }
         };
 
-        fetchData("http://www.jewelerp.timeserasoftware.in/api/Master/MasterMainProductList", setMainProductOptions, "MNAME");
-        fetchData("http://www.jewelerp.timeserasoftware.in/api/Master/MasterManufacturerMasterList", setManufacturerOptions, "MANUFACTURER");
-        fetchData("http://www.jewelerp.timeserasoftware.in/api/Master/MasterPrefixMasterList", setPrefixOptions, "Prefix");
-        fetchData("http://www.jewelerp.timeserasoftware.in/api/Master/MasterCounterMasterList", setCounterOptions, "Counter");
+        fetchData(`${CREATE_jwel}/api/Master/MasterMainProductList`, setMainProductOptions, "MNAME");
+        fetchData(`${CREATE_jwel}/api/Master/MasterManufacturerMasterList`, setManufacturerOptions, "MANUFACTURER");
+        fetchData(`${CREATE_jwel}/api/Master/MasterPrefixMasterList`, setPrefixOptions, "Prefix");
+        fetchData(`${CREATE_jwel}/api/Master/MasterCounterMasterList`, setCounterOptions, "Counter");
     }, [tenantNameHeader]);
 
     useEffect(() => {
@@ -63,7 +64,7 @@ const LotForm = ({ onSubmit, onCancel, initialValues, tenantNameHeader }) => {
         try {
             // Fetch latest Lot No before submission
             const lotNumberResponse = await axios.get(
-                "http://www.jewelerp.timeserasoftware.in/api/Erp/LotCreationMaxNumber"
+                `${CREATE_jwel}/api/Erp/LotCreationMaxNumber`
             );
             
             const nextLotNo = lotNumberResponse.data?.[0]?.LOTMAXNUMBER ?? 1;
@@ -91,7 +92,7 @@ const LotForm = ({ onSubmit, onCancel, initialValues, tenantNameHeader }) => {
             };
     
             const response = await axios.post(
-                "http://www.jewelerp.timeserasoftware.in/api/Erp/LotCreationInsert",
+                `${CREATE_jwel}/api/Erp/LotCreationInsert`,
                 requestBody
             );
     
@@ -107,7 +108,7 @@ const LotForm = ({ onSubmit, onCancel, initialValues, tenantNameHeader }) => {
             
             // Reset Lot No to the previous value if submission fails
             const lotNumberResponse = await axios.get(
-                "http://www.jewelerp.timeserasoftware.in/api/Erp/LotCreationMaxNumber"
+                `${CREATE_jwel}/api/Erp/LotCreationMaxNumber`
             );
             const currentLotNo = lotNumberResponse.data?.[0]?.LOTMAXNUMBER ?? 1;
             setLotNumber(currentLotNo);

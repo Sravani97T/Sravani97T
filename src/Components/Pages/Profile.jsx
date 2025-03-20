@@ -3,6 +3,7 @@ import { Form, Input, Button, Radio, Row, Col } from "antd";
 import { EditOutlined } from "@ant-design/icons";
 import axios from "axios";
 import DropdownSearch from "../Context/Dropdown";
+import { CREATE_jwel } from "../../Config/Config";
 
 const FirmConfigure = () => {
   const [form] = Form.useForm();
@@ -11,7 +12,7 @@ const FirmConfigure = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get("http://www.jewelerp.timeserasoftware.in/api/Erp/GetFirmConfihure");
+        const response = await axios.get(`${CREATE_jwel}/api/Erp/GetFirmConfihure`);
         const data = response.data[0];
         form.setFieldsValue({
           firmName: data.FIRMNAME,

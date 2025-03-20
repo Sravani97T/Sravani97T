@@ -3,6 +3,8 @@ import { Form, Table, Button, Col, Row, Input, Card, Typography, Tag, message, P
 import { DeleteOutlined, InfoCircleOutlined, FolderAddOutlined, PlusOutlined, ReloadOutlined, CloseOutlined, EditOutlined, LoadingOutlined } from "@ant-design/icons";
 import TodaysRates1 from "./TodaysRate1";
 import axios from 'axios';
+import { CREATE_jwel } from "../../Config/Config";
+
 const loadingIcon = <LoadingOutlined style={{ color: "red", fontSize: 16 }} spin />; // Customize color and size
 
 const { Option } = Select;
@@ -133,7 +135,7 @@ const EstimationTable = () => {
     const fetchEstimationNo = async () => {
         try {
             const response = await fetch(
-                "http://www.jewelerp.timeserasoftware.in/api/Scheme/GetSchemeMaxNumberInTable?tableName=ESTIMATION_MAST&column=ESTIMATIONNO",
+                `${CREATE_jwel}/api/Scheme/GetSchemeMaxNumberInTable?tableName=ESTIMATION_MAST&column=ESTIMATIONNO`,
                 {
                     headers: {
                         tenantName: "PmlYjF0yAwEjNohFDKjzn/ExL/LMhjzbRDhwXlvos+0="
@@ -192,7 +194,7 @@ const EstimationTable = () => {
     const [selectedPurity, setSelectedPurity] = useState("");
     useEffect(() => {
         if (selectedMainProduct) {
-            axios.get(`http://www.jewelerp.timeserasoftware.in/api/Master/MasterPrefixMasterList`)
+            axios.get(`${CREATE_jwel}/api/Master/MasterPrefixMasterList`)
                 .then(response => {
                     const filteredOptions = response.data.filter(item => item.MAINPRODUCT === selectedMainProduct);
                     setPurityOptions(filteredOptions);
@@ -221,7 +223,7 @@ const EstimationTable = () => {
         }
     };
     useEffect(() => {
-        axios.get("http://www.jewelerp.timeserasoftware.in/api/Master/MasterItemMasterList")
+        axios.get("${CREATE_jwel}/api/Master/MasterItemMasterList")
             .then(response => {
                 setStoneItems(response.data);
             })
@@ -439,7 +441,7 @@ const EstimationTable = () => {
     useEffect(() => {
         const fetchCategories = async () => {
             try {
-                const response = await axios.get("http://www.jewelerp.timeserasoftware.in/api/Master/MasterCategoryMasterList");
+                const response = await axios.get(`${CREATE_jwel}/api/Master/MasterCategoryMasterList`);
                 setCategories(response.data);
             } catch (error) {
                 console.error("Error fetching categories:", error);
@@ -483,7 +485,7 @@ const EstimationTable = () => {
         // Fetch Main Product List
         const fetchMainProducts = async () => {
             try {
-                const response = await axios.get(`http://www.jewelerp.timeserasoftware.in/api/Master/MasterMainProductList`);
+                const response = await axios.get(`${CREATE_jwel}/api/Master/MasterMainProductList`);
                 const options = response.data.map((item) => item.MNAME);
                 setMainProductOptions(options);
             } catch (error) {
@@ -496,7 +498,7 @@ const EstimationTable = () => {
 
     useEffect(() => {
         if (!selectedMainProduct) return;
-        const url = `http://www.jewelerp.timeserasoftware.in/api/Master/GetDataFromGivenTableNameWithWhereandOrder?tableName=PRODUCT_MASTER&where=MNAME='${selectedMainProduct}'&order=PRODUCTNAME`;
+        const url = `${CREATE_jwel}/api/Master/GetDataFromGivenTableNameWithWhereandOrder?tableName=PRODUCT_MASTER&where=MNAME='${selectedMainProduct}'&order=PRODUCTNAME`;
         axios.get(url)
             .then(response => {
                 setProducts(response.data);
@@ -584,7 +586,7 @@ const EstimationTable = () => {
         setLoading(true);
         try {
             const response = await axios.get(
-                "http://www.jewelerp.timeserasoftware.in/api/Master/GetDataFromGivenTableNameWithOrder",
+                `${CREATE_jwel}/api/Master/GetDataFromGivenTableNameWithOrder`,
                 {
                     params: { tableName: "ESTIMATION_MAST", order: "ESTIMATIONNO" },
                     headers: {
@@ -665,7 +667,7 @@ const EstimationTable = () => {
                 .padStart(2, "0")}/${currentDate.getFullYear()}`;
 
             const ratesResponse = await axios.get(
-                `http://www.jewelerp.timeserasoftware.in/api/Master/GetDataFromGivenTableNameWithWhere?tableName=DAILY_RATES&where=RDATE%3D%27${formattedDate}%27`
+                `${CREATE_jwel}/api/Master/GetDataFromGivenTableNameWithWhere?tableName=DAILY_RATES&where=RDATE%3D%27${formattedDate}%27`
             );
 
             const hasRates = ratesResponse.data.length > 0;
@@ -708,7 +710,7 @@ const EstimationTable = () => {
 
             // Fetch tag details
             const response = await axios.get(
-                `http://www.jewelerp.timeserasoftware.in/api/Erp/TagGenerationSearch?tagNo=${trimmedTagNo}`
+                `${CREATE_jwel}/api/Erp/TagGenerationSearch?tagNo=${trimmedTagNo}`
             );
             const responseData = response.data;
 
@@ -724,13 +726,13 @@ const EstimationTable = () => {
 
             // Fetch daily rates
             const ratesResponse = await axios.get(
-                `http://www.jewelerp.timeserasoftware.in/api/Master/GetDataFromGivenTableNameWithWhere?tableName=DAILY_RATES&where=RDATE%3D%27${formattedDate}%27`
+                `${CREATE_jwel}/api/Master/GetDataFromGivenTableNameWithWhere?tableName=DAILY_RATES&where=RDATE%3D%27${formattedDate}%27`
             );
             const allRates = ratesResponse.data;
 
             // Fetch additional item details for the tag
             const tagItemsResponse = await axios.get(
-                `http://www.jewelerp.timeserasoftware.in/api/Master/GetDataFromGivenTableNameWithWhereandOrder?tableName=TAG_ITEMS&where=TAGNO%3D${trimmedTagNo}&order=SNO`
+                `${CREATE_jwel}/api/Master/GetDataFromGivenTableNameWithWhereandOrder?tableName=TAG_ITEMS&where=TAGNO%3D${trimmedTagNo}&order=SNO`
             );
             const tagItemsData = tagItemsResponse.data;
 
@@ -802,7 +804,7 @@ const EstimationTable = () => {
 
             // Fetch VAT based on MNAME
             const vatResponse = await axios.get(
-                `http://www.jewelerp.timeserasoftware.in/api/Master/MasterMainProductSearch?MName=${newMName}`
+                `${CREATE_jwel}/api/Master/MasterMainProductSearch?MName=${newMName}`
             );
             const vatData = vatResponse.data;
             const matchedVatRecord = vatData.find(record => record.MNAME === newMName);
@@ -838,7 +840,7 @@ const EstimationTable = () => {
             // Fetch daily rates using the current date
             const formattedDate = new Date().toISOString().split("T")[0]; // Format date as YYYY-MM-DD
             const ratesResponse = await axios.get(
-                `http://www.jewelerp.timeserasoftware.in/api/Master/GetDataFromGivenTableNameWithWhere?tableName=DAILY_RATES&where=RDATE%3D%27${formattedDate}%27`
+                `${CREATE_jwel}/api/Master/GetDataFromGivenTableNameWithWhere?tableName=DAILY_RATES&where=RDATE%3D%27${formattedDate}%27`
             );
             const allRates = ratesResponse.data; // Extract rates data
 
@@ -971,7 +973,7 @@ const EstimationTable = () => {
             if (!tagNo) return;
 
             const formattedTagNo = `'${tagNo}'`;
-            const apiUrl = `http://www.jewelerp.timeserasoftware.in/api/Master/GetDataFromGivenTableNameWithWhereandOrder`;
+            const apiUrl = `${CREATE_jwel}/api/Master/GetDataFromGivenTableNameWithWhereandOrder`;
 
             try {
                 const response = await axios.get(apiUrl, {
@@ -1196,7 +1198,7 @@ const EstimationTable = () => {
             // Fetch Estimation Data
 
             const response = await axios.get(
-                `http://www.jewelerp.timeserasoftware.in/api/Master/GetDataFromGivenTableNameWithWhere?tableName=ESTIMATION_DATA&where=ESTIMATIONNO%3D${selectedEstimationNo}`
+                `${CREATE_jwel}/api/Master/GetDataFromGivenTableNameWithWhere?tableName=ESTIMATION_DATA&where=ESTIMATIONNO%3D${selectedEstimationNo}`
             );
             console.log("resp", response);
             if (!response.data.length) {
@@ -1209,13 +1211,13 @@ const EstimationTable = () => {
             const formattedDate = `${(currentDate.getMonth() + 1).toString().padStart(2, "0")}/${currentDate.getDate().toString().padStart(2, "0")}/${currentDate.getFullYear()}`;
 
             const ratesResponse = await axios.get(
-                `http://www.jewelerp.timeserasoftware.in/api/Master/GetDataFromGivenTableNameWithWhere?tableName=DAILY_RATES&where=RDATE%3D%27${formattedDate}%27`
+                `${CREATE_jwel}/api/Master/GetDataFromGivenTableNameWithWhere?tableName=DAILY_RATES&where=RDATE%3D%27${formattedDate}%27`
             );
             const allRates = ratesResponse.data || [];
 
             // Fetch Estimation Items (Tag Item Details)
             const tagItemsResponse = await axios.get(
-                `http://www.jewelerp.timeserasoftware.in/api/Master/GetDataFromGivenTableNameWithWhere?tableName=ESTIMATION_ITEMS&where=ESTIMATIONNO%3D${selectedEstimationNo}`
+                `${CREATE_jwel}/api/Master/GetDataFromGivenTableNameWithWhere?tableName=ESTIMATION_ITEMS&where=ESTIMATIONNO%3D${selectedEstimationNo}`
             );
             const tagItems = tagItemsResponse.data || [];
 
@@ -1628,20 +1630,20 @@ const EstimationTable = () => {
             };
             // 🔹 Step 1: Delete Existing Estimation Data (Ensuring Clean Insert)
             await axios.post(
-                `http://www.jewelerp.timeserasoftware.in/api/Master/DeleteDataFromGivenTableNameWithWhere?tableName=ESTIMATION_ITEMS&where=ESTIMATIONNO%3D${estimationNo}`,
+                `${CREATE_jwel}/api/Master/DeleteDataFromGivenTableNameWithWhere?tableName=ESTIMATION_ITEMS&where=ESTIMATIONNO%3D${estimationNo}`,
                 { headers }
             );
             await axios.post(
-                `http://www.jewelerp.timeserasoftware.in/api/Master/DeleteDataFromGivenTableNameWithWhere?tableName=ESTIMATION_DATA&where=ESTIMATIONNO%3D${estimationNo}`,
+                `${CREATE_jwel}/api/Master/DeleteDataFromGivenTableNameWithWhere?tableName=ESTIMATION_DATA&where=ESTIMATIONNO%3D${estimationNo}`,
                 { headers }
             );
             await axios.post(
-                `http://www.jewelerp.timeserasoftware.in/api/Master/DeleteDataFromGivenTableNameWithWhere?tableName=ESTIMATION_MAST&where=ESTIMATIONNO%3D${estimationNo}`,
+                `${CREATE_jwel}/api/Master/DeleteDataFromGivenTableNameWithWhere?tableName=ESTIMATION_MAST&where=ESTIMATIONNO%3D${estimationNo}`,
                 { headers }
             );
             // 1st API Call - Save Master Data
             const responseMaster = await axios.post(
-                "http://www.jewelerp.timeserasoftware.in/api/Master/EstimationMastInsert",
+                `${CREATE_jwel}/api/Master/EstimationMastInsert`,
                 payloadMaster,
                 { headers }
             );
@@ -1654,7 +1656,7 @@ const EstimationTable = () => {
                 };
                 // 2nd API Call - Save Estimation Details
                 const responseDetails = await axios.post(
-                    "http://www.jewelerp.timeserasoftware.in/api/Master/EstimationDataMultiInsert",
+                    `${CREATE_jwel}/api/Master/EstimationDataMultiInsert`,
                     payloadDataInsert,
                     { headers }
                 );
@@ -1665,7 +1667,7 @@ const EstimationTable = () => {
                     // 3rd API Call - Save Estimation Items
                     if (payloadItemsInsert.length > 0) {
                         const responseItems = await axios.post(
-                            "http://www.jewelerp.timeserasoftware.in/api/Master/EstimationItemsMultiInsert",
+                            `${CREATE_jwel}/api/Master/EstimationItemsMultiInsert`,
                             payloadItemsInsert,
                             { headers: { "Content-Type": "application/json" } }
                         );
@@ -1718,7 +1720,7 @@ const EstimationTable = () => {
 
         // Ensure tagNo is properly formatted with single quotes
         const formattedTagNo = `'${tagNo}'`; // Enclose in single quotes
-        const apiUrl = `http://www.jewelerp.timeserasoftware.in/api/Master/GetDataFromGivenTableNameWithWhereandOrder`;
+        const apiUrl = `${CREATE_jwel}/api/Master/GetDataFromGivenTableNameWithWhereandOrder`;
 
         console.log("Fetching stone details for TAGNO:", formattedTagNo); // Debugging
 

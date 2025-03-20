@@ -11,6 +11,7 @@ import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import "./TableStyles.css";
 import { FileExcelOutlined, FilePdfOutlined, PrinterOutlined } from "@ant-design/icons";
+import { CREATE_jwel } from "../../Config/Config";
 
 const CustomInput = forwardRef(({ value, onClick, placeholder }, ref) => (
     <div className="custom-date-input" onClick={onClick} ref={ref}>
@@ -166,7 +167,7 @@ const DayGlance = () => {
             // const fromDate = moment(dates[0]).format("DD-MM-YYYY");
             // const toDate = moment(dates[1]).format("DD-MM-YYYY");
 
-            axios.get(`http://www.jewelerp.timeserasoftware.in/api/POSReports/GetdayGlance?fromDate=${fromDate}&toDate=${toDate}`)
+            axios.get(`${CREATE_jwel}/api/POSReports/GetdayGlance?fromDate=${fromDate}&toDate=${toDate}`)
                 .then(response => {
                     const detailsData = response.data;
                     const grouped = detailsData.reduce((acc, item) => {
@@ -513,7 +514,8 @@ const DayGlance = () => {
                                             <td style={{ textAlign: 'right' }}>{item.ONLINE}</td>
                                         </tr>
                                         <tr>
-                                            <td colSpan="1" className="empty-border">{moment(item.DATE).format('MM/DD/YYYY')}</td>
+                                            <td colSpan="1" className="empty-border">{moment(item.DATE).format('DD/MM/YYYY')}</td>
+                                            
                                             <td colSpan="8" className="description">{item.PARTICULARS}</td>
                                             <td colSpan="12" className="empty-border"></td>
                                         </tr>

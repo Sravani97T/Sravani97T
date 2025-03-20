@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Table, Space, Button, Breadcrumb, Card, message, Popconfirm, Form, Input, Select, Row, Col, Checkbox, Pagination } from "antd";
 import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import { CREATE_jwel } from "../../../Config/Config";
+
 import axios from "axios";
 
 const { Option } = Select;
@@ -22,8 +24,7 @@ const LotCreation = () => {
     const [pageSize, setPageSize] = useState(20);
     const [selectedMainProduct, setSelectedMainProduct] = useState(null);
     const [mainProductInputValue, setMainProductInputValue] = useState("");
-    const baseURL = "http://www.jewelerp.timeserasoftware.in/api/Erp/";
-
+ 
     const mainProductRef = useRef(null);
     const piecesRef = useRef(null);
     const weightRef = useRef(null);
@@ -46,7 +47,7 @@ const LotCreation = () => {
 
     const fetchData = async () => {
         try {
-            const response = await axios.get(`${baseURL}GetLotCreationList`);
+            const response = await axios.get(`${CREATE_jwel}/api/Erp/GetLotCreationList`);
             if (response.data) {
                 const formattedData = response.data.map((item, index) => ({
                     ...item,
@@ -64,7 +65,7 @@ const LotCreation = () => {
 
     const fetchLotNumber = async () => {
         try {
-            const response = await axios.get(`${baseURL}LotCreationMaxNumber`);
+            const response = await axios.get(`${CREATE_jwel}/api/Erp/LotCreationMaxNumber`);
             let lotNo = response.data?.[0]?.LOTMAXNUMBER ?? 1;
             if (lotNo === null || lotNo === 1) {
                 lotNo = 2;
@@ -90,11 +91,11 @@ const LotCreation = () => {
             }
         };
 
-        fetchData("http://www.jewelerp.timeserasoftware.in/api/Master/MasterMainProductList", setMainProductOptions);
-        fetchData("http://www.jewelerp.timeserasoftware.in/api/Master/MasterManufacturerMasterList", setManufacturerOptions);
-        fetchData("http://www.jewelerp.timeserasoftware.in/api/Master/MasterPrefixMasterList", setPrefixOptions);
-        fetchData("http://www.jewelerp.timeserasoftware.in/api/Master/MasterCounterMasterList", setCounterOptions);
-        fetchData("http://www.jewelerp.timeserasoftware.in/api/Master/GetDataFromGivenTableNameWithWhereandOrder?tableName=DEALER_MASTER&where=CUSTTYPE%3D%27DEALER%27&order=DEALERNAME", setDealerOptions);
+        fetchData(`${CREATE_jwel}/api/Master/MasterMainProductList`, setMainProductOptions);
+        fetchData(`${CREATE_jwel}/api/Master/MasterManufacturerMasterList`, setManufacturerOptions);
+        fetchData(`${CREATE_jwel}/api/Master/MasterPrefixMasterList`, setPrefixOptions);
+        fetchData(`${CREATE_jwel}/api/Master/MasterCounterMasterList`, setCounterOptions);
+        fetchData(`${CREATE_jwel}/api/Master/GetDataFromGivenTableNameWithWhereandOrder?tableName=DEALER_MASTER&where=CUSTTYPE%3D%27DEALER%27&order=DEALERNAME`, setDealerOptions);
     };
 
     const handleMainProductChange = (value) => {
@@ -112,11 +113,11 @@ const LotCreation = () => {
     const handleAddOrUpdate = async (values) => {
         if (editingKey) {
             try {
-                await axios.post(`${baseURL}LotCreationDelete`, null, {
+                await axios.post(`${CREATE_jwel}/api/Erp/LotCreationDelete`, null, {
                     params: { lotNumber: editingKey },
                 });
 
-                const response = await axios.post(`${baseURL}LotCreationInsert`, {
+                const response = await axios.post(`${CREATE_jwel}/api/Erp/LotCreationInsert`, {
                     mname: values.mainProduct,
                     lotno: editingKey,
                     pieces: values.pieces,
@@ -156,11 +157,11 @@ const LotCreation = () => {
             values.lotno = lotNumber;
 
             try {
-                await axios.post(`${baseURL}LotCreationDelete`, null, {
+                await axios.post(`${CREATE_jwel}/api/Erp/LotCreationDelete`, null, {
                     params: { lotNumber: values.lotno },
                 });
 
-                const response = await axios.post(`${baseURL}LotCreationInsert`, {
+                const response = await axios.post(`${CREATE_jwel}/api/Erp/LotCreationInsert`, {
                     mname: values.mainProduct,
                     lotno: values.lotno,
                     pieces: values.pieces,
@@ -203,7 +204,7 @@ const LotCreation = () => {
 
     const handleDelete = async (lotno) => {
         try {
-            const response = await axios.post(`${baseURL}LotCreationDelete`, null, {
+            const response = await axios.post(`${CREATE_jwel}/api/Erp/LotCreationDelete`, null, {
                 params: { lotNumber: lotno },
             });
 

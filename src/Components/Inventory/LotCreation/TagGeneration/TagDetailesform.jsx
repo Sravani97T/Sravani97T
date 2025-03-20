@@ -5,6 +5,8 @@ import {
 import axios from 'axios';
 import TableHeaderStyles from '../../../Pages/TableHeaderStyles';
 import ResetButton from "../TagGeneration/ResetFormTag";
+import { CREATE_jwel } from "../../../../Config/Config";
+
 const { Option } = Select;
 const { TextArea } = Input;
 const { Text } = Typography;
@@ -51,7 +53,6 @@ const TagDetailsForm = ({ setStoneData, stoneData, focusProductName, updateTotal
         fontWeight: "bold",
         color: "white",
     };
-    const baseURL = "http://www.jewelerp.timeserasoftware.in/api/";
 
     useEffect(() => {
         fetchOptions();
@@ -86,14 +87,14 @@ const TagDetailsForm = ({ setStoneData, stoneData, focusProductName, updateTotal
             }
         };
 
-        fetchData(`${baseURL}Master/MasterCounterMasterList`, setCounterOptions);
-        fetchData(`${baseURL}Master/MasterManufacturerMasterList`, setManufacturerOptions);
-        fetchData(`http://www.jewelerp.timeserasoftware.in/api/Master/GetDataFromGivenTableNameWithWhereandOrder?tableName=DEALER_MASTER&where=CUSTTYPE%3D%27DEALER%27&order=DEALERNAME
+        fetchData(`${CREATE_jwel}/api/Master/MasterCounterMasterList`, setCounterOptions);
+        fetchData(`${CREATE_jwel}/api/Master/MasterManufacturerMasterList`, setManufacturerOptions);
+        fetchData(`${CREATE_jwel}/api/Master/GetDataFromGivenTableNameWithWhereandOrder?tableName=DEALER_MASTER&where=CUSTTYPE%3D%27DEALER%27&order=DEALERNAME
 `, setDealerOptions);
 
         if (mname) {
             fetchData(
-                `${baseURL}Master/MasterPrefixMasterList`,
+                `${CREATE_jwel}/api/Master/MasterPrefixMasterList`,
                 setPurityOptions,
                 (item) => item.MAINPRODUCT === mname
             );
@@ -102,7 +103,7 @@ const TagDetailsForm = ({ setStoneData, stoneData, focusProductName, updateTotal
 
     const fetchTableData = async () => {
         try {
-            const response = await axios.get(`http://www.jewelerp.timeserasoftware.in/api/Master/GetDataFromGivenTableNameWithWhereandOrder?tableName=TAG_GENERATION&where=LOTNO%3D${lotno}&order=TAGNO`);
+            const response = await axios.get(`${CREATE_jwel}/api/Master/GetDataFromGivenTableNameWithWhereandOrder?tableName=TAG_GENERATION&where=LOTNO%3D${lotno}&order=TAGNO`);
             setTableData(response.data);
             calculateTotals(response.data); // Call totals calculation
         } catch (error) {
@@ -172,7 +173,7 @@ const TagDetailsForm = ({ setStoneData, stoneData, focusProductName, updateTotal
                 snO1: parseInt(item.snO1, 10) || 0,
             }));
 
-            const response = await axios.post(`http://www.jewelerp.timeserasoftware.in/api/Erp/TagItemMultiInsert`, payload);
+            const response = await axios.post(`${CREATE_jwel}/api/Erp/TagItemMultiInsert`, payload);
             if (response.data === true) {
                 message.success('Data saved successfully');
             } else {
@@ -276,7 +277,7 @@ const TagDetailsForm = ({ setStoneData, stoneData, focusProductName, updateTotal
                 tagGeneration: "true"
             };
 
-            const response = await axios.post(`${baseURL}Erp/TagGenerationInsert`, payload);
+            const response = await axios.post(`${CREATE_jwel}/api/Erp/TagGenerationInsert`, payload);
             if (response.status === 200) {
                 message.success('Data saved successfully');
                 if (focusProductName) {
