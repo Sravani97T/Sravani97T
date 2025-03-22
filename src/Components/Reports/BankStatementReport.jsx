@@ -128,6 +128,7 @@ const BankStatementReport = () => {
         ...filteredData.map((item, index) => ({
             ...item,
             serialNo: index + 1,
+            DEPDATE: moment(item.DEPDATE, 'YYYY-MM-DD').format('DD/MM/YYYY'),
             Debit: item.Debit ? item.Debit.toFixed(2) : '',
             Credit: item.Credit ? item.Credit.toFixed(2) : '',
             balance: item.balance ? item.balance.toFixed(2) : ''
@@ -195,7 +196,7 @@ const BankStatementReport = () => {
                     onChange={(date) => handleTempFilterChange('dateFrom', date ? moment(date).format('YYYY-MM-DD') : null)}
                     customInput={<CustomInput />}
                     placeholderText="From Date"
-                    dateFormat="dd/MM/yyyy"
+                    dateFormat="dd MMM yyyy"
                 />
             </Col>
             <Col xs={24} sm={12} md={4}>
@@ -204,7 +205,7 @@ const BankStatementReport = () => {
                     onChange={(date) => handleTempFilterChange('dateTo', date ? moment(date).format('YYYY-MM-DD') : null)}
                     customInput={<CustomInput />}
                     placeholderText="To Date"
-                    dateFormat="dd/MM/yyyy"
+                    dateFormat="dd MMM yyyy"
                 />
             </Col>
         </Row>
@@ -221,7 +222,7 @@ const BankStatementReport = () => {
                 </Col>
                 <Col>
                     <PdfExcelPrint
-                        data={formattedData}
+                        data={formattedData} 
                         columns={columns}
                         fileName="BankStatementReport"
                         totals={totals}
@@ -231,7 +232,7 @@ const BankStatementReport = () => {
             {filterContent}
             <Row gutter={8} style={{ marginBottom: 8 }} align="middle">
                 <Col flex="auto" />
-                <Col>
+                <Col style={{ marginTop:"10px" }}>
                     <Pagination
                         current={currentPage}
                         pageSize={pageSize}
@@ -244,7 +245,7 @@ const BankStatementReport = () => {
                     />
                 </Col>
             </Row>
-            <div style={{ marginTop: 16, boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}>
+            <div style={{ marginTop: 10, boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}>
                 <div
                     className="table-responsive scroll-horizontal"
                     style={{

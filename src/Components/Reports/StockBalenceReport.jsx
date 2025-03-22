@@ -43,13 +43,13 @@ const StockBalanceReport = () => {
     const { totalNWT, totalPCS, totalGWT } = getTotals();
 
     const formatValue = value => Number(value).toFixed(3);
-
     const formattedData = [
         ...filteredData.map((item, index) => ({
             ...item,
             sno: index + 1,
             GWT: formatValue(item.GWT),
             NWT: formatValue(item.NWT),
+            align: "right"
         })),
         {
             sno: 'Total',
@@ -57,6 +57,7 @@ const StockBalanceReport = () => {
             PCS: totalPCS,
             GWT: totalGWT,
             NWT: totalNWT,
+            align: "right"
         }
     ];
 

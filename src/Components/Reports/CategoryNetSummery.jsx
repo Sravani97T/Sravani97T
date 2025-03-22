@@ -39,8 +39,9 @@ const CategoryNetSummary = () => {
         { title: 'S.No', dataIndex: 'sno', key: 'sno', className: 'blue-background-column', width: 50 },
         { title: 'Category', dataIndex: 'CATEGORYNAME', key: 'CATEGORYNAME' },
         { title: 'Pieces', align: "right", dataIndex: 'Pieces', key: 'Pieces' },
-        { title: 'Net Wt', align: "right", dataIndex: 'Nwt', key: 'Nwt', render: value => Number(value).toFixed(3) },
         { title: 'Gross Wt', align: "right", dataIndex: 'Gwt', key: 'Gwt', render: value => Number(value).toFixed(3) },
+        { title: 'Net Wt', align: "right", dataIndex: 'Nwt', key: 'Nwt', render: value => Number(value).toFixed(3) },
+
     ];
 
     const getTotals = () => {

@@ -43,7 +43,7 @@ const PdfExcelPrint = ({ data, columns, fileName }) => {
         const doc = new jsPDF();
         const tableColumn = columns.map(col => col.title);
         const tableRows = data.map(item => columns.map(col => item[col.dataIndex]));
-    
+
         doc.autoTable({
             head: [tableColumn],
             body: tableRows,
@@ -51,7 +51,7 @@ const PdfExcelPrint = ({ data, columns, fileName }) => {
             headStyles: { fillColor: [211, 211, 211], textColor: [0, 0, 0], fontStyle: 'normal', lineWidth: 0.1, lineColor: [211, 211, 211] }, // Light grey background, black text, normal font, and borders
             theme: 'grid',
         });
-    
+
         const pdfBlob = doc.output('blob');
         const pdfUrl = URL.createObjectURL(pdfBlob);
         const previewWindow = window.open(pdfUrl, '_blank');
@@ -66,7 +66,7 @@ const PdfExcelPrint = ({ data, columns, fileName }) => {
             };
         };
     };
-    
+
 
     const handleExcel = async () => {
         const workbook = new ExcelJS.Workbook();
@@ -86,7 +86,6 @@ const PdfExcelPrint = ({ data, columns, fileName }) => {
             worksheet.addRow(row);
         });
 
-        // Style the header
         worksheet.getRow(1).eachCell(cell => {
             cell.font = { bold: true };
             cell.fill = {
@@ -102,7 +101,6 @@ const PdfExcelPrint = ({ data, columns, fileName }) => {
             };
         });
 
-        // Style the data cells
         worksheet.eachRow((row, rowNumber) => {
             if (rowNumber !== 1) {
                 row.eachCell(cell => {

@@ -60,6 +60,8 @@ const ProductCategorySummary = () => {
         ...filteredData.map((item, index) => ({
             ...item,
             serialNumber: index + 1,
+            GWT: Number(item.GWT)?.toFixed(3),
+            NWT: Number(item.NWT)?.toFixed(3),
         })),
         {
             serialNumber: 'Total',

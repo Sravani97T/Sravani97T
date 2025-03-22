@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Select, Input, Breadcrumb, Row, Col, Popover, Button ,Pagination} from 'antd';
+import { Table, Select, Input, Breadcrumb, Row, Col, Popover, Button } from 'antd';
 import axios from 'axios';
 import moment from 'moment';
 import { PrinterOutlined, FilePdfOutlined, FileExcelOutlined, FilterOutlined } from '@ant-design/icons';
@@ -38,8 +38,7 @@ const ProductTable = () => {
     });
     const [tempFilters, setTempFilters] = useState(filters);
     const [data, setData] = useState([]);
-     const [currentPage, setCurrentPage] = useState(1);
-      const [pageSize, setPageSize] = useState(20);
+    
     const [filteredData, setFilteredData] = useState([]);
     const [popoverVisible, setPopoverVisible] = useState(false);
     const handlePrint = () => {
@@ -61,6 +60,7 @@ const ProductTable = () => {
     const handlePDFWithPreview = () => {
         const doc = new jsPDF('landscape');
         doc.autoTable({
+            startY: 15,
             head: [['S.No', 'Tag No', 'Product Name', 'PCS', 'Purity', 'Gross Wt', 'Less Wt', 'Net Wt', 'Dia Cts', 'Dia Amt', 'ST Cost', 'Counter Name', 'Brand Name', 'Brand Amt', 'Dealer Name', 'HUID', 'HSN Code', 'Tag Size', 'Date']],
             body: filteredData.map((item, index) => [
                 index + 1,
@@ -83,20 +83,33 @@ const ProductTable = () => {
                 item.TAGSIZE,
                 moment(item.TAGDATE).format('DD/MM/YYYY')
             ]),
-            foot: [['Total', '', '', sums.PCS || '', '', formatWeight(sums.GWT), formatWeight(sums.COST_LESS), formatWeight(sums.NWT), sums.diacts ? sums.diacts.toFixed(2) : '', sums.Diamond_Amount ? sums.Diamond_Amount.toFixed(2) : '', '', '', '', '', '', '', '', '']],
-            styles: { cellPadding: 1, fontSize: 5, lineColor: [200, 200, 200], lineWidth: 0.1, fillColor: [255, 255, 255], textColor: [0, 0, 0] },
-            headStyles: { fillColor: [255, 255, 255], textColor: [0, 0, 0], fontSize: 5, fontStyle: 'normal' },
-            footStyles: { fillColor: [255, 255, 255], textColor: [0, 0, 0], lineWidth: 0.1, lineColor: [200, 200, 200], fontStyle: 'normal' },
-            margin: { top: 5, bottom: 5 },
-            columnStyles: {
-                0: { cellWidth: 11 },
-                1: { cellWidth: 11 }, 2: { cellWidth: 30 }, 3: { cellWidth: 8 }, 4: { cellWidth: 12 }, 5: { cellWidth: 13 }, 6: { cellWidth: 12 },
-                7: { cellWidth: 13 }, 8: { cellWidth: 12 }, 9: { cellWidth: 13 },
-                10: { cellWidth: 13 }, 11: { cellWidth: 14 },
-                12: { cellWidth: 24 }, 13: { cellWidth: 15 },
-                14: { cellWidth: 25 },
-                15: { cellWidth: 13 }, 16: { cellWidth: 13 }, 17: { cellWidth: 12 }, 18: { cellWidth: 15 }
-            }
+            foot: [[
+                'Total', '', '', 
+                sums.PCS || '', '', 
+                formatWeight(sums.GWT), 
+                formatWeight(sums.COST_LESS), 
+                formatWeight(sums.NWT), 
+                sums.diacts ? sums.diacts.toFixed(2) : '', 
+                sums.Diamond_Amount ? sums.Diamond_Amount.toFixed(2) : '', 
+                '', '', '', '', '', '', '', ''
+            ]],            styles: { cellPadding: 1, fontSize: 5, lineColor: [200, 200, 200], lineWidth: 0.1, fillColor: [255, 255, 255], textColor: [0, 0, 0] },
+    headStyles: { fillColor: [255, 255, 255], textColor: [0, 0, 0], fontSize: 5, fontStyle: 'normal' },
+    footStyles: { 
+        fillColor: [255, 255, 255], 
+        textColor: [0, 0, 0], 
+        fontSize: 5, 
+        halign: 'right' // Align totals to the right
+    },    // margin: { top: 5, bottom: 5 },
+    margin: { top: 5, left: 5, bottom: 5, right: 5 },
+    columnStyles: {
+        0: { cellWidth: 11 },
+        1: { cellWidth: 11 }, 2: { cellWidth: 30 }, 3: { cellWidth: 8 }, 4: { cellWidth: 12 }, 5: { cellWidth: 13, halign: 'right' },
+        6: { cellWidth: 12, halign: 'right' }, 7: { cellWidth: 13, halign: 'right' }, 8: { cellWidth: 12, halign: 'right' },
+        9: { cellWidth: 13, halign: 'right' }, 10: { cellWidth: 13, halign: 'right' }, 11: { cellWidth: 20 },
+        12: { cellWidth: 24 }, 13: { cellWidth: 15, halign: 'right' }, 14: { cellWidth: 25 }, 15: { cellWidth: 13 },
+        16: { cellWidth: 13 }, 17: { cellWidth: 12 }, 18: { cellWidth: 15 } // Added small padding to "Date"
+    }
+            
         });
         const pdfBlob = doc.output('blob');
         const pdfUrl = URL.createObjectURL(pdfBlob);
@@ -124,21 +137,22 @@ const ProductTable = () => {
             { header: 'Product Name', key: 'PRODUCTNAME', width: 30 },
             { header: 'Pieces', key: 'PIECES', width: 10 },
             { header: 'Purity', key: 'PREFIX', width: 10 },
-            { header: 'Gross Wt', key: 'GWT', width: 10 },
-            { header: 'Less Wt', key: 'COST_LESS', width: 10 },
-            { header: 'Net Wt', key: 'NWT', width: 10 },
-            { header: 'Dia Cts', key: 'diacts', width: 10 },
-            { header: 'Dia Amt', key: 'Diamond_Amount', width: 15 },
-            { header: 'ST Cost', key: 'ITEM_TOTAMT', width: 15 },
-            { header: 'Counter Name', key: 'COUNTERNAME', width: 20 },
+            { header: 'Gross Wt', key: 'GWT', width: 10, style: { alignment: { horizontal: 'right' } } },
+            { header: 'Less Wt', key: 'COST_LESS', width: 10, style: { alignment: { horizontal: 'right' } } },
+            { header: 'Net Wt', key: 'NWT', width: 10, style: { alignment: { horizontal: 'right' } } },
+            { header: 'Dia Cts', key: 'diacts', width: 10, style: { alignment: { horizontal: 'right' } } },
+            { header: 'Dia Amt', key: 'Diamond_Amount', width: 15, style: { alignment: { horizontal: 'right' } } },
+            { header: 'ST Cost', key: 'ITEM_TOTAMT', width: 15, style: { alignment: { horizontal: 'right' } } },
+            { header: 'Counter Name', key: 'COUNTERNAME', width: 25 }, // Increased width
             { header: 'Brand Name', key: 'BRANDNAME', width: 20 },
-            { header: 'Brand Amt', key: 'BRANDAMT', width: 15 },
+            { header: 'Brand Amt', key: 'BRANDAMT', width: 15, style: { alignment: { horizontal: 'right' } } },
             { header: 'Dealer Name', key: 'DEALERNAME', width: 20 },
             { header: 'HUID', key: 'HUID', width: 15 },
             { header: 'HSN Code', key: 'HSNCODE', width: 15 },
             { header: 'Tag Size', key: 'TAGSIZE', width: 10 },
             { header: 'Date', key: 'TAGDATE', width: 15 }
         ];
+        
 
         filteredData.forEach((item, index) => {
             worksheet.addRow({
@@ -350,204 +364,203 @@ const ProductTable = () => {
     const isFilterApplied = filters.mainProduct || filters.product || filters.productName || filters.counterName || filters.categoryName || filters.manufacturer || filters.dealerName || filters.prefix || filters.brand || (filters.tagWeightType && filters.tagWeightFrom !== null && filters.tagWeightTo !== null) || (filters.tagDate.length === 2);
 
  
-
-    const filterContent = (
-        <Row gutter={[8, 8]}>
-            <Col xs={24} sm={12} md={8}>
-                <Select
-                    showSearch
-                    allowClear
-                    style={{ width: '100%' }}
-                    value={tempFilters.mainProduct}
-                    onChange={(value) => handleTempFilterChange('mainProduct', value)}
-                    placeholder="Main Product"
-                >
-                    {uniqueMainProducts.map(product => (
-                        <Option key={product} value={product}>{product}</Option>
-                    ))}
-                </Select>
-            </Col>
-            <Col xs={24} sm={12} md={8}>
-                <Select
-                    showSearch
-                    placeholder="Product Category"
-                    allowClear
-                    style={{ width: '100%' }}
-                    value={tempFilters.product}
-                    onChange={(value) => handleTempFilterChange('product', value)}
-                    disabled={!tempFilters.mainProduct}
-                >
-                    {uniqueProductCategories.map(category => (
-                        <Option key={category} value={category}>{category}</Option>
-                    ))}
-                </Select>
-            </Col>
-            <Col xs={24} sm={12} md={8}>
-                <Select
-                    showSearch
-                    placeholder="Product Name"
-                    allowClear
-                    style={{ width: '100%' }}
-                    value={tempFilters.productName}
-                    onChange={(value) => handleTempFilterChange('productName', value)}
-                    disabled={!tempFilters.mainProduct || !tempFilters.product}
-                >
-                    {uniqueProductNames.map(name => (
-                        <Option key={name} value={name}>{name}</Option>
-                    ))}
-                </Select>
-            </Col>
-            <Col xs={24} sm={12} md={8}>
-                <Select
-                    showSearch
-                    placeholder="Counter Name"
-                    allowClear
-                    style={{ width: '100%' }}
-                    value={tempFilters.counterName}
-                    onChange={(value) => handleTempFilterChange('counterName', value)}
-                >
-                    {uniqueCounterNames.map(counter => (
-                        <Option key={counter} value={counter}>{counter}</Option>
-                    ))}
-                </Select>
-            </Col>
-            <Col xs={24} sm={12} md={8}>
-                <Select
-                    showSearch
-                    placeholder="Category Name"
-                    allowClear
-                    style={{ width: '100%' }}
-                    value={tempFilters.categoryName}
-                    onChange={(value) => handleTempFilterChange('categoryName', value)}
-                >
-                    {uniqueCategoryNames.map(category => (
-                        <Option key={category} value={category}>{category}</Option>
-                    ))}
-                </Select>
-            </Col>
-            <Col xs={24} sm={12} md={8}>
-                <Select
-                    showSearch
-                    placeholder="Manufacturer"
-                    allowClear
-                    style={{ width: '100%' }}
-                    value={tempFilters.manufacturer}
-                    onChange={(value) => handleTempFilterChange('manufacturer', value)}
-                >
-                    {uniqueManufacturers.map(manufacturer => (
-                        <Option key={manufacturer} value={manufacturer}>{manufacturer}</Option>
-                    ))}
-                </Select>
-            </Col>
-            <Col xs={24} sm={12} md={8}>
-                <Select
-                    showSearch
-                    placeholder="Dealer Name"
-                    allowClear
-                    style={{ width: '100%' }}
-                    value={tempFilters.dealerName}
-                    onChange={(value) => handleTempFilterChange('dealerName', value)}
-                >
-                    {uniqueDealerNames.map(dealer => (
-                        <Option key={dealer} value={dealer}>{dealer}</Option>
-                    ))}
-                </Select>
-            </Col>
-            <Col xs={24} sm={12} md={8}>
-                <Select
-                    showSearch
-                    placeholder="Prefix"
-                    allowClear
-                    style={{ width: '100%' }}
-                    value={tempFilters.prefix}
-                    onChange={(value) => handleTempFilterChange('prefix', value)}
-                >
-                    {uniquePrefixes.map(prefix => (
-                        <Option key={prefix} value={prefix}>{prefix}</Option>
-                    ))}
-                </Select>
-            </Col>
-            <Col xs={24} sm={12} md={8}>
-                <Select
-                    showSearch
-                    placeholder="Brand"
-                    allowClear
-                    style={{ width: '100%' }}
-                    value={tempFilters.brand}
-                    onChange={(value) => handleTempFilterChange('brand', value)}
-                >
-                    {uniqueBrands.map(brand => (
-                        <Option key={brand} value={brand}>{brand}</Option>
-                    ))}
-                </Select>
-            </Col>
-            <Col xs={24} sm={12} md={8}>
-                <Select
-                    showSearch
-                    placeholder="Tag Weight Type"
-                    allowClear
-                    style={{ width: '100%' }}
-                    value={tempFilters.tagWeightType}
-                    onChange={(value) => handleTempFilterChange('tagWeightType', value)}
-                    disabled={!tempFilters.mainProduct}
-                >
-                    <Option value="GWT">GWT</Option>
-                    <Option value="NWT">NWT</Option>
-                    <Option value="diacts">DIA-CTS</Option>
-                </Select>
-            </Col>
-            <Col xs={24} sm={12} md={8}>
-                <Input
-                    placeholder="From"
-                    value={tempFilters.tagWeightFrom}
-                    onChange={(e) => handleTempFilterChange('tagWeightFrom', e.target.value)}
-                    disabled={!tempFilters.mainProduct || !tempFilters.tagWeightType}
-                />
-            </Col>
-            <Col xs={24} sm={12} md={8}>
-                <Input
-                    placeholder="To"
-                    value={tempFilters.tagWeightTo}
-                    onChange={(e) => handleTempFilterChange('tagWeightTo', e.target.value)}
-                    disabled={!tempFilters.mainProduct || !tempFilters.tagWeightType}
-                />
-            </Col>
-            <Col xs={24} sm={12} md={8}>
-                <DatePicker
-                    selected={tempFilters.tagDate[0] ? new Date(tempFilters.tagDate[0]) : null}
-                    onChange={(date) => {
-                        const newDates = [...tempFilters.tagDate];
-                        newDates[0] = date ? date.toISOString() : null;
-                        handleTempFilterChange('tagDate', newDates);
-                    }}
-                    customInput={<CustomInput placeholder="Tag Date From" />}
-                    dateFormat="yyyy-MM-dd"
-                    className="ant-input"
-                    placeholderText="From Date"
-                    style={{ width: '100%' }}
-                />
-            </Col>
-            <Col xs={24} sm={12} md={8}>
-                <DatePicker
-                    selected={tempFilters.tagDate[1] ? new Date(tempFilters.tagDate[1]) : null}
-                    onChange={(date) => {
-                        const newDates = [...tempFilters.tagDate];
-                        newDates[1] = date ? date.toISOString() : null;
-                        handleTempFilterChange('tagDate', newDates);
-                    }}
-                    customInput={<CustomInput placeholder="Tag Date To" />}
-                    dateFormat="yyyy-MM-dd"
-                    placeholderText="To Date"
-                    className="ant-input"
-                    style={{ width: '100%' }}
-                />
-            </Col>
-            <Col xs={24} sm={24} md={24}>
-                <Button type="primary" onClick={applyFilters}>Apply</Button>
-                <Button style={{ marginLeft: '8px' }} onClick={clearFilters}>Clear</Button>
-            </Col>
-        </Row>
-    );
+const filterContent = (
+    <Row gutter={[8, 8]}>
+        <Col xs={24} sm={12} md={8}>
+            <Select
+                showSearch
+                allowClear
+                style={{ width: '100%' }}
+                value={tempFilters.mainProduct || undefined}
+                onChange={(value) => handleTempFilterChange('mainProduct', value)}
+                placeholder="Main Product"
+            >
+                {uniqueMainProducts.map(product => (
+                    <Option key={product} value={product}>{product}</Option>
+                ))}
+            </Select>
+        </Col>
+        <Col xs={24} sm={12} md={8}>
+            <Select
+                showSearch
+                placeholder="Product Category"
+                allowClear
+                style={{ width: '100%' }}
+                value={tempFilters.product || undefined}
+                onChange={(value) => handleTempFilterChange('product', value)}
+                disabled={!tempFilters.mainProduct}
+            >
+                {uniqueProductCategories.map(category => (
+                    <Option key={category} value={category}>{category}</Option>
+                ))}
+            </Select>
+        </Col>
+        <Col xs={24} sm={12} md={8}>
+            <Select
+                showSearch
+                placeholder="Product Name"
+                allowClear
+                style={{ width: '100%' }}
+                value={tempFilters.productName || undefined}
+                onChange={(value) => handleTempFilterChange('productName', value)}
+                disabled={!tempFilters.mainProduct || !tempFilters.product}
+            >
+                {uniqueProductNames.map(name => (
+                    <Option key={name} value={name}>{name}</Option>
+                ))}
+            </Select>
+        </Col>
+        <Col xs={24} sm={12} md={8}>
+            <Select
+                showSearch
+                placeholder="Counter Name"
+                allowClear
+                style={{ width: '100%' }}
+                value={tempFilters.counterName || undefined}
+                onChange={(value) => handleTempFilterChange('counterName', value)}
+            >
+                {uniqueCounterNames.map(counter => (
+                    <Option key={counter} value={counter}>{counter}</Option>
+                ))}
+            </Select>
+        </Col>
+        <Col xs={24} sm={12} md={8}>
+            <Select
+                showSearch
+                placeholder="Category Name"
+                allowClear
+                style={{ width: '100%' }}
+                value={tempFilters.categoryName || undefined}
+                onChange={(value) => handleTempFilterChange('categoryName', value)}
+            >
+                {uniqueCategoryNames.map(category => (
+                    <Option key={category} value={category}>{category}</Option>
+                ))}
+            </Select>
+        </Col>
+        <Col xs={24} sm={12} md={8}>
+            <Select
+                showSearch
+                placeholder="Manufacturer"
+                allowClear
+                style={{ width: '100%' }}
+                value={tempFilters.manufacturer || undefined}
+                onChange={(value) => handleTempFilterChange('manufacturer', value)}
+            >
+                {uniqueManufacturers.map(manufacturer => (
+                    <Option key={manufacturer} value={manufacturer}>{manufacturer}</Option>
+                ))}
+            </Select>
+        </Col>
+        <Col xs={24} sm={12} md={8}>
+            <Select
+                showSearch
+                placeholder="Dealer Name"
+                allowClear
+                style={{ width: '100%' }}
+                value={tempFilters.dealerName || undefined}
+                onChange={(value) => handleTempFilterChange('dealerName', value)}
+            >
+                {uniqueDealerNames.map(dealer => (
+                    <Option key={dealer} value={dealer}>{dealer}</Option>
+                ))}
+            </Select>
+        </Col>
+        <Col xs={24} sm={12} md={8}>
+            <Select
+                showSearch
+                placeholder="Prefix"
+                allowClear
+                style={{ width: '100%' }}
+                value={tempFilters.prefix || undefined}
+                onChange={(value) => handleTempFilterChange('prefix', value)}
+            >
+                {uniquePrefixes.map(prefix => (
+                    <Option key={prefix} value={prefix}>{prefix}</Option>
+                ))}
+            </Select>
+        </Col>
+        <Col xs={24} sm={12} md={8}>
+            <Select
+                showSearch
+                placeholder="Brand"
+                allowClear
+                style={{ width: '100%' }}
+                value={tempFilters.brand || undefined}
+                onChange={(value) => handleTempFilterChange('brand', value)}
+            >
+                {uniqueBrands.map(brand => (
+                    <Option key={brand} value={brand}>{brand}</Option>
+                ))}
+            </Select>
+        </Col>
+        <Col xs={24} sm={12} md={8}>
+            <Select
+                showSearch
+                placeholder="Tag Weight Type"
+                allowClear
+                style={{ width: '100%' }}
+                value={tempFilters.tagWeightType || undefined}
+                onChange={(value) => handleTempFilterChange('tagWeightType', value)}
+                disabled={!tempFilters.mainProduct}
+            >
+                <Option value="GWT">GWT</Option>
+                <Option value="NWT">NWT</Option>
+                <Option value="diacts">DIA-CTS</Option>
+            </Select>
+        </Col>
+        <Col xs={24} sm={12} md={8}>
+            <Input
+                placeholder="From"
+                value={tempFilters.tagWeightFrom || undefined}
+                onChange={(e) => handleTempFilterChange('tagWeightFrom', e.target.value)}
+                disabled={!tempFilters.mainProduct || !tempFilters.tagWeightType}
+            />
+        </Col>
+        <Col xs={24} sm={12} md={8}>
+            <Input
+                placeholder="To"
+                value={tempFilters.tagWeightTo || undefined}
+                onChange={(e) => handleTempFilterChange('tagWeightTo', e.target.value)}
+                disabled={!tempFilters.mainProduct || !tempFilters.tagWeightType}
+            />
+        </Col>
+        <Col xs={24} sm={12} md={8}>
+            <DatePicker
+                selected={tempFilters.tagDate[0] ? new Date(tempFilters.tagDate[0]) : null}
+                onChange={(date) => {
+                    const newDates = [...tempFilters.tagDate];
+                    newDates[0] = date ? date.toISOString() : null;
+                    handleTempFilterChange('tagDate', newDates);
+                }}
+                customInput={<CustomInput placeholder="Tag Date From" />}
+                dateFormat="yyyy-MM-dd"
+                className="ant-input"
+                placeholderText="From Date"
+                style={{ width: '100%' }}
+            />
+        </Col>
+        <Col xs={24} sm={12} md={8}>
+            <DatePicker
+                selected={tempFilters.tagDate[1] ? new Date(tempFilters.tagDate[1]) : null}
+                onChange={(date) => {
+                    const newDates = [...tempFilters.tagDate];
+                    newDates[1] = date ? date.toISOString() : null;
+                    handleTempFilterChange('tagDate', newDates);
+                }}
+                customInput={<CustomInput placeholder="Tag Date To" />}
+                dateFormat="yyyy-MM-dd"
+                placeholderText="To Date"
+                className="ant-input"
+                style={{ width: '100%' }}
+            />
+        </Col>
+        <Col xs={24} sm={24} md={24}>
+            <Button type="primary" onClick={applyFilters}>Apply</Button>
+            <Button style={{ marginLeft: '8px' }} onClick={clearFilters}>Clear</Button>
+        </Col>
+    </Row>
+);
 
     return (
         <>
@@ -559,9 +572,13 @@ const ProductTable = () => {
                     </Breadcrumb>
                 </Col>
                 <Col>
-                    <Button icon={<PrinterOutlined />} onClick={handlePrint} style={{ marginRight: 8 }}>Print</Button>
-                    <Button icon={<FilePdfOutlined />} onClick={handlePDFWithPreview} style={{ marginRight: 8 }}>PDF</Button>
-                    <Button icon={<FileExcelOutlined />} onClick={handleExcel} style={{ marginRight: 8 }}>Excel</Button>
+                    <Button icon={<PrinterOutlined />} onClick={handlePrint} style={{ marginRight: 8 }} type="primary">Print</Button>
+                    <Button icon={<FilePdfOutlined />} onClick={handlePDFWithPreview} style={{ marginRight: 8,  backgroundColor: "#0052cc",
+                                color: "#fff",
+                                border: "none",}}>PDF</Button>
+                    <Button icon={<FileExcelOutlined />} onClick={handleExcel} style={{ marginRight: 8, backgroundColor: "#28a745",
+                                color: "#fff",
+                                border: "none", }}>Excel</Button>
                     <Popover
                         content={filterContent}
                         title="Filters"

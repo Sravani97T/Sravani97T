@@ -50,8 +50,9 @@ const PrifixNetSummry = () => {
         { title: 'S.No', dataIndex: 'sno',  width: 50, className: 'blue-background-column', key: 'sno' },
         { title: 'Prefix', dataIndex: 'PREFIX', key: 'PREFIX' },
         { title: 'Pieces', align: "right", dataIndex: 'Pieces', key: 'Pieces' },
-        { title: 'Net Wt', align: "right", dataIndex: 'Nwt', key: 'Nwt', render: value => Number(value).toFixed(3) },
         { title: 'Gross Wt', align: "right", dataIndex: 'Gwt', key: 'Gwt', render: value => Number(value).toFixed(3) },
+
+        { title: 'Net Wt', align: "right", dataIndex: 'Nwt', key: 'Nwt', render: value => Number(value).toFixed(3) },
         { title: 'Diamond Counts', align: "right", dataIndex: 'DIACTS', key: 'DIACTS', render: value => Number(value).toFixed(2) },
         { title: 'Diamond Amount', align: "right", dataIndex: 'DIAAMT', key: 'DIAAMT', render: value => Number(value).toFixed(2) },
     ];

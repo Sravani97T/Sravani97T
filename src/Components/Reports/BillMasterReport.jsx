@@ -1,5 +1,5 @@
-import React, { useState, useEffect, forwardRef } from 'react';
-import { Table, Row, Col, Breadcrumb, Input, Select, Pagination } from 'antd';
+import React, { useState, useEffect, forwardRef, useRef } from 'react';
+import { Table, Row, Col, Breadcrumb, Input, Select, Pagination, Button } from 'antd';
 import axios from 'axios';
 import moment from 'moment';
 import PdfExcelPrint from '../Utiles/PdfExcelPrint'; // Adjust the import path as necessary
@@ -121,7 +121,7 @@ const BillMasterReport = () => {
 
     const columns = [
         { title: 'S.No', dataIndex: 'serialNo', align: "center", key: 'serialNo', width: 50, className: 'blue-background-column' },
-        { title: 'Bill Date', dataIndex: 'BillDate', key: 'BillDate', render: (text) => moment(text).format('DD/MM/YYYY') },
+        { title: 'Bill Date', dataIndex: 'BillDate', key: 'BillDate', render: (text) => moment(text).format('DD/MMM/YYYY') },
         { title: 'Jewel Type', dataIndex: 'JewelType', key: 'JewelType' },
         { title: 'Bill No', dataIndex: 'BillNo', key: 'BillNo' },
         { title: 'Customer Name', dataIndex: 'CustName', key: 'CustName' },
@@ -141,6 +141,7 @@ const BillMasterReport = () => {
         ...filteredData.map((item, index) => ({
             ...item,
             serialNo: index + 1,
+            BillDate: moment(item.BillDate).format('DD/MM/YYYY'),
             TotGwt: item.TotGwt ? item.TotGwt.toFixed(3) : '',
             TotNwt: item.TotNwt ? item.TotNwt.toFixed(3) : '',
             TotAmt: item.TotAmt ? item.TotAmt.toFixed(2) : '',
