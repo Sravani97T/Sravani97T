@@ -21,7 +21,12 @@ const TraySummary = () => {
                 console.error('Error fetching data:', error);
             });
     }, []);
+    const columnStyles = {
 
+        4: { halign: 'right' },  // Net Wt
+        5: { halign: 'right' },  // Total Amount
+
+    };
     const columns = [
         {
             title: 'S.No',
@@ -33,8 +38,8 @@ const TraySummary = () => {
         { title: 'Tag No', dataIndex: 'TAGNO', key: 'TAGNO' },
         { title: 'Product Name', dataIndex: 'PRODUCTNAME', key: 'PRODUCTNAME' },
         { title: 'Pieces', dataIndex: 'PCS', key: 'PCS', align: "right" },
-        { title: 'Gross Wt', dataIndex: 'GWT', key: 'GWT', align: "right", render: value => Number(value).toFixed(3) },
-        { title: 'Net Wt', dataIndex: 'NWT', key: 'NWT', align: "right", render: value => Number(value).toFixed(3) },
+        { title: 'Gross Wt', dataIndex: 'GWT', key: 'GWT', align: "right", render: value =><b>{Number(value).toFixed(3) }</b> },
+        { title: 'Net Wt', dataIndex: 'NWT', key: 'NWT', align: "right", render: value => <b>{Number(value).toFixed(3)}</b> },
     ];
 
     const getTotals = () => {
@@ -85,6 +90,7 @@ const TraySummary = () => {
                     <PdfExcelPrint
                         data={formattedData}
                         columns={columns}
+                        columnStyles={columnStyles}
                         fileName="TraySummaryReport"
                     />
                 </Col>

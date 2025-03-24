@@ -34,7 +34,12 @@ const StockSummaryReport = () => {
                 console.error('Error fetching stock summary data:', error);
             });
     }, [mName]);  // Re-fetch when MNAME is changed
+    const columnStyles = {
 
+        3: { halign: 'right' },  // Net Wt
+        4: { halign: 'right' },  // Total Amount
+
+    };
     const columns = [
         {
             title: 'S.No', dataIndex: 'sno', key: 'sno', className: 'blue-background-column',
@@ -42,8 +47,8 @@ const StockSummaryReport = () => {
         },
         { title: 'Product Name', dataIndex: 'PRODUCTNAME', key: 'PRODUCTNAME' },
         { title: 'Pieces', align: "right", dataIndex: 'PIECES', key: 'PIECES' },
-        { title: 'Gross Wt', align: "right", dataIndex: 'GWT', key: 'GWT', render: value => Number(value).toFixed(3) },
-        { title: 'Net Wt', align: "right", dataIndex: 'NWT', key: 'NWT', render: value => Number(value).toFixed(3) },
+        { title: 'Gross Wt', align: "right", dataIndex: 'GWT', key: 'GWT', render: value => <b>{Number(value).toFixed(3)}</b> },
+        { title: 'Net Wt', align: "right", dataIndex: 'NWT', key: 'NWT', render: value => <b>{Number(value).toFixed(3)}</b> },
     ];
 
     const getTotals = () => {
@@ -95,6 +100,7 @@ const StockSummaryReport = () => {
                         data={formattedDataWithTotals}
                         columns={columns}
                         fileName="StockSummaryReport"
+                        columnStyles={columnStyles}
                         alignRightColumns={['PIECES', 'GWT', 'NWT']} // Add this prop to align right
                     />
                 </Col>

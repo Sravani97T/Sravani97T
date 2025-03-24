@@ -75,6 +75,8 @@ const Sidebar = ({ collapsed }) => {
         { key: "3-2", label: <Link to="/tag-generation" style={{ color: "#fff" }}>Tag Generation</Link> },
         { key: "3-3", label: <Link to="/estimation-register" style={{ color: "#fff" }}>Estimation Register</Link> },
         { key: "3-4", label: <Link to="/estimation-purchase" style={{ color: "#fff" }}>Estimation Purchase</Link> },
+        { key: "3-5", label: <Link to="/dailycollection-register" style={{ color: "#fff" }}>Daily Collection Register</Link> },
+
 
       ],
     },

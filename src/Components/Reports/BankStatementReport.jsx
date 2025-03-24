@@ -51,7 +51,7 @@ const BankStatementReport = () => {
                 setUniquePayModes(uniqueModes);
 
                 // Apply initial filters based on current date
-                const filtered = data.filter(item => 
+                const filtered = data.filter(item =>
                     moment(item.DEPDATE).isSameOrAfter(tempFilters.dateFrom) &&
                     moment(item.DEPDATE).isSameOrBefore(tempFilters.dateTo)
                 );
@@ -110,7 +110,13 @@ const BankStatementReport = () => {
     };
 
     const totals = calculateTotals(filteredData);
+    const columnStyles = {
 
+        7: { halign: 'right' },  // Net Wt
+        8: { halign: 'right' },  // Total Amount
+        9: { halign: 'right' },  // Discount
+
+    };
     const columns = [
         { title: 'S.No', dataIndex: 'serialNo', width: 50, align: "center", key: 'serialNo', className: 'blue-background-column' },
         { title: 'VNO', dataIndex: 'RecNo', key: 'RecNo' },
@@ -119,9 +125,19 @@ const BankStatementReport = () => {
         { title: 'Pay Mode', dataIndex: 'mode', key: 'mode' },
         { title: 'Particulars', dataIndex: 'DESCR', key: 'DESCR' },
         { title: 'Party Name', dataIndex: 'CustName', key: 'CustName' },
-        { title: 'Debit', dataIndex: 'Debit', key: 'Debit', align: "right", render: (value) => value ? value.toFixed(2) : '' },
-        { title: 'Credit', dataIndex: 'Credit', key: 'Credit', align: "right", render: (value) => value ? value.toFixed(2) : '' },
-        { title: 'Closing Balance', dataIndex: 'balance', key: 'balance', align: "right", render: (value) => value ? value.toFixed(2) : '' }
+        {
+            title: 'Debit', dataIndex: 'Debit', key: 'Debit', textAlign: "right", className: 'blue-background-column'
+            ,
+            render: (value) => value ? value.toFixed(2) : ''
+        },
+        {
+            title: 'Credit', dataIndex: 'Credit', key: 'Credit', align: "right", className: 'blue-background-column'
+            , render: (value) => value ? value.toFixed(2) : ''
+        },
+        {
+            title: 'Closing Balance', dataIndex: 'balance', key: 'balance', align: "right", className: 'blue-background-column',
+            render: (value) => value ? value.toFixed(2) : ''
+        }
     ];
 
     const formattedData = [
@@ -222,17 +238,18 @@ const BankStatementReport = () => {
                 </Col>
                 <Col>
                     <PdfExcelPrint
-                        data={formattedData} 
+                        data={formattedData}
                         columns={columns}
                         fileName="BankStatementReport"
                         totals={totals}
+                        columnStyles={columnStyles}
                     />
                 </Col>
             </Row>
             {filterContent}
             <Row gutter={8} style={{ marginBottom: 8 }} align="middle">
                 <Col flex="auto" />
-                <Col style={{ marginTop:"10px" }}>
+                <Col style={{ marginTop: "10px" }}>
                     <Pagination
                         current={currentPage}
                         pageSize={pageSize}

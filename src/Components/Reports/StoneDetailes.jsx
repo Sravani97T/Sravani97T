@@ -36,14 +36,21 @@ const StoneDetails = () => {
                 console.error('Error fetching stone details data:', error);
             });
     }, [mName]);  // Re-fetch when MNAME is changed
+    const columnStyles = {
 
+        3: { halign: 'right' },  // Net Wt
+        4: { halign: 'right' },  // Total Amount
+        5: { halign: 'right' },  // Total Amount
+
+
+    };
     const columns = [
-        { title: 'S.No', dataIndex: 'sno', key: 'sno' , width: 50,  className: 'blue-background-column',},
+        { title: 'S.No', dataIndex: 'sno', key: 'sno', width: 50, className: 'blue-background-column' },
         { title: 'Item Name', dataIndex: 'ITEMNAME', key: 'ITEMNAME' },
         { title: 'Pieces', align: "right", dataIndex: 'PCS', key: 'PCS' },
-        { title: 'Grams', align: "right", dataIndex: 'GRMS', key: 'GRMS' },
-        { title: 'Carats', align: "right", dataIndex: 'CTS', key: 'CTS' },
-        { title: 'Amount', align: "right", dataIndex: 'AMOUNT', key: 'AMOUNT' },
+        { title: 'Grams', align: "right", dataIndex: 'GRMS', key: 'GRMS', render: (text) => <b>{Number(text).toFixed(3)}</b> },
+        { title: 'Carats', align: "right", dataIndex: 'CTS', key: 'CTS', render: (text) => <b>{Number(text).toFixed(3)}</b> },
+        { title: 'Amount', align: "right", dataIndex: 'AMOUNT', key: 'AMOUNT', render: (text) => <b>{Number(text).toFixed(2)}</b> },
     ];
 
     const getTotals = () => {
@@ -60,21 +67,23 @@ const StoneDetails = () => {
     };
 
     const { totalPCS, totalGRMS, totalCTS, totalAMOUNT } = getTotals();
-
     const formattedData = [
         ...filteredData.map((item, index) => ({
             ...item,
             sno: index + 1,
+            GRMS: Math.round(item.GRMS),
+            CTS: Math.round(item.CTS),
         })),
         {
             sno: 'Total',
             ITEMNAME: '',
-            PCS: totalPCS,
-            GRMS: totalGRMS,
-            CTS: totalCTS,
-            AMOUNT: totalAMOUNT,
+            PCS: Math.ceil(totalPCS),
+            GRMS: Math.round(totalGRMS),
+            CTS: Math.round(totalCTS),
+            AMOUNT: Math.ceil(totalAMOUNT),
         }
     ];
+    
 
     const handlePageChange = (page, pageSize) => {
         setCurrentPage(page);
@@ -95,6 +104,7 @@ const StoneDetails = () => {
                         data={formattedData}
                         columns={columns}
                         fileName="StoneDetailsReport"
+                        columnStyles={columnStyles}
                     />
                 </Col>
             </Row>

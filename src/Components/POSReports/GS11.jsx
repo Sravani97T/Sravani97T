@@ -10,7 +10,7 @@ import TableHeaderStyles from '../Pages/TableHeaderStyles';
 import { CREATE_jwel } from '../../Config/Config';
 
 const CustomInput = forwardRef(({ value, onClick, placeholder }, ref) => {
-    const formattedValue = value ? moment(value).format('DD/MM/YYYY') : '';
+    const formattedValue = value ? moment(value).format('DD MMM YYYY') : '';
     return (
         <div className="custom-date-input" onClick={onClick} ref={ref}>
             <input value={formattedValue} placeholder={placeholder} readOnly />
@@ -70,17 +70,23 @@ const GS11Reports = () => {
                 });
         }
     }, [dates, openingCash, particulars]);
+    const columnStyles = {
 
+        6: { halign: 'right' },  // Net Wt
+        7: { halign: 'right' },  // Total Amount
+        8: { halign: 'right' },  // Discount
+
+    };
     const columns = [
         { title: 'S.No', dataIndex: 'serialNo', align: "center", key: 'serialNo',  width: 50, className: 'blue-background-column' },
-        { title: 'Date', dataIndex: 'ENTRYDATE', key: 'ENTRYDATE', render: date => moment(date).format('YYYY/MM/DD') },
+        { title: 'Date', dataIndex: 'ENTRYDATE', key: 'ENTRYDATE', render: date => moment(date).format('DD/MM/YYYY') },
         { title: 'Particulars', dataIndex: 'PARTICULARS', key: 'PARTICULARS' },
         { title: 'Party Name', dataIndex: 'PARTYNAME', key: 'PARTYNAME' },
         { title: 'HSN Code', dataIndex: 'HSNCode', key: 'HSNCode' },
         { title: 'Inv .no', dataIndex: 'VNO', key: 'VNO' },
-        { title: 'Debit', dataIndex: 'JAMA', key: 'JAMA', align: "right", render: value => Number(value).toFixed(2) },
-        { title: 'Credit', dataIndex: 'NAMA', key: 'NAMA', align: "right", render: value => Number(value).toFixed(2) },
-        { title: 'Balance', dataIndex: 'BALANCE', key: 'BALANCE', align: "right", render: value => Number(value).toFixed(2) },
+        { title: 'Debit', dataIndex: 'JAMA', key: 'JAMA', align: "right", render: value => <b>{Number(value).toFixed(2)}</b> },
+        { title: 'Credit', dataIndex: 'NAMA', key: 'NAMA', align: "right", render: value => <b>{Number(value).toFixed(2)}</b> },
+        { title: 'Balance', dataIndex: 'BALANCE', key: 'BALANCE', align: "right", render: value =><b>{Number(value).toFixed(2)}</b>  },
     ];
 
     const getTotals = () => {
@@ -137,6 +143,7 @@ const GS11Reports = () => {
                         data={formattedData}
                         columns={columns}
                         fileName="GS11Report"
+                        columnStyles={columnStyles}
                     />
                 </Col>
             </Row>
@@ -154,6 +161,8 @@ const GS11Reports = () => {
                                 endDate={dates[1]}
                                 placeholderText="Start Date"
                                 customInput={<CustomInput />}
+                                dateFormat="dd MMM yyyy"
+
                             />
                         </Col>
                         <Col>
@@ -167,6 +176,10 @@ const GS11Reports = () => {
                                 endDate={dates[1]}
                                 placeholderText="End Date"
                                 customInput={<CustomInput />}
+                                dateFormat="dd MMM yyyy"
+
+                                
+
                             />
                         </Col>
                     </Row>

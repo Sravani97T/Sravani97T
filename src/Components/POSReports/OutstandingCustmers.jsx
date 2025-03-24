@@ -57,15 +57,21 @@ const OutstandingCustomers = () => {
         (mobileFilter ? item.MobileNum.includes(mobileFilter) : true) &&
         (customerNameFilter ? item.CustName.toLowerCase().includes(customerNameFilter.toLowerCase()) : true)
     );
+    const columnStyles = {
 
+        4: { halign: 'right' },  // Net Wt
+        5: { halign: 'right' },  // Total Amount
+        6: { halign: 'right' },  // Discount
+
+    };
     const columns = [
         { title: 'S.No', width: 50,   className: 'blue-background-column',  dataIndex: 'serialNo', key: 'serialNo' },
         { title: 'City Name', dataIndex: 'CityName', key: 'CityName' },
         { title: 'Customer Name', dataIndex: 'CustName', key: 'CustName' },
         { title: 'Mobile Number', dataIndex: 'MobileNum', key: 'MobileNum' },
-        { title: 'Debit', dataIndex: 'debit', key: 'debit', align: "right", render: value => Number(value).toFixed(2) },
-        { title: 'Credit', dataIndex: 'credit', key: 'credit', align: "right", render: value => Number(value).toFixed(2) },
-        { title: 'Balance', dataIndex: 'balance', key: 'balance', align: "right", render: value => Number(value).toFixed(2) },
+        { title: 'Debit', dataIndex: 'debit', key: 'debit', align: "right", render: value => <b>{Number(value).toFixed(2)}</b> },
+        { title: 'Credit', dataIndex: 'credit', key: 'credit', align: "right", render: value => <b>{Number(value).toFixed(2)}</b> },
+        { title: 'Balance', dataIndex: 'balance', key: 'balance', align: "right", render: value => <b>{Number(value).toFixed(2)}</b> },
     ];
 
     const getTotals = () => {
@@ -109,6 +115,7 @@ const OutstandingCustomers = () => {
                         data={formattedData}
                         columns={columns}
                         fileName="OutstandingCustomersReport"
+                        columnStyles={columnStyles}
                     />
                 </Col>
             </Row>

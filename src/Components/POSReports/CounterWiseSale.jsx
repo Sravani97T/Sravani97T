@@ -50,14 +50,20 @@ const CounterWiseSale = () => {
     useEffect(() => {
         console.log('Filtered Data:', filteredData);
     }, [filteredData]);
+    const columnStyles = {
 
+        3: { halign: 'right' },  // Net Wt
+        4: { halign: 'right' },  // Total Amount
+        5: { halign: 'right' },  // Discount
+
+    };
     const columns = [
         { title: 'S.No', dataIndex: 'serialNo', width: 50, align: "center", key: 'serialNo', className: 'blue-background-column' },
         { title: 'Counter Name', dataIndex: 'CounterName', key: 'CounterName' },
         { title: 'Pcs', dataIndex: 'Pcs', key: 'Pcs', align: "right" },
-        { title: 'Gross Weight', dataIndex: 'Gwt', key: 'Gwt', align: "right", render: value => Number(value).toFixed(3) },
-        { title: 'Net Weight', dataIndex: 'Nwt', key: 'Nwt', align: "right", render: value => Number(value).toFixed(3) },
-        { title: 'Amount', dataIndex: 'Amount', key: 'Amount', align: "right", render: value => Number(value).toFixed(2) },
+        { title: 'Gross Weight', dataIndex: 'Gwt', key: 'Gwt', align: "right", render: value => <b>{Number(value).toFixed(3)}</b>},
+        { title: 'Net Weight', dataIndex: 'Nwt', key: 'Nwt', align: "right", render: value => <b>{Number(value).toFixed(3)}</b> },
+        { title: 'Amount', dataIndex: 'Amount', key: 'Amount', align: "right", render: value => <b>{Number(value).toFixed(2)}</b> },
     ];
 
     useEffect(() => {
@@ -120,6 +126,8 @@ const CounterWiseSale = () => {
                                 endDate={dates[1]}
                                 placeholderText="Start Date"
                                 customInput={<CustomInput />}
+                                dateFormat="dd MMM yyyy"
+
                             />
                         </Col>
                         <Col>
@@ -133,6 +141,8 @@ const CounterWiseSale = () => {
                                 endDate={dates[1]}
                                 placeholderText="End Date"
                                 customInput={<CustomInput />}
+                                dateFormat="dd MMM yyyy"
+
                             />
                         </Col>
                     </Row>
@@ -142,6 +152,7 @@ const CounterWiseSale = () => {
                         data={formattedData}
                         columns={columns}
                         fileName="CounterWiseSaleReport"
+                        columnStyles={columnStyles}
                     />
                 </Col>
             </Row>

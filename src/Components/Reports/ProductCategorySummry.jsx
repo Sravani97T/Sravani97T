@@ -34,13 +34,20 @@ const ProductCategorySummary = () => {
                 console.error('Error fetching product category summary data:', error);
             });
     }, [mName]);  // Re-fetch when MNAME is changed
+    const columnStyles = {
 
+        3: { halign: 'right' },  // Net Wt
+        4: { halign: 'right' },  // Total Amount
+    
+
+
+    };
     const columns = [
         { title: 'S.No', dataIndex: 'serialNumber', width: 50, key: 'serialNumber' },
         { title: 'Product Name', dataIndex: 'PRODUCTNAME', key: 'PRODUCTNAME' },
         { title: 'Pieces', align: "right", dataIndex: 'PIECES', key: 'PIECES' },
-        { title: 'Gross Wt', align: "right", dataIndex: 'GWT', key: 'GWT', render: value => Number(value).toFixed(3) },
-        { title: 'Net Wt', align: "right", dataIndex: 'NWT', key: 'NWT', render: value => Number(value).toFixed(3) },
+        { title: 'Gross Wt', align: "right", dataIndex: 'GWT', key: 'GWT', render: value => <b>{Number(value).toFixed(3)}</b> },
+        { title: 'Net Wt', align: "right", dataIndex: 'NWT', key: 'NWT', render: value => <b>{Number(value).toFixed(3)}</b> },
     ];
 
     const getTotals = () => {
@@ -94,6 +101,7 @@ const ProductCategorySummary = () => {
                         data={formattedData}
                         columns={columns}
                         fileName="ProductCategorySummaryReport"
+                        columnStyles={columnStyles}
                     />
                 </Col>
             </Row>

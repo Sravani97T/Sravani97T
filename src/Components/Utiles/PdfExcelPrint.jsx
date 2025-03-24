@@ -6,7 +6,7 @@ import 'jspdf-autotable';
 import { saveAs } from 'file-saver';
 import ExcelJS from 'exceljs';
 
-const PdfExcelPrint = ({ data, columns, fileName }) => {
+const PdfExcelPrint = ({ data, columns, fileName ,columnStyles={}}) => {
 
     const handlePrint = () => {
         const printWindow = window.open('', '_blank');
@@ -19,16 +19,16 @@ const PdfExcelPrint = ({ data, columns, fileName }) => {
         printWindow.document.write('</head><body>');
         printWindow.document.write('<table><thead><tr>');
 
-        columns.forEach(col => {
-            printWindow.document.write(`<th>${col.title}</th>`);
+        columns.forEach((col, index) => {
+            printWindow.document.write(`<th style="${columnStyles[index]?.headerStyle ? Object.entries(columnStyles[index].headerStyle).map(([key, value]) => `${key}:${value}`).join(';') : ''}">${col.title}</th>`);
         });
 
         printWindow.document.write('</tr></thead><tbody>');
 
         data.forEach(item => {
             printWindow.document.write('<tr>');
-            columns.forEach(col => {
-                printWindow.document.write(`<td>${item[col.dataIndex]}</td>`);
+            columns.forEach((col, index) => {
+                printWindow.document.write(`<td style="${columnStyles[index]?.cellStyle ? Object.entries(columnStyles[index].cellStyle).map(([key, value]) => `${key}:${value}`).join(';') : ''}">${item[col.dataIndex]}</td>`);
             });
             printWindow.document.write('</tr>');
         });
@@ -38,6 +38,14 @@ const PdfExcelPrint = ({ data, columns, fileName }) => {
         printWindow.document.close();
         printWindow.print();
     };
+    columns.forEach((col, index) => {
+        if (columnStyles[index]?.headerStyle) {
+            Object.assign(col, { headerStyle: columnStyles[index].headerStyle });
+        }
+        if (columnStyles[index]?.cellStyle) {
+            Object.assign(col, { cellStyle: columnStyles[index].cellStyle });
+        }
+    });
 
     const handlePDFWithPreview = () => {
         const doc = new jsPDF();
@@ -47,9 +55,10 @@ const PdfExcelPrint = ({ data, columns, fileName }) => {
         doc.autoTable({
             head: [tableColumn],
             body: tableRows,
-            styles: { fontSize: 6, cellPadding: 1 }, // Further reduce font size and cell padding
-            headStyles: { fillColor: [211, 211, 211], textColor: [0, 0, 0], fontStyle: 'normal', lineWidth: 0.1, lineColor: [211, 211, 211] }, // Light grey background, black text, normal font, and borders
+            styles: { fontSize: 6, cellPadding: 1 },
+            headStyles: { fillColor: [211, 211, 211], textColor: [0, 0, 0], fontStyle: 'normal', lineWidth: 0.1, lineColor: [211, 211, 211] },
             theme: 'grid',
+            columnStyles: columnStyles
         });
 
         const pdfBlob = doc.output('blob');
@@ -66,16 +75,14 @@ const PdfExcelPrint = ({ data, columns, fileName }) => {
             };
         };
     };
-
-
     const handleExcel = async () => {
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet(fileName);
 
-        worksheet.columns = columns.map(col => ({
+        worksheet.columns = columns.map((col, index) => ({
             header: col.title,
             key: col.dataIndex,
-            width: 25
+            width: columnStyles[index]?.width || 25
         }));
 
         data.forEach(item => {
@@ -86,7 +93,7 @@ const PdfExcelPrint = ({ data, columns, fileName }) => {
             worksheet.addRow(row);
         });
 
-        worksheet.getRow(1).eachCell(cell => {
+        worksheet.getRow(1).eachCell((cell, colNumber) => {
             cell.font = { bold: true };
             cell.fill = {
                 type: 'pattern',
@@ -99,17 +106,23 @@ const PdfExcelPrint = ({ data, columns, fileName }) => {
                 bottom: { style: 'thin' },
                 right: { style: 'thin' }
             };
+            if (columnStyles[colNumber - 1]?.headerStyle) {
+                Object.assign(cell, columnStyles[colNumber - 1].headerStyle);
+            }
         });
 
         worksheet.eachRow((row, rowNumber) => {
             if (rowNumber !== 1) {
-                row.eachCell(cell => {
+                row.eachCell((cell, colNumber) => {
                     cell.border = {
                         top: { style: 'thin' },
                         left: { style: 'thin' },
                         bottom: { style: 'thin' },
                         right: { style: 'thin' }
                     };
+                    if (columnStyles[colNumber - 1]?.cellStyle) {
+                        Object.assign(cell, columnStyles[colNumber - 1].cellStyle);
+                    }
                 });
             }
         });
@@ -117,7 +130,6 @@ const PdfExcelPrint = ({ data, columns, fileName }) => {
         const buffer = await workbook.xlsx.writeBuffer();
         saveAs(new Blob([buffer]), `${fileName}.xlsx`);
     };
-
     return (
         <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px', backgroundColor: '#ffffff', borderRadius: '5px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
             <Button icon={<PrinterOutlined style={{ color: 'blue' }} />} onClick={handlePrint} style={{ backgroundColor: '#e6f7ff', color: '#000', border: 'none', marginRight: 8 }}>Print</Button>

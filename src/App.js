@@ -57,6 +57,7 @@ import AvatarUpload from "./Components/Utiles/UploadImg";
 import EstimationRegister from "./Components/Inventory/LotCreation/EstimationRegister";
 import EstimationPurchase from "./Components/Inventory/LotCreation/EstimationPurchase";
 import EstimationTable from "./Components/Estimation/EstimationC";
+import DailyCollectionRegister from "./Components/Inventory/LotCreation/DailyCollectionRegister";
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(
     localStorage.getItem("isLoggedIn") === "true"
@@ -105,6 +106,9 @@ const App = () => {
                   <Route path="/online-mode" element={<OnlineMode />} />
                   {/* Estimation */}
                   <Route path="/daily-rates" element={<DailyRates />} />
+                  <Route path="/dailycollection-register" element={<DailyCollectionRegister/>} />
+
+                  
                   {/* Inventory */}
                   <Route path="/lot-creation" element={<LotCreation />} />
                   <Route path="/tag-generation" element={<TagGeneration />} />

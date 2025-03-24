@@ -4,6 +4,7 @@ import axios from 'axios';
 import PdfExcelPrint from '../Utiles/PdfExcelPrint'; // Adjust the import path as necessary
 import TableHeaderStyles from '../Pages/TableHeaderStyles';
 import { CREATE_jwel } from '../../Config/Config';
+
 const { Option } = Select;
 
 const DealerWiseStockDetailes = () => {
@@ -34,7 +35,12 @@ const DealerWiseStockDetailes = () => {
                 console.error('Error fetching dealer wise stock detail data:', error);
             });
     }, [mName]);  // Re-fetch when MNAME is changed
+    const columnStyles = {
 
+        4: { halign: 'right' },  // Total Amount
+        5: { halign: 'right' },  // Total Amount
+
+    };
     const columns = [
         { title: 'S.No', dataIndex: 'sno',  className: 'blue-background-column', width: 50,  key: 'sno' },
         { title: 'Tag No', dataIndex: 'TAGNO', key: 'TAGNO' },
@@ -77,6 +83,7 @@ const DealerWiseStockDetailes = () => {
             sno: index + 1,
             GWT: Number(item.GWT).toFixed(3),
             NWT: Number(item.NWT).toFixed(3),
+            
         })),
         {
             sno: 'Total',
@@ -113,6 +120,7 @@ const DealerWiseStockDetailes = () => {
                         data={formattedData}
                         columns={columns}
                         fileName="DealerWiseStockDetailReport"
+                        columnStyles={columnStyles}
                         totals={{ totalPCS, totalGWT, totalNWT }} // Pass totals as props
                     />
                 </Col>

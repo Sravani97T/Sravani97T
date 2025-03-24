@@ -11,7 +11,7 @@ import TableHeaderStyles from '../Pages/TableHeaderStyles';
 import { CREATE_jwel } from '../../Config/Config';
 
 const CustomInput = forwardRef(({ value, onClick, placeholder }, ref) => {
-    const formattedValue = value ? moment(value).format('DD/MM/YYYY') : '';
+    const formattedValue = value ? moment(value).format('DD MMM YYYY') : '';
     return (
         <div className="custom-date-input" onClick={onClick} ref={ref}>
             <input value={formattedValue} placeholder={placeholder} readOnly />
@@ -73,7 +73,20 @@ const NewOrnamentReport = () => {
             (!partyNameFilter || item.PartyName === partyNameFilter)
         );
     });
+    const columnStyles = {
 
+        6: { halign: 'right' },  // Net Wt
+        7: { halign: 'right' },  // Total Amount
+        8: { halign: 'right' },  // Discount
+        9: { halign: 'right' }, 
+        10: { halign: 'right' }, 
+        11: { halign: 'right' }, 
+        12: { halign: 'right' }, 
+        13: { halign: 'right' }, 
+        14: { halign: 'right' }, 
+        15: { halign: 'right' }, 
+
+    };
     const columns = [
         { title: 'S.No', dataIndex: 'sno', width: 50, align: "center", key: 'sno', className: 'blue-background-column' },
         { title: 'Entry No', dataIndex: 'entryno', key: 'entryno' },
@@ -81,16 +94,16 @@ const NewOrnamentReport = () => {
         { title: 'Inv Date', dataIndex: 'InvDate', key: 'InvDate' },
         { title: 'Main Product', dataIndex: 'ptype', key: 'ptype' },
         { title: 'Party Name', dataIndex: 'PartyName', key: 'PartyName' },
-        { title: 'GWt', dataIndex: 'Gwt', key: 'Gwt', align: "right", render: value => Number(value).toFixed(3) },
-        { title: 'Less', dataIndex: 'Others', key: 'Others', align: "right", render: value => Number(value).toFixed(2) },
-        { title: 'NWt', dataIndex: 'NWT', key: 'NWT', align: "right", render: value => Number(value).toFixed(3) },
-        { title: 'Total Amt', dataIndex: 'TotVal', key: 'TotVal', align: "right", render: value => Number(value).toFixed(2) },
+        { title: 'GWt', dataIndex: 'Gwt', key: 'Gwt', align: "right", render: value => <b>{Number(value).toFixed(3)}</b> },
+        { title: 'Less', dataIndex: 'Others', key: 'Others', align: "right", render: value => <b>{Number(value).toFixed(2)}</b> },
+        { title: 'NWt', dataIndex: 'NWT', key: 'NWT', align: "right", render: value => <b>{Number(value).toFixed(3)}</b> },
+        { title: 'Total Amt', dataIndex: 'TotVal', key: 'TotVal', align: "right", render: value => <b>{Number(value).toFixed(2)}</b> },
         { title: 'CGST', dataIndex: 'cgst', key: 'cgst', align: "right", render: value => Number(value).toFixed(2) },
         { title: 'SGST', dataIndex: 'Sgst', key: 'Sgst', align: "right", render: value => Number(value).toFixed(2) },
         { title: 'IGST', dataIndex: 'igst', key: 'igst', align: "right", render: value => Number(value).toFixed(2) },
-        { title: 'Gross Amt', dataIndex: 'grossamt', key: 'grossamt', align: "right", render: value => Number(value).toFixed(2) },
+        { title: 'Gross Amt', dataIndex: 'grossamt', key: 'grossamt', align: "right", render: value => <b>{Number(value).toFixed(2)}</b> },
         { title: 'TCS ', dataIndex: 'tcsamt', key: 'tcsamt', align: "right", render: value => Number(value).toFixed(2) },
-        { title: 'Net Amount', dataIndex: 'NETAMT', key: 'NETAMT', align: "right", render: value => Number(value).toFixed(2) },
+        { title: 'Net Amount', dataIndex: 'NETAMT', key: 'NETAMT', align: "right", render: value => <b>{Number(value).toFixed(2)}</b> },
     ];
 
     useEffect(() => {
@@ -213,6 +226,7 @@ const NewOrnamentReport = () => {
                         data={formattedData}
                         columns={columns}
                         fileName="NewOrnamentReport"
+                        columnStyles={columnStyles}
                     />
                 </Col>
             </Row>
@@ -230,6 +244,8 @@ const NewOrnamentReport = () => {
                                 endDate={dates[1]}
                                 placeholderText="Start Date"
                                 customInput={<CustomInput />}
+                                dateFormat="dd MMM yyyy"
+
                             />
                         </Col>
                         <Col>
@@ -244,6 +260,8 @@ const NewOrnamentReport = () => {
                                 placeholderText="End Date"
                                 className="date-picker"
                                 customInput={<CustomInput />}
+                                dateFormat="dd MMM yyyy"
+
                             />
                         </Col>
                     </Row>

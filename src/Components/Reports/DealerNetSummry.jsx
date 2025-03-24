@@ -34,15 +34,22 @@ const DealerNetSummry = () => {
                 console.error('Error fetching dealer net summary data:', error);
             });
     }, [mName]);  // Re-fetch when MNAME is changed
+    const columnStyles = {
 
+        3: { halign: 'right' },  // Total Amount
+        4: { halign: 'right' },  // Total Amount
+        5: { halign: 'right' }, 
+        6: { halign: 'right' }, 
+
+    };
     const columns = [
         { title: 'S.No', dataIndex: 'sno', width: 50, className: 'blue-background-column', key: 'sno' },
         { title: 'Dealer', dataIndex: 'DEALERNAME', key: 'DEALERNAME' },
         { title: 'Pieces', align: "right", dataIndex: 'Pieces', key: 'Pieces' },
-        { title: 'Gross Wt', align: "right", dataIndex: 'Gwt', key: 'Gwt', render: value => Number(value).toFixed(3) },
-        { title: 'Net Wt', align: "right", dataIndex: 'Nwt', key: 'Nwt', render: value => Number(value).toFixed(3) },
-        { title: 'Dia Cts', align: "right", dataIndex: 'DIACTS', key: 'DIACTS', render: value => Number(value).toFixed(2) },
-        { title: 'Dia Amt', align: "right", dataIndex: 'DIAAMT', key: 'DIAAMT', render: value => Number(value).toFixed(2) },
+        { title: 'Gross Wt', align: "right", dataIndex: 'Gwt', key: 'Gwt', render: value => <b>{Number(value).toFixed(3)}</b> },
+        { title: 'Net Wt', align: "right", dataIndex: 'Nwt', key: 'Nwt', render: value =><b>{Number(value).toFixed(3)}</b>  },
+        { title: 'Dia Cts', align: "right", dataIndex: 'DIACTS', key: 'DIACTS', render: value => <b>{Number(value).toFixed(2)}</b> },
+        { title: 'Dia Amt', align: "right", dataIndex: 'DIAAMT', key: 'DIAAMT', render: value => <b>{Number(value).toFixed(2)}</b> },
     ];
 
     const getTotals = () => {
@@ -104,6 +111,7 @@ const DealerNetSummry = () => {
                         data={formattedData}
                         columns={columns}
                         fileName="DealerNetSummaryReport"
+                        columnStyles={columnStyles}
                     />
                 </Col>
             </Row>

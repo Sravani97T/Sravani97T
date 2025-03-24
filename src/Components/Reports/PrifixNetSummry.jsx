@@ -45,32 +45,39 @@ const PrifixNetSummry = () => {
         setCurrentPage(page);
         setPageSize(pageSize);
     };
+    const columnStyles = {
 
+        3: { halign: 'right' },  // Total Amount
+        4: { halign: 'right' },  // Total Amount
+        5: { halign: 'right' }, 
+        6: { halign: 'right' }, 
+
+    };
     const columns = [
         { title: 'S.No', dataIndex: 'sno',  width: 50, className: 'blue-background-column', key: 'sno' },
         { title: 'Prefix', dataIndex: 'PREFIX', key: 'PREFIX' },
         { title: 'Pieces', align: "right", dataIndex: 'Pieces', key: 'Pieces' },
-        { title: 'Gross Wt', align: "right", dataIndex: 'Gwt', key: 'Gwt', render: value => Number(value).toFixed(3) },
+        { title: 'Gross Wt', align: "right", dataIndex: 'Gwt', key: 'Gwt', render: value => <b>{Number(value).toFixed(3)}</b> },
 
-        { title: 'Net Wt', align: "right", dataIndex: 'Nwt', key: 'Nwt', render: value => Number(value).toFixed(3) },
+        { title: 'Net Wt', align: "right", dataIndex: 'Nwt', key: 'Nwt', render: value => <b>{Number(value).toFixed(3)}</b> },
         { title: 'Diamond Counts', align: "right", dataIndex: 'DIACTS', key: 'DIACTS', render: value => Number(value).toFixed(2) },
-        { title: 'Diamond Amount', align: "right", dataIndex: 'DIAAMT', key: 'DIAAMT', render: value => Number(value).toFixed(2) },
+        { title: 'Diamond Amount', align: "right", dataIndex: 'DIAAMT', key: 'DIAAMT', render: value => <b>{Number(value).toFixed(2)}</b> },
     ];
 
-    const getTotals = () => {
-        const totalNwt = filteredData.reduce((sum, item) => sum + item.Nwt, 0);
-        const totalPieces = filteredData.reduce((sum, item) => sum + item.Pieces, 0);
-        const totalGwt = filteredData.reduce((sum, item) => sum + item.Gwt, 0);
-        const totalDiaCts = filteredData.reduce((sum, item) => sum + item.DIACTS, 0);
-        const totalDiaAmt = filteredData.reduce((sum, item) => sum + item.DIAAMT, 0);
-        return {
-            totalNwt: totalNwt.toFixed(3),
-            totalPieces: totalPieces,
-            totalGwt: totalGwt.toFixed(3),
-            totalDiaCts: totalDiaCts.toFixed(2),
-            totalDiaAmt: totalDiaAmt.toFixed(2),
-        };
-    };
+    // const getTotals = () => {
+    //     const totalNwt = filteredData.reduce((sum, item) => sum + item.Nwt, 0);
+    //     const totalPieces = filteredData.reduce((sum, item) => sum + item.Pieces, 0);
+    //     const totalGwt = filteredData.reduce((sum, item) => sum + item.Gwt, 0);
+    //     const totalDiaCts = filteredData.reduce((sum, item) => sum + item.DIACTS, 0);
+    //     const totalDiaAmt = filteredData.reduce((sum, item) => sum + item.DIAAMT, 0);
+    //     return {
+    //         totalNwt: totalNwt.toFixed(3),
+    //         totalPieces: totalPieces,
+    //         totalGwt: totalGwt.toFixed(3),
+    //         totalDiaCts: totalDiaCts.toFixed(2),
+    //         totalDiaAmt: totalDiaAmt.toFixed(2),
+    //     };
+    // };
 
     const filteredByPrefix = filteredData.filter(item => !prefix || item.PREFIX === prefix); // Filter by PREFIX
 
@@ -125,6 +132,7 @@ const PrifixNetSummry = () => {
                         data={formattedData}
                         columns={columns}
                         fileName="PrefixNetSummaryReport"
+                        columnStyles={columnStyles}
                     />
                 </Col>
             </Row>

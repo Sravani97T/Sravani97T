@@ -19,13 +19,19 @@ const StockBalanceReport = () => {
                 console.error('Error fetching data:', error);
             });
     }, []);
+    const columnStyles = {
 
+        3: { halign: 'right' },  // Net Wt
+        4: { halign: 'right' },  // Total Amount
+
+    };
     const columns = [
         { title: 'S.No', dataIndex: 'sno', key: 'sno', width: 50, className: 'blue-background-column' },
         { title: 'Material Name', dataIndex: 'MNAME', key: 'MNAME' },
         { title: 'Pieces', dataIndex: 'PCS', key: 'PCS', align: "right" },
-        { title: 'Gross Wt', dataIndex: 'GWT', key: 'GWT', align: "right", render: value => Number(value).toFixed(3) },
-        { title: 'Net Wt', dataIndex: 'NWT', key: 'NWT', align: "right", render: value => Number(value).toFixed(3) },
+        { title: 'Gross Wt', dataIndex: 'GWT', key: 'GWT', align: "right", render: value => <b>{Number(value).toFixed(3)}</b> },
+        { title: 'Net Wt', dataIndex: 'NWT', key: 'NWT', align: "right", render: value => <b>{Number(value).toFixed(3)}</b> },
+
     ];
 
     const getTotals = () => {
@@ -79,6 +85,7 @@ const StockBalanceReport = () => {
                         columns={columns}
                         fileName="StockBalanceReport"
                         totals={{ totalPCS, totalGWT, totalNWT }} // Pass totals as props
+                        columnStyles={columnStyles}
                     />
                 </Col>
             </Row>

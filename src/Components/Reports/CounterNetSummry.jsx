@@ -41,15 +41,22 @@ const CounterNetSummry = () => {
         setCurrentPage(page);
         setPageSize(pageSize);
     };
+    const columnStyles = {
 
+        3: { halign: 'right' },  // Total Amount
+        4: { halign: 'right' },  // Total Amount
+        5: { halign: 'right' }, 
+        6: { halign: 'right' }, 
+
+    };
     const columns = [
         { title: 'S.No', dataIndex: 'sno', width: 50, align: "center", key: 'sno', className: 'blue-background-column' },
         { title: 'Counter Name', dataIndex: 'CounterName', key: 'CounterName' },
         { title: 'Pieces', align: "right", dataIndex: 'Pieces', key: 'Pieces' },
-        { title: 'Gross Wt', align: "right", dataIndex: 'Gwt', key: 'Gwt', render: value => Number(value).toFixed(3) },
-        { title: 'Net Wt', align: "right", dataIndex: 'Nwt', key: 'Nwt', render: value => Number(value).toFixed(3) },
-        { title: 'Diamond Counts', align: "right", dataIndex: 'DIACTS', key: 'DIACTS', render: value => Number(value).toFixed(2) },
-        { title: 'Diamond Amount', align: "right", dataIndex: 'DIAAMT', key: 'DIAAMT', render: value => Number(value).toFixed(2) },
+        { title: 'Gross Wt', align: "right", dataIndex: 'Gwt', key: 'Gwt', render: value => <b>{Number(value).toFixed(3)}</b> },
+        { title: 'Net Wt', align: "right", dataIndex: 'Nwt', key: 'Nwt', render: value => <b>{Number(value).toFixed(3)}</b> },
+        { title: 'Diamond Counts', align: "right", dataIndex: 'DIACTS', key: 'DIACTS', render: value =><b>{Number(value).toFixed(2)}</b>  },
+        { title: 'Diamond Amount', align: "right", dataIndex: 'DIAAMT', key: 'DIAAMT', render: value => <b>{Number(value).toFixed(2)}</b> },
     ];
 
     const getTotals = () => {
@@ -105,6 +112,7 @@ const CounterNetSummry = () => {
                         data={formattedData}
                         columns={columns}
                         fileName="CounterNetSummaryReport"
+                        columnStyles={columnStyles}
                         totals={{ totalPieces, totalGwt, totalNwt, totalDiaCts, totalDiaAmt }} // Pass totals as props
                     />
                 </Col>

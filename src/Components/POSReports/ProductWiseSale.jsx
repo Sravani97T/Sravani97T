@@ -10,7 +10,7 @@ import { CREATE_jwel } from '../../Config/Config';
 import { FaCalendarAlt } from 'react-icons/fa';
 
 const CustomInput = forwardRef(({ value, onClick, placeholder }, ref) => {
-    const formattedValue = value ? moment(value).format('DD/MM/YYYY') : '';
+    const formattedValue = value ? moment(value).format('DD MMM YYYY') : '';
     return (
         <div className="custom-date-input" onClick={onClick} ref={ref}>
             <input value={formattedValue} placeholder={placeholder} readOnly />
@@ -49,13 +49,17 @@ const ProductWiseSale = () => {
     useEffect(() => {
         console.log('Filtered Data:', filteredData);
     }, [filteredData]);
-
+    const columnStyles = {
+        3: { halign: 'right' },
+        4: { halign: 'right' },  // Net Wt
+       
+    };
     const columns = [
         { title: 'S.No', dataIndex: 'serialNo', width: 50, align: "center", key: 'serialNo', className: 'blue-background-column' },
         { title: 'Product Name', dataIndex: 'PRODUCTNAME', key: 'PRODUCTNAME' },
         { title: 'Pcs', dataIndex: 'Pcs', key: 'Pcs', align: "right" },
-        { title: 'Gross Weight', dataIndex: 'Gwt', key: 'Gwt', align: "right", render: value => Number(value).toFixed(2) },
-        { title: 'Net Weight', dataIndex: 'Nwt', key: 'Nwt', align: "right", render: value => Number(value).toFixed(2) },
+        { title: 'Gross Weight', dataIndex: 'Gwt', key: 'Gwt', align: "right", render: value => <b>{Number(value).toFixed(3)}</b> },
+        { title: 'Net Weight', dataIndex: 'Nwt', key: 'Nwt', align: "right", render: value => <b>{Number(value).toFixed(3)}</b> },
     ];
 
     useEffect(() => {
@@ -113,6 +117,8 @@ const ProductWiseSale = () => {
                                 endDate={dates[1]}
                                 placeholderText="Start Date"
                                 customInput={<CustomInput />}
+                                dateFormat="dd/MMM/yyyy"
+
                             />
                         </Col>
                         <Col>
@@ -126,6 +132,8 @@ const ProductWiseSale = () => {
                                 endDate={dates[1]}
                                 placeholderText="End Date"
                                 customInput={<CustomInput />}
+                                dateFormat="dd MMM yyyy"
+
                             />
                         </Col>
                     </Row>
@@ -135,6 +143,7 @@ const ProductWiseSale = () => {
                         data={formattedData}
                         columns={columns}
                         fileName="ProductWiseSaleReport"
+                        columnStyles={columnStyles}
                     />
                 </Col>
             </Row>

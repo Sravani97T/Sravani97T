@@ -1,5 +1,5 @@
-import React, { useState, useEffect, forwardRef, useRef } from 'react';
-import { Table, Row, Col, Breadcrumb, Input, Select, Pagination, Button } from 'antd';
+import React, { useState, useEffect, forwardRef, useCallback } from 'react';
+import { Table, Row, Col, Breadcrumb, Input, Select, Pagination,  } from 'antd';
 import axios from 'axios';
 import moment from 'moment';
 import PdfExcelPrint from '../Utiles/PdfExcelPrint'; // Adjust the import path as necessary
@@ -34,6 +34,31 @@ const BillMasterReport = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(20);
 
+    const applyFilters = useCallback((data = originalData) => {
+        let filtered = data;
+
+        if (tempFilters.billNo) {
+            filtered = filtered.filter(item => item.BillNo.toString().includes(tempFilters.billNo));
+        }
+        if (tempFilters.jewelType) {
+            filtered = filtered.filter(item => item.JewelType === tempFilters.jewelType);
+        }
+        if (tempFilters.customerName) {
+            filtered = filtered.filter(item => item.CustName === tempFilters.customerName);
+        }
+        if (tempFilters.mobileNumber) {
+            filtered = filtered.filter(item => item.MobileNum === tempFilters.mobileNumber);
+        }
+        if (tempFilters.dateFrom) {
+            filtered = filtered.filter(item => moment(item.BillDate, 'YYYY-MM-DD').isSameOrAfter(moment(tempFilters.dateFrom, 'YYYY-MM-DD')));
+        }
+        if (tempFilters.dateTo) {
+            filtered = filtered.filter(item => moment(item.BillDate, 'YYYY-MM-DD').isSameOrBefore(moment(tempFilters.dateTo, 'YYYY-MM-DD')));
+        }
+
+        setFilteredData(filtered);
+    }, [originalData, tempFilters]);
+
     useEffect(() => {
         axios.get(`${CREATE_jwel}/api/Erp/GetBillMast`)
             .then(response => {
@@ -58,42 +83,17 @@ const BillMasterReport = () => {
             .catch(error => {
                 console.error('Error fetching bill master data:', error);
             });
-    }, []);
+    }, [applyFilters]);
 
     useEffect(() => {
         applyFilters();
-    }, [tempFilters]);
+    }, [tempFilters, applyFilters]);
 
     const handleTempFilterChange = (field, value) => {
         setTempFilters(prevFilters => ({
             ...prevFilters,
             [field]: value,
         }));
-    };
-
-    const applyFilters = (data = originalData) => {
-        let filtered = data;
-
-        if (tempFilters.billNo) {
-            filtered = filtered.filter(item => item.BillNo.toString().includes(tempFilters.billNo));
-        }
-        if (tempFilters.jewelType) {
-            filtered = filtered.filter(item => item.JewelType === tempFilters.jewelType);
-        }
-        if (tempFilters.customerName) {
-            filtered = filtered.filter(item => item.CustName === tempFilters.customerName);
-        }
-        if (tempFilters.mobileNumber) {
-            filtered = filtered.filter(item => item.MobileNum === tempFilters.mobileNumber);
-        }
-        if (tempFilters.dateFrom) {
-            filtered = filtered.filter(item => moment(item.BillDate, 'YYYY-MM-DD').isSameOrAfter(moment(tempFilters.dateFrom, 'YYYY-MM-DD')));
-        }
-        if (tempFilters.dateTo) {
-            filtered = filtered.filter(item => moment(item.BillDate, 'YYYY-MM-DD').isSameOrBefore(moment(tempFilters.dateTo, 'YYYY-MM-DD')));
-        }
-
-        setFilteredData(filtered);
     };
 
     const handlePageChange = (page, pageSize) => {
@@ -118,23 +118,39 @@ const BillMasterReport = () => {
     };
 
     const totals = calculateTotals(filteredData);
+    const columnStyles = {
+        6: { halign: 'right' },
+        7: { halign: 'right' },  // Net Wt
+        8: { halign: 'right' },  // Total Amount
+        9: { halign: 'right' },  // Discount
+        10: { halign: 'right' },
+        11: { halign: 'right' },
+        12: { halign: 'right' },
+        13: { halign: 'right' },
 
+        14: { halign: 'right' },
+
+
+
+    };
     const columns = [
         { title: 'S.No', dataIndex: 'serialNo', align: "center", key: 'serialNo', width: 50, className: 'blue-background-column' },
-        { title: 'Bill Date', dataIndex: 'BillDate', key: 'BillDate', render: (text) => moment(text).format('DD/MMM/YYYY') },
-        { title: 'Jewel Type', dataIndex: 'JewelType', key: 'JewelType' },
+        { title: 'Bill Date', dataIndex: 'BillDate', key: 'BillDate', render: (text) => moment(text).format('DD/MM/YYYY') },
         { title: 'Bill No', dataIndex: 'BillNo', key: 'BillNo' },
+        { title: 'Jewel Type', dataIndex: 'JewelType', key: 'JewelType' },
+
         { title: 'Customer Name', dataIndex: 'CustName', key: 'CustName' },
         { title: 'Pieces', dataIndex: 'TotPieces', key: 'TotPieces', align: 'right' },
-        { title: 'Gross WT', dataIndex: 'TotGwt', key: 'TotGwt', align: 'right', render: (value) => value ? value.toFixed(3) : '' },
-        { title: 'Net WT', dataIndex: 'TotNwt', key: 'TotNwt', align: 'right', render: (value) => value ? value.toFixed(3) : '' },
-        { title: 'Total Amount', dataIndex: 'TotAmt', key: 'TotAmt', align: 'right', render: (value) => value ? value.toFixed(2) : '' },
-        { title: 'Discount', dataIndex: 'DisAmt', key: 'DisAmt', align: 'right', render: (value) => value ? value.toFixed(2) : '' },
-        { title: 'Gross Amount', dataIndex: 'BillAmt', key: 'BillAmt', align: 'right', render: (value) => value ? value.toFixed(2) : '' },
+        { title: 'Gross WT', dataIndex: 'TotGwt', key: 'TotGwt', align: 'right', render: (value) => value ?<b>
+            {value.toFixed(3)}</b> : '' },
+        { title: 'Net WT', dataIndex: 'TotNwt', key: 'TotNwt', align: 'right', render: (value) => value ? <b>{value.toFixed(3)}</b> : '' },
+        { title: 'Total Amount', dataIndex: 'TotAmt', key: 'TotAmt', align: 'right', className: 'blue-background-column', render: (value) => value ? <b>{value.toFixed(2)}</b> : '' },
+        { title: 'Discount', dataIndex: 'DisAmt', key: 'DisAmt', align: 'right', render: (value) => value ? <b>{value.toFixed(2)}</b> : '' },
+        { title: 'Gross Amount', dataIndex: 'BillAmt', key: 'BillAmt', align: 'right', className: 'blue-background-column', render: (value) => value ? <b>{value.toFixed(2) }</b>: '' },
         { title: 'CGST', dataIndex: 'CGST', key: 'CGST', align: 'right', render: (value) => value ? value.toFixed(2) : '' },
         { title: 'SGST', dataIndex: 'SGST', key: 'SGST', align: 'right', render: (value) => value ? value.toFixed(2) : '' },
         { title: 'IGST', dataIndex: 'IGST', key: 'IGST', align: 'right', render: (value) => value ? value.toFixed(2) : '' },
-        { title: 'Net Amount', dataIndex: 'NetAmt', key: 'NetAmt', align: 'right', render: (value) => value ? value.toFixed(2) : '' }
+        { title: 'Net Amount', dataIndex: 'NetAmt', key: 'NetAmt', align: 'right',  className: 'blue-background-column',render: (value) => value ? <b>{value.toFixed(2)}</b>  : '' }
     ];
 
     const formattedData = [
@@ -226,7 +242,7 @@ const BillMasterReport = () => {
                     selected={tempFilters.dateFrom ? moment(tempFilters.dateFrom, 'YYYY-MM-DD').toDate() : null}
                     onChange={(date) => handleTempFilterChange('dateFrom', date ? moment(date).format('YYYY-MM-DD') : null)}
                     customInput={<CustomInput placeholder="From Date" />}
-                    dateFormat="dd/MM/yyyy"
+                    dateFormat="dd MMM yyyy"
                     placeholderText="From Date"
                 />
             </Col>
@@ -235,7 +251,7 @@ const BillMasterReport = () => {
                     selected={tempFilters.dateTo ? moment(tempFilters.dateTo, 'YYYY-MM-DD').toDate() : null}
                     onChange={(date) => handleTempFilterChange('dateTo', date ? moment(date).format('YYYY-MM-DD') : null)}
                     customInput={<CustomInput placeholder="To Date" />}
-                    dateFormat="dd/MM/yyyy"
+                    dateFormat="dd MMM yyyy"
                     placeholderText="To Date"
                 />
             </Col>
@@ -257,13 +273,14 @@ const BillMasterReport = () => {
                         columns={columns}
                         fileName="BillMasterReport"
                         totals={totals}
+                        columnStyles={columnStyles}
                     />
                 </Col>
             </Row>
             {filterContent}
             <Row gutter={8} style={{ marginBottom: 8 }} align="middle">
                 <Col flex="auto" />
-                <Col>
+                <Col style={{marginTop:"10px"}}>
                     <Pagination
                         current={currentPage}
                         pageSize={pageSize}
@@ -282,7 +299,7 @@ const BillMasterReport = () => {
                     style={{
                         overflowY: "auto",
                         overflowX: "auto",
-                        marginTop: "20px",
+                        marginTop: "10px",
                         boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
                         backgroundColor: '#fff',
                         borderRadius: '8px'

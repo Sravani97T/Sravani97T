@@ -25,14 +25,20 @@ const OutstandingDealers = () => {
                 console.error('Error fetching outstanding dealers:', error);
             });
     }, []);
+    const columnStyles = {
 
+        4: { halign: 'right' },  // Net Wt
+        5: { halign: 'right' },  // Total Amount
+        6: { halign: 'right' },  // Discount
+
+    };
     const columns = [
         { title: 'S.No', width: 50, className: 'blue-background-column', dataIndex: 'serialNo', key: 'serialNo' },
         { title: 'Party Name', dataIndex: 'PARTYNAME', key: 'PARTYNAME' },
         { title: 'Mobile Number', dataIndex: 'MOBILENO', key: 'MOBILENO' },
-        { title: 'Debit', dataIndex: 'JAMA', key: 'JAMA', align: "right", render: value => Number(value).toFixed(2) },
-        { title: 'Credit', dataIndex: 'NAMA', key: 'NAMA', align: "right", render: value => Number(value).toFixed(2) },
-        { title: 'Balance', dataIndex: 'balance', key: 'balance', align: "right", render: value => Number(value).toFixed(2) },
+        { title: 'Debit', dataIndex: 'JAMA', key: 'JAMA', align: "right", render: value =><b>{Number(value).toFixed(2)}</b>  },
+        { title: 'Credit', dataIndex: 'NAMA', key: 'NAMA', align: "right", render: value => <b>{Number(value).toFixed(2) }</b>},
+        { title: 'Balance', dataIndex: 'balance', key: 'balance', align: "right", render: value =><b>{Number(value).toFixed(2)}</b>  },
     ];
 
     const getTotals = () => {
@@ -86,6 +92,7 @@ const OutstandingDealers = () => {
                         data={formattedData}
                         columns={columns}
                         fileName="OutstandingDealersReport"
+                        columnStyles={columnStyles}
                     />
                 </Col>
             </Row>

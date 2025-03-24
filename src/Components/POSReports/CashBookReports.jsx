@@ -65,16 +65,24 @@ const CashBookReports = () => {
     useEffect(() => {
         console.log('Filtered Data:', filteredData);
     }, [filteredData]);
+    const columnStyles = {
 
+       
+        5: { halign: 'right' }, 
+        6: { halign: 'right' }, 
+        7: { halign: 'right' }, 
+
+
+    };
     const columns = [
         { title: 'S.No', dataIndex: 'serialNo', width: 50, align: "center", key: 'serialNo', className: 'blue-background-column' },
         { title: 'Bill No', dataIndex: 'BILLNO', key: 'BILLNO' },
         { title: 'Bill Date', dataIndex: 'BILLDATE', key: 'BILLDATE', render: date => moment(date).format('DD/MM/YYYY') },
         { title: 'Particulars', dataIndex: 'PARTICULARS', key: 'PARTICULARS' },
         { title: 'Type', dataIndex: 'TYPE', key: 'TYPE' }, // New column added here
-        { title: 'Debit', dataIndex: 'DEBIT', key: 'DEBIT', align: "right", render: value => Number(value).toFixed(2) },
-        { title: 'Credit', dataIndex: 'CREDIT', key: 'CREDIT', align: "right", render: value => Number(value).toFixed(2) },
-        { title: 'Balance', dataIndex: 'BALANCE', key: 'BALANCE', align: "right", render: value => Number(value).toFixed(2) },
+        { title: 'Debit', dataIndex: 'DEBIT', key: 'DEBIT', align: "right", render: value => <b>{Number(value).toFixed(2)}</b> },
+        { title: 'Credit', dataIndex: 'CREDIT', key: 'CREDIT', align: "right", render: value => <b>{Number(value).toFixed(2)}</b> },
+        { title: 'Balance', dataIndex: 'BALANCE', key: 'BALANCE', align: "right", render: value => <b>{Number(value).toFixed(2)}</b> },
     ];
 
     useEffect(() => {
@@ -135,6 +143,7 @@ const CashBookReports = () => {
                         data={formattedData}
                         columns={columns}
                         fileName="CashBookReport"
+                        columnStyles={columnStyles}
                         totals={{ totalDebit, totalCredit, totalBalance }} // Pass totals as props
                     />
                 </Col>
@@ -152,7 +161,7 @@ const CashBookReports = () => {
                                 endDate={dates[1]}
                                 placeholderText="Start Date"
                                 customInput={<CustomInput />}
-                                dateFormat="dd/MM/yyyy"
+                                dateFormat="dd MMM yyyy"
                             />
                         </Col>
                         <Col>
@@ -165,7 +174,7 @@ const CashBookReports = () => {
                                 endDate={dates[1]}
                                 placeholderText="End Date"
                                 customInput={<CustomInput />}
-                                dateFormat="dd/MM/yyyy"
+                                dateFormat="dd MMM yyyy"
                             />
                         </Col>
                     </Row>

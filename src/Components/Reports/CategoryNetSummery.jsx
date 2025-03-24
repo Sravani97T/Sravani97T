@@ -34,13 +34,20 @@ const CategoryNetSummary = () => {
                 console.error('Error fetching category net summary data:', error);
             });
     }, [mName]);  // Re-fetch when MNAME is changed
+    const columnStyles = {
 
+        3: { halign: 'right' },  // Net Wt
+        4: { halign: 'right' },  // Total Amount
+    
+
+
+    };
     const columns = [
         { title: 'S.No', dataIndex: 'sno', key: 'sno', className: 'blue-background-column', width: 50 },
         { title: 'Category', dataIndex: 'CATEGORYNAME', key: 'CATEGORYNAME' },
         { title: 'Pieces', align: "right", dataIndex: 'Pieces', key: 'Pieces' },
-        { title: 'Gross Wt', align: "right", dataIndex: 'Gwt', key: 'Gwt', render: value => Number(value).toFixed(3) },
-        { title: 'Net Wt', align: "right", dataIndex: 'Nwt', key: 'Nwt', render: value => Number(value).toFixed(3) },
+        { title: 'Gross Wt', align: "right", dataIndex: 'Gwt', key: 'Gwt', render: value => <b>{Number(value).toFixed(3)}</b> },
+        { title: 'Net Wt', align: "right", dataIndex: 'Nwt', key: 'Nwt', render: value => <b>{Number(value).toFixed(3)}</b> },
 
     ];
 
@@ -95,6 +102,7 @@ const CategoryNetSummary = () => {
                         data={formattedData}
                         columns={columns}
                         fileName="CategoryNetSummaryReport"
+                        columnStyles={columnStyles}
                         totals={{ totalPCS, totalGWT, totalNWT }} // Pass totals as props
                     />
                 </Col>

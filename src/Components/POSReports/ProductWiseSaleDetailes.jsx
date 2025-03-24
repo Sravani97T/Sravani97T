@@ -10,7 +10,7 @@ import TableHeaderStyles from '../Pages/TableHeaderStyles';
 import { CREATE_jwel } from '../../Config/Config';
 
 const CustomInput = forwardRef(({ value, onClick, placeholder }, ref) => {
-    const formattedValue = value ? moment(value).format('DD/MM/YYYY') : '';
+    const formattedValue = value ? moment(value).format('DD MMM YYYY') : '';
     return (
         <div className="custom-date-input" onClick={onClick} ref={ref}>
             <input value={formattedValue} placeholder={placeholder} readOnly />
@@ -167,6 +167,8 @@ const ProductWiseSaleDetailes = () => {
                                 startDate={dates[0]}
                                 endDate={dates[1]}
                                 placeholderText="Start Date"
+                                dateFormat="dd MMM yyyy"
+
                                 customInput={<CustomInput />}
                             />
                         </Col>
@@ -180,6 +182,8 @@ const ProductWiseSaleDetailes = () => {
                                 endDate={dates[1]}
                                 placeholderText="End Date"
                                 customInput={<CustomInput />}
+                                dateFormat="dd MMM yyyy"
+
                             />
                         </Col>
                     </Row>

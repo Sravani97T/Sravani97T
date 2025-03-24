@@ -42,7 +42,14 @@ const DealerWiseStockSummary = () => {
         setCurrentPage(page);
         setPageSize(pageSize);
     };
+    const columnStyles = {
 
+        4: { halign: 'right' },  // Total Amount
+        5: { halign: 'right' },  // Total Amount
+
+        6: { halign: 'right' },  // Total Amount
+        7: { halign: 'right' },  // Total Amount
+    };
     const columns = [
         { title: 'S.No', dataIndex: 'sno', width: 50, className: 'blue-background-column', key: 'sno' },
         { title: 'Dealer Name', dataIndex: 'DEALERNAME', key: 'DEALERNAME' },
@@ -106,6 +113,7 @@ const DealerWiseStockSummary = () => {
                     <PdfExcelPrint
                         data={formattedData}
                         columns={columns}
+                        columnStyles={columnStyles}
                         fileName="DealerWiseStockSummary"
                         totals={{ totalPieces, totalGWT, totalNWT, totalDIACTS, totalDIAAMT }} // Pass totals as props
                     />
