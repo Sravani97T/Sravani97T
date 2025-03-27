@@ -3,7 +3,7 @@ import { Card, Tag, Popover, Table, Input, Button } from "antd";
 import axios from "axios";
 import { CREATE_jwel } from "../../Config/Config";
 
-const TodaysRates = ({setRatesAvailable ,tagNoInputRef}) => {
+const TodaysRates = ({setRatesAvailable ,tagNoInputRef,fetchRates1}) => {
   const [goldRate, setGoldRate] = useState({ prefix: "18K", rate: 0 });
   const [silverRate, setSilverRate] = useState(0);
   const [currentPrefixIndex, setCurrentPrefixIndex] = useState(0);
@@ -11,10 +11,15 @@ const TodaysRates = ({setRatesAvailable ,tagNoInputRef}) => {
   const [visible, setVisible] = useState(false);
   // const [ratesAvailable, setRatesAvailable] = useState(false);
 
-  const prefixes = React.useMemo(() => ["18K", "22K", "24K"], []);
+const prefixes = React.useMemo(() => {
+    const goldPrefixes = ratesData
+      .filter(item => item.MAINPRODUCT === "GOLD")
+      .map(item => item.PREFIX);
+    return [...new Set(goldPrefixes)]; // Remove duplicates
+  }, [ratesData]);
   useEffect(() => {
-    if (!visible && tagNoInputRef.current) {
-      tagNoInputRef.current.focus();
+    if (!visible && tagNoInputRef?.current) {
+      tagNoInputRef?.current?.focus();
     }
   }, [visible, tagNoInputRef]);
 
@@ -155,6 +160,7 @@ const TodaysRates = ({setRatesAvailable ,tagNoInputRef}) => {
 
       setVisible(false);
       fetchRates(); // Refresh the rates after submission
+      fetchRates1();
     } catch (error) {
       console.error("Error submitting rates:", error);
     }

@@ -10,7 +10,12 @@ const TodaysRates = () => {
   const [ratesData, setRatesData] = useState([]);
   const [visible, setVisible] = useState(false);
 
-  const prefixes = React.useMemo(() => ["18K", "22K", "24K"], []);
+  const prefixes = React.useMemo(() => {
+    const goldPrefixes = ratesData
+      .filter(item => item.MAINPRODUCT === "GOLD")
+      .map(item => item.PREFIX);
+    return [...new Set(goldPrefixes)]; // Remove duplicates
+  }, [ratesData]);
 
   const fetchRates = async () => {
     try {

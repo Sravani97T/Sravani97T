@@ -907,3 +907,13 @@ font-weight: bold;
 .align-right-column {
   text-align: right !important;
 }
+.custom-small-table .ant-table {
+  font-size: 12px !important;
+}
+
+.custom-small-table .ant-table-thead > tr > th
+ {
+  font-size: 11px !important;
+  font-weight: bold !important;
+  padding: 4px 8px; /* Reduce padding for a compact look */
+}

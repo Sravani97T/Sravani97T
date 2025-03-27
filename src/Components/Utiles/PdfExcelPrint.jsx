@@ -8,6 +8,37 @@ import ExcelJS from 'exceljs';
 
 const PdfExcelPrint = ({ data, columns, fileName ,columnStyles={}}) => {
 
+    // const handlePrint = () => {
+
+    //     const printWindow = window.open('', '_blank');
+    //     printWindow.document.write('<html><head><title>Print Table</title>');
+    //     printWindow.document.write('<style>');
+    //     printWindow.document.write('table { width: 100%; border-collapse: collapse; }');
+    //     printWindow.document.write('th, td { border: 1px solid black; padding: 8px; text-align: left; }');
+    //     printWindow.document.write('th { background-color: #f2f2f2; }');
+    //     printWindow.document.write('</style>');
+    //     printWindow.document.write('</head><body>');
+    //     printWindow.document.write('<table><thead><tr>');
+
+    //     columns.forEach((col, index) => {
+    //         printWindow.document.write(`<th style="${columnStyles[index]?.headerStyle ? Object.entries(columnStyles[index].headerStyle).map(([key, value]) => `${key}:${value}`).join(';') : ''}">${col.title}</th>`);
+    //     });
+
+    //     printWindow.document.write('</tr></thead><tbody>');
+
+    //     data.forEach(item => {
+    //         printWindow.document.write('<tr>');
+    //         columns.forEach((col, index) => {
+    //             printWindow.document.write(`<td style="${columnStyles[index]?.cellStyle ? Object.entries(columnStyles[index].cellStyle).map(([key, value]) => `${key}:${value}`).join(';') : ''}">${item[col.dataIndex]}</td>`);
+    //         });
+    //         printWindow.document.write('</tr>');
+    //     });
+
+    //     printWindow.document.write('</tbody></table>');
+    //     printWindow.document.write('</body></html>');
+    //     printWindow.document.close();
+    //     printWindow.print();
+    // };
     const handlePrint = () => {
         const printWindow = window.open('', '_blank');
         printWindow.document.write('<html><head><title>Print Table</title>');
@@ -20,7 +51,7 @@ const PdfExcelPrint = ({ data, columns, fileName ,columnStyles={}}) => {
         printWindow.document.write('<table><thead><tr>');
 
         columns.forEach((col, index) => {
-            printWindow.document.write(`<th style="${columnStyles[index]?.headerStyle ? Object.entries(columnStyles[index].headerStyle).map(([key, value]) => `${key}:${value}`).join(';') : ''}">${col.title}</th>`);
+            printWindow.document.write(`<th style="${columnStyles[index]?.halign === 'right' ? 'text-align: right;' : 'text-align: left;'}">${col.title}</th>`);
         });
 
         printWindow.document.write('</tr></thead><tbody>');
@@ -28,7 +59,8 @@ const PdfExcelPrint = ({ data, columns, fileName ,columnStyles={}}) => {
         data.forEach(item => {
             printWindow.document.write('<tr>');
             columns.forEach((col, index) => {
-                printWindow.document.write(`<td style="${columnStyles[index]?.cellStyle ? Object.entries(columnStyles[index].cellStyle).map(([key, value]) => `${key}:${value}`).join(';') : ''}">${item[col.dataIndex]}</td>`);
+                const alignment = columnStyles[index]?.halign === 'right' ? 'text-align: right;' : 'text-align: left;';
+                printWindow.document.write(`<td style="${alignment}">${item[col.dataIndex]}</td>`);
             });
             printWindow.document.write('</tr>');
         });
@@ -75,16 +107,73 @@ const PdfExcelPrint = ({ data, columns, fileName ,columnStyles={}}) => {
             };
         };
     };
-    const handleExcel = async () => {
+    // const handleExcel = async () => {
+    //     const workbook = new ExcelJS.Workbook();
+    //     const worksheet = workbook.addWorksheet(fileName);
+
+    //     worksheet.columns = columns.map((col, index) => ({
+    //         header: col.title,
+    //         key: col.dataIndex,
+    //         width: columnStyles[index]?.width || 25
+    //     }));
+
+    //     data.forEach(item => {
+    //         const row = {};
+    //         columns.forEach(col => {
+    //             row[col.dataIndex] = item[col.dataIndex];
+    //         });
+    //         worksheet.addRow(row);
+    //     });
+
+    //     worksheet.getRow(1).eachCell((cell, colNumber) => {
+    //         cell.font = { bold: true };
+    //         cell.fill = {
+    //             type: 'pattern',
+    //             pattern: 'solid',
+    //             fgColor: { argb: 'D3D3D3' }
+    //         };
+    //         cell.border = {
+    //             top: { style: 'thin' },
+    //             left: { style: 'thin' },
+    //             bottom: { style: 'thin' },
+    //             right: { style: 'thin' }
+    //         };
+    //         if (columnStyles[colNumber - 1]?.headerStyle) {
+    //             Object.assign(cell, columnStyles[colNumber - 1].headerStyle);
+    //         }
+    //     });
+
+    //     worksheet.eachRow((row, rowNumber) => {
+    //         if (rowNumber !== 1) {
+    //             row.eachCell((cell, colNumber) => {
+    //                 cell.border = {
+    //                     top: { style: 'thin' },
+    //                     left: { style: 'thin' },
+    //                     bottom: { style: 'thin' },
+    //                     right: { style: 'thin' }
+    //                 };
+    //                 if (columnStyles[colNumber - 1]?.cellStyle) {
+    //                     Object.assign(cell, columnStyles[colNumber - 1].cellStyle);
+    //                 }
+    //             });
+    //         }
+    //     });
+
+    //     const buffer = await workbook.xlsx.writeBuffer();
+    //     saveAs(new Blob([buffer]), `${fileName}.xlsx`);
+    // };
+    const handleExportExcelSheet = async () => {
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet(fileName);
 
+        // Define columns with headers and keys
         worksheet.columns = columns.map((col, index) => ({
             header: col.title,
             key: col.dataIndex,
-            width: columnStyles[index]?.width || 25
+            width: columnStyles[index]?.width || 25,
         }));
 
+        // Add data rows
         data.forEach(item => {
             const row = {};
             columns.forEach(col => {
@@ -93,6 +182,7 @@ const PdfExcelPrint = ({ data, columns, fileName ,columnStyles={}}) => {
             worksheet.addRow(row);
         });
 
+        // Style header row
         worksheet.getRow(1).eachCell((cell, colNumber) => {
             cell.font = { bold: true };
             cell.fill = {
@@ -106,13 +196,16 @@ const PdfExcelPrint = ({ data, columns, fileName ,columnStyles={}}) => {
                 bottom: { style: 'thin' },
                 right: { style: 'thin' }
             };
-            if (columnStyles[colNumber - 1]?.headerStyle) {
-                Object.assign(cell, columnStyles[colNumber - 1].headerStyle);
+            if (columnStyles[colNumber - 1]?.halign === 'right') {
+                cell.alignment = { horizontal: 'right' };
+            } else {
+                cell.alignment = { horizontal: 'left' };
             }
         });
 
+        // Style data rows
         worksheet.eachRow((row, rowNumber) => {
-            if (rowNumber !== 1) {
+            if (rowNumber !== 1) { // Skip header row
                 row.eachCell((cell, colNumber) => {
                     cell.border = {
                         top: { style: 'thin' },
@@ -120,13 +213,16 @@ const PdfExcelPrint = ({ data, columns, fileName ,columnStyles={}}) => {
                         bottom: { style: 'thin' },
                         right: { style: 'thin' }
                     };
-                    if (columnStyles[colNumber - 1]?.cellStyle) {
-                        Object.assign(cell, columnStyles[colNumber - 1].cellStyle);
+                    if (columnStyles[colNumber - 1]?.halign === 'right') {
+                        cell.alignment = { horizontal: 'right' };
+                    } else {
+                        cell.alignment = { horizontal: 'left' };
                     }
                 });
             }
         });
 
+        // Generate Excel file and trigger download
         const buffer = await workbook.xlsx.writeBuffer();
         saveAs(new Blob([buffer]), `${fileName}.xlsx`);
     };
@@ -134,7 +230,7 @@ const PdfExcelPrint = ({ data, columns, fileName ,columnStyles={}}) => {
         <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px', backgroundColor: '#ffffff', borderRadius: '5px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
             <Button icon={<PrinterOutlined style={{ color: 'blue' }} />} onClick={handlePrint} style={{ backgroundColor: '#e6f7ff', color: '#000', border: 'none', marginRight: 8 }}>Print</Button>
             <Button icon={<FilePdfOutlined style={{ color: 'red' }} />} onClick={handlePDFWithPreview} style={{ backgroundColor: '#fff1f0', color: '#000', border: 'none', marginRight: 8 }}>PDF</Button>
-            <Button icon={<FileExcelOutlined style={{ color: 'green' }} />} onClick={handleExcel} style={{ backgroundColor: '#f6ffed', color: '#000', border: 'none', marginRight: 8 }}>Excel</Button>
+            <Button icon={<FileExcelOutlined style={{ color: 'green' }} />} onClick={handleExportExcelSheet} style={{ backgroundColor: '#f6ffed', color: '#000', border: 'none', marginRight: 8 }}>Excel</Button>
         </div>
     );
 };

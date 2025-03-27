@@ -655,10 +655,10 @@ const EstimationTable = () => {
         };
     }, []);
     useEffect(() => {
-        fetchRates();
+        fetchRates1();
     }, []);
 
-    const fetchRates = async () => {
+    const fetchRates1 = async () => {
         try {
             const currentDate = new Date();
             const formattedDate = `${(currentDate.getMonth() + 1).toString().padStart(2, "0")}/${currentDate
@@ -2132,7 +2132,7 @@ const EstimationTable = () => {
 
                         }}
                     >
-                        <TodaysRates1 setRatesAvailable={setRatesAvailable} tagNoInputRef={tagNoInputRef}/>
+                        <TodaysRates1 setRatesAvailable={setRatesAvailable} tagNoInputRef={tagNoInputRef} fetchRates1={fetchRates1}/>
                     </Col>
                 </Row>
             </Card>

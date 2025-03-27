@@ -78,7 +78,8 @@ const DailyCollectionRegister = () => {
         { title: 'Date', dataIndex: 'RecDate', key: 'RecDate', render: date => moment(date).format('DD MMM YYYY') },
         { title: 'Group', dataIndex: 'SchemeGroup', key: 'SchemeGroup' },
         { title: 'Name', dataIndex: 'SchemeName', key: 'SchemeName' },
-        { title: 'Card No', dataIndex: 'CardNo', key: 'CardNo' },
+        { title: 'Card No', align: 'center', dataIndex: 'CardNo', key: 'CardNo' },
+        { title: 'Inst No',align: 'center', dataIndex: 'INSTNO', key: 'INSTNO' },
         { title: 'Member', dataIndex: 'SchemeMember', key: 'SchemeMember' },
         { title: 'Incharge', dataIndex: 'Incharger', key: 'Incharger' },
         { title: 'Gold Rate', dataIndex: 'GoldRate', key: 'GoldRate', align: 'right', render: value => <b>{Number(value).toFixed(2)}</b> },
@@ -114,34 +115,35 @@ const DailyCollectionRegister = () => {
                 </Col>
             </Row>
 
-            <Row justify="space-between" align="middle">
-                <Col>
-                    <label style={{ marginRight: 8 }}>Start Date:</label>
-                    <DatePicker
-                        selected={dates[0]}
-                        onChange={(date) => setDates([date, dates[1]])}
-                        selectsStart
-                        startDate={dates[0]}
-                        endDate={dates[1]}
-                        placeholderText="Start Date"
-                        customInput={<CustomInput />}
-                        dateFormat="dd MMM yyyy"
-                    />
-                </Col>
-                <Col>
-                    <label style={{ marginRight: 8 }}>End Date:</label>
-                    <DatePicker
-                        selected={dates[1]}
-                        onChange={(date) => setDates([dates[0], date])}
-                        selectsEnd
-                        startDate={dates[0]}
-                        endDate={dates[1]}
-                        placeholderText="End Date"
-                        customInput={<CustomInput />}
-                        dateFormat="dd MMM yyyy"
-                    />
-                </Col>
-            </Row>
+            <Row gutter={16} align="middle">
+  <Col>
+    <label style={{ marginRight: 8 }}>Start Date:</label>
+    <DatePicker
+      selected={dates[0]}
+      onChange={(date) => setDates([date, dates[1]])}
+      selectsStart
+      startDate={dates[0]}
+      endDate={dates[1]}
+      placeholderText="Start Date"
+      customInput={<CustomInput />}
+      dateFormat="dd MMM yyyy"
+    />
+  </Col>
+  <Col>
+    <label style={{ marginRight: 8 }}>End Date:</label>
+    <DatePicker
+      selected={dates[1]}
+      onChange={(date) => setDates([dates[0], date])}
+      selectsEnd
+      startDate={dates[0]}
+      endDate={dates[1]}
+      placeholderText="End Date"
+      customInput={<CustomInput />}
+      dateFormat="dd MMM yyyy"
+    />
+  </Col>
+</Row>
+
 
             <Row justify="space-between" align="middle" style={{ marginTop: 16 }}>
                 <Col>
