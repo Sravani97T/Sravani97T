@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef, forwardRef } from "react";
-import { Input, Button, Row, Col, Table, Card, Typography, Select, message,Form, Popconfirm ,Popover,Space,Spin} from "antd";
+import { Input, Button, Row, Col, Table, Card, Typography, Select, message, Form, Popconfirm, Popover, Space, } from "antd";
 import axios from "axios";
 import { CREATE_jwel } from "../../../Config/Config";
 
-import { DeleteOutlined ,InfoCircleOutlined} from "@ant-design/icons";
+import { DeleteOutlined, InfoCircleOutlined } from "@ant-design/icons";
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { FaCalendarAlt } from 'react-icons/fa';
@@ -25,8 +25,8 @@ const SchemeDetails = () => {
     const [payModes, setPayModes] = useState([]);
     const [accountNumbers, setAccountNumbers] = useState([]);
     const paymentModes = ["UPI", "ONLINE", "CARD", "CHEQUE", "CASH"];
-    const [loading, setLoading] = useState(false);
-    const [tableData1, setTableData1] = useState([]);
+    const [, setLoading] = useState(false);
+    const [, setTableData1] = useState([]);
 
     const [selectedPaymentMode, setSelectedPaymentMode] = useState(null);
     const [selectedPayMode, setSelectedPayMode] = useState(null);
@@ -36,52 +36,83 @@ const SchemeDetails = () => {
     const descriptionRef = useRef(null);
     const amountRef = useRef(null);
     const okButtonRef = useRef(null);
-     const [selectedDate, setSelectedDate] = useState(new Date()); // Set default to current date
-     const [visible, setVisible] = useState(false);
-     const [searchValue, setSearchValue] = useState("");
-     const inputRef = useRef(null);
+    const [selectedDate, setSelectedDate] = useState(new Date()); // Set default to current date
+    const [visible, setVisible] = useState(false);
+    const [searchValue, setSearchValue] = useState("");
+    const inputRef = useRef(null);
 
-     useEffect(() => {
-         if (visible) {
-             setTimeout(() => inputRef.current?.focus(), 100); // Ensure focus when Popover opens
-         }
-     }, [visible]);
-    const columns1 = [
-       { title: "Receipt No", dataIndex: "RecNo", key: "RecNo" },
-       { 
-          title: "Date", 
-          dataIndex: "RecDate", 
-          key: "RecDate", 
-          render: (date) => date ? new Date(date).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "-" 
-       },
-       { title: "Scheme Name", dataIndex: "SchemeName", key: "SchemeName" },
-       { title: "Amount", dataIndex: "SchemeAmount", key: "SchemeAmount", align: "right" },
-    ];
- 
-  
-     // Search Function
+    useEffect(() => {
+        if (visible) {
+            setTimeout(() => inputRef.current?.focus(), 100); // Ensure focus when Popover opens
+        }
+    }, [visible]);
+
+
+    // Search Function
     const handleSearch = async () => {
-       if (!searchValue.trim()) {
-          message.warning("Please enter a Receipt Number");
-          return;
-       }
+        if (!searchValue.trim()) {
+            message.warning("Please enter a Receipt Number");
+            return;
+        }
 
-       setLoading(true);
-       try {
-          const response = await axios.get(`http://www.jewelerp.timeserasoftware.in/api/Master/GetDataFromGivenTableNameWithWhere?tableName=RECEIPT_MAST&where=RECNO%3D${searchValue}`);
-          setTableData1(response.data);
-       } catch (error) {
-          message.error("Failed to fetch data");
-       } finally {
-          setLoading(false);
-       }
+        setLoading(true);
+        try {
+            const response = await axios.get(`${CREATE_jwel}/api/Master/GetDataFromGivenTableNameWithWhere?tableName=RECEIPT_MAST&where=RECNO%3D${searchValue}`);
+
+            // Map the response data to match the table columns
+            const mappedData = response.data.map(item => ({
+                RecNo: item.RecNo,
+                RecDate: item.RecDate,
+                SchemeName: item.SchemeName,
+                SchemeAmount: item.SchemeAmount,
+                cardNo: item.CardNo,
+                SchemeMember: item.SchemeMember,
+                Mobile1: item.Phno,
+                add1: item?.add1,
+                add2: item?.add2,
+                add3: item?.add3,
+                installmentNo: item.INSTNO,
+                SchemeType: item.SchemeType,
+                SchemeDuration: item.SchemeDuration,
+                BonusAmount: item.BonusAmount,
+                SchemeValue: item.SchemeValue,
+                SchemeJoinDate: item.SchemeJDate,
+                INCHARGE: item.Incharger,
+                narr: item.Narr,
+                area: item.AREA,
+                schemeENDDate: item.SchemeENDDate,
+
+            }));
+
+            setSchemeData(mappedData[0]);
+            setCardNo(mappedData[0]?.cardNo || ""); // Update cardNo state
+
+            // Fetch payment details for the matching receipt number
+            const paymentResponse = await axios.get(`${CREATE_jwel}/api/Master/GetDataFromGivenTableNameWithWhere?tableName=RECEIPT_PAYMENT&where=CARDNO%3D%27${mappedData[0]?.cardNo}%27`);
+            const paymentDetails = paymentResponse.data
+                .filter(item => item.RECNO === mappedData[0]?.RecNo)
+                .map(item => ({
+                    key: item.SNO,
+                    paymentMode: item.PAYMODE,
+                    particulars: item.PARTICULARS,
+                    accNo: item.ACCNO,
+                    amount: item.AMT,
+                    descr: item.DESCR,
+                }));
+
+            setTableData(paymentDetails);
+        } catch (error) {
+            message.error("Failed to fetch data");
+        } finally {
+            setLoading(false);
+        }
     };
-     // Clear Function
-     const handleClear = () => {
-         setSearchValue("");
-         setTableData1([]);
-     };
- 
+    // Clear Function
+    const handleClear = () => {
+        setSearchValue("");
+        setTableData1([]);
+    };
+
     const handleDateChange = (date) => {
         setSelectedDate(date);
     };
@@ -89,7 +120,7 @@ const SchemeDetails = () => {
         // Fetch data from API
         axios
             .get(
-                "http://www.jewelerp.timeserasoftware.in/api/Master/GetDataFromGivenTableName?tableName=ONLINEMODE_MAST"
+                `${CREATE_jwel}/api/Master/GetDataFromGivenTableName?tableName=ONLINEMODE_MAST`
             )
             .then((response) => {
                 setPaymentData(response.data);
@@ -149,13 +180,13 @@ const SchemeDetails = () => {
         try {
             // Fetch scheme details
             const response = await axios.get(
-                `http://www.jewelerp.timeserasoftware.in/api/Master/GetDataFromGivenTableNameWithWhere?tableName=SCHEME_MEMBER&where=CARDNO%3D${cardNo}`
+                `${CREATE_jwel}/api/Master/GetDataFromGivenTableNameWithWhere?tableName=SCHEME_MEMBER&where=CARDNO%3D${cardNo}`
             );
             setSchemeData(response.data[0]);
 
             // Fetch installment number
             const installmentResponse = await axios.get(
-                `http://www.jewelerp.timeserasoftware.in/api/Scheme/GetSchemeMaxNumberInTableWithOrder?tableName=RECEIPT_MAST&column=INSTNO&where=CARDNO%3D%27${cardNo}%27`
+                `${CREATE_jwel}/api/Scheme/GetSchemeMaxNumberInTableWithOrder?tableName=RECEIPT_MAST&column=INSTNO&where=CARDNO%3D%27${cardNo}%27`
             );
             const installmentData = installmentResponse.data;
 
@@ -165,9 +196,19 @@ const SchemeDetails = () => {
                 : 1;
 
             setInstallmentNo(maxInstallment);
+
+            // Fetch FYEAR from firm configuration
+            const firmConfigResponse = await axios.get(
+                `${CREATE_jwel}/api/Erp/GetFirmConfihure`
+            );
+            const fyear = firmConfigResponse.data?.[0]?.FYEAR || "default_fyear"; // Adjusted to handle array response
+            console.log("fyear", fyear);
+
+            // Pass FYEAR to handleSave function
+            setSchemeData((prev) => ({ ...prev, fyear: fyear || "default_fyear" })); // Ensure fyear is set with a fallback
         } catch (error) {
-            console.error("Error fetching scheme details or installment number:", error);
-            message.error("Failed to fetch scheme details or installment number.");
+            console.error("Error fetching scheme details, installment number, or FYEAR:", error);
+            message.error("Failed to fetch scheme details, installment number, or FYEAR.");
         }
     };
 
@@ -184,6 +225,7 @@ const SchemeDetails = () => {
             particulars: selectedPayMode, // Use Pay Mode or Description
             accNo: selectedAccount,
             amount: amount,
+            descr: description,
         };
 
         setTableData([...tableData, newRecord]);
@@ -236,38 +278,63 @@ const SchemeDetails = () => {
     const [receiptNo, setReceiptNo] = useState("Loading...");
 
     useEffect(() => {
-        const fetchReceiptNo = async () => {
-            try {
-                const response = await axios.get(
-                    "http://www.jewelerp.timeserasoftware.in/api/Scheme/GetSchemeMaxNumberInTable",
-                    {
-                        params: {
-                            tableName: "RECEIPT_MAST",
-                            column: "RECNO",
-                        },
-                    }
-                );
 
-                const maxNumber = response.data?.[0]?.Column1 || 0;
-                setReceiptNo(maxNumber + 1);
-            } catch (error) {
-                console.error("Error fetching receipt number:", error);
-                setReceiptNo("Error");
-            }
-        };
 
         fetchReceiptNo();
     }, []);
+    const fetchReceiptNo = async () => {
+        try {
+            const response = await axios.get(
+                `${CREATE_jwel}/api/Scheme/GetSchemeMaxNumberInTable`,
+                {
+                    params: {
+                        tableName: "RECEIPT_MAST",
+                        column: "RECNO",
+                    },
+                }
+            );
+
+            const maxNumber = response.data?.[0]?.Column1 || 0;
+            setReceiptNo(maxNumber + 1);
+        } catch (error) {
+            console.error("Error fetching receipt number:", error);
+            setReceiptNo("Error");
+        }
+    };
+    console.log("schemeData", schemeData);
     const handleSave = async () => {
+        const paidAmount = tableData.reduce((sum, record) => sum + parseFloat(record.amount || 0), 0); // Calculate paid amount
+
+        // No need to check here as the condition is applied when adding a record to the table.
+
         if (cardNo !== "1") {
-            // message.error("Card No must be 1 to save the data.");
             return;
         }
+        const selectedDateISO = selectedDate.toISOString(); // Use the selected date from the date picker
+        const cashAmount = tableData
+            .filter((record) => record.paymentMode === "CASH")
+            .reduce((sum, record) => sum + parseFloat(record.amount || 0), 0);
+
+        const cardAmount = tableData
+            .filter((record) => record.paymentMode === "CARD")
+            .reduce((sum, record) => sum + parseFloat(record.amount || 0), 0);
+
+        const upiAmount = tableData
+            .filter((record) => record.paymentMode === "UPI")
+            .reduce((sum, record) => sum + parseFloat(record.amount || 0), 0);
+
+        const onlineAmount = tableData
+            .filter((record) => record.paymentMode === "ONLINE")
+            .reduce((sum, record) => sum + parseFloat(record.amount || 0), 0);
+
+        const chequeAmount = tableData
+            .filter((record) => record.paymentMode === "CHEQUE")
+            .reduce((sum, record) => sum + parseFloat(record.amount || 0), 0);
 
         const payload = {
-            recNo: 0,
-            recDate: new Date().toISOString(),
-            rectime: new Date().toISOString(),
+            recNo: receiptNo, // Use receiptNo
+            recDate: selectedDateISO, // Use the selected date
+            rectime: selectedDateISO, // Use the selected date
             empCode: "string",
             schemeGroup: schemeData?.SchemeGroup || "string",
             schemeName: schemeData?.SchemeName || "string",
@@ -281,28 +348,36 @@ const SchemeDetails = () => {
             schemeAmount: schemeData?.SchemeAmount || 0,
             schemeDuration: schemeData?.SchemeDuration || 0,
             bonusAmount: schemeData?.BonusAmount || 0,
-            amount: 0, // Replace with actual amount if available
+            amount: paidAmount,
             schemeValue: schemeData?.SchemeValue || 0,
             schemeJDate: schemeData?.SchemeJoinDate || new Date().toISOString(),
-            recAmount: 0, // Replace with actual received amount if available
-            goldWt: 0, // Replace with actual gold weight if available
-            mode: "string", // Replace with actual mode if available
-            accno: "string", // Replace with actual account number if available
-            chequeno: "string", // Replace with actual cheque number if available
-            incharger: schemeData?.INCHARGE || "", // Replace with actual incharge if available
-            narr: "string", // Replace with actual narration if available
+            schemeENDDate: schemeData?.schemeENDDate || new Date().toISOString(),
+
+            recAmount: paidAmount, // Use paid amount
+            goldWt: 0,
+            mode: "string",
+            accno: "string",
+            chequeno: "string",
+            incharger: schemeData?.INCHARGE || "",
+            narr: schemeData?.narr,
             uname: "string",
             schemeType: schemeData?.SchemeType || "string",
             schemeMode: "string",
-            sbMonths: 0, // Replace with actual months if available
-            giftVoucher: 0, // Replace with actual gift voucher if available
+            sbMonths: 0,
+            giftVoucher: 0,
             collect_Point: "string",
             paymode: "string",
             modetype: "string",
             accname: "string",
-            fyear: "string",
-            instno: installmentNo, // Replace with actual installment number if available
-            pregoldwt: 0, // Replace with actual pre-gold weight if available
+            fyear: schemeData?.fyear || "string", // Pass FYEAR here
+            instno: installmentNo,
+            pregoldwt: 0,
+            cash: cashAmount,
+            card: cardAmount,
+            upi: upiAmount,
+            online: onlineAmount,
+            cheque: chequeAmount,
+            area: schemeData?.area,
             clouD_UPLOAD: true,
         };
 
@@ -312,8 +387,82 @@ const SchemeDetails = () => {
                 payload
             );
             message.success("Data saved successfully!");
+
+            // Save table data
+            const tablePayloads = tableData.map((record, index) => ({
+                recno: receiptNo, // Use receiptNo
+                recdate: selectedDateISO, // Use the selected date
+                scmgroup: schemeData?.SchemeGroup || "string",
+                scmname: schemeData?.SchemeName || "string",
+                scmmember: schemeData?.SchemeMember || "string",
+                cardno: cardNo,
+                sno: index + 1, // Pass the serial number (index + 1)
+                paymode: record.paymentMode || "string",
+                accno: record.accNo || "string",
+                descr: record.descr || description || "string",
+                particulars: record.particulars || "string",
+                amt: parseFloat(record.amount) || 0,
+                recamt: paidAmount, // Pass the calculated paid amount
+                fyear: schemeData?.fyear || "string", // Pass FYEAR here
+                clouD_UPLOAD: true,
+            }));
+
+            try {
+                const response = await axios.post(
+                    `http://www.jewelerp.timeserasoftware.in/api/Master/ReceiptPaymentInsert`,
+                    tablePayloads // Send the entire array as the request body
+                );
+
+                // Check responses for success
+                const allSuccessful = response.every(
+                    (response) => response.data?.[0]?.isInsert === true
+                );
+
+                if (allSuccessful) {
+                    message.success("All payment records saved successfully!");
+                } else {
+                    message.warning("Some payment records were not saved successfully.");
+                }
+            } catch (error) {
+                console.error("Error saving payment records:", error);
+                // message.error("Failed to save payment records.");
+            }
+
+            // Call MemberCardDetailsInsert API
+            if (installmentNo === 1) {
+                const memberCardPayload = {
+                    sno: index + 1, // Use installmentNo as sno
+                    recno: receiptNo,
+                    recdate: selectedDateISO,
+                    pstatus: true,
+                    cardno: cardNo,
+                    month: schemeData?.SchemeJoinDate || "", // Use SchemeJoinDate for month
+                    schemetype: schemeData?.SchemeType || "string",
+                    schemegroup: schemeData?.SchemeGroup || "string",
+                    schemename: schemeData?.SchemeName || "string",
+                    schememember: schemeData?.SchemeMember || "string",
+                    adD1: schemeData?.add1 || "string",
+                    adD2: schemeData?.add2 || "string",
+                    adD3: schemeData?.add3 || "string",
+                    adD4: "",
+                    area: schemeData?.area || "string",
+                    schemeamount: schemeData?.SchemeAmount || 0,
+                    schemeduration: schemeData?.SchemeDuration || 0,
+                    schemejoindate: schemeData?.SchemeJoinDate || new Date().toISOString(),
+                    schemeenddate: schemeData?.SchemeEndDate || new Date().toISOString(),
+                    bonusMonth: 0,
+                };
+
+                await axios.post(
+                    `${CREATE_jwel}/api/Scheme/MemberCardDetailsInsert`,
+                    memberCardPayload
+                );
+            }
+
             setSchemeData();
-            cardNo();
+            setCardNo("");
+            setTableData([]);
+            fetchReceiptNo();
             console.log("Response:", response.data);
         } catch (error) {
             console.error("Error saving data:", error);
@@ -325,6 +474,12 @@ const SchemeDetails = () => {
     };
 
     const columns = [
+        {
+            title: "S.No",
+            dataIndex: "key",
+            key: "key",
+            render: (text, record, index) => index + 1, // Display serial number
+        },
         {
             title: "Payment Mode",
             dataIndex: "paymentMode",
@@ -378,24 +533,19 @@ const SchemeDetails = () => {
                 </Form.Item>
             </Form>
 
-            {/* Table */}
-            {/* {loading ? (
-                <Spin style={{ display: "block", marginTop: 10 }} />
-            ) : (
-                <Table
-                    columns={columns1}
-                    dataSource={tableData1}
-                    pagination={false}
-                    size="small"
-                    style={{ marginTop: 10 }}
-                    rowKey="sno"
-                />
-            )} */}
-
             {/* Buttons */}
             <Space style={{ marginTop: 10, display: "flex", justifyContent: "flex-end" }}>
                 <Button onClick={handleClear}>Clear</Button>
-                <Button type="primary" onClick={() => setVisible(false)}>OK</Button>
+                <Button
+                    type="primary"
+                    onClick={() => {
+                        setReceiptNo(searchValue); // Update receiptNo with the entered value
+                        setVisible(false);
+                        handleSearch();
+                    }}
+                >
+                    OK
+                </Button>
             </Space>
         </div>
     );
@@ -466,14 +616,14 @@ const SchemeDetails = () => {
                             OK
                         </Button>
                         <Popover
-            content={popoverContent}
-            title="Search Receipt"
-            trigger="click"
-            open={visible}
-            onOpenChange={(newVisible) => setVisible(newVisible)}
-        >
-            <Button icon={<InfoCircleOutlined />} shape="circle" style={{ marginLeft: 8 }} />
-        </Popover>                        
+                            content={popoverContent}
+                            title="Search Receipt"
+                            trigger="click"
+                            open={visible}
+                            onOpenChange={(newVisible) => setVisible(newVisible)}
+                        >
+                            <Button icon={<InfoCircleOutlined />} shape="circle" style={{ marginLeft: 8 }} />
+                        </Popover>
                     </Col>
 
                     {/* Receipt No */}
@@ -490,14 +640,14 @@ const SchemeDetails = () => {
                         </Text>{" "}
                         <div style={{ display: "inline-block", marginLeft: "10px" }}>
                             <DatePicker
-            selected={selectedDate}
-            onChange={handleDateChange}
-            dateFormat="dd MMM yyyy" // Formats date as "27 Mar 2025"
-            customInput={<CustomInput />}
-            popperPlacement="bottom"
-            portalId="root"
-            container="body"
-        />
+                                selected={selectedDate}
+                                onChange={handleDateChange}
+                                dateFormat="dd MMM yyyy" // Formats date as "27 Mar 2025"
+                                customInput={<CustomInput />}
+                                popperPlacement="bottom"
+                                portalId="root"
+                                container="body"
+                            />
                         </div>
                     </Col>
 
@@ -579,7 +729,7 @@ const SchemeDetails = () => {
                                             <Text strong style={{ fontSize: "16px", fontWeight: "bold" }}>:</Text>
                                         </Col>
                                         <Col span={17}>
-                                            <Text style={{ fontSize: "14px", fontWeight: "bold" }}>{schemeData ? schemeData.add2 : ""}</Text>
+                                            <Text style={{ fontSize: "14px", fontWeight: "bold" }}>{schemeData ? schemeData.add1 : ""}{schemeData ? schemeData.add2 : ""}{schemeData ? schemeData.add3 : ""}</Text>
                                         </Col>
                                     </Row>
                                 </Col>
@@ -613,7 +763,7 @@ const SchemeDetails = () => {
                                             minWidth: "50px",
                                         }}
                                     >
-                                        {installmentNo}
+                                        {installmentNo || 0}
                                     </Text>
                                 </div>
                                 <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -632,7 +782,7 @@ const SchemeDetails = () => {
                                             minWidth: "80px",
                                         }}
                                     >
-                                        ₹ 5,000
+                                        ₹  {schemeData?.SchemeAmount || 0}
                                     </Text>
                                 </div>
                                 <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -651,7 +801,7 @@ const SchemeDetails = () => {
                                             minWidth: "80px",
                                         }}
                                     >
-                                        ₹ 5,000
+                                        ₹ {schemeData?.TotalDues || 0}
                                     </Text>
                                 </div>
                             </div>
@@ -718,7 +868,19 @@ const SchemeDetails = () => {
                                     <Select
                                         showSearch
                                         ref={accountRef}
-                                        onKeyDown={(e) => handleKeyDown(e, descriptionRef)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === "Enter") {
+                                                const filteredOptions = accountNumbers.filter((acc) =>
+                                                    acc.toLowerCase().includes(e.target.value.toLowerCase())
+                                                );
+                                                if (filteredOptions.length > 0) {
+                                                    setSelectedAccount(filteredOptions[0]); // Select first matched option
+                                                }
+                                                setTimeout(() => descriptionRef.current.focus(), 0); // Move focus to next field
+                                            } else {
+                                                handleKeyDown(e, descriptionRef);
+                                            }
+                                        }}
                                         style={{ width: "100%" }}
                                         placeholder="Select"
                                         disabled={!selectedPayMode}
@@ -731,6 +893,7 @@ const SchemeDetails = () => {
                                             </Option>
                                         ))}
                                     </Select>
+
                                 </Col>
 
                                 {/* Description */}
@@ -756,10 +919,32 @@ const SchemeDetails = () => {
                                         id="amountInput"
                                         placeholder="Enter Amount"
                                         value={amount}
-                                        onChange={(e) => setAmount(e.target.value)}
+                                        onChange={(e) => {
+                                            const enteredAmount = parseFloat(e.target.value) || 0;
+                                            const totalPaid = tableData.reduce(
+                                                (sum, record) => sum + parseFloat(record.amount || 0),
+                                                0
+                                            );
+                                            const remainingAmount = (schemeData?.SchemeAmount || 0) - totalPaid;
+
+                                            if (enteredAmount > remainingAmount) {
+                                                message.warning(
+                                                    `You can only enter up to ₹${remainingAmount.toFixed(2)}`
+                                                );
+                                                setAmount(remainingAmount.toString());
+                                            } else {
+                                                setAmount(e.target.value);
+                                            }
+                                        }}
                                         ref={amountRef}
-                                        onKeyDown={(e) => handleKeyDown(e, okButtonRef)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === "Enter") {
+                                                e.preventDefault(); // Prevent default Enter behavior
+                                                okButtonRef.current.click(); // Programmatically trigger button click
+                                            }
+                                        }}
                                     />
+
                                 </Col>
 
                                 {/* OK Button */}
@@ -768,19 +953,20 @@ const SchemeDetails = () => {
                                         type="primary"
                                         ref={okButtonRef}
                                         onClick={() => {
-                                            if (!selectedPaymentMode || !amount) {
-                                                const newRecord = {
-                                                    key: Date.now(),
-                                                    paymentMode: selectedPaymentMode || "N/A",
-                                                    particulars: description || "N/A",
-                                                    accNo: selectedAccount || "N/A",
-                                                    amount: amount || "N/A",
-                                                };
-                                                setTableData([...tableData, newRecord]);
+                                            const totalPaid = tableData.reduce(
+                                                (sum, record) => sum + parseFloat(record.amount || 0),
+                                                0
+                                            );
+                                            const remainingAmount = (schemeData?.SchemeAmount || 0) - totalPaid;
+
+                                            if (parseFloat(amount) > remainingAmount) {
+                                                message.error(
+                                                    `The total paid amount cannot exceed the scheme amount of ₹${schemeData?.SchemeAmount}`
+                                                );
                                             } else {
                                                 handleAddRecord();
+                                                setTimeout(() => document.getElementById("paymentModeDropdown").focus(), 2000);
                                             }
-                                            setTimeout(() => document.getElementById("paymentModeDropdown").focus(), 2000);
                                         }}
                                     >
                                         OK
@@ -788,15 +974,12 @@ const SchemeDetails = () => {
                                 </Col>
                             </Row>
 
-
-
                             <div style={{ marginTop: "10px", maxHeight: 100, overflowY: 'auto' }}>
                                 <Table
                                     dataSource={tableData}
                                     columns={columns}
                                     pagination={false}
                                     size="small"
-
                                 />
                             </div>
 
@@ -822,11 +1005,15 @@ const SchemeDetails = () => {
                                         .toFixed(2)}
                                 </Text>
                             </div>
-
+                            
                             <Row gutter={[16, 8]} style={{ marginTop: "10px" }}>
                                 <Col span={12}>
                                     <Text strong style={{ fontSize: "14px", fontWeight: "bold" }}>Incharge:</Text>
-                                    <Select placeholder="Select Incharge" style={{ width: "100%" }}>
+                                    <Select
+                                        placeholder="Select Incharge"
+                                        style={{ width: "100%" }}
+                                        onChange={(value) => setSchemeData((prev) => ({ ...prev, incharge: value }))}
+                                    >
                                         {schemeData?.INCHARGE?.split(",").map((incharge, index) => (
                                             <Option key={index} value={incharge}>
                                                 {incharge}
@@ -837,7 +1024,11 @@ const SchemeDetails = () => {
 
                                 <Col span={12}>
                                     <Text strong style={{ fontSize: "14px", fontWeight: "bold" }}>Narration:</Text>
-                                    <Input placeholder="Enter Narration" />
+                                    <Input
+                                        placeholder="Enter Narration"
+                                        value={schemeData?.narr || ""}
+                                        onChange={(e) => setSchemeData((prev) => ({ ...prev, narr: e.target.value }))}
+                                    />
                                 </Col>
                             </Row>
                         </Card>

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Card, Tag, Popover, Table, Input, Button } from "antd";
 import axios from "axios";
 import { CREATE_jwel } from "../../Config/Config";
@@ -9,6 +9,7 @@ const TodaysRates = () => {
   const [currentPrefixIndex, setCurrentPrefixIndex] = useState(0);
   const [ratesData, setRatesData] = useState([]);
   const [visible, setVisible] = useState(false);
+  const inputRefs = useRef([]); // Array of refs for input fields
 
   const prefixes = React.useMemo(() => {
     const goldPrefixes = ratesData
@@ -40,10 +41,9 @@ const TodaysRates = () => {
         setRatesData(todayRates);
       } else {
         const masterResponse = await axios.get(`${CREATE_jwel}/api/Master/MasterPrefixMasterList`);
-        const masterData = masterResponse.data.map(item =>({
-          MAINPRODUCT : item.MAINPRODUCT,
-          PREFIX : item.Prefix,
-          
+        const masterData = masterResponse.data.map(item => ({
+          MAINPRODUCT: item.MAINPRODUCT,
+          PREFIX: item.Prefix,
           ...item
         }));
         setRatesData(masterData);
@@ -74,20 +74,25 @@ const TodaysRates = () => {
 
   const handleVisibleChange = visible => {
     setVisible(visible);
+    if (visible) {
+      // Focus the first input field when the popover opens
+      setTimeout(() => {
+        inputRefs.current[0]?.focus();
+      }, 0);
+    }
   };
+
   const handleKeyDown = (e, index) => {
     if (e.key === "Enter") {
       e.preventDefault();
-      const inputs = document.querySelectorAll(".rate-input");
-      
-      if (index < inputs.length - 1) {
-        inputs[index + 1].focus(); // Move to the next input
+      if (index < inputRefs.current.length - 1) {
+        inputRefs.current[index + 1]?.focus(); // Move to the next input
       } else {
         handleSubmit(); // Submit if it's the last input field
       }
     }
   };
-  
+
   const columns = [
     {
       title: 'Main Product',
@@ -105,6 +110,7 @@ const TodaysRates = () => {
       key: 'RATE',
       render: (text, record, index) => (
         <Input
+          ref={el => (inputRefs.current[index] = el)} // Assign ref to each input
           defaultValue={text}
           onChange={e => {
             const newRate = e.target.value || 0;
@@ -117,7 +123,6 @@ const TodaysRates = () => {
             setRatesData(newData);
           }}
           onKeyDown={e => handleKeyDown(e, index)}
-
         />
       ),
     },
@@ -133,7 +138,7 @@ const TodaysRates = () => {
           mainproduct: rate.MAINPRODUCT,
           rate: rate.RATE || 0,
           prefix: rate.PREFIX,
-          pureornot: rate.PUREORNOT ,
+          pureornot: rate.PUREORNOT,
           temP_RATE: rate.TEMP_RATE || 0,
           cloud_upload: rate.cloud_upload,
         });
@@ -147,13 +152,13 @@ const TodaysRates = () => {
 
   const popoverContent = (
     <div>
-      <Table 
-        dataSource={ratesData} 
-        columns={columns} 
-        style={{ width: '600px', backgroundColor: '#cdc9c9' }} 
-        size="small" 
-        rowKey="PREFIX" 
-        pagination={false} 
+      <Table
+        dataSource={ratesData}
+        columns={columns}
+        style={{ width: '600px', backgroundColor: '#cdc9c9' }}
+        size="small"
+        rowKey="PREFIX"
+        pagination={false}
       />
       <Button type="primary" onClick={handleSubmit} style={{ marginTop: 10 }}>
         Submit
@@ -162,7 +167,7 @@ const TodaysRates = () => {
   );
 
   return (
-    <div >
+    <div>
       <Card
         style={{
           backgroundColor: "#12246a",
@@ -216,28 +221,6 @@ const TodaysRates = () => {
           }}
         ></div>
       </Card>
-      <style jsx>{`
-        @media (max-width: 768px) {
-          .ant-card {
-            width: 100% !important;
-            transform: none !important;
-            margin-left: 0 !important;
-          }
-          .ant-card h3 {
-            font-size: 14px !important;
-          }
-          .ant-card .ant-tag {
-            top: 5px !important;
-            right: 5px !important;
-          }
-          .ant-card .ant-card-body {
-            padding: 10px !important;
-          }
-          .ant-card .ant-card-body div {
-            font-size: 20px !important;
-          }
-        }
-      `}</style>
     </div>
   );
 };

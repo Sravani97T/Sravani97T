@@ -60,6 +60,8 @@ import EstimationTable from "./Components/Estimation/EstimationC";
 import DailyCollectionRegister from "./Components/Inventory/LotCreation/DailyCollectionRegister";
 import SchemeDetails from "./Components/Inventory/LotCreation/Receipt";
 import MemberCard from "./Components/Inventory/MemberCard";
+import SchemeSettlement from "./Components/Inventory/ShemeSettlement";
+import MemberDiscontinue from "./Components/Inventory/MemberDiscontinue";
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(
     localStorage.getItem("isLoggedIn") === "true"
@@ -111,8 +113,8 @@ const App = () => {
                   <Route path="/dailycollection-register" element={<DailyCollectionRegister/>} />
                   <Route path="/Receipt" element={<SchemeDetails/>} />
                                     <Route path="/Membercard" element={<MemberCard/>} />
-
-
+                                    <Route path="/ShemeSettlement" element={<SchemeSettlement/>} />
+                                    <Route path="/MemberDiscontinue" element={<MemberDiscontinue/>} />
                   
                   {/* Inventory */}
                   <Route path="/lot-creation" element={<LotCreation />} />

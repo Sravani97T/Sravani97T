@@ -1,4 +1,4 @@
-import React, { useState ,useEffect} from "react";
+import React, { useState, useEffect } from "react";
 import { Input, Button, Row, Col, Card, Typography, Table, message } from "antd";
 import axios from "axios";
 import { CREATE_jwel } from "../../Config/Config";
@@ -10,30 +10,30 @@ const MemberCard = () => {
     const [cardNo, setCardNo] = useState("");
     const [memberData, setMemberData] = useState(null);
     const [tableData, setTableData] = useState([]);
-     const [rates, setRates] = useState([]);
-         const [index, setIndex] = useState(0);
-     
-        useEffect(() => {
-            fetchRates1();
-        }, []);
-        const fetchRates1 = async () => {
-            try {
-                const currentDate = new Date();
-                const formattedDate = `${(currentDate.getMonth() + 1).toString().padStart(2, "0")}/${currentDate
-                    .getDate()
-                    .toString()
-                    .padStart(2, "0")}/${currentDate.getFullYear()}`;
-    
-                const ratesResponse = await axios.get(
-                    `${CREATE_jwel}/api/Master/GetDataFromGivenTableNameWithWhere?tableName=DAILY_RATES&where=RDATE%3D%27${formattedDate}%27`
-                );
-    
-                const hasRates = ratesResponse.data.length > 0;
-                setRates(ratesResponse.data);
-            } catch (error) {
-                message.error("Error fetching rates");
-            }
-        };
+    const [rates, setRates] = useState([]);
+    const [index, setIndex] = useState(0);
+
+    useEffect(() => {
+        fetchRates1();
+    }, []);
+    const fetchRates1 = async () => {
+        try {
+            const currentDate = new Date();
+            const formattedDate = `${(currentDate.getMonth() + 1).toString().padStart(2, "0")}/${currentDate
+                .getDate()
+                .toString()
+                .padStart(2, "0")}/${currentDate.getFullYear()}`;
+
+            const ratesResponse = await axios.get(
+                `${CREATE_jwel}/api/Master/GetDataFromGivenTableNameWithWhere?tableName=DAILY_RATES&where=RDATE%3D%27${formattedDate}%27`
+            );
+
+            const hasRates = ratesResponse.data.length > 0;
+            setRates(ratesResponse.data);
+        } catch (error) {
+            message.error("Error fetching rates");
+        }
+    };
     // Filter only GOLD products
     const goldRates = rates.filter(item => item.MAINPRODUCT.toLowerCase() === "gold");
 
@@ -48,7 +48,8 @@ const MemberCard = () => {
     }, [goldRates.length]);
     const columns = [
         { title: "S.No", dataIndex: "sno", key: "sno" },
-        { title: "Month", dataIndex: "MONTH", key: "month" ,    render: (text) => text ? moment(text, "MM/DD/YYYY").format("DD MMM YYYY") : "",
+        {
+            title: "Month", dataIndex: "MONTH", key: "month", render: (text) => text ? moment(text, "MM/DD/YYYY").format("DD MMM YYYY") : "",
         },
         { title: "Rec No", dataIndex: "RECNO", key: "recNo" },
         { title: "Rec Amt", dataIndex: "SCHEMEAMOUNT", key: "recAmount" },
@@ -162,30 +163,30 @@ const MemberCard = () => {
                     </Col>
 
                     <Col>
-                       <Card
-                                                   style={{
-                                                       //   background: "rgba(255, 255, 255, 0.2)", // Semi-transparent white
-                                                       background: "linear-gradient(135deg,rgb(20, 54, 117),rgb(66, 110, 185))", // Blue and Grey Gradient
-                       
-                                                       position: "relative",
-                                                       zIndex: 1,
-                                                       borderRadius: "8px",
-                                                       color: "white",
-                                                   }}
-                                                   className="custometagnocard"
-                       
-                                               >
-                                                   <div style={{ fontSize: "13px", fontWeight: "bold", marginBottom: "5px", color: "white" }}>
-                                                       Today's Gold Rates
-                                                   </div>
-                                                   {goldRates.length > 0 ? (
-                                                       <div style={{ fontSize: "12px", fontWeight: "bold", color: "yellow" }}>
-                                                           {rates[index]?.MAINPRODUCT} - {goldRates[index]?.PREFIX} - ₹{goldRates[index]?.RATE}
-                                                       </div>
-                                                   ) : (
-                                                       <div style={{ fontSize: "12px", color: "white" }}>No Gold Rates Available</div>
-                                                   )}
-                                               </Card>
+                        <Card
+                            style={{
+                                //   background: "rgba(255, 255, 255, 0.2)", // Semi-transparent white
+                                background: "linear-gradient(135deg,rgb(20, 54, 117),rgb(66, 110, 185))", // Blue and Grey Gradient
+
+                                position: "relative",
+                                zIndex: 1,
+                                borderRadius: "8px",
+                                color: "white",
+                            }}
+                            className="custometagnocard"
+
+                        >
+                            <div style={{ fontSize: "13px", fontWeight: "bold", marginBottom: "5px", color: "white" }}>
+                                Today's Gold Rates
+                            </div>
+                            {goldRates.length > 0 ? (
+                                <div style={{ fontSize: "12px", fontWeight: "bold", color: "yellow" }}>
+                                    {rates[index]?.MAINPRODUCT} - {goldRates[index]?.PREFIX} - ₹{goldRates[index]?.RATE}
+                                </div>
+                            ) : (
+                                <div style={{ fontSize: "12px", color: "white" }}>No Gold Rates Available</div>
+                            )}
+                        </Card>
                     </Col>
                 </Row>
             </Card>
@@ -201,7 +202,7 @@ const MemberCard = () => {
                                     backgroundImage: "linear-gradient(to right,rgb(73, 73, 143),rgb(44, 55, 155))",
                                     position: "relative",
                                     paddingTop: "10px",
-                                    color:"white"
+                                    color: "white"
                                 }}
                             >
                                 {/* Colored Status Dots */}
@@ -232,10 +233,10 @@ const MemberCard = () => {
                                 <Row>
                                     {/* Member Name */}
                                     <Col span={6}>
-                                        <Text strong style={{ fontSize: "14px", fontWeight: "bold",color:"white" }}>Member Name</Text>
+                                        <Text strong style={{ fontSize: "14px", fontWeight: "bold", color: "white" }}>Member Name</Text>
                                     </Col>
                                     <Col span={2} style={{ textAlign: "left" }}>
-                                        <Text strong style={{ fontSize: "16px", fontWeight: "bold", color:"white"}}>:</Text>
+                                        <Text strong style={{ fontSize: "16px", fontWeight: "bold", color: "white" }}>:</Text>
                                     </Col>
                                     <Col span={12} style={{ fontSize: "14px", fontWeight: "bold" }}>
                                         {memberData?.MemberName}
@@ -243,10 +244,10 @@ const MemberCard = () => {
 
                                     {/* Scheme Type */}
                                     <Col span={6}>
-                                        <Text strong style={{ fontSize: "14px", fontWeight: "bold" ,color:"white"}}>Scheme Type</Text>
+                                        <Text strong style={{ fontSize: "14px", fontWeight: "bold", color: "white" }}>Scheme Type</Text>
                                     </Col>
                                     <Col span={2} style={{ textAlign: "left" }}>
-                                        <Text strong style={{ fontSize: "16px", fontWeight: "bold" ,color:"white"}}>:</Text>
+                                        <Text strong style={{ fontSize: "16px", fontWeight: "bold", color: "white" }}>:</Text>
                                     </Col>
                                     <Col span={12} style={{ fontSize: "14px", fontWeight: "bold" }}>
                                         {memberData?.SchemeType}
@@ -254,10 +255,10 @@ const MemberCard = () => {
 
                                     {/* Group Name */}
                                     <Col span={6}>
-                                        <Text strong style={{ fontSize: "14px", fontWeight: "bold" ,color:"white"}}>Group Name</Text>
+                                        <Text strong style={{ fontSize: "14px", fontWeight: "bold", color: "white" }}>Group Name</Text>
                                     </Col>
                                     <Col span={2} style={{ textAlign: "left" }}>
-                                        <Text strong style={{ fontSize: "16px", fontWeight: "bold" ,color:"white"}}>:</Text>
+                                        <Text strong style={{ fontSize: "16px", fontWeight: "bold", color: "white" }}>:</Text>
                                     </Col>
                                     <Col span={12} style={{ fontSize: "14px", fontWeight: "bold" }}>
                                         {memberData?.GroupName}
