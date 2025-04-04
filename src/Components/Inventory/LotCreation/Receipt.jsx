@@ -682,9 +682,9 @@ const SchemeDetails = () => {
             </Card>
 
             <div style={{ marginTop: "6px" }}>
-                <Row gutter={16}>
+                <Row gutter={[16, 16]}>
                     {/* Member & Payment Details */}
-                    <Col span={15}>
+                    <Col xs={24} lg={17}>
                         <Card className="customeproductcard" style={{ backgroundImage: "linear-gradient(to right, #cdcddf, #a8b1ff)" }}>
                             <div style={{ fontSize: "14px", fontWeight: "bold", marginBottom: "5px" }}>
                                 PERSON DETAILS
@@ -741,80 +741,94 @@ const SchemeDetails = () => {
                                     borderRadius: "6px",
                                     border: "1px solid #1890ff",
                                     display: "flex",
-                                    alignItems: "center",
+                                    flexWrap: "wrap",  // ✅ Allows wrapping on small screens
                                     justifyContent: "space-between",
-                                    // Ensures responsiveness
-                                    width: "100%",
+                                    alignItems: "center",
+                                    gap: "10px",  // ✅ Keeps consistent spacing
                                 }}
                             >
-                                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                                    <Text strong style={{ fontSize: "16px", color: "#003a8c" }}>Installment No</Text>
-                                    <Text strong style={{ fontSize: "18px", fontWeight: "bold", color: "#1890ff" }}>:</Text>
-                                    <Text
-                                        style={{
-                                            fontSize: "16px",
-                                            fontWeight: "bold",
-                                            color: "#d4380d",
-                                            backgroundColor: "#fff1f0",
-                                            padding: "6px 16px",
-                                            borderRadius: "6px",
-                                            border: "1px solid #d4380d",
-                                            display: "inline-block",
-                                            minWidth: "50px",
-                                        }}
-                                    >
-                                        {installmentNo || 0}
-                                    </Text>
-                                </div>
-                                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                                    <Text strong style={{ fontSize: "16px", color: "#003a8c" }}>Inst Amt</Text>
-                                    <Text strong style={{ fontSize: "18px", fontWeight: "bold", color: "#1890ff" }}>:</Text>
-                                    <Text
-                                        style={{
-                                            fontSize: "16px",
-                                            fontWeight: "bold",
-                                            color: "#389e0d",
-                                            backgroundColor: "#f6ffed",
-                                            padding: "6px 16px",
-                                            borderRadius: "6px",
-                                            border: "1px solid #389e0d",
-                                            display: "inline-block",
-                                            minWidth: "80px",
-                                        }}
-                                    >
-                                        ₹  {schemeData?.SchemeAmount || 0}
-                                    </Text>
-                                </div>
-                                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                                    <Text strong style={{ fontSize: "16px", color: "#003a8c" }}>Total Dues</Text>
-                                    <Text strong style={{ fontSize: "18px", fontWeight: "bold", color: "#1890ff" }}>:</Text>
-                                    <Text
-                                        style={{
-                                            fontSize: "16px",
-                                            fontWeight: "bold",
-                                            color: "#389e0d",
-                                            backgroundColor: "#f6ffed",
-                                            padding: "6px 16px",
-                                            borderRadius: "6px",
-                                            border: "1px solid #389e0d",
-                                            display: "inline-block",
-                                            minWidth: "80px",
-                                        }}
-                                    >
-                                        ₹ {schemeData?.TotalDues || 0}
-                                    </Text>
-                                </div>
+                                <Row gutter={[10, 10]} style={{ width: "100%" }}>
+                                    {/* Installment No */}
+                                    <Col xs={24} sm={12} md={8}>
+                                        <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                            <Text strong style={{ fontSize: "16px", color: "#003a8c" }}>Installment No</Text>
+                                            <Text strong style={{ fontSize: "18px", fontWeight: "bold", color: "#1890ff", margin: "0 4px" }}>:</Text>
+                                            <Text
+                                                style={{
+                                                    fontSize: "16px",
+                                                    fontWeight: "bold",
+                                                    color: "#d4380d",
+                                                    backgroundColor: "#fff1f0",
+                                                    padding: "6px 14px",
+                                                    borderRadius: "6px",
+                                                    border: "1px solid #d4380d",
+                                                    textAlign: "center",
+                                                    minWidth: "50px",
+                                                }}
+                                            >
+                                                {installmentNo || 0}
+                                            </Text>
+                                        </div>
+                                    </Col>
+
+                                    {/* Installment Amount */}
+                                    <Col xs={24} sm={12} md={8}>
+                                        <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                            <Text strong style={{ fontSize: "16px", color: "#003a8c" }}>Inst Amt</Text>
+                                            <Text strong style={{ fontSize: "18px", fontWeight: "bold", color: "#1890ff", margin: "0 4px" }}>:</Text>
+                                            <Text
+                                                style={{
+                                                    fontSize: "16px",
+                                                    fontWeight: "bold",
+                                                    color: "#389e0d",
+                                                    backgroundColor: "#f6ffed",
+                                                    padding: "6px 14px",
+                                                    borderRadius: "6px",
+                                                    border: "1px solid #389e0d",
+                                                    textAlign: "center",
+                                                    minWidth: "80px",
+                                                }}
+                                            >
+                                                ₹ {schemeData?.SchemeAmount || 0}
+                                            </Text>
+                                        </div>
+                                    </Col>
+
+                                    {/* Total Dues */}
+                                    <Col xs={24} sm={12} md={8}>
+                                        <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                            <Text strong style={{ fontSize: "16px", color: "#003a8c" }}>Total Dues</Text>
+                                            <Text strong style={{ fontSize: "18px", fontWeight: "bold", color: "#1890ff", margin: "0 4px" }}>:</Text>
+                                            <Text
+                                                style={{
+                                                    fontSize: "16px",
+                                                    fontWeight: "bold",
+                                                    color: "#389e0d",
+                                                    backgroundColor: "#f6ffed",
+                                                    padding: "6px 14px",
+                                                    borderRadius: "6px",
+                                                    border: "1px solid #389e0d",
+                                                    textAlign: "center",
+                                                    minWidth: "80px",
+                                                }}
+                                            >
+                                                ₹ {schemeData?.TotalDues || 0}
+                                            </Text>
+                                        </div>
+                                    </Col>
+                                </Row>
                             </div>
+
+
 
                             <div style={{ fontSize: "14px", fontWeight: "bold", margin: "15px 0 10px" }}>
                                 PAYMENT DETAILS
                             </div>
-                            <Row gutter={[8, 8]} justify="center" align="middle">
+
+                            <Row gutter={[12, 12]} justify="start" align="middle">
                                 {/* Payment Mode */}
-                                <Col span={5}>
-                                    <Text strong style={{ fontSize: "14px", fontWeight: "bold" }}>
-                                        Payment Mode:
-                                    </Text>
+                                <Col xs={24} sm={12} md={6} lg={5}>
+                                    <Text strong style={{ fontSize: "14px", fontWeight: "bold" }}>Payment Mode:</Text>
                                     <Select
                                         id="paymentModeDropdown"
                                         showSearch
@@ -830,18 +844,14 @@ const SchemeDetails = () => {
                                         onKeyDown={(e) => handleKeyDown(e, payModeRef)}
                                     >
                                         {paymentModes.map((mode) => (
-                                            <Option key={mode} value={mode}>
-                                                {mode}
-                                            </Option>
+                                            <Option key={mode} value={mode}>{mode}</Option>
                                         ))}
                                     </Select>
                                 </Col>
 
                                 {/* Pay Mode */}
-                                <Col span={4}>
-                                    <Text strong style={{ fontSize: "14px", fontWeight: "bold" }}>
-                                        Pay Mode:
-                                    </Text>
+                                <Col xs={24} sm={12} md={5} lg={4}>
+                                    <Text strong style={{ fontSize: "14px", fontWeight: "bold" }}>Pay Mode:</Text>
                                     <Select
                                         showSearch
                                         ref={payModeRef}
@@ -853,18 +863,14 @@ const SchemeDetails = () => {
                                         disabled={!selectedPaymentMode}
                                     >
                                         {payModes.map((paymode) => (
-                                            <Option key={paymode} value={paymode}>
-                                                {paymode}
-                                            </Option>
+                                            <Option key={paymode} value={paymode}>{paymode}</Option>
                                         ))}
                                     </Select>
                                 </Col>
 
                                 {/* Account No */}
-                                <Col span={4}>
-                                    <Text strong style={{ fontSize: "14px", fontWeight: "bold" }}>
-                                        Account No:
-                                    </Text>
+                                <Col xs={24} sm={12} md={5} lg={4}>
+                                    <Text strong style={{ fontSize: "14px", fontWeight: "bold" }}>Account No:</Text>
                                     <Select
                                         showSearch
                                         ref={accountRef}
@@ -874,9 +880,9 @@ const SchemeDetails = () => {
                                                     acc.toLowerCase().includes(e.target.value.toLowerCase())
                                                 );
                                                 if (filteredOptions.length > 0) {
-                                                    setSelectedAccount(filteredOptions[0]); // Select first matched option
+                                                    setSelectedAccount(filteredOptions[0]);
                                                 }
-                                                setTimeout(() => descriptionRef.current.focus(), 0); // Move focus to next field
+                                                setTimeout(() => descriptionRef.current.focus(), 0);
                                             } else {
                                                 handleKeyDown(e, descriptionRef);
                                             }
@@ -888,19 +894,14 @@ const SchemeDetails = () => {
                                         onChange={(value) => setSelectedAccount(value)}
                                     >
                                         {accountNumbers.map((acc) => (
-                                            <Option key={acc} value={acc}>
-                                                {acc}
-                                            </Option>
+                                            <Option key={acc} value={acc}>{acc}</Option>
                                         ))}
                                     </Select>
-
                                 </Col>
 
                                 {/* Description */}
-                                <Col span={5}>
-                                    <Text strong style={{ fontSize: "14px", fontWeight: "bold" }}>
-                                        Description:
-                                    </Text>
+                                <Col xs={24} sm={12} md={6} lg={5}>
+                                    <Text strong style={{ fontSize: "14px", fontWeight: "bold" }}>Description:</Text>
                                     <Input
                                         ref={descriptionRef}
                                         onKeyDown={(e) => handleKeyDown(e, amountRef)}
@@ -911,26 +912,19 @@ const SchemeDetails = () => {
                                 </Col>
 
                                 {/* Amount */}
-                                <Col span={4}>
-                                    <Text strong style={{ fontSize: "14px", fontWeight: "bold" }}>
-                                        Amount:
-                                    </Text>
+                                <Col xs={24} sm={12} md={6} lg={4}>
+                                    <Text strong style={{ fontSize: "14px", fontWeight: "bold" }}>Amount:</Text>
                                     <Input
                                         id="amountInput"
                                         placeholder="Enter Amount"
                                         value={amount}
                                         onChange={(e) => {
                                             const enteredAmount = parseFloat(e.target.value) || 0;
-                                            const totalPaid = tableData.reduce(
-                                                (sum, record) => sum + parseFloat(record.amount || 0),
-                                                0
-                                            );
+                                            const totalPaid = tableData.reduce((sum, record) => sum + parseFloat(record.amount || 0), 0);
                                             const remainingAmount = (schemeData?.SchemeAmount || 0) - totalPaid;
 
                                             if (enteredAmount > remainingAmount) {
-                                                message.warning(
-                                                    `You can only enter up to ₹${remainingAmount.toFixed(2)}`
-                                                );
+                                                message.warning(`You can only enter up to ₹${remainingAmount.toFixed(2)}`);
                                                 setAmount(remainingAmount.toString());
                                             } else {
                                                 setAmount(e.target.value);
@@ -939,30 +933,24 @@ const SchemeDetails = () => {
                                         ref={amountRef}
                                         onKeyDown={(e) => {
                                             if (e.key === "Enter") {
-                                                e.preventDefault(); // Prevent default Enter behavior
-                                                okButtonRef.current.click(); // Programmatically trigger button click
+                                                e.preventDefault();
+                                                okButtonRef.current.click();
                                             }
                                         }}
                                     />
-
                                 </Col>
 
                                 {/* OK Button */}
-                                <Col span={2} style={{ textAlign: "center", marginTop: "15px" }}>
+                                <Col xs={24} sm={12} md={4} lg={2} style={{ textAlign: "center", marginTop: "15px" }}>
                                     <Button
                                         type="primary"
                                         ref={okButtonRef}
                                         onClick={() => {
-                                            const totalPaid = tableData.reduce(
-                                                (sum, record) => sum + parseFloat(record.amount || 0),
-                                                0
-                                            );
+                                            const totalPaid = tableData.reduce((sum, record) => sum + parseFloat(record.amount || 0), 0);
                                             const remainingAmount = (schemeData?.SchemeAmount || 0) - totalPaid;
 
                                             if (parseFloat(amount) > remainingAmount) {
-                                                message.error(
-                                                    `The total paid amount cannot exceed the scheme amount of ₹${schemeData?.SchemeAmount}`
-                                                );
+                                                message.error(`The total paid amount cannot exceed the scheme amount of ₹${schemeData?.SchemeAmount}`);
                                             } else {
                                                 handleAddRecord();
                                                 setTimeout(() => document.getElementById("paymentModeDropdown").focus(), 2000);
@@ -973,6 +961,7 @@ const SchemeDetails = () => {
                                     </Button>
                                 </Col>
                             </Row>
+
 
                             <div style={{ marginTop: "10px", maxHeight: 100, overflowY: 'auto' }}>
                                 <Table
@@ -1005,7 +994,7 @@ const SchemeDetails = () => {
                                         .toFixed(2)}
                                 </Text>
                             </div>
-                            
+
                             <Row gutter={[16, 8]} style={{ marginTop: "10px" }}>
                                 <Col span={12}>
                                     <Text strong style={{ fontSize: "14px", fontWeight: "bold" }}>Incharge:</Text>
@@ -1035,7 +1024,7 @@ const SchemeDetails = () => {
                     </Col>
 
                     {/* Scheme Details */}
-                    <Col span={9}>
+                    <Col xs={24} lg={7}>
                         <Card className="customeproductcard" style={{ backgroundImage: "linear-gradient(to right, #cdcddf, #a8b1ff)" }}>
                             <div style={{ fontSize: "14px", fontWeight: "bold", marginBottom: "5px" }}>
                                 SCHEME DETAILS
