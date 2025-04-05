@@ -228,21 +228,21 @@ const SchemeDetails = () => {
             // Pass FYEAR to handleSave function
             setSchemeData((prev) => ({ ...prev, fyear: fyear || "default_fyear" })); // Ensure fyear is set with a fallback
 
-            // // Fetch payment details for the card number
-            // const paymentResponse = await axios.get(
-            //     `${CREATE_jwel}/api/Master/GetDataFromGivenTableNameWithWhere?tableName=RECEIPT_PAYMENT&where=CARDNO%3D%27${encodeURIComponent(trimmedCardNo)}%27`
-            // );
+            // Fetch payment details for the card number
+            const paymentResponse = await axios.get(
+                `${CREATE_jwel}/api/Master/GetDataFromGivenTableNameWithWhere?tableName=RECEIPT_PAYMENT&where=CARDNO%3D%27${encodeURIComponent(trimmedCardNo)}%27`
+            );
 
-            // const paymentDetails = paymentResponse.data.map((item, index) => ({
-            //     key: index + 1,
-            //     paymentMode: item.PAYMODE,
-            //     particulars: item.PARTICULARS,
-            //     accNo: item.ACCNO,
-            //     amount: item.AMT,
-            //     descr: item.DESCR,
-            // }));
+            const paymentDetails = paymentResponse.data.map((item, index) => ({
+                key: index + 1,
+                paymentMode: item.PAYMODE,
+                particulars: item.PARTICULARS,
+                accNo: item.ACCNO,
+                amount: item.AMT,
+                descr: item.DESCR,
+            }));
 
-            // setTableData(paymentDetails); // Update the table data
+            setTableData(paymentDetails); // Update the table data
         } catch (error) {
             console.error("Error fetching scheme details, installment number, or FYEAR:", error);
             message.error("Failed to fetch scheme details, installment number, or FYEAR.");
