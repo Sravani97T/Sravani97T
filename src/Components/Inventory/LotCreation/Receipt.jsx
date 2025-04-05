@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, forwardRef } from "react";
 import { Input, Button, Row, Col, Table, Card, Typography, Select, message, Form, Popconfirm, Popover, Space, } from "antd";
 import axios from "axios";
 import { CREATE_jwel } from "../../../Config/Config";
+import Swal from 'sweetalert2';
 
 import { DeleteOutlined, InfoCircleOutlined } from "@ant-design/icons";
 import DatePicker from 'react-datepicker';
@@ -23,6 +24,7 @@ const SchemeDetails = () => {
     const [installmentNo, setInstallmentNo] = useState(1); // Default to 1
     const [paymentData, setPaymentData] = useState([]);
     const [payModes, setPayModes] = useState([]);
+
     const [accountNumbers, setAccountNumbers] = useState([]);
     const paymentModes = ["UPI", "ONLINE", "CARD", "CHEQUE", "CASH"];
     const [, setLoading] = useState(false);
@@ -32,10 +34,14 @@ const SchemeDetails = () => {
     const [selectedPayMode, setSelectedPayMode] = useState(null);
     // Input Refs for Keyboard Navigation
     const payModeRef = useRef(null);
+    const paymentModeRef = useRef(null);
     const accountRef = useRef(null);
     const descriptionRef = useRef(null);
     const amountRef = useRef(null);
     const okButtonRef = useRef(null);
+    const saveRef = useRef(null);
+    const inchargeRef = useRef(null);
+    const narrRef = useRef(null);
     const [selectedDate, setSelectedDate] = useState(new Date()); // Set default to current date
     const [visible, setVisible] = useState(false);
     const [searchValue, setSearchValue] = useState("");
@@ -78,14 +84,14 @@ const SchemeDetails = () => {
                 SchemeValue: item.SchemeValue,
                 SchemeJoinDate: item.SchemeJDate,
                 INCHARGE: item.Incharger,
-                narr: item.Narr,
+                narr: item.Narr ?? item.narr ?? "", // Ensure narr is initialized to an empty string if both are undefined
                 area: item.AREA,
-                schemeENDDate: item.SchemeENDDate,
-
+                SchemeEndDate: item.SchemeENDDate || item.schemeENDDate || item.SchemeEndDate, // Ensure all possible cases are handled
             }));
 
             setSchemeData(mappedData[0]);
-            setCardNo(mappedData[0]?.cardNo || ""); // Update cardNo state
+            setCardNo(mappedData[0]?.cardNo || "");
+            fetchSchemeDetails(mappedData[0]?.cardNo); // ← Pass the value directly
 
             // Fetch payment details for the matching receipt number
             const paymentResponse = await axios.get(`${CREATE_jwel}/api/Master/GetDataFromGivenTableNameWithWhere?tableName=RECEIPT_PAYMENT&where=CARDNO%3D%27${mappedData[0]?.cardNo}%27`);
@@ -101,6 +107,7 @@ const SchemeDetails = () => {
                 }));
 
             setTableData(paymentDetails);
+            fetchSchemeDetails();
         } catch (error) {
             message.error("Failed to fetch data");
         } finally {
@@ -176,27 +183,41 @@ const SchemeDetails = () => {
         const date = new Date(dateString);
         return date.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
     };
-    const fetchSchemeDetails = async () => {
+    const fetchSchemeDetails = async (cardNoToUse) => {
         try {
-            // Fetch scheme details
-            const response = await axios.get(
-                `${CREATE_jwel}/api/Master/GetDataFromGivenTableNameWithWhere?tableName=SCHEME_MEMBER&where=CARDNO%3D${cardNo}`
-            );
-            setSchemeData(response.data[0]);
+            const trimmedCardNo = cardNoToUse?.trim();
+            if (!trimmedCardNo) {
+                // message.warning("Card No is required.");
+                return;
+            }
 
-            // Fetch installment number
-            const installmentResponse = await axios.get(
-                `${CREATE_jwel}/api/Scheme/GetSchemeMaxNumberInTableWithOrder?tableName=RECEIPT_MAST&column=INSTNO&where=CARDNO%3D%27${cardNo}%27`
+            // Use trimmedCardNo in place of cardNo
+            const response = await axios.get(
+                `http://www.jewelerp.timeserasoftware.in/api/Master/GetDataFromGivenTableNameWithWhere?tableName=SCHEME_MEMBER&where=CARDNO%3D${encodeURIComponent(trimmedCardNo)}`
             );
+
+            if (response.data.length === 0) {
+                message.warning("No scheme details found for the provided Card No.");
+                return;
+            }
+
+            setSchemeData({
+                ...response.data[0],
+                narr: response.data[0]?.narr || "", // Ensure narr is initialized
+            });
+
+            const installmentResponse = await axios.get(
+                `${CREATE_jwel}/api/Scheme/GetSchemeMaxNumberInTableWithOrder?tableName=RECEIPT_MAST&column=INSTNO&where=CARDNO%3D%27${encodeURIComponent(trimmedCardNo)}%27`
+            );
+
             const installmentData = installmentResponse.data;
 
-            // Extract and properly convert Column1 value
             const maxInstallment = installmentData.length > 0 && installmentData[0].Column1 !== null
                 ? Math.floor(Number(installmentData[0].Column1)) + 1
                 : 1;
 
             setInstallmentNo(maxInstallment);
-
+            console.log("Installment No:", maxInstallment);
             // Fetch FYEAR from firm configuration
             const firmConfigResponse = await axios.get(
                 `${CREATE_jwel}/api/Erp/GetFirmConfihure`
@@ -206,6 +227,22 @@ const SchemeDetails = () => {
 
             // Pass FYEAR to handleSave function
             setSchemeData((prev) => ({ ...prev, fyear: fyear || "default_fyear" })); // Ensure fyear is set with a fallback
+
+            // // Fetch payment details for the card number
+            // const paymentResponse = await axios.get(
+            //     `${CREATE_jwel}/api/Master/GetDataFromGivenTableNameWithWhere?tableName=RECEIPT_PAYMENT&where=CARDNO%3D%27${encodeURIComponent(trimmedCardNo)}%27`
+            // );
+
+            // const paymentDetails = paymentResponse.data.map((item, index) => ({
+            //     key: index + 1,
+            //     paymentMode: item.PAYMODE,
+            //     particulars: item.PARTICULARS,
+            //     accNo: item.ACCNO,
+            //     amount: item.AMT,
+            //     descr: item.DESCR,
+            // }));
+
+            // setTableData(paymentDetails); // Update the table data
         } catch (error) {
             console.error("Error fetching scheme details, installment number, or FYEAR:", error);
             message.error("Failed to fetch scheme details, installment number, or FYEAR.");
@@ -240,6 +277,14 @@ const SchemeDetails = () => {
         setAccountNumbers([]);
     };
     const [rates, setRates] = useState([]);
+    useEffect(() => {
+        if (schemeData?.SchemeAmount > 0) {
+            const paidAmount = tableData.reduce((sum, record) => sum + parseFloat(record.amount || 0), 0);
+            if (schemeData?.SchemeAmount === paidAmount) {
+                setTimeout(() => inchargeRef.current?.focus(), 0);
+            }
+        }
+    }, [schemeData, tableData]);
     useEffect(() => {
         fetchRates1();
     }, []);
@@ -302,14 +347,29 @@ const SchemeDetails = () => {
         }
     };
     console.log("schemeData", schemeData);
+
+
     const handleSave = async () => {
         const paidAmount = tableData.reduce((sum, record) => sum + parseFloat(record.amount || 0), 0); // Calculate paid amount
 
-        // No need to check here as the condition is applied when adding a record to the table.
-
-        if (cardNo !== "1") {
+        if (!cardNo.trim()) {
+            message.warning("Card No is required.");
             return;
         }
+
+        if (paidAmount !== (schemeData?.SchemeAmount || 0)) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Check Payment',
+                text: 'The paid amount does not match the scheme amount.',
+                confirmButtonText: 'OK',
+                timer: 5000,
+                timerProgressBar: true,
+            });
+
+            return;
+        }
+
         const selectedDateISO = selectedDate.toISOString(); // Use the selected date from the date picker
         const cashAmount = tableData
             .filter((record) => record.paymentMode === "CASH")
@@ -332,10 +392,10 @@ const SchemeDetails = () => {
             .reduce((sum, record) => sum + parseFloat(record.amount || 0), 0);
 
         const payload = {
-            recNo: receiptNo, // Use receiptNo
-            recDate: selectedDateISO, // Use the selected date
-            rectime: selectedDateISO, // Use the selected date
-            empCode: "string",
+            recNo: receiptNo,
+            recDate: selectedDateISO,
+            rectime: selectedDateISO,
+            empCode: "string", // If dynamic, update later
             schemeGroup: schemeData?.SchemeGroup || "string",
             schemeName: schemeData?.SchemeName || "string",
             goldRate: goldRates[index]?.RATE || 0,
@@ -349,27 +409,16 @@ const SchemeDetails = () => {
             schemeDuration: schemeData?.SchemeDuration || 0,
             bonusAmount: schemeData?.BonusAmount || 0,
             amount: paidAmount,
+            recAmount: paidAmount, // ✅ required by API
+            goldWt: 0,             // ✅ required by API
             schemeValue: schemeData?.SchemeValue || 0,
             schemeJDate: schemeData?.SchemeJoinDate || new Date().toISOString(),
-            schemeENDDate: schemeData?.schemeENDDate || new Date().toISOString(),
-
-            recAmount: paidAmount, // Use paid amount
-            goldWt: 0,
-            mode: "string",
-            accno: "string",
-            chequeno: "string",
+            schemeENDDate: schemeData?.SchemeEndDate || new Date().toISOString(),
             incharger: schemeData?.INCHARGE || "",
-            narr: schemeData?.narr,
-            uname: "string",
+            narr: schemeData?.narr || "string",
+            uname: "string", // if you have logged-in user, replace this
             schemeType: schemeData?.SchemeType || "string",
-            schemeMode: "string",
-            sbMonths: 0,
-            giftVoucher: 0,
-            collect_Point: "string",
-            paymode: "string",
-            modetype: "string",
-            accname: "string",
-            fyear: schemeData?.fyear || "string", // Pass FYEAR here
+            fyear: schemeData?.fyear || "string",
             instno: installmentNo,
             pregoldwt: 0,
             cash: cashAmount,
@@ -377,11 +426,38 @@ const SchemeDetails = () => {
             upi: upiAmount,
             online: onlineAmount,
             cheque: chequeAmount,
-            area: schemeData?.area,
+            area: schemeData?.area || "",
             clouD_UPLOAD: true,
-        };
 
+            // ❌ Optional/Not used — REMOVE unless backend requires them:
+            mode: "string",
+            accno: "string",
+            chequeno: "string",
+            schemeMode: "string",
+            sbMonths: 0,
+            giftVoucher: 0,
+            collect_Point: "string",
+            paymode: "string",
+            modetype: "string",
+            accname: "string",
+        };
         try {
+            // Delete existing records for the receipt number
+            await axios.post(
+                `http://www.jewelerp.timeserasoftware.in/api/Master/DeleteDataFromGivenTableNameWithWhere?tableName=RECEIPT_PAYMENT&where=RECNO%3D%27${receiptNo}%27`
+            );
+
+            // Delete MEMBER_CARD_DET records
+            await axios.post(
+                `http://www.jewelerp.timeserasoftware.in/api/Master/DeleteDataFromGivenTableNameWithWhere?tableName=MEMBER_CARD_DET&where=CARDNO%3D%27${cardNo}%27`
+            );
+
+            // Delete RECEIPT_MAST records
+            await axios.post(
+                `http://www.jewelerp.timeserasoftware.in/api/Master/DeleteDataFromGivenTableNameWithWhere?tableName=RECEIPT_MAST&where=RECNO%3D%27${receiptNo}%27`
+            );
+
+            // Save receipt data
             const response = await axios.post(
                 `${CREATE_jwel}/api/Master/ReceiptMastInsert`,
                 payload
@@ -459,10 +535,12 @@ const SchemeDetails = () => {
                 );
             }
 
-            setSchemeData();
+            setSchemeData(null);
             setCardNo("");
             setTableData([]);
             fetchReceiptNo();
+            setInstallmentNo(1);
+            setTimeout(() => document.getElementById("cardNoInput").focus(), 0); // Move cursor to Card No input
             console.log("Response:", response.data);
         } catch (error) {
             console.error("Error saving data:", error);
@@ -527,7 +605,13 @@ const SchemeDetails = () => {
                         placeholder="Enter Receipt No"
                         value={searchValue}
                         onChange={(e) => setSearchValue(e.target.value)}
-                        onPressEnter={handleSearch}
+                        onPressEnter={() => {
+                            setReceiptNo(searchValue); // Update receiptNo with the entered value
+                            setVisible(false);
+                            handleSearch();
+                            setSearchValue(""); // Clear the search value after pressing Enter
+                            setTimeout(() => document.getElementById("paymentModeDropdown").focus(), 0); // Move cursor to Payment Mode
+                        }}
                         allowClear
                     />
                 </Form.Item>
@@ -542,6 +626,8 @@ const SchemeDetails = () => {
                         setReceiptNo(searchValue); // Update receiptNo with the entered value
                         setVisible(false);
                         handleSearch();
+                        setSearchValue(""); // Clear the search value after clicking OK
+                        setTimeout(() => document.getElementById("paymentModeDropdown").focus(), 0); // Move cursor to Payment Mode
                     }}
                 >
                     OK
@@ -591,6 +677,7 @@ const SchemeDetails = () => {
                             Card No:
                         </Text>
                         <Input
+                            id="cardNoInput"
                             value={cardNo}
                             onChange={(e) => setCardNo(e.target.value)}
                             placeholder="Card no"
@@ -610,7 +697,7 @@ const SchemeDetails = () => {
                             }} />
                         <Button type="primary" style={{ width: "40px", height: "40px" }}
                             onClick={() => {
-                                fetchSchemeDetails();
+                                fetchSchemeDetails(cardNo); // Pass cardNo explicitly
                                 setTimeout(() => document.getElementById("paymentModeDropdown").focus(), 0);
                             }}>
                             OK
@@ -794,7 +881,7 @@ const SchemeDetails = () => {
                                         </div>
                                     </Col>
 
-                                    {/* Total Dues */}
+
                                     <Col xs={24} sm={12} md={8}>
                                         <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
                                             <Text strong style={{ fontSize: "16px", color: "#003a8c" }}>Total Dues</Text>
@@ -830,6 +917,7 @@ const SchemeDetails = () => {
                                 <Col xs={24} sm={12} md={6} lg={5}>
                                     <Text strong style={{ fontSize: "14px", fontWeight: "bold" }}>Payment Mode:</Text>
                                     <Select
+                                        ref={paymentModeRef}
                                         id="paymentModeDropdown"
                                         showSearch
                                         style={{ width: "100%" }}
@@ -940,7 +1028,7 @@ const SchemeDetails = () => {
                                     />
                                 </Col>
 
-                                {/* OK Button */}
+
                                 <Col xs={24} sm={12} md={4} lg={2} style={{ textAlign: "center", marginTop: "15px" }}>
                                     <Button
                                         type="primary"
@@ -952,16 +1040,25 @@ const SchemeDetails = () => {
                                             if (parseFloat(amount) > remainingAmount) {
                                                 message.error(`The total paid amount cannot exceed the scheme amount of ₹${schemeData?.SchemeAmount}`);
                                             } else {
-                                                handleAddRecord();
-                                                setTimeout(() => document.getElementById("paymentModeDropdown").focus(), 2000);
+                                                const paidAmount = tableData.reduce((sum, record) => sum + parseFloat(record.amount || 0), 0);
+                                                if (paidAmount === (schemeData?.SchemeAmount)) {
+                                                    setTimeout(() => inchargeRef.current?.focus(), 0);
+                                                } else {
+                                                    handleAddRecord();
+
+                                                    setTimeout(() => paymentModeRef.current?.focus(), 0);
+                                                }
                                             }
                                         }}
+                                        disabled={
+                                            tableData.reduce((sum, record) => sum + parseFloat(record.amount || 0), 0) ===
+                                            (schemeData?.SchemeAmount || 0)
+                                        }
                                     >
                                         OK
                                     </Button>
                                 </Col>
                             </Row>
-
 
                             <div style={{ marginTop: "10px", maxHeight: 100, overflowY: 'auto' }}>
                                 <Table
@@ -999,9 +1096,12 @@ const SchemeDetails = () => {
                                 <Col span={12}>
                                     <Text strong style={{ fontSize: "14px", fontWeight: "bold" }}>Incharge:</Text>
                                     <Select
+                                        showSearch
+                                        ref={inchargeRef}
                                         placeholder="Select Incharge"
                                         style={{ width: "100%" }}
-                                        onChange={(value) => setSchemeData((prev) => ({ ...prev, incharge: value }))}
+                                        onKeyDown={(e) => handleKeyDown(e, narrRef)}
+                                        onChange={(value) => setSchemeData((prev) => ({ ...prev, INCHARGE: value }))}
                                     >
                                         {schemeData?.INCHARGE?.split(",").map((incharge, index) => (
                                             <Option key={index} value={incharge}>
@@ -1014,12 +1114,26 @@ const SchemeDetails = () => {
                                 <Col span={12}>
                                     <Text strong style={{ fontSize: "14px", fontWeight: "bold" }}>Narration:</Text>
                                     <Input
-                                        placeholder="Enter Narration"
-                                        value={schemeData?.narr || ""}
-                                        onChange={(e) => setSchemeData((prev) => ({ ...prev, narr: e.target.value }))}
-                                    />
+    ref={narrRef}
+    placeholder="Enter Narration"
+    value={schemeData?.narr || ""}
+    onKeyDown={(e) => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            saveRef.current.click();
+        }
+    }}
+    onChange={(e) =>
+        setSchemeData((prev) => ({
+            ...prev,
+            narr: e.target.value,
+        }))
+    }
+/>
+
                                 </Col>
                             </Row>
+
                         </Card>
                     </Col>
 
@@ -1108,8 +1222,26 @@ const SchemeDetails = () => {
 
                             </Row>
                             <Row justify="end" style={{ marginTop: 5 }}>
-                                <Button type="primary" onClick={handleSave} style={{ fontSize: "16px", fontWeight: "bold" }}>SAVE</Button>
-                                <Button style={{ marginLeft: 10, fontSize: "16px", fontWeight: "bold" }}>CANCEL</Button>
+                                <Button ref={saveRef}
+                                    type="primary" onClick={handleSave} style={{ fontSize: "16px", fontWeight: "bold" }}>SAVE</Button>
+                                <Button
+                                    style={{ marginLeft: 10, fontSize: "16px", fontWeight: "bold" }}
+                                    onClick={() => {
+                                        setCardNo("");
+                                        setSchemeData(null);
+                                        setSelectedPaymentMode(null);
+                                        setSelectedPayMode(null);
+                                        setSelectedAccount(null);
+                                        setDescription("");
+                                        setAmount("");
+                                        setTableData([]);
+                                        setInstallmentNo(1); // Reset installment number to default
+                                        fetchReceiptNo();
+                                        setTimeout(() => document.getElementById("cardNoInput").focus(), 0);
+                                    }}
+                                >
+                                    CANCEL
+                                </Button>
                             </Row>
                         </Card>
                     </Col>
