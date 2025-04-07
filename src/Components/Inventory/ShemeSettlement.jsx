@@ -6,6 +6,8 @@ import moment from "moment";
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { FaCalendarAlt } from 'react-icons/fa';
+import {  ReloadOutlined, } from "@ant-design/icons";
+
 const { Text } = Typography;
 const { Option } = Select;
 const CustomInput = forwardRef(({ value, onClick, placeholder }, ref) => (
@@ -19,7 +21,10 @@ const ShemeSettlement = () => {
     const [memberData, setMemberData] = useState(null);
     const [tableData, setTableData] = useState([]);
     const [rates, setRates] = useState([]);
- const [index, setIndex] = useState(0);
+    const [index, setIndex] = useState(0);
+    const [inchargeList, setInchargeList] = useState([]);
+
+    const [schemeCardData, setSchemeCardData] = useState(null);
 
     // Filter only GOLD products
     const goldRates = rates.filter(item => item.MAINPRODUCT.toLowerCase() === "gold");
@@ -32,29 +37,131 @@ const ShemeSettlement = () => {
 
             return () => clearInterval(interval);
         }
-    }, [goldRates.length]);    const voucherData = {
-        voucherNo: "12345",
-        date: "2024-03-31",
-        address: "123 Street Name",
-        mobile1: "9876543210",
-        mobile2: "9876543211",
+    }, [goldRates.length]);
+    const fetchIncharges = async () => {
+        try {
+            const res = await axios.get(`${CREATE_jwel}/api/Master/GetDataFromGivenTableName`, {
+                params: {
+                    tableName: "SCHEME_MEMBER",
+                },
+            });
+
+            const allIncharges = res.data
+                .map(item => item.INCHARGE)
+                .filter((val, index, self) => val && self.indexOf(val) === index); // remove duplicates and nulls
+
+            setInchargeList(allIncharges);
+        } catch (err) {
+            console.error("Error fetching incharges:", err);
+            message.error("Failed to fetch incharge list.");
+        }
+    };
+    useEffect(() => {
+        fetchIncharges();
+    }, []);
+
+    const fetchMemberData = async () => {
+        if (!cardNo) {
+            message.error("Please enter a valid Card No.");
+            return;
+        }
+
+        try {
+            // 1️⃣ Fetch from MEMBER_CARD_DET
+            const [paymentRes, schemeRes] = await Promise.all([
+                axios.get(`${CREATE_jwel}/api/Master/GetDataFromGivenTableNameWithWhere`, {
+                    params: {
+                        tableName: "MEMBER_CARD_DET",
+                        where: `CARDNO='${cardNo}'`,
+                    },
+                }),
+                axios.get(`${CREATE_jwel}/api/Master/GetDataFromGivenTableNameWithWhere`, {
+                    params: {
+                        tableName: "SCHEME_MEMBER",
+                        where: `CARDNO='${cardNo}'`,
+                    },
+                }),
+            ]);
+
+            const paymentData = paymentRes.data || [];
+            const schemeData = schemeRes.data && schemeRes.data.length > 0 ? schemeRes.data[0] : null;
+
+            // 2️⃣ Handle payment table and member metrics
+            if (paymentData.length > 0) {
+                const formattedData = paymentData.map((item, index) => ({
+                    key: index,
+                    sno: item.sno,
+                    MONTH: item.MONTH,
+                    RECNO: item.RECNO,
+                    RECDATE: item.RECDATE,
+                    SCHEMEAMOUNT: item.SCHEMEAMOUNT,
+                    goldWeight: item.GOLDWT ?? "N/A",
+                    goldOneGram: item.GOLDRATE ?? "N/A",
+                    modeOfPay: item.RECNO ? "Cash" : "Pending",
+                    balance: item.RECNO ? 0 : item.SCHEMEAMOUNT,
+                    PSTATUS: item.PSTATUS,
+                }));
+
+                const totalPaid = paymentData.reduce(
+                    (sum, item) => sum + (item.RECNO ? item.SCHEMEAMOUNT : 0),
+                    0
+                );
+
+                const schemeAmt = paymentData[0].SCHEMEAMOUNT;
+                const duration = paymentData[0].SCHEMEDURATION;
+
+                setTableData(formattedData);
+
+                setMemberData({
+                    MemberName: paymentData[0].SCHEMEMEMBER,
+                    SchemeType: paymentData[0].SCHEMETYPE,
+                    GroupName: paymentData[0].SCHEMEGROUP,
+                    SchemeAmount: schemeAmt,
+                    TotalPaid: totalPaid,
+                    BalanceAmount: schemeAmt * duration - totalPaid,
+                    TotalGoldWeight: "N/A",
+                    MembershipType: paymentData[0].SCHEMENAME,
+                    JoinDate: paymentData[0].SCHEMEJOINDATE,
+                    ExpiryDate: paymentData[0].SCHEMEENDDATE,
+                });
+            } else {
+                setTableData([]);
+                setMemberData(null);
+                message.error("No payment data found for the entered Card No.");
+            }
+
+            // 3️⃣ Handle scheme/voucher/payment detail card values
+            if (schemeData) {
+                setSchemeCardData({
+                    address: schemeData.add1,
+                    mobile1: schemeData.Mobile1,
+                    mobile2: schemeData.Mobile2,
+
+                    amount: schemeData.SchemeAmount,
+                    joinDate: moment(schemeData.SchemeJoinDate).format("DD-MM-YYYY"),
+                    schemeValue: schemeData.SchemeValue,
+                    noOfMonths: schemeData.SchemeDuration,
+                    bonusAmount: schemeData.BonusAmount,
+                    bonusMonths: schemeData.BonusMonth,
+                    totalSchemeAmount: schemeData.SchemeValue,
+                    incharge: schemeData.INCHARGE,
+
+                    paidAmount: paymentData.reduce(
+                        (sum, item) => sum + (item.RECNO ? item.SCHEMEAMOUNT : 0),
+                        0
+                    ),
+                    totalAmount: schemeData.SchemeValue,
+                });
+            } else {
+                message.warning("No scheme info found in SCHEME_MEMBER table.");
+                setSchemeCardData(null);
+            }
+        } catch (error) {
+            message.error("Failed to fetch data. Please try again.");
+            console.error(error);
+        }
     };
 
-    const schemeData = {
-        amount: "5000",
-        joinDate: "2024-01-01",
-        schemeValue: "5500",
-        noOfMonths: "12",
-        bonusAmount: "500",
-        bonusMonths: "2",
-        totalSchemeAmount: "6000",
-    };
-
-    const paymentData = {
-        paidAmount: "3000",
-        bonusAmount: "200",
-        totalAmount: "3200",
-    };
 
     useEffect(() => {
         fetchRates1();
@@ -79,60 +186,100 @@ const ShemeSettlement = () => {
     };
 
     const columns = [
-        { title: "S.No", dataIndex: "sno", key: "sno" },
-        { title: "Date", dataIndex: "MONTH", key: "month", render: (text) => text ? moment(text, "MM/DD/YYYY").format("DD MMM YYYY") : "" },
-        { title: "Rec No", dataIndex: "RECNO", key: "recNo" },
-        { title: "Rec Date", dataIndex: "RECDATE", key: "recDate", render: (text) => text ? moment(text, "MM/DD/YYYY").format("DD MMM YYYY") : "" },
-        { title: "Rec Amt", dataIndex: "SCHEMEAMOUNT", key: "recAmount" },
-        { title: "Gold Wt", dataIndex: "goldWeight", key: "goldWeight" },
-        { title: "Gold(1Gram)", dataIndex: "goldOneGram", key: "goldOneGram", width: 100 },
-        { title: "Pay Mode", dataIndex: "modeOfPay", key: "modeOfPay", width: 100 },
-        { title: "Balance", dataIndex: "balance", key: "balance" },
+        {
+            title: "S.No",
+            dataIndex: "sno",
+            key: "sno",
+            onHeaderCell: () => ({
+                style: { fontSize: "12px" },
+            }),
+            render: (text, record) => (
+                <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px" }}>
+                    <span
+                        style={{
+                            width: "10px",
+                            height: "10px",
+                            borderRadius: "50%",
+                            backgroundColor: record.PSTATUS ? "green" : "red",
+                        }}
+                    ></span>
+                    {text}
+                </div>
+            ),
+        },
+        {
+            title: "Date",
+            dataIndex: "MONTH",
+            width: 100,
+            key: "month",
+            onHeaderCell: () => ({
+                style: { fontSize: "12px" },
+            }),
+            render: (text) => (
+                <span style={{ fontSize: "12px" }}>
+                    {text ? moment(text, "YYYY-MM-DD").format("DD MMM YYYY") : ""}
+                </span>
+            ),
+        },
+        {
+            title: "Rec No",
+            dataIndex: "RECNO",
+            key: "recNo",
+            onHeaderCell: () => ({ style: { fontSize: "12px" } }),
+            render: (text) => <span style={{ fontSize: "12px" }}>{text}</span>,
+        },
+        {
+            title: "Rec Date",
+            dataIndex: "RECDATE",
+            width: 100,
+            key: "recDate",
+            onHeaderCell: () => ({ style: { fontSize: "12px" } }),
+            render: (text) => (
+                <span style={{ fontSize: "12px" }}>
+                    {text ? moment(text).format("DD MMM YYYY") : ""}
+                </span>
+            ),
+        },
+        {
+            title: "Rec Amt",
+            dataIndex: "SCHEMEAMOUNT",
+            key: "recAmount",
+            onHeaderCell: () => ({ style: { fontSize: "12px" } }),
+            render: (text) => <span style={{ fontSize: "12px" }}>{text}</span>,
+        },
+        {
+            title: "Gold Wt",
+            dataIndex: "goldWeight",
+            key: "goldWeight",
+            onHeaderCell: () => ({ style: { fontSize: "12px" } }),
+            render: (text) => <span style={{ fontSize: "12px" }}>{text}</span>,
+        },
+        {
+            title: "Gold(1Gram)",
+            dataIndex: "goldOneGram",
+            key: "goldOneGram",
+            width: 100,
+            onHeaderCell: () => ({ style: { fontSize: "12px" } }),
+            render: (text) => <span style={{ fontSize: "12px" }}>{text}</span>,
+        },
+        {
+            title: "Pay Mode",
+            dataIndex: "modeOfPay",
+            key: "modeOfPay",
+            width: 100,
+            onHeaderCell: () => ({ style: { fontSize: "12px" } }),
+            render: (text) => <span style={{ fontSize: "12px" }}>{text}</span>,
+        },
+        {
+            title: "Balance",
+            dataIndex: "balance",
+            key: "balance",
+            onHeaderCell: () => ({ style: { fontSize: "12px" } }),
+            render: (text) => <span style={{ fontSize: "12px" }}>{text}</span>,
+        },
     ];
+    
 
-    const fetchMemberData = async () => {
-        if (!cardNo) {
-            message.error("Please enter a valid Card No.");
-            return;
-        }
-
-        try {
-            const response = await axios.get(
-                `${CREATE_jwel}/api/Master/GetDataFromGivenTableNameWithWhere`,
-                {
-                    params: {
-                        tableName: "MEMBER_CARD_DET",
-                        where: `CARDNO=${cardNo}`,
-                    },
-                }
-            );
-
-            const data = response.data;
-
-            if (data && data.length > 0) {
-                setTableData(data);
-                setMemberData({
-                    MemberName: data[0].SCHEMEMEMBER,
-                    SchemeType: data[0].SCHEMETYPE,
-                    GroupName: data[0].SCHEMEGROUP,
-                    SchemeAmount: data[0].SCHEMEAMOUNT,
-                    TotalPaid: data.reduce((sum, item) => sum + (item.RECNO ? item.SCHEMEAMOUNT : 0), 0),
-                    BalanceAmount: data[0].SCHEMEAMOUNT * data[0].SCHEMEDURATION - data.reduce((sum, item) => sum + (item.RECNO ? item.SCHEMEAMOUNT : 0), 0),
-                    TotalGoldWeight: "N/A",
-                    MembershipType: data[0].SCHEMENAME,
-                    JoinDate: data[0].SCHEMEJOINDATE,
-                    ExpiryDate: data[0].SCHEMEENDDATE,
-                });
-            } else {
-                message.error("No data found for the entered Card No.");
-                setTableData([]);
-                setMemberData(null);
-            }
-        } catch (error) {
-            message.error("Failed to fetch data. Please try again.");
-            console.error(error);
-        }
-    };
 
     return (
         <div>
@@ -145,7 +292,7 @@ const ShemeSettlement = () => {
                     color: "white",
                 }}
             >
-                
+
                 <Row justify="space-between" align="middle" gutter={16}>
                     <Col style={{ display: "flex", alignItems: "center", zIndex: 1 }}>
                         <Text
@@ -178,34 +325,45 @@ const ShemeSettlement = () => {
                         <Button type="primary" style={{ width: "40px", height: "40px" }} onClick={fetchMemberData}>
                             OK
                         </Button>
+                        <Button
+                            style={{ marginLeft: 10, fontSize: "16px", fontWeight: "bold" }}
+                            onClick={() => {
+                                setCardNo("");
+                                setMemberData(null);
+                                setSchemeCardData(null);
+                                setTableData([]);
+                            }}
+                        >
+                            <ReloadOutlined style={{ fontSize: "20px" }} />
+                        </Button>
                     </Col>
-                      {/* Gold Rates */}
-                                        <Col>
-                                            <Card
-                                                style={{
-                                                    //   background: "rgba(255, 255, 255, 0.2)", // Semi-transparent white
-                                                    background: "linear-gradient(135deg,rgb(20, 54, 117),rgb(66, 110, 185))", // Blue and Grey Gradient
-                    
-                                                    position: "relative",
-                                                    zIndex: 1,
-                                                    borderRadius: "8px",
-                                                    color: "white",
-                                                }}
-                                                className="custometagnocard"
-                    
-                                            >
-                                                <div style={{ fontSize: "13px", fontWeight: "bold", marginBottom: "5px", color: "white" }}>
-                                                    Today's Gold Rates
-                                                </div>
-                                                {goldRates.length > 0 ? (
-                                                    <div style={{ fontSize: "12px", fontWeight: "bold", color: "yellow" }}>
-                                                        {rates[index]?.MAINPRODUCT} - {goldRates[index]?.PREFIX} - ₹{goldRates[index]?.RATE}
-                                                    </div>
-                                                ) : (
-                                                    <div style={{ fontSize: "12px", color: "white" }}>No Gold Rates Available</div>
-                                                )}
-                                            </Card>
-                                        </Col>
+                    {/* Gold Rates */}
+                    <Col>
+                        <Card
+                            style={{
+                                //   background: "rgba(255, 255, 255, 0.2)", // Semi-transparent white
+                                background: "linear-gradient(135deg,rgb(20, 54, 117),rgb(66, 110, 185))", // Blue and Grey Gradient
+
+                                position: "relative",
+                                zIndex: 1,
+                                borderRadius: "8px",
+                                color: "white",
+                            }}
+                            className="custometagnocard"
+
+                        >
+                            <div style={{ fontSize: "13px", fontWeight: "bold", marginBottom: "5px", color: "white" }}>
+                                Today's Gold Rates
+                            </div>
+                            {goldRates.length > 0 ? (
+                                <div style={{ fontSize: "12px", fontWeight: "bold", color: "yellow" }}>
+                                    {rates[index]?.MAINPRODUCT} - {goldRates[index]?.PREFIX} - ₹{goldRates[index]?.RATE}
+                                </div>
+                            ) : (
+                                <div style={{ fontSize: "12px", color: "white" }}>No Gold Rates Available</div>
+                            )}
+                        </Card>
+                    </Col>
                 </Row>
             </Card>
 
@@ -213,30 +371,30 @@ const ShemeSettlement = () => {
                 <Row gutter={16}>
                     <Col span={17}>
                         <Card className="customeproductcard" style={{ backgroundImage: "linear-gradient(to right, #cdcddf, #a8b1ff)" }}>
-                              {/* Colored Status Dots */}
-                              <div style={{ position: "absolute", top: "10px", right: "10px", display: "flex", gap: "5px" }}>
-                                    {/* Red Dot - Dropped */}
-                                    <div
-                                        style={{
-                                            width: "12px",
-                                            height: "12px",
-                                            backgroundColor: "red",
-                                            borderRadius: "50%",
-                                        }}
-                                        title="Dropped"
-                                    ></div>
+                            {/* Colored Status Dots */}
+                            <div style={{ position: "absolute", top: "10px", right: "10px", display: "flex", gap: "5px" }}>
+                                {/* Red Dot - Dropped */}
+                                <div
+                                    style={{
+                                        width: "12px",
+                                        height: "12px",
+                                        backgroundColor: "red",
+                                        borderRadius: "50%",
+                                    }}
+                                    title="Dropped"
+                                ></div>
 
-                                    {/* Green Dot - Receipt Paid */}
-                                    <div
-                                        style={{
-                                            width: "12px",
-                                            height: "12px",
-                                            backgroundColor: "green",
-                                            borderRadius: "50%",
-                                        }}
-                                        title="Receipt Paid"
-                                    ></div>
-                                </div>
+                                {/* Green Dot - Receipt Paid */}
+                                <div
+                                    style={{
+                                        width: "12px",
+                                        height: "12px",
+                                        backgroundColor: "green",
+                                        borderRadius: "50%",
+                                    }}
+                                    title="Receipt Paid"
+                                ></div>
+                            </div>
 
                             <div style={{ fontSize: "14px", fontWeight: "bold", marginBottom: "5px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                                 <span>SCHEME SETTLEMENT</span>
@@ -245,7 +403,7 @@ const ShemeSettlement = () => {
                                     <div style={{ display: "flex", alignItems: "center" }}>
                                         <Text strong style={{ fontSize: "16px", color: "#d10507" }}>Voucher No</Text>
                                         <Text strong style={{ marginLeft: "4px", color: "#d10507" }}>:</Text>
-                                        <Text strong style={{ marginLeft: "6px", fontSize: "16px", color: "#d10507" }}>{voucherData?.voucherNo}</Text>
+                                        <Text strong style={{ marginLeft: "6px", fontSize: "16px", color: "#d10507" }}></Text>
                                     </div>
 
                                     <div style={{ display: "flex", alignItems: "center" }}>
@@ -289,11 +447,25 @@ const ShemeSettlement = () => {
                                     <Text strong style={{ marginLeft: "4px" }}>:</Text>
                                 </Col>
                                 <Col span={7}>
-                                    <Select placeholder="Select Incharge" style={{ width: "100%" }}>
-                                        <Option value="incharge1">Incharge 1</Option>
-                                        <Option value="incharge2">Incharge 2</Option>
+
+                                    <Select
+                                        placeholder="Select Incharge"
+                                        style={{ width: "100%" }}
+                                        value={schemeCardData?.incharge} // selected value from schemeData.INCHARGE
+                                        onChange={(value) => {
+                                            setSchemeCardData(prev => ({ ...prev, incharge: value }));
+                                        }}
+                                    >
+                                        {inchargeList.map(incharge => (
+                                            <Option key={incharge} value={incharge}>
+                                                {incharge}
+                                            </Option>
+                                        ))}
                                     </Select>
                                 </Col>
+
+
+
 
                                 {/* Description Input */}
                                 <Col span={5} style={{ display: "flex", alignItems: "center" }}>
@@ -317,15 +489,15 @@ const ShemeSettlement = () => {
 
                                 <Col span={10}><Text strong>Address</Text></Col>
                                 <Col span={2} style={{ textAlign: "center" }}><Text strong>:</Text></Col>
-                                <Col span={12}>{voucherData?.address}</Col>
+                                <Col span={12}>{schemeCardData?.address}</Col>
 
                                 <Col span={10}><Text strong>Mobile No 1</Text></Col>
                                 <Col span={2} style={{ textAlign: "center" }}><Text strong>:</Text></Col>
-                                <Col span={12}>{voucherData?.mobile1}</Col>
+                                <Col span={12}>{schemeCardData?.mobile1}</Col>
 
                                 <Col span={10}><Text strong>Mobile No 2</Text></Col>
                                 <Col span={2} style={{ textAlign: "center" }}><Text strong>:</Text></Col>
-                                <Col span={12}>{voucherData?.mobile2}</Col>
+                                <Col span={12}>{schemeCardData?.mobile2}</Col>
                             </Row>
                         </Card>
 
@@ -334,31 +506,31 @@ const ShemeSettlement = () => {
                             <Row>
                                 <Col span={10}><Text strong>Amount</Text></Col>
                                 <Col span={2} style={{ textAlign: "center" }}><Text strong>:</Text></Col>
-                                <Col span={12}>{schemeData?.amount}</Col>
+                                <Col span={12}>{schemeCardData?.amount}</Col>
 
                                 <Col span={10}><Text strong>Join Date</Text></Col>
                                 <Col span={2} style={{ textAlign: "center" }}><Text strong>:</Text></Col>
-                                <Col span={12}>{schemeData?.joinDate}</Col>
+                                <Col span={12}>{schemeCardData?.joinDate}</Col>
 
                                 <Col span={10}><Text strong>Scheme Value</Text></Col>
                                 <Col span={2} style={{ textAlign: "center" }}><Text strong>:</Text></Col>
-                                <Col span={12}>{schemeData?.schemeValue}</Col>
+                                <Col span={12}>{schemeCardData?.schemeValue}</Col>
 
                                 <Col span={10}><Text strong>No of Months</Text></Col>
                                 <Col span={2} style={{ textAlign: "center" }}><Text strong>:</Text></Col>
-                                <Col span={12}>{schemeData?.noOfMonths}</Col>
+                                <Col span={12}>{schemeCardData?.noOfMonths}</Col>
 
                                 <Col span={10}><Text strong>Bonus Amount</Text></Col>
                                 <Col span={2} style={{ textAlign: "center" }}><Text strong>:</Text></Col>
-                                <Col span={12}>{schemeData?.bonusAmount}</Col>
+                                <Col span={12}>{schemeCardData?.bonusAmount}</Col>
 
                                 <Col span={10}><Text strong>Bonus Months</Text></Col>
                                 <Col span={2} style={{ textAlign: "center" }}><Text strong>:</Text></Col>
-                                <Col span={12}>{schemeData?.bonusMonths}</Col>
+                                <Col span={12}>{schemeCardData?.bonusMonths}</Col>
 
                                 <Col span={10}><Text strong>Total Scheme Amt</Text></Col>
                                 <Col span={2} style={{ textAlign: "center" }}><Text strong>:</Text></Col>
-                                <Col span={12}>{schemeData?.totalSchemeAmount}</Col>
+                                <Col span={12}>{schemeCardData?.totalSchemeAmount}</Col>
                             </Row>
                         </Card>
 
@@ -367,15 +539,15 @@ const ShemeSettlement = () => {
                             <Row>
                                 <Col span={10}><Text strong>Paid Amount</Text></Col>
                                 <Col span={2} style={{ textAlign: "center" }}><Text strong>:</Text></Col>
-                                <Col span={12}>{paymentData?.paidAmount}</Col>
+                                <Col span={12}>{schemeCardData?.paidAmount}</Col>
 
                                 <Col span={10}><Text strong>Bonus Amount</Text></Col>
                                 <Col span={2} style={{ textAlign: "center" }}><Text strong>:</Text></Col>
-                                <Col span={12}>{paymentData?.bonusAmount}</Col>
+                                <Col span={12}>{schemeCardData?.bonusAmount}</Col>
 
                                 <Col span={10}><Text strong>Total Amount</Text></Col>
                                 <Col span={2} style={{ textAlign: "center" }}><Text strong>:</Text></Col>
-                                <Col span={12}>{paymentData?.totalAmount}</Col>
+                                <Col span={12}>{schemeCardData?.totalAmount}</Col>
 
 
                             </Row>

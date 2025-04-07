@@ -42,6 +42,7 @@ const SchemeDetails = () => {
     const saveRef = useRef(null);
     const inchargeRef = useRef(null);
     const narrRef = useRef(null);
+    const cardnookRef = useRef(null);
     const [selectedDate, setSelectedDate] = useState(new Date()); // Set default to current date
     const [visible, setVisible] = useState(false);
     const [searchValue, setSearchValue] = useState("");
@@ -84,7 +85,7 @@ const SchemeDetails = () => {
                 SchemeValue: item.SchemeValue,
                 SchemeJoinDate: item.SchemeJDate,
                 INCHARGE: item.Incharger,
-                narr: item.Narr ?? item.narr ?? "", // Ensure narr is initialized to an empty string if both are undefined
+                narr: item.Narr, // Ensure narr is initialized to an empty string if both are undefined
                 area: item.AREA,
                 SchemeEndDate: item.SchemeENDDate || item.schemeENDDate || item.SchemeEndDate, // Ensure all possible cases are handled
             }));
@@ -104,6 +105,7 @@ const SchemeDetails = () => {
                     accNo: item.ACCNO,
                     amount: item.AMT,
                     descr: item.DESCR,
+                    RECNO: item.RECNO,
                 }));
 
             setTableData(paymentDetails);
@@ -167,6 +169,7 @@ const SchemeDetails = () => {
             nextRef.current?.focus();
         }
     };
+    
 
     // Handle Pay Mode Selection
     const handlePayModeChange = (paymode) => {
@@ -192,19 +195,40 @@ const SchemeDetails = () => {
             }
 
             // Use trimmedCardNo in place of cardNo
+            // const response = await axios.get(
+            //     `http://www.jewelerp.timeserasoftware.in/api/Master/GetDataFromGivenTableNameWithWhere?tableName=SCHEME_MEMBER&where=CARDNO%3D${encodeURIComponent(trimmedCardNo)}`
+            // );
             const response = await axios.get(
-                `http://www.jewelerp.timeserasoftware.in/api/Master/GetDataFromGivenTableNameWithWhere?tableName=SCHEME_MEMBER&where=CARDNO%3D${encodeURIComponent(trimmedCardNo)}`
+                `http://www.jewelerp.timeserasoftware.in/api/Master/GetDataFromGivenTableNameWithWhere?tableName=RECEIPT_MAST&where=CARDNO%3D%27${encodeURIComponent(trimmedCardNo)}%27`
             );
-
             if (response.data.length === 0) {
                 message.warning("No scheme details found for the provided Card No.");
                 return;
             }
-
-            setSchemeData({
-                ...response.data[0],
-                narr: response.data[0]?.narr || "", // Ensure narr is initialized
-            });
+            const mappedData = response.data.map(item => ({
+                RecNo: item.RecNo,
+                RecDate: item.RecDate,
+                SchemeName: item.SchemeName,
+                SchemeAmount: item.SchemeAmount,
+                cardNo: item.CardNo,
+                SchemeMember: item.SchemeMember,
+                Mobile1: item.Phno,
+                add1: item?.add1,
+                add2: item?.add2,
+                add3: item?.add3,
+                installmentNo: item.INSTNO,
+                SchemeType: item.SchemeType,
+                SchemeDuration: item.SchemeDuration,
+                BonusAmount: item.BonusAmount,
+                SchemeValue: item.SchemeValue,
+                SchemeJoinDate: item.SchemeJDate,
+                INCHARGE: item.Incharger,
+                narr: item.Narr, // Ensure narr is initialized to an empty string if both are undefined
+                area: item.AREA,
+                SchemeEndDate: item.SchemeENDDate || item.schemeENDDate || item.SchemeEndDate, // Ensure all possible cases are handled
+            }));
+            setSchemeData(mappedData[0]);
+            console.log("mast", response.data);
 
             const installmentResponse = await axios.get(
                 `${CREATE_jwel}/api/Scheme/GetSchemeMaxNumberInTableWithOrder?tableName=RECEIPT_MAST&column=INSTNO&where=CARDNO%3D%27${encodeURIComponent(trimmedCardNo)}%27`
@@ -229,20 +253,21 @@ const SchemeDetails = () => {
             setSchemeData((prev) => ({ ...prev, fyear: fyear || "default_fyear" })); // Ensure fyear is set with a fallback
 
             // Fetch payment details for the card number
-            const paymentResponse = await axios.get(
-                `${CREATE_jwel}/api/Master/GetDataFromGivenTableNameWithWhere?tableName=RECEIPT_PAYMENT&where=CARDNO%3D%27${encodeURIComponent(trimmedCardNo)}%27`
-            );
+            // const paymentResponse = await axios.get(
+            //     `${CREATE_jwel}/api/Master/GetDataFromGivenTableNameWithWhere?tableName=RECEIPT_PAYMENT&where=CARDNO%3D%27${encodeURIComponent(trimmedCardNo)}%27`
+            // );
 
-            const paymentDetails = paymentResponse.data.map((item, index) => ({
-                key: index + 1,
-                paymentMode: item.PAYMODE,
-                particulars: item.PARTICULARS,
-                accNo: item.ACCNO,
-                amount: item.AMT,
-                descr: item.DESCR,
-            }));
+            // const paymentDetails = paymentResponse.data.map((item, index) => ({
+            //     key: index + 1,
+            //     paymentMode: item.PAYMODE,
+            //     particulars: item.PARTICULARS,
+            //     accNo: item.ACCNO,
+            //     amount: item.AMT,
+            //     descr: item.DESCR,
+            //     RECNO: item.RECNO
+            // }));
 
-            setTableData(paymentDetails); // Update the table data
+            // setTableData(paymentDetails); // Update the table data
         } catch (error) {
             console.error("Error fetching scheme details, installment number, or FYEAR:", error);
             message.error("Failed to fetch scheme details, installment number, or FYEAR.");
@@ -321,10 +346,8 @@ const SchemeDetails = () => {
         }
     }, [goldRates.length]);
     const [receiptNo, setReceiptNo] = useState("Loading...");
-
+    
     useEffect(() => {
-
-
         fetchReceiptNo();
     }, []);
     const fetchReceiptNo = async () => {
@@ -441,6 +464,7 @@ const SchemeDetails = () => {
             modetype: "string",
             accname: "string",
         };
+
         try {
             // Delete existing records for the receipt number
             await axios.post(
@@ -595,6 +619,7 @@ const SchemeDetails = () => {
             ),
         },
     ];
+    console.log(tableData);
     const popoverContent = (
         <div style={{ width: 450 }}>
             {/* Search Input with Label */}
@@ -677,6 +702,7 @@ const SchemeDetails = () => {
                             Card No:
                         </Text>
                         <Input
+
                             id="cardNoInput"
                             value={cardNo}
                             onChange={(e) => setCardNo(e.target.value)}
@@ -691,14 +717,16 @@ const SchemeDetails = () => {
                                 fontSize: "16px",
                             }}
                             autoFocus
-                            onPressEnter={() => {
-                                fetchSchemeDetails();
-                                setTimeout(() => document.getElementById("paymentModeDropdown").focus(), 0);
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                    e.preventDefault();
+                                    cardnookRef.current.click();
+                                }
                             }} />
-                        <Button type="primary" style={{ width: "40px", height: "40px" }}
+                        <Button ref={cardnookRef} type="primary" style={{ width: "40px", height: "40px" }}
                             onClick={() => {
                                 fetchSchemeDetails(cardNo); // Pass cardNo explicitly
-                                setTimeout(() => document.getElementById("paymentModeDropdown").focus(), 0);
+                                setTimeout(() => document.getElementById("paymentModeDropdown")?.focus(), 0);
                             }}>
                             OK
                         </Button>
@@ -715,8 +743,9 @@ const SchemeDetails = () => {
 
                     {/* Receipt No */}
                     <Col>
+
                         <Text strong style={{ fontSize: "14px", fontWeight: "bold", color: "white" }}>
-                            Receipt No: {receiptNo}
+                            Receipt No:  {receiptNo}
                         </Text>
                     </Col>
 
@@ -1102,6 +1131,7 @@ const SchemeDetails = () => {
                                         style={{ width: "100%" }}
                                         onKeyDown={(e) => handleKeyDown(e, narrRef)}
                                         onChange={(value) => setSchemeData((prev) => ({ ...prev, INCHARGE: value }))}
+                                        value={schemeData?.INCHARGE}
                                     >
                                         {schemeData?.INCHARGE?.split(",").map((incharge, index) => (
                                             <Option key={index} value={incharge}>
@@ -1114,22 +1144,24 @@ const SchemeDetails = () => {
                                 <Col span={12}>
                                     <Text strong style={{ fontSize: "14px", fontWeight: "bold" }}>Narration:</Text>
                                     <Input
-    ref={narrRef}
-    placeholder="Enter Narration"
-    value={schemeData?.narr || ""}
-    onKeyDown={(e) => {
-        if (e.key === "Enter") {
-            e.preventDefault();
-            saveRef.current.click();
-        }
-    }}
-    onChange={(e) =>
-        setSchemeData((prev) => ({
-            ...prev,
-            narr: e.target.value,
-        }))
-    }
-/>
+                                        ref={narrRef}
+                                        placeholder="Enter Narration"
+                                        value={schemeData?.narr || ""}
+                                        onKeyDown={(e) => {
+                                            if (e.key === "Enter") {
+                                                e.preventDefault();
+                                                e.stopPropagation(); // <-- Add this
+                                                saveRef.current.click();
+                                            }
+                                        }}
+                                        
+                                        onChange={(e) =>
+                                            setSchemeData((prev) => ({
+                                                ...prev,
+                                                narr: e.target.value,
+                                            }))
+                                        }
+                                    />
 
                                 </Col>
                             </Row>
