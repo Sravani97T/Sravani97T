@@ -77,6 +77,66 @@ const SchemeDetails = () => {
 
 
     // Search Function
+    // const handleSearch = async () => {
+    //     if (!searchValue.trim()) {
+    //         message.warning("Please enter a Receipt Number");
+    //         return;
+    //     }
+
+    //     setLoading(true);
+    //     try {
+    //         const response = await axios.get(`${CREATE_jwel}/api/Master/GetDataFromGivenTableNameWithWhere?tableName=RECEIPT_MAST&where=RECNO%3D${searchValue}`);
+
+    //         // Map the response data to match the table columns
+    //         const mappedData = response.data.map(item => ({
+    //             RecNo: item.RecNo,
+    //             RecDate: item.RecDate,
+    //             SchemeName: item.SchemeName,
+    //             SchemeAmount: item.SchemeAmount,
+    //             cardNo: item.CardNo,
+    //             SchemeMember: item.SchemeMember,
+    //             Mobile1: item.Phno,
+    //             add1: item?.add1,
+    //             add2: item?.add2,
+    //             add3: item?.add3,
+    //             installmentNo: item.INSTNO,
+    //             SchemeType: item.SchemeType,
+    //             SchemeDuration: item.SchemeDuration,
+    //             BonusAmount: item.BonusAmount,
+    //             SchemeValue: item.SchemeValue,
+    //             SchemeJoinDate: item.SchemeJDate,
+    //             INCHARGE: item.Incharger,
+    //             narr: item.Narr, // Ensure narr is initialized to an empty string if both are undefined
+    //             area: item.AREA,
+    //             SchemeEndDate: item.SchemeENDDate || item.schemeENDDate || item.SchemeEndDate, // Ensure all possible cases are handled
+    //         }));
+
+    //         setSchemeData(mappedData[0]);
+    //         setCardNo(mappedData[0]?.cardNo || "");
+    //         fetchSchemeDetails(mappedData[0]?.cardNo); // ← Pass the value directly
+
+    //         // Fetch payment details for the matching receipt number
+    //         const paymentResponse = await axios.get(`${CREATE_jwel}/api/Master/GetDataFromGivenTableNameWithWhere?tableName=RECEIPT_PAYMENT&where=CARDNO%3D%27${mappedData[0]?.cardNo}%27`);
+    //         const paymentDetails = paymentResponse.data
+    //             .filter(item => item.RECNO === mappedData[0]?.RecNo)
+    //             .map(item => ({
+    //                 key: item.SNO,
+    //                 paymentMode: item.PAYMODE,
+    //                 particulars: item.PARTICULARS,
+    //                 accNo: item.ACCNO,
+    //                 amount: item.AMT,
+    //                 descr: item.DESCR,
+    //                 RECNO: item.RECNO,
+    //             }));
+
+    //         setTableData(paymentDetails);
+    //         fetchSchemeDetails();
+    //     } catch (error) {
+    //         message.error("Failed to fetch data");
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    // };
     const handleSearch = async () => {
         if (!searchValue.trim()) {
             message.warning("Please enter a Receipt Number");
@@ -85,9 +145,8 @@ const SchemeDetails = () => {
 
         setLoading(true);
         try {
+            // Fetch receipt master
             const response = await axios.get(`${CREATE_jwel}/api/Master/GetDataFromGivenTableNameWithWhere?tableName=RECEIPT_MAST&where=RECNO%3D${searchValue}`);
-
-            // Map the response data to match the table columns
             const mappedData = response.data.map(item => ({
                 RecNo: item.RecNo,
                 RecDate: item.RecDate,
@@ -106,19 +165,20 @@ const SchemeDetails = () => {
                 SchemeValue: item.SchemeValue,
                 SchemeJoinDate: item.SchemeJDate,
                 INCHARGE: item.Incharger,
-                narr: item.Narr, // Ensure narr is initialized to an empty string if both are undefined
+                narr: item.Narr,
                 area: item.AREA,
-                SchemeEndDate: item.SchemeENDDate || item.schemeENDDate || item.SchemeEndDate, // Ensure all possible cases are handled
+                SchemeEndDate: item.SchemeENDDate || item.schemeENDDate || item.SchemeEndDate,
             }));
 
-            setSchemeData(mappedData[0]);
-            setCardNo(mappedData[0]?.cardNo || "");
-            fetchSchemeDetails(mappedData[0]?.cardNo); // ← Pass the value directly
+            const schemeInfo = mappedData[0];
+            setSchemeData(schemeInfo);
+            setCardNo(schemeInfo?.cardNo || "");
+            
 
-            // Fetch payment details for the matching receipt number
-            const paymentResponse = await axios.get(`${CREATE_jwel}/api/Master/GetDataFromGivenTableNameWithWhere?tableName=RECEIPT_PAYMENT&where=CARDNO%3D%27${mappedData[0]?.cardNo}%27`);
+            // Fetch payment details
+            const paymentResponse = await axios.get(`${CREATE_jwel}/api/Master/GetDataFromGivenTableNameWithWhere?tableName=RECEIPT_PAYMENT&where=CARDNO%3D%27${schemeInfo?.cardNo}%27`);
             const paymentDetails = paymentResponse.data
-                .filter(item => item.RECNO === mappedData[0]?.RecNo)
+                .filter(item => item.RECNO === schemeInfo?.RecNo)
                 .map(item => ({
                     key: item.SNO,
                     paymentMode: item.PAYMODE,
@@ -128,15 +188,27 @@ const SchemeDetails = () => {
                     descr: item.DESCR,
                     RECNO: item.RECNO,
                 }));
-
             setTableData(paymentDetails);
-            fetchSchemeDetails();
+
+            // Fetch Member Card Detail
+            const memberCardResponse = await axios.get(`${CREATE_jwel}/api/Master/GetDataFromGivenTableNameWithWhere?tableName=MEMBER_CARD_DET&where=CARDNO%3D%27${schemeInfo.cardNo}%27%20AND%20RECNO%3D%27${schemeInfo.RecNo}%27`);
+            if (memberCardResponse.data?.length > 0) {
+                const memberCard = memberCardResponse.data[0];
+                setSchemeData(prev => ({
+                    ...prev,
+                    sno: memberCard.sno, // ← Add sno to existing scheme data
+                }));
+            }
+
+            fetchSchemeDetails(schemeInfo?.cardNo); // Still fetch full scheme details
+
         } catch (error) {
             message.error("Failed to fetch data");
         } finally {
             setLoading(false);
         }
     };
+
     // Clear Function
     const handleClear = () => {
         setSearchValue("");
@@ -190,7 +262,7 @@ const SchemeDetails = () => {
             nextRef.current?.focus();
         }
     };
-    
+
 
     // Handle Pay Mode Selection
     const handlePayModeChange = (paymode) => {
@@ -207,6 +279,28 @@ const SchemeDetails = () => {
         const date = new Date(dateString);
         return date.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
     };
+    const fetchInstallmentNoByCardNo = async (cardNo) => {
+        try {
+            const trimmedCardNo = cardNo?.trim();
+            if (!trimmedCardNo) return;
+    
+            const installRes = await axios.get(
+                `http://www.jewelerp.timeserasoftware.in/api/Master/GetDataFromGivenTableNameWithWhereandOrder?tableName=MEMBER_CARD_DET&where=CARDNO%3D%27${encodeURIComponent(trimmedCardNo)}%27%20AND%20RECNO%20IS%20NULL&order=SNO`
+            );
+    
+            const pendingInstallments = installRes.data;
+            const firstSno = pendingInstallments.length > 0 ? Math.floor(pendingInstallments[0].sno) : 1;
+    
+            setInstallmentNo(firstSno);
+            setSchemeData(prev => ({ ...prev, sno: firstSno }));
+    
+            console.log("Fetched Installment SNO:", firstSno);
+        } catch (error) {
+            console.error("Error fetching installment number:", error);
+            message.error("Failed to fetch installment number.");
+        }
+    };
+    
     const fetchSchemeDetails = async (cardNoToUse) => {
         try {
             const trimmedCardNo = cardNoToUse?.trim();
@@ -219,7 +313,7 @@ const SchemeDetails = () => {
             const response = await axios.get(
                 `http://www.jewelerp.timeserasoftware.in/api/Master/GetDataFromGivenTableNameWithWhere?tableName=SCHEME_MEMBER&where=CARDNO%3D${encodeURIComponent(trimmedCardNo)}`
             );
-           
+
             if (response.data.length === 0) {
                 message.warning("No scheme details found for the provided Card No.");
                 return;
@@ -248,14 +342,14 @@ const SchemeDetails = () => {
             }));
             setSchemeData(mappedData[0]);
             console.log("mast", response.data);
-            const installRes = await axios.get(
-                `http://www.jewelerp.timeserasoftware.in/api/Master/GetDataFromGivenTableNameWithWhereandOrder?tableName=MEMBER_CARD_DET&where=CARDNO%3D%27${encodeURIComponent(trimmedCardNo)}%27%20AND%20RECNO%20IS%20NULL&order=SNO`
-            );
-    
-            const pendingInstallments = installRes.data;
-            const firstSno = pendingInstallments.length > 0 ? Math.floor(pendingInstallments[0].sno) : 1;
-            setInstallmentNo(firstSno);
-            console.log("Installment No:", firstSno);
+            // const installRes = await axios.get(
+            //     `http://www.jewelerp.timeserasoftware.in/api/Master/GetDataFromGivenTableNameWithWhereandOrder?tableName=MEMBER_CARD_DET&where=CARDNO%3D%27${encodeURIComponent(trimmedCardNo)}%27%20AND%20RECNO%20IS%20NULL&order=SNO`
+            // );
+
+            // const pendingInstallments = installRes.data;
+            // const firstSno = pendingInstallments.length > 0 ? Math.floor(pendingInstallments[0].sno) : 1;
+            // setInstallmentNo(firstSno);
+            // console.log("Installment No:", firstSno);
             // Fetch FYEAR from firm configuration
             const firmConfigResponse = await axios.get(
                 `${CREATE_jwel}/api/Erp/GetFirmConfihure`
@@ -266,22 +360,7 @@ const SchemeDetails = () => {
             // Pass FYEAR to handleSave function
             setSchemeData((prev) => ({ ...prev, fyear: fyear || "default_fyear" })); // Ensure fyear is set with a fallback
 
-            // Fetch payment details for the card number
-            // const paymentResponse = await axios.get(
-            //     `${CREATE_jwel}/api/Master/GetDataFromGivenTableNameWithWhere?tableName=RECEIPT_PAYMENT&where=CARDNO%3D%27${encodeURIComponent(trimmedCardNo)}%27`
-            // );
-
-            // const paymentDetails = paymentResponse.data.map((item, index) => ({
-            //     key: index + 1,
-            //     paymentMode: item.PAYMODE,
-            //     particulars: item.PARTICULARS,
-            //     accNo: item.ACCNO,
-            //     amount: item.AMT,
-            //     descr: item.DESCR,
-            //     RECNO: item.RECNO
-            // }));
-
-            // setTableData(paymentDetails); // Update the table data
+         
         } catch (error) {
             console.error("Error fetching scheme details, installment number, or FYEAR:", error);
             message.error("Failed to fetch scheme details, installment number, or FYEAR.");
@@ -339,7 +418,6 @@ const SchemeDetails = () => {
                 `${CREATE_jwel}/api/Master/GetDataFromGivenTableNameWithWhere?tableName=DAILY_RATES&where=RDATE%3D%27${formattedDate}%27`
             );
 
-            const hasRates = ratesResponse.data.length > 0;
             setRates(ratesResponse.data);
         } catch (error) {
             message.error("Error fetching rates");
@@ -360,7 +438,7 @@ const SchemeDetails = () => {
         }
     }, [goldRates.length]);
     const [receiptNo, setReceiptNo] = useState("Loading...");
-    
+
     useEffect(() => {
         fetchReceiptNo();
     }, []);
@@ -486,12 +564,12 @@ const SchemeDetails = () => {
             );
 
             // Delete MEMBER_CARD_DET records
-                        if (installmentNo === 1) {
+            if (installmentNo === 1) {
 
-            await axios.post(
-                `http://www.jewelerp.timeserasoftware.in/api/Master/DeleteDataFromGivenTableNameWithWhere?tableName=MEMBER_CARD_DET&where=CARDNO%3D%27${cardNo}%27`
-            );
-        }
+                await axios.post(
+                    `http://www.jewelerp.timeserasoftware.in/api/Master/DeleteDataFromGivenTableNameWithWhere?tableName=MEMBER_CARD_DET&where=CARDNO%3D%27${cardNo}%27`
+                );
+            }
             // Delete RECEIPT_MAST records
             await axios.post(
                 `http://www.jewelerp.timeserasoftware.in/api/Master/DeleteDataFromGivenTableNameWithWhere?tableName=RECEIPT_MAST&where=RECNO%3D%27${receiptNo}%27`
@@ -650,6 +728,7 @@ const SchemeDetails = () => {
                             setReceiptNo(searchValue); // Update receiptNo with the entered value
                             setVisible(false);
                             handleSearch();
+                            
                             setSearchValue(""); // Clear the search value after pressing Enter
                             setTimeout(() => document.getElementById("paymentModeDropdown").focus(), 0); // Move cursor to Payment Mode
                         }}
@@ -722,6 +801,7 @@ const SchemeDetails = () => {
                             id="cardNoInput"
                             value={cardNo}
                             onChange={(e) => setCardNo(e.target.value)}
+                            onBlur={() => fetchInstallmentNoByCardNo(cardNo)}
                             placeholder="Card no"
                             style={{
                                 width: "120px",
@@ -898,7 +978,7 @@ const SchemeDetails = () => {
                                                     minWidth: "50px",
                                                 }}
                                             >
-                                                {installmentNo || 0}
+                                                {schemeData?.sno !== undefined ? schemeData.sno : installmentNo || 0}
                                             </Text>
                                         </div>
                                     </Col>
@@ -1149,7 +1229,7 @@ const SchemeDetails = () => {
                                         onChange={(value) => setSchemeData((prev) => ({ ...prev, INCHARGE: value }))}
                                         value={schemeData?.INCHARGE}
                                     >
-                                         {inchargeList.map(incharge => (
+                                        {inchargeList.map(incharge => (
                                             <Option key={incharge} value={incharge}>
                                                 {incharge}
                                             </Option>
@@ -1170,7 +1250,7 @@ const SchemeDetails = () => {
                                                 saveRef.current.click();
                                             }
                                         }}
-                                        
+
                                         onChange={(e) =>
                                             setSchemeData((prev) => ({
                                                 ...prev,
