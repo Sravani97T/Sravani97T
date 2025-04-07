@@ -24,6 +24,7 @@ const SchemeDetails = () => {
     const [installmentNo, setInstallmentNo] = useState(1); // Default to 1
     const [paymentData, setPaymentData] = useState([]);
     const [payModes, setPayModes] = useState([]);
+    const [inchargeList, setInchargeList] = useState([]);
 
     const [accountNumbers, setAccountNumbers] = useState([]);
     const paymentModes = ["UPI", "ONLINE", "CARD", "CHEQUE", "CASH"];
@@ -47,7 +48,27 @@ const SchemeDetails = () => {
     const [visible, setVisible] = useState(false);
     const [searchValue, setSearchValue] = useState("");
     const inputRef = useRef(null);
+    useEffect(() => {
+        fetchIncharges();
+    }, []);
+    const fetchIncharges = async () => {
+        try {
+            const res = await axios.get(`${CREATE_jwel}/api/Master/GetDataFromGivenTableName`, {
+                params: {
+                    tableName: "SCHEME_MEMBER",
+                },
+            });
 
+            const allIncharges = res.data
+                .map(item => item.INCHARGE)
+                .filter((val, index, self) => val && self.indexOf(val) === index); // remove duplicates and nulls
+
+            setInchargeList(allIncharges);
+        } catch (err) {
+            console.error("Error fetching incharges:", err);
+            message.error("Failed to fetch incharge list.");
+        }
+    };
     useEffect(() => {
         if (visible) {
             setTimeout(() => inputRef.current?.focus(), 100); // Ensure focus when Popover opens
@@ -195,12 +216,10 @@ const SchemeDetails = () => {
             }
 
             // Use trimmedCardNo in place of cardNo
-            // const response = await axios.get(
-            //     `http://www.jewelerp.timeserasoftware.in/api/Master/GetDataFromGivenTableNameWithWhere?tableName=SCHEME_MEMBER&where=CARDNO%3D${encodeURIComponent(trimmedCardNo)}`
-            // );
             const response = await axios.get(
-                `http://www.jewelerp.timeserasoftware.in/api/Master/GetDataFromGivenTableNameWithWhere?tableName=RECEIPT_MAST&where=CARDNO%3D%27${encodeURIComponent(trimmedCardNo)}%27`
+                `http://www.jewelerp.timeserasoftware.in/api/Master/GetDataFromGivenTableNameWithWhere?tableName=SCHEME_MEMBER&where=CARDNO%3D${encodeURIComponent(trimmedCardNo)}`
             );
+           
             if (response.data.length === 0) {
                 message.warning("No scheme details found for the provided Card No.");
                 return;
@@ -212,7 +231,7 @@ const SchemeDetails = () => {
                 SchemeAmount: item.SchemeAmount,
                 cardNo: item.CardNo,
                 SchemeMember: item.SchemeMember,
-                Mobile1: item.Phno,
+                Mobile1: item.Mobile1,
                 add1: item?.add1,
                 add2: item?.add2,
                 add3: item?.add3,
@@ -221,27 +240,22 @@ const SchemeDetails = () => {
                 SchemeDuration: item.SchemeDuration,
                 BonusAmount: item.BonusAmount,
                 SchemeValue: item.SchemeValue,
-                SchemeJoinDate: item.SchemeJDate,
-                INCHARGE: item.Incharger,
+                SchemeJoinDate: item.SchemeJoinDate,
+                INCHARGE: item.INCHARGE,
                 narr: item.Narr, // Ensure narr is initialized to an empty string if both are undefined
-                area: item.AREA,
+                area: item.area,
                 SchemeEndDate: item.SchemeENDDate || item.schemeENDDate || item.SchemeEndDate, // Ensure all possible cases are handled
             }));
             setSchemeData(mappedData[0]);
             console.log("mast", response.data);
-
-            const installmentResponse = await axios.get(
-                `${CREATE_jwel}/api/Scheme/GetSchemeMaxNumberInTableWithOrder?tableName=RECEIPT_MAST&column=INSTNO&where=CARDNO%3D%27${encodeURIComponent(trimmedCardNo)}%27`
+            const installRes = await axios.get(
+                `http://www.jewelerp.timeserasoftware.in/api/Master/GetDataFromGivenTableNameWithWhereandOrder?tableName=MEMBER_CARD_DET&where=CARDNO%3D%27${encodeURIComponent(trimmedCardNo)}%27%20AND%20RECNO%20IS%20NULL&order=SNO`
             );
-
-            const installmentData = installmentResponse.data;
-
-            const maxInstallment = installmentData.length > 0 && installmentData[0].Column1 !== null
-                ? Math.floor(Number(installmentData[0].Column1)) + 1
-                : 1;
-
-            setInstallmentNo(maxInstallment);
-            console.log("Installment No:", maxInstallment);
+    
+            const pendingInstallments = installRes.data;
+            const firstSno = pendingInstallments.length > 0 ? Math.floor(pendingInstallments[0].sno) : 1;
+            setInstallmentNo(firstSno);
+            console.log("Installment No:", firstSno);
             // Fetch FYEAR from firm configuration
             const firmConfigResponse = await axios.get(
                 `${CREATE_jwel}/api/Erp/GetFirmConfihure`
@@ -472,10 +486,12 @@ const SchemeDetails = () => {
             );
 
             // Delete MEMBER_CARD_DET records
+                        if (installmentNo === 1) {
+
             await axios.post(
                 `http://www.jewelerp.timeserasoftware.in/api/Master/DeleteDataFromGivenTableNameWithWhere?tableName=MEMBER_CARD_DET&where=CARDNO%3D%27${cardNo}%27`
             );
-
+        }
             // Delete RECEIPT_MAST records
             await axios.post(
                 `http://www.jewelerp.timeserasoftware.in/api/Master/DeleteDataFromGivenTableNameWithWhere?tableName=RECEIPT_MAST&where=RECNO%3D%27${receiptNo}%27`
@@ -1133,8 +1149,8 @@ const SchemeDetails = () => {
                                         onChange={(value) => setSchemeData((prev) => ({ ...prev, INCHARGE: value }))}
                                         value={schemeData?.INCHARGE}
                                     >
-                                        {schemeData?.INCHARGE?.split(",").map((incharge, index) => (
-                                            <Option key={index} value={incharge}>
+                                         {inchargeList.map(incharge => (
+                                            <Option key={incharge} value={incharge}>
                                                 {incharge}
                                             </Option>
                                         ))}

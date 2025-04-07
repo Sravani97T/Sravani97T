@@ -1,4 +1,4 @@
-import React, { useState, useEffect, forwardRef } from "react";
+import React, { useState, useEffect,useRef, forwardRef } from "react";
 import { Input, Button, Row, Col, Card, Typography, Table, message, Select } from "antd";
 import axios from "axios";
 import { CREATE_jwel } from "../../Config/Config";
@@ -23,8 +23,15 @@ const ShemeSettlement = () => {
     const [rates, setRates] = useState([]);
     const [index, setIndex] = useState(0);
     const [inchargeList, setInchargeList] = useState([]);
-
+    const cardNoRef = useRef(null);
+    const inchargeRef = useRef(null);
+    const narrRef = useRef(null);
+    const saveButtonRef = useRef(null);
+    
     const [schemeCardData, setSchemeCardData] = useState(null);
+// Inside your component
+
+
 
     // Filter only GOLD products
     const goldRates = rates.filter(item => item.MAINPRODUCT.toLowerCase() === "gold");
@@ -38,6 +45,31 @@ const ShemeSettlement = () => {
             return () => clearInterval(interval);
         }
     }, [goldRates.length]);
+    const [voucherNo, setVoucherNo] = useState(null);
+    const fetchVoucherNo = async () => {
+        try {
+          const response = await axios.get(
+            "http://www.jewelerp.timeserasoftware.in/api/Scheme/GetSchemeMaxNumberInTable?tableName=SCHEME_END&column=RECNO"
+          );
+          const data = response.data;
+  
+          if (data && data.length > 0) {
+            const maxNo = data[0].Column1;
+            setVoucherNo(maxNo === null ? 1 : maxNo + 1);
+          } else {
+            setVoucherNo(1);
+          }
+        } catch (error) {
+          console.error("Error fetching voucher number:", error);
+          setVoucherNo(1); // fallback
+        }
+      };
+    useEffect(() => {
+ 
+  
+      fetchVoucherNo();
+    }, []);
+  
     const fetchIncharges = async () => {
         try {
             const res = await axios.get(`${CREATE_jwel}/api/Master/GetDataFromGivenTableName`, {
@@ -162,6 +194,69 @@ const ShemeSettlement = () => {
         }
     };
 
+    const handleSave = async () => {
+        const now = new Date().toISOString();
+
+        const safeDate = (val) => val ? new Date(val).toISOString() : now;
+        
+        const body = {
+          recNo: Number(voucherNo) || 0,
+          recDate: now,
+          rectime: now,
+          empCode: schemeCardData?.empCode ?? "",
+          schemeGroup: schemeCardData?.schemeGroup ?? "",
+          schemeName: schemeCardData?.schemeName ?? "",
+          goldRate: Number(schemeCardData?.goldRate) || 0,
+          cardNo: schemeCardData?.cardNo ?? "",
+          phno: schemeCardData?.mobile1 ?? "",
+          schemeMember: schemeCardData?.memberName ?? "",
+          add1: schemeCardData?.address ?? "",
+          add2: "",
+          add3: "",
+          schemeAmount: Number(schemeCardData?.amount) || 0,
+          schemeDuration: Number(schemeCardData?.noOfMonths) || 0,
+          bonusAmount: Number(schemeCardData?.bonusAmount) || 0,
+          amount: Number(schemeCardData?.paidAmount) || 0,
+          schemeValue: Number(schemeCardData?.schemeValue) || 0,
+          schemeJDate: safeDate(schemeCardData?.joinDate),
+          recAmount: Number(schemeCardData?.paidAmount) || 0,
+          goldWt: Number(schemeCardData?.goldWeight) || 0,
+          narr: schemeCardData?.narr ?? "",
+          uname: schemeCardData?.uname ?? "",
+          schemeType: schemeCardData?.schemeType ?? "",
+          schemeMode: schemeCardData?.schemeMode ?? "",
+          rBonusAmount: Number(schemeCardData?.rBonusAmount) || 0,
+          giftVoucher: Number(schemeCardData?.giftVoucher) || 0,
+          totSValue: Number(schemeCardData?.totalSchemeAmount) || 0,
+          mobile1: schemeCardData?.mobile1 ?? "",
+          mobile2: schemeCardData?.mobile2 ?? "",
+          billNo: Number(schemeCardData?.billNo) || 0,
+          billDate: now,
+          jewelType: schemeCardData?.jewelType ?? "",
+          saleCode: schemeCardData?.saleCode ?? "",
+          cancelled: "N",
+          incharger: schemeCardData?.incharge ?? "",
+          clouD_UPLOAD: true,
+          schemE_ENDDATE: now,
+        };
+        
+      
+        try {
+          await axios.post("http://www.jewelerp.timeserasoftware.in/api/Scheme/SchemeEndInsert", body);
+          message.success("Scheme saved successfully!");
+          fetchVoucherNo(); // Fetch new voucher number after saving
+
+          // Clear data after saving
+          setCardNo("");
+          setMemberData(null);
+          setSchemeCardData(null);
+          setTableData([]);
+        } catch (error) {
+          console.error("Save failed:", error);
+          message.error("Failed to save scheme.");
+        }
+      };
+      
 
     useEffect(() => {
         fetchRates1();
@@ -308,6 +403,8 @@ const ShemeSettlement = () => {
                             Card No:
                         </Text>
                         <Input
+                            ref={cardNoRef}
+
                             value={cardNo}
                             onChange={(e) => setCardNo(e.target.value)}
                             placeholder="Card no"
@@ -319,6 +416,12 @@ const ShemeSettlement = () => {
                                 marginRight: "10px",
                                 fontWeight: "bold",
                                 fontSize: "16px",
+                            }}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                    fetchMemberData();
+                                    setTimeout(() => inchargeRef.current?.focus(), 100); // Delay to ensure rendering
+                                }
                             }}
                             autoFocus
                         />
@@ -403,7 +506,7 @@ const ShemeSettlement = () => {
                                     <div style={{ display: "flex", alignItems: "center" }}>
                                         <Text strong style={{ fontSize: "16px", color: "#d10507" }}>Voucher No</Text>
                                         <Text strong style={{ marginLeft: "4px", color: "#d10507" }}>:</Text>
-                                        <Text strong style={{ marginLeft: "6px", fontSize: "16px", color: "#d10507" }}></Text>
+                                        <Text strong style={{ marginLeft: "6px", fontSize: "16px", color: "#d10507" }}> {voucherNo !== null ? voucherNo : "Loading..."}</Text>
                                     </div>
 
                                     <div style={{ display: "flex", alignItems: "center" }}>
@@ -449,11 +552,18 @@ const ShemeSettlement = () => {
                                 <Col span={7}>
 
                                     <Select
+                                        ref={inchargeRef}
+
                                         placeholder="Select Incharge"
                                         style={{ width: "100%" }}
                                         value={schemeCardData?.incharge} // selected value from schemeData.INCHARGE
                                         onChange={(value) => {
                                             setSchemeCardData(prev => ({ ...prev, incharge: value }));
+                                        }}
+                                        onKeyDown={(e) => {
+                                            if (e.key === "Enter") {
+                                                narrRef.current?.focus();
+                                            }
                                         }}
                                     >
                                         {inchargeList.map(incharge => (
@@ -469,11 +579,26 @@ const ShemeSettlement = () => {
 
                                 {/* Description Input */}
                                 <Col span={5} style={{ display: "flex", alignItems: "center" }}>
-                                    <Text strong>Description</Text>
+                                    <Text strong>Narration</Text>
                                     <Text strong style={{ marginLeft: "4px" }}>:</Text>
                                 </Col>
                                 <Col span={7}>
-                                    <Input placeholder="Enter Description" />
+                                <Input
+                                    ref={narrRef}
+
+      placeholder="Enter Narr"
+      value={schemeCardData?.narr || ""}
+      onChange={(e) => {
+        const narrValue = e.target.value;
+        setSchemeCardData(prev => ({ ...prev, narr: narrValue }));
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+            handleSave();
+            setTimeout(() => cardNoRef.current?.focus(), 100);
+        }
+    }}
+    />
                                 </Col>
                             </Row>
                         </Card>
@@ -551,7 +676,8 @@ const ShemeSettlement = () => {
 
 
                             </Row>
-                            <Button type="primary" style={{ marginTop: "10px", width: "100%" }}>Save</Button>
+                            <Button     ref={saveButtonRef}
+type="primary" style={{ marginTop: "10px", width: "100%" }}  onClick={handleSave}>Save</Button>
                         </Card>
                     </Col>
                 </Row>
