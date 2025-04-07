@@ -247,28 +247,35 @@ const MemeberDiscontinue = () => {
 
 
         };
-
+console.log("schemeCardData",schemeCardData)
         try {
             await axios.post("http://www.jewelerp.timeserasoftware.in/api/Scheme/SchemeMiddleDropInsert", body);
             message.success("Scheme saved successfully!");
             setTimeout(() => {
                 cardNoRef.current?.focus();
               }, 0);
-            fetchVoucherNo(); // if this gets the next voucher
+           // Second: update member dropping
+    await axios.post(`http://www.jewelerp.timeserasoftware.in/api/Scheme/UpdateSchemeMemberDropping?schemeDropping=true&cardNO=${cardNo}`, {
+       
+      });
+  
+  
+    
 
-            // Reset fields
-            setSchemeCardData(null); // or initial state if used
-            setVoucherNo("");         // if voucherNo is editable
-            setCardNo("");
-            setTableData([]);
-            setIsDiscontinued(false);
-            setMemberData(null);
-        }
-        catch (error) {
-            console.error("Save failed:", error);
-            message.error("Failed to save scheme.");
-        }
-    };
+      fetchVoucherNo();
+  
+      // Reset fields
+      setSchemeCardData(null);
+      setVoucherNo("");
+      setCardNo("");
+      setTableData([]);
+      setIsDiscontinued(false);
+      setMemberData(null);
+    } catch (error) {
+      console.error("Save failed:", error);
+      message.error("Failed to save scheme.");
+    }
+  };
 
 
 

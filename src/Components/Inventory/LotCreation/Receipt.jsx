@@ -148,6 +148,7 @@ const SchemeDetails = () => {
             // Fetch receipt master
             const response = await axios.get(`${CREATE_jwel}/api/Master/GetDataFromGivenTableNameWithWhere?tableName=RECEIPT_MAST&where=RECNO%3D${searchValue}`);
             const mappedData = response.data.map(item => ({
+
                 RecNo: item.RecNo,
                 RecDate: item.RecDate,
                 SchemeName: item.SchemeName,
@@ -165,12 +166,14 @@ const SchemeDetails = () => {
                 SchemeValue: item.SchemeValue,
                 SchemeJoinDate: item.SchemeJDate,
                 INCHARGE: item.Incharger,
-                narr: item.Narr,
+                narr: item?.Narr,
                 area: item.AREA,
                 SchemeEndDate: item.SchemeENDDate || item.schemeENDDate || item.SchemeEndDate,
             }));
 
             const schemeInfo = mappedData[0];
+            console.log("narr",mappedData)
+
             setSchemeData(schemeInfo);
             setCardNo(schemeInfo?.cardNo || "");
             
@@ -194,10 +197,8 @@ const SchemeDetails = () => {
             const memberCardResponse = await axios.get(`${CREATE_jwel}/api/Master/GetDataFromGivenTableNameWithWhere?tableName=MEMBER_CARD_DET&where=CARDNO%3D%27${schemeInfo.cardNo}%27%20AND%20RECNO%3D%27${schemeInfo.RecNo}%27`);
             if (memberCardResponse.data?.length > 0) {
                 const memberCard = memberCardResponse.data[0];
-                setSchemeData(prev => ({
-                    ...prev,
-                    sno: memberCard.sno, // ← Add sno to existing scheme data
-                }));
+               
+                setInstallmentNo(memberCard.sno); // Set installment number from MEMBER_CARD_DET
             }
 
             fetchSchemeDetails(schemeInfo?.cardNo); // Still fetch full scheme details
@@ -300,6 +301,7 @@ const SchemeDetails = () => {
             message.error("Failed to fetch installment number.");
         }
     };
+  
     
     const fetchSchemeDetails = async (cardNoToUse) => {
         try {
@@ -342,15 +344,7 @@ const SchemeDetails = () => {
             }));
             setSchemeData(mappedData[0]);
             console.log("mast", response.data);
-            // const installRes = await axios.get(
-            //     `http://www.jewelerp.timeserasoftware.in/api/Master/GetDataFromGivenTableNameWithWhereandOrder?tableName=MEMBER_CARD_DET&where=CARDNO%3D%27${encodeURIComponent(trimmedCardNo)}%27%20AND%20RECNO%20IS%20NULL&order=SNO`
-            // );
-
-            // const pendingInstallments = installRes.data;
-            // const firstSno = pendingInstallments.length > 0 ? Math.floor(pendingInstallments[0].sno) : 1;
-            // setInstallmentNo(firstSno);
-            // console.log("Installment No:", firstSno);
-            // Fetch FYEAR from firm configuration
+           
             const firmConfigResponse = await axios.get(
                 `${CREATE_jwel}/api/Erp/GetFirmConfihure`
             );
@@ -652,19 +646,47 @@ const SchemeDetails = () => {
                     memberCardPayload
                 );
             }
+  // 🔁 Call update APIs
+  try {
+    if (installmentNo > 1) {
+        await axios.post(`http://www.jewelerp.timeserasoftware.in/api/Scheme/UpdateMemberCardDetails`, null, {
+            params: {
+                recNo: receiptNo,
+                recDate: selectedDate.toLocaleDateString("en-US"),
+                pStatus: true,
+                cardNO: cardNo,
+                sno: installmentNo,
+            },
+        });
+    }
 
-            setSchemeData(null);
-            setCardNo("");
-            setTableData([]);
-            fetchReceiptNo();
-            setInstallmentNo(1);
-            setTimeout(() => document.getElementById("cardNoInput").focus(), 0); // Move cursor to Card No input
-            console.log("Response:", response.data);
-        } catch (error) {
-            console.error("Error saving data:", error);
-            message.error("Failed to save data.");
-        }
-    };
+    await axios.post(`http://www.jewelerp.timeserasoftware.in/api/Scheme/UpdateSchemeMemberInstallment`, null, {
+        params: {
+            InstallNo: installmentNo,
+            recNo: receiptNo,
+            recDate: selectedDate.toLocaleDateString("en-US"),
+            recAmt: paidAmount,
+            cardNO: cardNo,
+        },
+    });} catch (updateError) {
+        console.error("Error calling update APIs:", updateError);
+        message.warning("Update steps failed for member or installment.");
+    }
+
+    // Reset
+    setSchemeData(null);
+    setCardNo("");
+    setTableData([]);
+    fetchReceiptNo();
+    setInstallmentNo(1);
+    setTimeout(() => document.getElementById("cardNoInput").focus(), 0);
+
+    console.log("Response:", response.data);
+} catch (error) {
+    console.error("Error saving data:", error);
+    message.error("Failed to save data.");
+}
+};
     const handleDelete = (key) => {
         setTableData((prevData) => prevData.filter((item) => item.key !== key));
     };
@@ -978,7 +1000,7 @@ const SchemeDetails = () => {
                                                     minWidth: "50px",
                                                 }}
                                             >
-                                                {schemeData?.sno !== undefined ? schemeData.sno : installmentNo || 0}
+                                                {installmentNo || 0}
                                             </Text>
                                         </div>
                                     </Col>
@@ -1230,7 +1252,7 @@ const SchemeDetails = () => {
                                         value={schemeData?.INCHARGE}
                                     >
                                         {inchargeList.map(incharge => (
-                                            <Option key={incharge} value={incharge}>
+                                            <Option key={index} value={incharge}>
                                                 {incharge}
                                             </Option>
                                         ))}
@@ -1242,11 +1264,10 @@ const SchemeDetails = () => {
                                     <Input
                                         ref={narrRef}
                                         placeholder="Enter Narration"
-                                        value={schemeData?.narr || ""}
+                                        value={schemeData && schemeData?.narr || ""}
                                         onKeyDown={(e) => {
                                             if (e.key === "Enter") {
                                                 e.preventDefault();
-                                                e.stopPropagation(); // <-- Add this
                                                 saveRef.current.click();
                                             }
                                         }}
