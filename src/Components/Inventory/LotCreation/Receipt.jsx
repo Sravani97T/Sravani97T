@@ -334,7 +334,7 @@ const SchemeDetails = () => {
         if (schemeData?.SchemeAmount > 0) {
             const paidAmount = tableData.reduce((sum, record) => sum + parseFloat(record.amount || 0), 0);
             if (schemeData?.SchemeAmount === paidAmount) {
-                setTimeout(() => inchargeRef.current?.focus(), 0);
+                setTimeout(() => narrRef.current?.focus(), 0);
             }
         }
     }, [schemeData, tableData]);
@@ -588,6 +588,15 @@ const SchemeDetails = () => {
                 );
             }
   // 🔁 Call update APIs
+  await axios.post(`http://www.jewelerp.timeserasoftware.in/api/Scheme/UpdateSchemeMemberInstallment`, null, {
+    params: {
+        InstallNo: installmentNo,
+        recNo: receiptNo,
+        recDate: selectedDate.toLocaleDateString("en-US"),
+        recAmt: paidAmount,
+        cardNO: cardNo,
+    },
+});
   try {
     if (installmentNo > 1) {
         await axios.post(`http://www.jewelerp.timeserasoftware.in/api/Scheme/UpdateMemberCardDetails`, null, {
@@ -1180,7 +1189,7 @@ const SchemeDetails = () => {
                                 </Text>
                             </div>
 
-                            <Row gutter={[16, 8]} style={{ marginTop: "10px" }}>
+                            <Row gutter={[16, 8]} style={{ marginTop: "5px" }}>
                                 <Col span={12}>
                                     <Text strong style={{ fontSize: "14px", fontWeight: "bold" }}>Incharge:</Text>
                                     <Select
@@ -1205,7 +1214,7 @@ const SchemeDetails = () => {
                                     <Input
                                         ref={narrRef}
                                         placeholder="Enter Narration"
-                                        value={schemeData && schemeData?.narr || ""}
+                                        value={schemeData && schemeData?.narr}
                                         onKeyDown={(e) => {
                                             if (e.key === "Enter") {
                                                 e.preventDefault();
@@ -1230,33 +1239,33 @@ const SchemeDetails = () => {
                     {/* Scheme Details */}
                     <Col xs={24} lg={7}>
                         <Card className="customeproductcard" style={{ backgroundImage: "linear-gradient(to right, #cdcddf, #a8b1ff)" }}>
-                            <div style={{ fontSize: "14px", fontWeight: "bold", marginBottom: "5px" }}>
+                            <div style={{ fontSize: "12px", fontWeight: "bold", marginBottom: "5px" }}>
                                 SCHEME DETAILS
                             </div>
                             <Row>
-                                <Col span={10}><Text strong style={{ fontSize: "14px", fontWeight: "bold" }}>Scheme Type</Text></Col>
+                                <Col span={10}><Text strong style={{ fontSize: "12px", fontWeight: "bold" }}>Scheme Type</Text></Col>
                                 <Col span={2} style={{ textAlign: "center" }}><Text strong style={{ fontSize: "16px", fontWeight: "bold" }}>:</Text></Col>
-                                <Col span={12} style={{ fontSize: "14px", fontWeight: "bold" }}>{schemeData ? schemeData.SchemeType : ""}</Col>
+                                <Col span={12} style={{ fontSize: "12px", fontWeight: "bold" }}>{schemeData ? schemeData.SchemeType : ""}</Col>
 
-                                <Col span={10}><Text strong style={{ fontSize: "14px", fontWeight: "bold" }}>Scheme Name</Text></Col>
+                                <Col span={10}><Text strong style={{ fontSize: "12px", fontWeight: "bold" }}>Scheme Name</Text></Col>
                                 <Col span={2} style={{ textAlign: "center" }}><Text strong style={{ fontSize: "16px", fontWeight: "bold" }}>:</Text></Col>
-                                <Col span={12}><Text strong style={{ fontSize: "14px", fontWeight: "bold" }}>{schemeData ? schemeData.SchemeName : ""}</Text></Col>
+                                <Col span={12}><Text strong style={{ fontSize: "12px", fontWeight: "bold" }}>{schemeData ? schemeData.SchemeName : ""}</Text></Col>
 
-                                <Col span={10}><Text strong style={{ fontSize: "14px", fontWeight: "bold" }}>Scheme Amount</Text></Col>
+                                <Col span={10}><Text strong style={{ fontSize: "12px", fontWeight: "bold" }}>Scheme Amount</Text></Col>
                                 <Col span={2} style={{ textAlign: "center" }}><Text strong style={{ fontSize: "16px", fontWeight: "bold" }}>:</Text></Col>
-                                <Col span={12}><Text strong style={{ fontSize: "14px", fontWeight: "bold" }}>{schemeData ? schemeData.SchemeAmount : ""}</Text></Col>
+                                <Col span={12}><Text strong style={{ fontSize: "12px", fontWeight: "bold" }}>{schemeData ? schemeData.SchemeAmount : ""}</Text></Col>
 
-                                <Col span={10}><Text strong style={{ fontSize: "14px", fontWeight: "bold" }}>Scheme Duration</Text></Col>
+                                <Col span={10}><Text strong style={{ fontSize: "12px", fontWeight: "bold" }}>Scheme Duration</Text></Col>
                                 <Col span={2} style={{ textAlign: "center" }}><Text strong style={{ fontSize: "16px", fontWeight: "bold" }}>:</Text></Col>
-                                <Col span={12} style={{ fontSize: "14px", fontWeight: "bold" }}>{schemeData ? schemeData.SchemeDuration : ""}</Col>
+                                <Col span={12} style={{ fontSize: "12px", fontWeight: "bold" }}>{schemeData ? schemeData.SchemeDuration : ""}</Col>
 
-                                <Col span={10}><Text strong style={{ fontSize: "14px", fontWeight: "bold" }}>Bonus Amount</Text></Col>
+                                <Col span={10}><Text strong style={{ fontSize: "12px", fontWeight: "bold" }}>Bonus Amount</Text></Col>
                                 <Col span={2} style={{ textAlign: "center" }}><Text strong style={{ fontSize: "16px", fontWeight: "bold" }}>:</Text></Col>
-                                <Col span={12}><Text strong style={{ fontSize: "14px", fontWeight: "bold" }}>{schemeData ? schemeData.BonusAmount : ""}</Text></Col>
+                                <Col span={12}><Text strong style={{ fontSize: "12px", fontWeight: "bold" }}>{schemeData ? schemeData.BonusAmount : ""}</Text></Col>
 
-                                <Col span={10}><Text strong style={{ fontSize: "14px", fontWeight: "bold" }}>Total Scheme Amount</Text></Col>
+                                <Col span={10}><Text strong style={{ fontSize: "12px", fontWeight: "bold" }}>Total Scheme Amount</Text></Col>
                                 <Col span={2} style={{ textAlign: "center" }}><Text strong style={{ fontSize: "16px", fontWeight: "bold" }}>:</Text></Col>
-                                <Col span={12} style={{ fontSize: "14px", fontWeight: "bold" }}>{schemeData ? schemeData.SchemeValue : ""}</Col>
+                                <Col span={12} style={{ fontSize: "12px", fontWeight: "bold" }}>{schemeData ? schemeData.SchemeValue : ""}</Col>
 
                             </Row>
                         </Card>
@@ -1264,13 +1273,13 @@ const SchemeDetails = () => {
                             backgroundImage: "linear-gradient(to right, #ff9a9e, #fad0c4)",
                         }}>
                             <Row>
-                                <Col span={10}><Text strong style={{ fontSize: "14px", fontWeight: "bold" }}>Scheme Join Date</Text></Col>
+                                <Col span={10}><Text strong style={{ fontSize: "12px", fontWeight: "bold" }}>Scheme Join Date</Text></Col>
                                 <Col span={2} style={{ textAlign: "center" }}><Text strong style={{ fontSize: "16px", fontWeight: "bold" }}>:</Text></Col>
-                                <Col span={12} style={{ fontSize: "14px", fontWeight: "bold" }}>{schemeData ? formatDate(schemeData.SchemeJoinDate) : ""}</Col>
+                                <Col span={12} style={{ fontSize: "12px", fontWeight: "bold" }}>{schemeData ? formatDate(schemeData.SchemeJoinDate) : ""}</Col>
 
-                                <Col span={10}><Text strong style={{ fontSize: "14px", fontWeight: "bold" }}>Scheme End Date</Text></Col>
+                                <Col span={10}><Text strong style={{ fontSize: "12px", fontWeight: "bold" }}>Scheme End Date</Text></Col>
                                 <Col span={2} style={{ textAlign: "center" }}><Text strong style={{ fontSize: "16px", fontWeight: "bold" }}>:</Text></Col>
-                                <Col span={12} style={{ fontSize: "14px", fontWeight: "bold" }}>{schemeData ? formatDate(schemeData.SchemeEndDate) : ""}</Col>
+                                <Col span={12} style={{ fontSize: "12px", fontWeight: "bold" }}>{schemeData ? formatDate(schemeData.SchemeEndDate) : ""}</Col>
                             </Row>
                         </Card>
                         <Card className="customeproductcard" style={{ background: "lightblue" }}>
@@ -1292,23 +1301,23 @@ const SchemeDetails = () => {
                             </Row>
                         </Card>
                         <Card className="customeproductcard" style={{ backgroundImage: "linear-gradient(to right, #cdcddf, #a8b1ff)" }}>
-                            <div style={{ fontSize: "14px", fontWeight: "bold", marginBottom: "5px" }}>
+                            <div style={{ fontSize: "12px", fontWeight: "bold",  }}>
                                 SCHEME PAYMENT DETAILS
                             </div>
                             <Row>
-                                <Col span={10}><Text strong style={{ fontSize: "14px", fontWeight: "bold" }}>Total Months</Text></Col>
+                                <Col span={10}><Text strong style={{ fontSize: "12px", fontWeight: "bold" }}>Total Months</Text></Col>
                                 <Col span={2} style={{ textAlign: "center" }}><Text strong style={{ fontSize: "16px", fontWeight: "bold" }}>:</Text></Col>
-                                <Col span={12} style={{ fontSize: "14px", fontWeight: "bold" }}>{schemeData ? schemeData.SchemeDuration : ""}</Col>
-                                <Col span={10}><Text strong style={{ fontSize: "14px", fontWeight: "bold" }}>Paid Months</Text></Col>
+                                <Col span={12} style={{ fontSize: "12px", fontWeight: "bold" }}>{schemeData ? schemeData.SchemeDuration : ""}</Col>
+                                <Col span={10}><Text strong style={{ fontSize: "12px", fontWeight: "bold" }}>Paid Months</Text></Col>
                                 <Col span={2} style={{ textAlign: "center" }}><Text strong style={{ fontSize: "16px", fontWeight: "bold" }}>:</Text></Col>
-                                <Col span={12} style={{ fontSize: "14px", fontWeight: "bold" }}>{schemeData ? schemeData.SchemeDuration : "" - schemeData ? schemeData.DUEMONTHS : ""}</Col>
+                                <Col span={12} style={{ fontSize: "12px", fontWeight: "bold" }}>{schemeData ? schemeData.SchemeDuration : "" - schemeData ? schemeData.DUEMONTHS : ""}</Col>
 
-                                <Col span={10}><Text strong style={{ fontSize: "14px", fontWeight: "bold" }}>Balance Months</Text></Col>
+                                <Col span={10}><Text strong style={{ fontSize: "12px", fontWeight: "bold" }}>Balance Months</Text></Col>
                                 <Col span={2} style={{ textAlign: "center" }}><Text strong style={{ fontSize: "16px", fontWeight: "bold" }}>:</Text></Col>
-                                <Col span={12} style={{ fontSize: "14px", fontWeight: "bold" }}> {schemeData ? schemeData.DUEMONTHS : ""}</Col>
-                                <Col span={10}><Text strong style={{ fontSize: "14px", fontWeight: "bold" }}>Total Amount</Text></Col>
+                                <Col span={12} style={{ fontSize: "12px", fontWeight: "bold" }}> {schemeData ? schemeData.DUEMONTHS : ""}</Col>
+                                <Col span={10}><Text strong style={{ fontSize: "12px", fontWeight: "bold" }}>Total Amount</Text></Col>
                                 <Col span={2} style={{ textAlign: "center" }}><Text strong style={{ fontSize: "16px", fontWeight: "bold" }}>:</Text></Col>
-                                <Col span={12} style={{ fontSize: "14px", fontWeight: "bold" }}>{schemeData ? schemeData.SchemeValue : ""}</Col>
+                                <Col span={12} style={{ fontSize: "12px", fontWeight: "bold" }}>{schemeData ? schemeData.SchemeValue : ""}</Col>
 
                             </Row>
                             <Row justify="end" style={{ marginTop: 5 }}>
