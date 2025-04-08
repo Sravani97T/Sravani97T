@@ -76,67 +76,7 @@ const SchemeDetails = () => {
     }, [visible]);
 
 
-    // Search Function
-    // const handleSearch = async () => {
-    //     if (!searchValue.trim()) {
-    //         message.warning("Please enter a Receipt Number");
-    //         return;
-    //     }
-
-    //     setLoading(true);
-    //     try {
-    //         const response = await axios.get(`${CREATE_jwel}/api/Master/GetDataFromGivenTableNameWithWhere?tableName=RECEIPT_MAST&where=RECNO%3D${searchValue}`);
-
-    //         // Map the response data to match the table columns
-    //         const mappedData = response.data.map(item => ({
-    //             RecNo: item.RecNo,
-    //             RecDate: item.RecDate,
-    //             SchemeName: item.SchemeName,
-    //             SchemeAmount: item.SchemeAmount,
-    //             cardNo: item.CardNo,
-    //             SchemeMember: item.SchemeMember,
-    //             Mobile1: item.Phno,
-    //             add1: item?.add1,
-    //             add2: item?.add2,
-    //             add3: item?.add3,
-    //             installmentNo: item.INSTNO,
-    //             SchemeType: item.SchemeType,
-    //             SchemeDuration: item.SchemeDuration,
-    //             BonusAmount: item.BonusAmount,
-    //             SchemeValue: item.SchemeValue,
-    //             SchemeJoinDate: item.SchemeJDate,
-    //             INCHARGE: item.Incharger,
-    //             narr: item.Narr, // Ensure narr is initialized to an empty string if both are undefined
-    //             area: item.AREA,
-    //             SchemeEndDate: item.SchemeENDDate || item.schemeENDDate || item.SchemeEndDate, // Ensure all possible cases are handled
-    //         }));
-
-    //         setSchemeData(mappedData[0]);
-    //         setCardNo(mappedData[0]?.cardNo || "");
-    //         fetchSchemeDetails(mappedData[0]?.cardNo); // ← Pass the value directly
-
-    //         // Fetch payment details for the matching receipt number
-    //         const paymentResponse = await axios.get(`${CREATE_jwel}/api/Master/GetDataFromGivenTableNameWithWhere?tableName=RECEIPT_PAYMENT&where=CARDNO%3D%27${mappedData[0]?.cardNo}%27`);
-    //         const paymentDetails = paymentResponse.data
-    //             .filter(item => item.RECNO === mappedData[0]?.RecNo)
-    //             .map(item => ({
-    //                 key: item.SNO,
-    //                 paymentMode: item.PAYMODE,
-    //                 particulars: item.PARTICULARS,
-    //                 accNo: item.ACCNO,
-    //                 amount: item.AMT,
-    //                 descr: item.DESCR,
-    //                 RECNO: item.RECNO,
-    //             }));
-
-    //         setTableData(paymentDetails);
-    //         fetchSchemeDetails();
-    //     } catch (error) {
-    //         message.error("Failed to fetch data");
-    //     } finally {
-    //         setLoading(false);
-    //     }
-    // };
+   
     const handleSearch = async () => {
         if (!searchValue.trim()) {
             message.warning("Please enter a Receipt Number");
@@ -166,14 +106,15 @@ const SchemeDetails = () => {
                 SchemeValue: item.SchemeValue,
                 SchemeJoinDate: item.SchemeJDate,
                 INCHARGE: item.Incharger,
-                narr: item?.Narr,
+                narr: item?.Narr || item?.narr || item?.NARR || "",
                 area: item.AREA,
                 SchemeEndDate: item.SchemeENDDate || item.schemeENDDate || item.SchemeEndDate,
             }));
 
             const schemeInfo = mappedData[0];
             console.log("narr",mappedData)
-
+            console.log("Narration:", schemeInfo.narr); // <-- Log for narr field
+            
             setSchemeData(schemeInfo);
             setCardNo(schemeInfo?.cardNo || "");
             
@@ -201,7 +142,7 @@ const SchemeDetails = () => {
                 setInstallmentNo(memberCard.sno); // Set installment number from MEMBER_CARD_DET
             }
 
-            fetchSchemeDetails(schemeInfo?.cardNo); // Still fetch full scheme details
+            // fetchSchemeDetails(schemeInfo?.cardNo); // Still fetch full scheme details
 
         } catch (error) {
             message.error("Failed to fetch data");

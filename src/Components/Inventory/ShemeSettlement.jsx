@@ -244,6 +244,10 @@ const ShemeSettlement = () => {
         try {
           await axios.post("http://www.jewelerp.timeserasoftware.in/api/Scheme/SchemeEndInsert", body);
           message.success("Scheme saved successfully!");
+              await axios.post(`http://www.jewelerp.timeserasoftware.in/api/Scheme/UpdateSchemeMemberDropping?schemeDropping=true&cardNO=${cardNo}`, {
+                 
+                });
+            
           fetchVoucherNo(); // Fetch new voucher number after saving
 
           // Clear data after saving
