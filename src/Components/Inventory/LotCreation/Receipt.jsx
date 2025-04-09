@@ -4,7 +4,7 @@ import axios from "axios";
 import { CREATE_jwel } from "../../../Config/Config";
 import Swal from 'sweetalert2';
 
-import { DeleteOutlined, InfoCircleOutlined } from "@ant-design/icons";
+import { DeleteOutlined, InfoCircleOutlined, ReloadOutlined } from "@ant-design/icons";
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { FaCalendarAlt } from 'react-icons/fa';
@@ -25,10 +25,14 @@ const SchemeDetails = () => {
     const [paymentData, setPaymentData] = useState([]);
     const [payModes, setPayModes] = useState([]);
     const [inchargeList, setInchargeList] = useState([]);
+    const [checkInstalmentNo, setCheckInstalmentNo] = useState({});
+    const [disableButton, setDisableButton] = useState(false);
+    const [recpDisableButton, setRecpDisableButton] = useState(false);
+console.log("recpDisableButton", recpDisableButton);
+    const [loading, setLoading] = useState(false);
 
     const [accountNumbers, setAccountNumbers] = useState([]);
     const paymentModes = ["UPI", "ONLINE", "CARD", "CHEQUE", "CASH"];
-    const [, setLoading] = useState(false);
     const [, setTableData1] = useState([]);
 
     const [selectedPaymentMode, setSelectedPaymentMode] = useState(null);
@@ -48,9 +52,29 @@ const SchemeDetails = () => {
     const [visible, setVisible] = useState(false);
     const [searchValue, setSearchValue] = useState("");
     const inputRef = useRef(null);
+    console.log("checkInstalmentNo", checkInstalmentNo);
+    console.log("installmentNo", installmentNo);
+
     useEffect(() => {
         fetchIncharges();
-    }, []);
+        if (checkInstalmentNo?.length > 0) {
+            if (checkInstalmentNo.sno === installmentNo) {
+                setDisableButton(true);
+
+            }
+            if (checkInstalmentNo.sno !== installmentNo) {
+                setDisableButton(false);
+
+            }
+            if (loading === false) {
+                setDisableButton(false);
+                
+            }
+            
+        }
+
+
+    }, [checkInstalmentNo, installmentNo]);
     const fetchIncharges = async () => {
         try {
             const res = await axios.get(`${CREATE_jwel}/api/Master/GetDataFromGivenTableName`, {
@@ -76,14 +100,17 @@ const SchemeDetails = () => {
     }, [visible]);
 
 
-   
+
     const handleSearch = async () => {
+                            setRecpDisableButton(true);
+
         if (!searchValue.trim()) {
             message.warning("Please enter a Receipt Number");
             return;
         }
 
         setLoading(true);
+        
         try {
             // Fetch receipt master
             const response = await axios.get(`${CREATE_jwel}/api/Master/GetDataFromGivenTableNameWithWhere?tableName=RECEIPT_MAST&where=RECNO%3D${searchValue}`);
@@ -96,7 +123,7 @@ const SchemeDetails = () => {
                 cardNo: item.CardNo,
                 SchemeMember: item.SchemeMember,
                 Mobile1: item.Phno,
-                add1: item?.add1,
+                add1: item?.Add1,
                 add2: item?.add2,
                 add3: item?.add3,
                 installmentNo: item.INSTNO,
@@ -112,12 +139,11 @@ const SchemeDetails = () => {
             }));
 
             const schemeInfo = mappedData[0];
-            console.log("narr",mappedData)
-            console.log("Narration:", schemeInfo.narr); // <-- Log for narr field
-            
+
             setSchemeData(schemeInfo);
             setCardNo(schemeInfo?.cardNo || "");
-            
+            getSchemecheckDetails(mappedData[0].cardNo);
+console.log("table",response.data.length)
 
             // Fetch payment details
             const paymentResponse = await axios.get(`${CREATE_jwel}/api/Master/GetDataFromGivenTableNameWithWhere?tableName=RECEIPT_PAYMENT&where=CARDNO%3D%27${schemeInfo?.cardNo}%27`);
@@ -138,14 +164,16 @@ const SchemeDetails = () => {
             const memberCardResponse = await axios.get(`${CREATE_jwel}/api/Master/GetDataFromGivenTableNameWithWhere?tableName=MEMBER_CARD_DET&where=CARDNO%3D%27${schemeInfo.cardNo}%27%20AND%20RECNO%3D%27${schemeInfo.RecNo}%27`);
             if (memberCardResponse.data?.length > 0) {
                 const memberCard = memberCardResponse.data[0];
-               
+
                 setInstallmentNo(memberCard.sno); // Set installment number from MEMBER_CARD_DET
             }
 
             // fetchSchemeDetails(schemeInfo?.cardNo); // Still fetch full scheme details
 
         } catch (error) {
-            message.error("Failed to fetch data");
+            message.warning("no receipt data");
+                setTableData([]);
+
         } finally {
             setLoading(false);
         }
@@ -221,29 +249,61 @@ const SchemeDetails = () => {
         const date = new Date(dateString);
         return date.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
     };
+
+
+    const getSchemecheckDetails = async (cardNo) => {
+        try {
+            const encodedWhere = encodeURIComponent(`CARDNO='${cardNo}' AND RECNO IS NOT NULL`);
+            const response = await axios.get(
+                `http://www.jewelerp.timeserasoftware.in/api/Master/GetDataFromGivenTableNameWithWhereandOrder?tableName=MEMBER_CARD_DET&where=${encodedWhere}&order=RECNO`
+            );
+
+            const data = response.data.map(item => ({
+                sno: item.sno,
+                RECNO: item.RECNO,
+                ...item
+            }));
+
+            if (data.length > 0) {
+                const result = {
+                    sno: data[0].sno,
+                    RECNO: data[0].RECNO,
+                    length: data.length,
+                    data: data
+                };
+                setCheckInstalmentNo(result);
+            } else {
+                setCheckInstalmentNo(null); // Or handle no data case
+            }
+
+        } catch (error) {
+            console.error("Error fetching scheme details", error);
+        }
+    };
+
     const fetchInstallmentNoByCardNo = async (cardNo) => {
         try {
             const trimmedCardNo = cardNo?.trim();
             if (!trimmedCardNo) return;
-    
+
             const installRes = await axios.get(
                 `http://www.jewelerp.timeserasoftware.in/api/Master/GetDataFromGivenTableNameWithWhereandOrder?tableName=MEMBER_CARD_DET&where=CARDNO%3D%27${encodeURIComponent(trimmedCardNo)}%27%20AND%20RECNO%20IS%20NULL&order=SNO`
             );
-    
+
             const pendingInstallments = installRes.data;
             const firstSno = pendingInstallments.length > 0 ? Math.floor(pendingInstallments[0].sno) : 1;
-    
+
             setInstallmentNo(firstSno);
             setSchemeData(prev => ({ ...prev, sno: firstSno }));
-    
+
             console.log("Fetched Installment SNO:", firstSno);
         } catch (error) {
             console.error("Error fetching installment number:", error);
             message.error("Failed to fetch installment number.");
         }
     };
-  
-    
+
+
     const fetchSchemeDetails = async (cardNoToUse) => {
         try {
             const trimmedCardNo = cardNoToUse?.trim();
@@ -283,9 +343,10 @@ const SchemeDetails = () => {
                 area: item.area,
                 SchemeEndDate: item.SchemeENDDate || item.schemeENDDate || item.SchemeEndDate, // Ensure all possible cases are handled
             }));
+            getSchemecheckDetails(mappedData[0].cardNo);
             setSchemeData(mappedData[0]);
             console.log("mast", response.data);
-           
+
             const firmConfigResponse = await axios.get(
                 `${CREATE_jwel}/api/Erp/GetFirmConfihure`
             );
@@ -295,7 +356,7 @@ const SchemeDetails = () => {
             // Pass FYEAR to handleSave function
             setSchemeData((prev) => ({ ...prev, fyear: fyear || "default_fyear" })); // Ensure fyear is set with a fallback
 
-         
+
         } catch (error) {
             console.error("Error fetching scheme details, installment number, or FYEAR:", error);
             message.error("Failed to fetch scheme details, installment number, or FYEAR.");
@@ -396,14 +457,20 @@ const SchemeDetails = () => {
             setReceiptNo("Error");
         }
     };
-    console.log("schemeData", schemeData);
+    // console.log("schemeData", schemeData);
 
-
+console.log("disableButton",disableButton)
     const handleSave = async () => {
+        if (loading) return; // Avoid double call
+        setLoading(true);
+        setDisableButton(true);
         const paidAmount = tableData.reduce((sum, record) => sum + parseFloat(record.amount || 0), 0); // Calculate paid amount
 
         if (!cardNo.trim()) {
             message.warning("Card No is required.");
+            setLoading(false);
+            // setDisableButton(false);
+
             return;
         }
 
@@ -416,6 +483,8 @@ const SchemeDetails = () => {
                 timer: 5000,
                 timerProgressBar: true,
             });
+            setLoading(false);
+            setDisableButton(false);
 
             return;
         }
@@ -587,56 +656,66 @@ const SchemeDetails = () => {
                     memberCardPayload
                 );
             }
-  // 🔁 Call update APIs
-  await axios.post(`http://www.jewelerp.timeserasoftware.in/api/Scheme/UpdateSchemeMemberInstallment`, null, {
-    params: {
-        InstallNo: installmentNo,
-        recNo: receiptNo,
-        recDate: selectedDate.toLocaleDateString("en-US"),
-        recAmt: paidAmount,
-        cardNO: cardNo,
-    },
-});
-  try {
-    if (installmentNo > 1) {
-        await axios.post(`http://www.jewelerp.timeserasoftware.in/api/Scheme/UpdateMemberCardDetails`, null, {
-            params: {
-                recNo: receiptNo,
-                recDate: selectedDate.toLocaleDateString("en-US"),
-                pStatus: true,
-                cardNO: cardNo,
-                sno: installmentNo,
-            },
-        });
-    }
+            // 🔁 Call update APIs
+            await axios.post(`http://www.jewelerp.timeserasoftware.in/api/Scheme/UpdateSchemeMemberInstallment`, null, {
+                params: {
+                    InstallNo: installmentNo,
+                    recNo: receiptNo,
+                    recDate: selectedDate.toLocaleDateString("en-US"),
+                    recAmt: paidAmount,
+                    cardNO: cardNo,
+                },
+            });
+            try {
+                if (installmentNo > 1) {
+                    await axios.post(`http://www.jewelerp.timeserasoftware.in/api/Scheme/UpdateMemberCardDetails`, null, {
+                        params: {
+                            recNo: receiptNo,
+                            recDate: selectedDate.toLocaleDateString("en-US"),
+                            pStatus: true,
+                            cardNO: cardNo,
+                            sno: installmentNo,
+                        },
+                    });
+                }
 
-    await axios.post(`http://www.jewelerp.timeserasoftware.in/api/Scheme/UpdateSchemeMemberInstallment`, null, {
-        params: {
-            InstallNo: installmentNo,
-            recNo: receiptNo,
-            recDate: selectedDate.toLocaleDateString("en-US"),
-            recAmt: paidAmount,
-            cardNO: cardNo,
-        },
-    });} catch (updateError) {
-        console.error("Error calling update APIs:", updateError);
-        message.warning("Update steps failed for member or installment.");
-    }
+                await axios.post(`http://www.jewelerp.timeserasoftware.in/api/Scheme/UpdateSchemeMemberInstallment`, null, {
+                    params: {
+                        InstallNo: installmentNo,
+                        recNo: receiptNo,
+                        recDate: selectedDate.toLocaleDateString("en-US"),
+                        recAmt: paidAmount,
+                        cardNO: cardNo,
+                    },
+                });
+            } catch (updateError) {
+                console.error("Error calling update APIs:", updateError);
+                message.warning("Update steps failed for member or installment.");
+            } finally {
+                setLoading(false); // Always hide loader at the end
+                setDisableButton(false);
+            }
 
-    // Reset
-    setSchemeData(null);
-    setCardNo("");
-    setTableData([]);
-    fetchReceiptNo();
-    setInstallmentNo(1);
-    setTimeout(() => document.getElementById("cardNoInput").focus(), 0);
+            // Reset
+            setSchemeData(null);
+            setCardNo("");
+            setTableData([]);
+            fetchReceiptNo();
+            setInstallmentNo(1);
+            setTimeout(() => document.getElementById("cardNoInput").focus(), 0);
+            setDisableButton(false);
+                                        setRecpDisableButton(false);
 
-    console.log("Response:", response.data);
-} catch (error) {
-    console.error("Error saving data:", error);
-    message.error("Failed to save data.");
-}
-};
+            console.log("Response:", response.data);
+        } catch (error) {
+            console.error("Error saving data:", error);
+            message.error("Failed to save data.");
+            setDisableButton(false);
+                                                    setRecpDisableButton(false);
+
+
+        }
+    };
     const handleDelete = (key) => {
         setTableData((prevData) => prevData.filter((item) => item.key !== key));
     };
@@ -700,7 +779,7 @@ const SchemeDetails = () => {
                             setReceiptNo(searchValue); // Update receiptNo with the entered value
                             setVisible(false);
                             handleSearch();
-                            
+
                             setSearchValue(""); // Clear the search value after pressing Enter
                             setTimeout(() => document.getElementById("paymentModeDropdown").focus(), 0); // Move cursor to Payment Mode
                         }}
@@ -715,6 +794,7 @@ const SchemeDetails = () => {
                 <Button
                     type="primary"
                     onClick={() => {
+                    setRecpDisableButton(true);
                         setReceiptNo(searchValue); // Update receiptNo with the entered value
                         setVisible(false);
                         handleSearch();
@@ -769,7 +849,6 @@ const SchemeDetails = () => {
                             Card No:
                         </Text>
                         <Input
-
                             id="cardNoInput"
                             value={cardNo}
                             onChange={(e) => setCardNo(e.target.value)}
@@ -784,20 +863,29 @@ const SchemeDetails = () => {
                                 fontWeight: "bold",
                                 fontSize: "16px",
                             }}
+                            disabled={recpDisableButton === true}
                             autoFocus
                             onKeyDown={(e) => {
                                 if (e.key === "Enter") {
                                     e.preventDefault();
                                     cardnookRef.current.click();
                                 }
-                            }} />
-                        <Button ref={cardnookRef} type="primary" style={{ width: "40px", height: "40px" }}
+                            }}
+                        />
+                        <Button
+                            ref={cardnookRef}
+                            type="primary"
+                            disabled={recpDisableButton === true}
+                            style={{ width: "40px", height: "40px" ,color:"white"}}
                             onClick={() => {
-                                fetchSchemeDetails(cardNo); // Pass cardNo explicitly
+                                fetchSchemeDetails(cardNo);
                                 setTimeout(() => document.getElementById("paymentModeDropdown")?.focus(), 0);
-                            }}>
+                            }}
+                        >
                             OK
                         </Button>
+
+                        {/* Info Icon Button */}
                         <Popover
                             content={popoverContent}
                             title="Search Receipt"
@@ -807,6 +895,30 @@ const SchemeDetails = () => {
                         >
                             <Button icon={<InfoCircleOutlined />} shape="circle" style={{ marginLeft: 8 }} />
                         </Popover>
+
+                        {/* Refresh Icon Button */}
+                        <Button
+                            icon={<ReloadOutlined />}
+                            shape="circle"
+                            style={{ marginLeft: 8 }}
+                            onClick={() => {
+                                setCardNo("");
+                                setSchemeData(null);
+                                setSelectedPaymentMode(null);
+                                setSelectedPayMode(null);
+                                setSelectedAccount(null);
+                                setDescription("");
+                                setAmount("");
+                                setTableData([]);
+                                setInstallmentNo(1); // Reset installment number to default
+                                fetchReceiptNo();
+                                setDisableButton(false);
+                                setCheckInstalmentNo({});
+                                                                        setRecpDisableButton(false);
+
+                                setTimeout(() => document.getElementById("cardNoInput").focus(), 0);
+                            }}
+                        />
                     </Col>
 
                     {/* Receipt No */}
@@ -913,7 +1025,7 @@ const SchemeDetails = () => {
                                             <Text strong style={{ fontSize: "16px", fontWeight: "bold" }}>:</Text>
                                         </Col>
                                         <Col span={17}>
-                                            <Text style={{ fontSize: "14px", fontWeight: "bold" }}>{schemeData ? schemeData.add1 : ""}{schemeData ? schemeData.add2 : ""}{schemeData ? schemeData.add3 : ""}</Text>
+                                            <Text style={{ fontSize: "14px", fontWeight: "bold" }}>{schemeData ? schemeData.add1 : ""}&nbsp;{schemeData ? schemeData.add2 : ""}&nbsp;{schemeData ? schemeData.add3 : ""}</Text>
                                         </Col>
                                     </Row>
                                 </Col>
@@ -1301,7 +1413,7 @@ const SchemeDetails = () => {
                             </Row>
                         </Card>
                         <Card className="customeproductcard" style={{ backgroundImage: "linear-gradient(to right, #cdcddf, #a8b1ff)" }}>
-                            <div style={{ fontSize: "12px", fontWeight: "bold",  }}>
+                            <div style={{ fontSize: "12px", fontWeight: "bold", }}>
                                 SCHEME PAYMENT DETAILS
                             </div>
                             <Row>
@@ -1322,7 +1434,7 @@ const SchemeDetails = () => {
                             </Row>
                             <Row justify="end" style={{ marginTop: 5 }}>
                                 <Button ref={saveRef}
-                                    type="primary" onClick={handleSave} style={{ fontSize: "16px", fontWeight: "bold" }}>SAVE</Button>
+                                    type="primary" onClick={handleSave} loading={loading} style={{ fontSize: "16px", fontWeight: "bold" }} disabled={disableButton === true}>SAVE</Button>
                                 <Button
                                     style={{ marginLeft: 10, fontSize: "16px", fontWeight: "bold" }}
                                     onClick={() => {
@@ -1336,6 +1448,9 @@ const SchemeDetails = () => {
                                         setTableData([]);
                                         setInstallmentNo(1); // Reset installment number to default
                                         fetchReceiptNo();
+                                        setDisableButton(false);
+                                        setRecpDisableButton(false);
+                                        setCheckInstalmentNo({});
                                         setTimeout(() => document.getElementById("cardNoInput").focus(), 0);
                                     }}
                                 >
