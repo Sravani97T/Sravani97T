@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { Input, Button, Row, Col, Card, Typography, Table, message } from "antd";
+import { Input, Button, Row, Col, Card, Typography, Table, message, Divider } from "antd";
 import axios from "axios";
 import { CREATE_jwel } from "../../Config/Config";
-import moment from "moment";
+import { ReloadOutlined, } from "@ant-design/icons";
 
 const { Text } = Typography;
 
@@ -12,6 +12,14 @@ const MemberCard = () => {
     const [tableData, setTableData] = useState([]);
     const [rates, setRates] = useState([]);
     const [index, setIndex] = useState(0);
+    const formatDate = (dateString) => {
+        const date = new Date(dateString);
+        return new Intl.DateTimeFormat('en-GB', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+        })?.format(date);
+    };
 
     useEffect(() => {
         fetchRates1();
@@ -28,7 +36,6 @@ const MemberCard = () => {
                 `${CREATE_jwel}/api/Master/GetDataFromGivenTableNameWithWhere?tableName=DAILY_RATES&where=RDATE%3D%27${formattedDate}%27`
             );
 
-            const hasRates = ratesResponse.data.length > 0;
             setRates(ratesResponse.data);
         } catch (error) {
             message.error("Error fetching rates");
@@ -47,16 +54,35 @@ const MemberCard = () => {
         }
     }, [goldRates.length]);
     const columns = [
-        { title: "S.No", dataIndex: "sno", key: "sno" },
         {
-            title: "Month", dataIndex: "MONTH", key: "month", render: (text) => text ? moment(text, "MM/DD/YYYY").format("DD MMM YYYY") : "",
+            title: "Inst.No", dataIndex: "sno", key: "sno", align: "center",
+            onHeaderCell: () => ({
+                style: { fontSize: "12px" },
+            }),
+            render: (text, record) => (
+                <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px" }}>
+                    <span
+                        style={{
+                            width: "10px",
+                            height: "10px",
+                            borderRadius: "50%",
+                            backgroundColor: record.PSTATUS ? "green" : "red",
+                        }}
+                    ></span>
+                    {text}
+                </div>
+            ),
         },
-        { title: "Rec No", dataIndex: "RECNO", key: "recNo" },
-        { title: "Rec Amt", dataIndex: "SCHEMEAMOUNT", key: "recAmount" },
+        {
+            title: "Month", dataIndex: "MONTH", width: 90, key: "month", render: (text) => (text ? formatDate(text) : "")
+        },
+        { title: "Rec No", dataIndex: "RECNO", key: "recNo", align: "center" },
+        { title: "Rec Date", dataIndex: "RECDATE", key: "receiptdate", render: (text) => (text ? formatDate(text) : "") },
+
+        { title: "Rec Amt", dataIndex: "SCHEMEAMOUNT", key: "recAmount", align: "right" },
         { title: "Gold Wt", dataIndex: "goldWeight", key: "goldWeight" },
         { title: "Gold(1Gram)", dataIndex: "goldOneGram", key: "goldOneGram" },
         { title: "Mode of Pay", dataIndex: "modeOfPay", key: "modeOfPay" },
-        { title: "Balance", dataIndex: "balance", key: "balance" },
     ];
 
     const fetchMemberData = async () => {
@@ -80,17 +106,37 @@ const MemberCard = () => {
 
             if (data && data.length > 0) {
                 setTableData(data);
+
+                const firstRecord = data[0];
+                const paidAmount = data.reduce((sum, item) => sum + (item.RECNO ? item.SCHEMEAMOUNT : 0), 0);
+                const totalAmount = firstRecord.SCHEMEAMOUNT * firstRecord.SCHEMEDURATION;
+                const balanceMonths = data.filter(item => !item.RECNO).length;
+
                 setMemberData({
-                    MemberName: data[0].SCHEMEMEMBER,
-                    SchemeType: data[0].SCHEMETYPE,
-                    GroupName: data[0].SCHEMEGROUP,
-                    SchemeAmount: data[0].SCHEMEAMOUNT,
-                    TotalPaid: data.reduce((sum, item) => sum + (item.RECNO ? item.SCHEMEAMOUNT : 0), 0),
-                    BalanceAmount: data[0].SCHEMEAMOUNT * data[0].SCHEMEDURATION - data.reduce((sum, item) => sum + (item.RECNO ? item.SCHEMEAMOUNT : 0), 0),
-                    TotalGoldWeight: "N/A", // Replace with actual calculation if available
-                    MembershipType: data[0].SCHEMENAME,
-                    JoinDate: data[0].SCHEMEJOINDATE,
-                    ExpiryDate: data[0].SCHEMEENDDATE,
+                    MemberName: firstRecord.SCHEMEMEMBER,
+                    SchemeType: firstRecord.SCHEMETYPE,
+                    GroupName: firstRecord.SCHEMEGROUP,
+                    SchemeAmount: firstRecord.SCHEMEAMOUNT,
+                    SchemeDuration: firstRecord.SCHEMEDURATION,
+
+                    TotalPaid: paidAmount,
+                    BalanceAmount: totalAmount - paidAmount,
+                    TotalGoldWeight: "N/A", // Update if you calculate from GOLDWT
+                    MembershipType: firstRecord.SCHEMENAME,
+                    JoinDate: firstRecord.SCHEMEJOINDATE,
+                    ExpiryDate: firstRecord.SCHEMEENDDATE,
+
+                    // Address and contact fields from ADD1-ADD4 and AREA
+                    Address: `${firstRecord.ADD1 || ""} ${firstRecord.ADD2 || ""} ${firstRecord.ADD3 || ""} ${firstRecord.ADD4 || ""}`.trim(),
+                    Area: firstRecord.AREA,
+                    Pincode: firstRecord.PINCODE || "", // Only if PINCODE exists
+                    Email: firstRecord.EMAIL || "",     // Only if EMAIL exists
+                    Phone: firstRecord.MOBILE1 || "",   // Only if MOBILE1 exists
+
+                    // Calculated fields
+                    RecentPaidDate: data.find(item => item.RECNO)?.RECDATE || "N/A",
+                    PendingDues: totalAmount - paidAmount,
+                    BalanceMonths: balanceMonths,
                 });
             } else {
                 message.error("No data found for the entered Card No.");
@@ -102,13 +148,14 @@ const MemberCard = () => {
             console.error(error);
         }
     };
-
+    const Paidmonths = tableData.filter(item => item.RECNO).length;
     return (
         <div>
+
             <Card
                 className="customeproductcard"
                 style={{
-                    background: "linear-gradient(135deg,rgb(20, 54, 117),rgb(66, 110, 185))",
+                    background: "linear-gradient(135deg, rgb(20, 54, 117), rgb(66, 110, 185))",
                     position: "relative",
                     overflow: "hidden",
                     color: "white",
@@ -121,15 +168,15 @@ const MemberCard = () => {
                         left: 0,
                         width: "100%",
                         height: "100%",
-                        backgroundImage:
-                            "radial-gradient(circle, rgba(255, 255, 255, 0.2) 1px, transparent 1px)",
+                        backgroundImage: "radial-gradient(circle, rgba(255, 255, 255, 0.2) 1px, transparent 1px)",
                         backgroundSize: "10px 10px",
                         opacity: 0.2,
                     }}
                 ></div>
 
-                <Row justify="space-between" align="middle" gutter={16}>
-                    <Col style={{ display: "flex", alignItems: "center", zIndex: 1 }}>
+                <Row gutter={[16, 16]} align="middle" justify="space-between" style={{ zIndex: 1 }}>
+                    {/* Left Section: Card No */}
+                    <Col xs={24} md={8} style={{ display: "flex", alignItems: "center" }}>
                         <Text
                             strong
                             style={{
@@ -145,6 +192,11 @@ const MemberCard = () => {
                         <Input
                             value={cardNo}
                             onChange={(e) => setCardNo(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                    fetchMemberData();
+                                }
+                            }}
                             placeholder="Card no"
                             style={{
                                 width: "120px",
@@ -157,115 +209,180 @@ const MemberCard = () => {
                             }}
                             autoFocus
                         />
+
                         <Button type="primary" style={{ width: "40px", height: "40px" }} onClick={fetchMemberData}>
                             OK
                         </Button>
+                        <Button
+                            style={{ marginLeft: 10, fontSize: "16px", fontWeight: "bold" }}
+                            onClick={() => {
+                                setCardNo("");
+                                setMemberData(null);
+                                setTableData([]);
+                            }}
+                        >
+                            <ReloadOutlined style={{ fontSize: "20px" }} />
+                        </Button>
                     </Col>
 
-                    <Col>
-                        <Card
-                            style={{
-                                //   background: "rgba(255, 255, 255, 0.2)", // Semi-transparent white
-                                background: "linear-gradient(135deg,rgb(20, 54, 117),rgb(66, 110, 185))", // Blue and Grey Gradient
+                    {/* Middle Section: Bill Details */}
+                    <Col xs={24} md={7}>
+                        <div style={{ border: "1px solid lightgrey", borderRadius: "6px", padding: "5px" }}>
+                        <Row gutter={[16, 8]}>
+  {/* Bill No and Bill Date - Side by Side */}
+  <Col span={12}>
+    <Row gutter={[4, 4]}>
+      <Col span={10}><Text strong style={{ fontSize: "12px", color: "white" }}>Bill No</Text></Col>
+      <Col span={2}><Text strong style={{ color: "white" }}>:</Text></Col>
+      <Col span={12}><Text strong style={{ color: "white" }}>{memberData?.BillNo}</Text></Col>
+    </Row>
+  </Col>
+  <Col span={12}>
+    <Row gutter={[4, 4]}>
+      <Col span={10}><Text strong style={{ fontSize: "12px", color: "white" }}>Bill Date</Text></Col>
+      <Col span={2}><Text strong style={{ color: "white" }}>:</Text></Col>
+      <Col span={12}><Text strong style={{ color: "white" }}>{memberData?.BillDate}</Text></Col>
+    </Row>
+  </Col>
 
-                                position: "relative",
-                                zIndex: 1,
-                                borderRadius: "8px",
-                                color: "white",
-                            }}
-                            className="custometagnocard"
+  {/* Jewel Type - Full Row */}
+  <Col span={24}>
+    <Row gutter={[4, 4]}>
+      <Col span={10}><Text strong style={{ fontSize: "12px", color: "white" }}>Jewel Type</Text></Col>
+      <Col span={2}><Text strong style={{ color: "white" }}>:</Text></Col>
+      <Col span={12}><Text strong style={{ color: "white" }}>{memberData?.JewelType}</Text></Col>
+    </Row>
+  </Col>
+</Row>
 
-                        >
-                            <div style={{ fontSize: "13px", fontWeight: "bold", marginBottom: "5px", color: "white" }}>
-                                Today's Gold Rates
-                            </div>
-                            {goldRates.length > 0 ? (
-                                <div style={{ fontSize: "12px", fontWeight: "bold", color: "yellow" }}>
-                                    {rates[index]?.MAINPRODUCT} - {goldRates[index]?.PREFIX} - ₹{goldRates[index]?.RATE}
-                                </div>
-                            ) : (
-                                <div style={{ fontSize: "12px", color: "white" }}>No Gold Rates Available</div>
-                            )}
-                        </Card>
+                        </div>
+                    </Col>
+
+                    {/* Right Section: Settlement Details */}
+                    <Col xs={24} md={7}>
+                        <div style={{ border: "1px solid lightgrey", borderRadius: "6px", padding: "5px" }}>
+
+                            <Row gutter={[4, 8]}>
+                                <Col span={10}><Text strong style={{ fontSize: "12px", color: "white" }}>Settlement No</Text></Col>
+                                <Col span={2}><Text strong style={{ color: "white" }}>:</Text></Col>
+                                <Col span={12}><Text strong style={{ color: "white" }}>{memberData?.settlementNo}</Text></Col>
+
+                                <Col span={10}><Text strong style={{ fontSize: "12px", color: "white" }}>Dropped Entry No</Text></Col>
+                                <Col span={2}><Text strong style={{ color: "white" }}>:</Text></Col>
+                                <Col span={12}><Text strong style={{ color: "white" }}>{memberData?.dropEntryNo}</Text></Col>
+                            </Row>
+                        </div>
                     </Col>
                 </Row>
             </Card>
 
             <div style={{ marginTop: "6px" }}>
                 <Row gutter={16}>
-                    <Col span={16}>
+                    <Col span={17}>
                         <Card className="customeproductcard" style={{ backgroundImage: "linear-gradient(to right, #cdcddf, #a8b1ff)" }}>
-                            <div style={{ fontSize: "14px", fontWeight: "bold", marginBottom: "5px" }}>MEMBER DETAILS</div>
+                            <div style={{ fontSize: "12px", fontWeight: "bold", marginBottom: "5px" }}>MEMBER DETAILS</div>
+                                 {/* ✅ Top-Right Scheme Completed Tag */}
+                                 {memberData?.SchemeDuration === Paidmonths && (
+
+        <div style={{
+            position: "absolute",
+            top: 10,
+            right: 10,
+            backgroundColor: "#52c41a", // green color
+            color: "#fff",
+            padding: "4px 12px",
+            borderRadius: "20px",
+            fontSize: "12px",
+            fontWeight: "bold",
+            boxShadow: "0 2px 6px rgba(0,0,0,0.15)",
+        }}>
+            Scheme Completed
+        </div>)}
                             <Card
                                 className="customeproductcard"
                                 style={{
                                     backgroundImage: "linear-gradient(to right,rgb(73, 73, 143),rgb(44, 55, 155))",
                                     position: "relative",
-                                    paddingTop: "10px",
-                                    color: "white"
+                                    color: "white",
+                                    marginTop: "15px",
                                 }}
                             >
-                                {/* Colored Status Dots */}
-                                <div style={{ position: "absolute", top: "10px", right: "10px", display: "flex", gap: "5px" }}>
-                                    {/* Red Dot - Dropped */}
-                                    <div
-                                        style={{
-                                            width: "12px",
-                                            height: "12px",
-                                            backgroundColor: "red",
-                                            borderRadius: "50%",
-                                        }}
-                                        title="Dropped"
-                                    ></div>
+                                
 
-                                    {/* Green Dot - Receipt Paid */}
-                                    <div
-                                        style={{
-                                            width: "12px",
-                                            height: "12px",
-                                            backgroundColor: "green",
-                                            borderRadius: "50%",
-                                        }}
-                                        title="Receipt Paid"
-                                    ></div>
-                                </div>
+                                <Row gutter={[16, 16]}>
+                                    {/* Left Side: 3 columns */}
+                                    <Col span={11}>
+                                        <Row>
+                                            {/* Member Name */}
+                                            <Col span={8}>
+                                                <Text strong style={{ fontSize: "12px", fontWeight: "bold", color: "white" }}>Member Name</Text>
+                                            </Col>
+                                            <Col span={2} style={{ textAlign: "center", fontSize: "14px", fontWeight: "bold", color: "white" }}>
+                                                :
+                                            </Col>
+                                            <Col span={14} style={{ fontSize: "11px", fontWeight: "bold", color: "white" }}>
+                                                {memberData?.MemberName}
+                                            </Col>
 
-                                <Row>
-                                    {/* Member Name */}
-                                    <Col span={6}>
-                                        <Text strong style={{ fontSize: "14px", fontWeight: "bold", color: "white" }}>Member Name</Text>
-                                    </Col>
-                                    <Col span={2} style={{ textAlign: "left" }}>
-                                        <Text strong style={{ fontSize: "16px", fontWeight: "bold", color: "white" }}>:</Text>
-                                    </Col>
-                                    <Col span={12} style={{ fontSize: "14px", fontWeight: "bold" }}>
-                                        {memberData?.MemberName}
-                                    </Col>
+                                            {/* Scheme Type */}
+                                            <Col span={8}>
+                                                <Text strong style={{ fontSize: "12px", fontWeight: "bold", color: "white" }}>Scheme Type</Text>
+                                            </Col>
+                                            <Col span={2} style={{ textAlign: "center", fontSize: "14px", fontWeight: "bold", color: "white" }}>
+                                                :
+                                            </Col>
+                                            <Col span={14} style={{ fontSize: "11px", fontWeight: "bold", color: "white" }}>
+                                                {memberData?.SchemeType}
+                                            </Col>
 
-                                    {/* Scheme Type */}
-                                    <Col span={6}>
-                                        <Text strong style={{ fontSize: "14px", fontWeight: "bold", color: "white" }}>Scheme Type</Text>
-                                    </Col>
-                                    <Col span={2} style={{ textAlign: "left" }}>
-                                        <Text strong style={{ fontSize: "16px", fontWeight: "bold", color: "white" }}>:</Text>
-                                    </Col>
-                                    <Col span={12} style={{ fontSize: "14px", fontWeight: "bold" }}>
-                                        {memberData?.SchemeType}
+                                            {/* Group Name */}
+                                            <Col span={8}>
+                                                <Text strong style={{ fontSize: "12px", fontWeight: "bold", color: "white" }}>Group Name</Text>
+                                            </Col>
+                                            <Col span={2} style={{ textAlign: "center", fontSize: "14px", fontWeight: "bold", color: "white" }}>
+                                                :
+                                            </Col>
+                                            <Col span={14} style={{ fontSize: "11px", fontWeight: "bold", color: "white" }}>
+                                                {memberData?.GroupName}
+                                            </Col>
+                                        </Row>
                                     </Col>
 
-                                    {/* Group Name */}
-                                    <Col span={6}>
-                                        <Text strong style={{ fontSize: "14px", fontWeight: "bold", color: "white" }}>Group Name</Text>
+                                    {/* Vertical Divider */}
+                                    <Col span={1} style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+                                        <Divider type="vertical" style={{ height: "100%", borderColor: "white", margin: "0" }} />
                                     </Col>
-                                    <Col span={2} style={{ textAlign: "left" }}>
-                                        <Text strong style={{ fontSize: "16px", fontWeight: "bold", color: "white" }}>:</Text>
-                                    </Col>
-                                    <Col span={12} style={{ fontSize: "14px", fontWeight: "bold" }}>
-                                        {memberData?.GroupName}
+
+                                    {/* Right Side: 3 columns */}
+                                    <Col span={11}>
+                                        <Row>
+                                            {/* Area */}
+                                            <Col span={8}>
+                                                <Text strong style={{ fontSize: "12px", fontWeight: "bold", color: "white" }}>Area</Text>
+                                            </Col>
+                                            <Col span={2} style={{ textAlign: "center", fontSize: "14px", fontWeight: "bold", color: "white" }}>
+                                                :
+                                            </Col>
+                                            <Col span={14} style={{ fontSize: "11px", fontWeight: "bold", color: "white" }}>
+                                                {memberData?.Area}
+                                            </Col>
+
+                                            {/* Address */}
+                                            <Col span={8}>
+                                                <Text strong style={{ fontSize: "12px", fontWeight: "bold", color: "white" }}>Address</Text>
+                                            </Col>
+                                            <Col span={2} style={{ textAlign: "center", fontSize: "14px", fontWeight: "bold", color: "white" }}>
+                                                :
+                                            </Col>
+                                            <Col span={14} style={{ fontSize: "11px", fontWeight: "bold", color: "white" }}>
+                                                {memberData?.Address}
+                                            </Col>
+                                        </Row>
                                     </Col>
                                 </Row>
-                            </Card>
 
+
+                            </Card>
                             <Table
                                 size="small"
                                 columns={columns}
@@ -273,96 +390,75 @@ const MemberCard = () => {
                                 pagination={false}
                                 style={{ marginTop: "10px" }}
                                 rowKey="sno"
-                                className="custom-small-table" // 👈 Add a class for more styling control
-
-                                scroll={{ y: 300 }} // 👈 Set table height and enable vertical scrolling
+                                className="custom-table" // 👈 Add a class for more styling control
+                                scroll={{ y: 200 }} // 👈 Set table height and enable vertical scrolling
                             />
-                            <Row gutter={[16, 8]} style={{ marginTop: "10px" }}>
-                                <Col span={6}><Text strong>Scheme Amount:</Text> {memberData?.SchemeAmount}</Col>
+
+                            <Row gutter={[16, 8]} style={{ marginTop: "10px", justifyContent: "space-between", alignItems: "center", }}>
+                                <Col span={6}><Text strong>Total Gold Weight:</Text> {memberData?.TotalGoldWeight}</Col>
+
                                 <Col span={6}><Text strong>Total Paid:</Text> {memberData?.TotalPaid}</Col>
                                 <Col span={6}><Text strong>Balance Amount:</Text> {memberData?.BalanceAmount}</Col>
-                                <Col span={6}><Text strong>Total Gold Weight:</Text> {memberData?.TotalGoldWeight}</Col>
                             </Row>
                         </Card>
                     </Col>
-                    <Col span={8}>
+                    <Col span={7}>
                         {/* Scheme Details */}
                         <Card className="customeproductcard" style={{ backgroundImage: "linear-gradient(to right, #cdcddf, #a8b1ff)" }}>
                             <div style={{ fontSize: "14px", fontWeight: "bold", marginBottom: "5px" }}>SCHEME DETAILS</div>
                             <Row>
                                 <Col span={10}><Text strong style={{ fontSize: "14px" }}>No. Of Months</Text></Col>
                                 <Col span={2} style={{ textAlign: "center" }}><Text strong>:</Text></Col>
-                                <Col span={12}><Text strong>{memberData?.noOfMonths}</Text></Col>
-
-                                <Col span={10}><Text strong style={{ fontSize: "14px" }}>Scheme Join Date</Text></Col>
-                                <Col span={2} style={{ textAlign: "center" }}><Text strong>:</Text></Col>
-                                <Col span={12}><Text strong>{memberData?.joinDate}</Text></Col>
+                                <Col span={12}><Text strong>{memberData?.SchemeDuration}</Text></Col>
 
                                 <Col span={10}><Text strong style={{ fontSize: "14px" }}>Amount</Text></Col>
                                 <Col span={2} style={{ textAlign: "center" }}><Text strong>:</Text></Col>
-                                <Col span={12}><Text strong>{memberData?.amount}</Text></Col>
+                                <Col span={12}><Text strong>{memberData?.SchemeAmount}</Text></Col>
 
                                 <Col span={10}><Text strong style={{ fontSize: "14px" }}>Scheme Value</Text></Col>
                                 <Col span={2} style={{ textAlign: "center" }}><Text strong>:</Text></Col>
-                                <Col span={12}><Text strong>{memberData?.schemeValue} WT</Text></Col>
+                                <Col span={12}><Text strong>{memberData?.SchemeValue} WT</Text></Col>
 
                                 <Col span={10}><Text strong style={{ fontSize: "14px" }}>Bonus Amount</Text></Col>
                                 <Col span={2} style={{ textAlign: "center" }}><Text strong>:</Text></Col>
-                                <Col span={12}><Text strong>{memberData?.bonusAmount}</Text></Col>
-
-                                <Col span={10}><Text strong style={{ fontSize: "14px" }}>Gift Voucher</Text></Col>
-                                <Col span={2} style={{ textAlign: "center" }}><Text strong>:</Text></Col>
-                                <Col span={12}><Text strong>{memberData?.giftVoucher}</Text></Col>
+                                <Col span={12}><Text strong>{memberData?.BonusAmount}</Text></Col>
 
                                 <Col span={10}><Text strong style={{ fontSize: "14px" }}>Total Scheme Amt</Text></Col>
                                 <Col span={2} style={{ textAlign: "center" }}><Text strong>:</Text></Col>
-                                <Col span={12}><Text strong>{memberData?.totalSchemeAmt}</Text></Col>
+                                <Col span={12}><Text strong>{memberData?.SchemeAmount}</Text></Col>
                             </Row>
                         </Card>
+                        <Card className="customeproductcard" style={{
+                            backgroundImage: "linear-gradient(to right, #ff9a9e, #fad0c4)",
+                        }}>
+                            <Row>
+                                <Col span={10}><Text strong style={{ fontSize: "12px", fontWeight: "bold" }}>Scheme Join Date</Text></Col>
+                                <Col span={2} style={{ textAlign: "center" }}><Text strong style={{ fontSize: "16px", fontWeight: "bold" }}>:</Text></Col>
+                                <Col span={12} style={{ fontSize: "12px", fontWeight: "bold" }}>{memberData?.JoinDate ? formatDate(memberData?.JoinDate) : ""}</Col>
 
+                                <Col span={10}><Text strong style={{ fontSize: "12px", fontWeight: "bold" }}>Scheme End Date</Text></Col>
+                                <Col span={2} style={{ textAlign: "center" }}><Text strong style={{ fontSize: "16px", fontWeight: "bold" }}>:</Text></Col>
+                                <Col span={12} style={{ fontSize: "12px", fontWeight: "bold" }}>{memberData?.ExpiryDate ? formatDate(memberData?.ExpiryDate) : ""}</Col>
+                            </Row>
+                        </Card>
                         {/* Pending Dues */}
                         <Card className="customeproductcard" style={{ backgroundImage: "linear-gradient(to right, #cdcddf, #a8b1ff)" }}>
                             <div style={{ fontSize: "14px", fontWeight: "bold", marginBottom: "5px" }}>PENDING DUES</div>
                             <Row>
-                                <Col span={10}><Text strong style={{ fontSize: "14px" }}>Pending Dues</Text></Col>
-                                <Col span={2} style={{ textAlign: "center" }}><Text strong>:</Text></Col>
-                                <Col span={12}><Text strong>{memberData?.pendingDues}</Text></Col>
+                                <Col span={10}><Text strong style={{ fontSize: "12px", fontWeight: "bold" }}>Total Months</Text></Col>
+                                <Col span={2} style={{ textAlign: "center" }}><Text strong style={{ fontSize: "16px", fontWeight: "bold" }}>:</Text></Col>
+                                <Col span={12} style={{ fontSize: "12px", fontWeight: "bold" }}>{memberData ? memberData.SchemeDuration : ""}</Col>
+                                <Col span={10}><Text strong style={{ fontSize: "12px", fontWeight: "bold" }}>Paid Months</Text></Col>
+                                <Col span={2} style={{ textAlign: "center" }}><Text strong style={{ fontSize: "16px", fontWeight: "bold" }}>:</Text></Col>
+                                <Col span={12} style={{ fontSize: "12px", fontWeight: "bold" }}>{Paidmonths}</Col>
 
-                                <Col span={10}><Text strong style={{ fontSize: "14px" }}>Balance Months</Text></Col>
-                                <Col span={2} style={{ textAlign: "center" }}><Text strong>:</Text></Col>
-                                <Col span={12}><Text strong>{memberData?.balanceMonths}</Text></Col>
-                            </Row>
-                        </Card>
+                                <Col span={10}><Text strong style={{ fontSize: "12px", fontWeight: "bold" }}>Balance Months</Text></Col>
+                                <Col span={2} style={{ textAlign: "center" }}><Text strong style={{ fontSize: "16px", fontWeight: "bold" }}>:</Text></Col>
+                                <Col span={12} style={{ fontSize: "12px", fontWeight: "bold" }}> {memberData ? memberData.SchemeDuration - Paidmonths : ""}</Col>
+                                <Col span={10}><Text strong style={{ fontSize: "12px", fontWeight: "bold" }}>Paid Amount</Text></Col>
+                                <Col span={2} style={{ textAlign: "center" }}><Text strong style={{ fontSize: "16px", fontWeight: "bold" }}>:</Text></Col>
+                                <Col span={12} style={{ fontSize: "12px", fontWeight: "bold" }}>{memberData ? memberData?.SchemeAmount * Paidmonths : ""}</Col>
 
-                        {/* Bill Details */}
-                        <Card className="customeproductcard" style={{ backgroundImage: "linear-gradient(to right, #cdcddf, #a8b1ff)" }}>
-                            <div style={{ fontSize: "14px", fontWeight: "bold", marginBottom: "5px" }}>BILL DETAILS</div>
-                            <Row>
-                                <Col span={10}><Text strong style={{ fontSize: "14px" }}>Bill No</Text></Col>
-                                <Col span={2} style={{ textAlign: "center" }}><Text strong>:</Text></Col>
-                                <Col span={12}><Text strong>{memberData?.billNo}</Text></Col>
-
-                                <Col span={10}><Text strong style={{ fontSize: "14px" }}>Bill Date</Text></Col>
-                                <Col span={2} style={{ textAlign: "center" }}><Text strong>:</Text></Col>
-                                <Col span={12}><Text strong>{memberData?.billDate}</Text></Col>
-
-                                <Col span={10}><Text strong style={{ fontSize: "14px" }}>Jewel Type</Text></Col>
-                                <Col span={2} style={{ textAlign: "center" }}><Text strong>:</Text></Col>
-                                <Col span={12}><Text strong>{memberData?.jewelType}</Text></Col>
-                            </Row>
-                        </Card>
-
-                        {/* Settlement Details */}
-                        <Card className="customeproductcard" style={{ backgroundImage: "linear-gradient(to right, #cdcddf, #a8b1ff)" }}>
-                            <div style={{ fontSize: "14px", fontWeight: "bold", marginBottom: "5px" }}>SETTLEMENT DETAILS</div>
-                            <Row>
-                                <Col span={10}><Text strong style={{ fontSize: "14px" }}>Settlement No</Text></Col>
-                                <Col span={2} style={{ textAlign: "center" }}><Text strong>:</Text></Col>
-                                <Col span={12}><Text strong>{memberData?.settlementNo}</Text></Col>
-
-                                <Col span={10}><Text strong style={{ fontSize: "14px" }}>Dropped Entry No</Text></Col>
-                                <Col span={2} style={{ textAlign: "center" }}><Text strong>:</Text></Col>
-                                <Col span={12}><Text strong>{memberData?.dropEntryNo}</Text></Col>
                             </Row>
                         </Card>
                     </Col>

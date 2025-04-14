@@ -1,4 +1,4 @@
-import React, { useState, useEffect,useRef, forwardRef } from "react";
+import React, { useState, useEffect, useRef, forwardRef } from "react";
 import { Input, Button, Row, Col, Card, Typography, Table, message, Select } from "antd";
 import axios from "axios";
 import { CREATE_jwel } from "../../Config/Config";
@@ -6,7 +6,7 @@ import moment from "moment";
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { FaCalendarAlt } from 'react-icons/fa';
-import {  ReloadOutlined, } from "@ant-design/icons";
+import { ReloadOutlined, } from "@ant-design/icons";
 
 const { Text } = Typography;
 const { Option } = Select;
@@ -27,9 +27,9 @@ const ShemeSettlement = () => {
     const inchargeRef = useRef(null);
     const narrRef = useRef(null);
     const saveButtonRef = useRef(null);
-    
+
     const [schemeCardData, setSchemeCardData] = useState(null);
-// Inside your component
+    // Inside your component
 
 
 
@@ -48,28 +48,28 @@ const ShemeSettlement = () => {
     const [voucherNo, setVoucherNo] = useState(null);
     const fetchVoucherNo = async () => {
         try {
-          const response = await axios.get(
-            "http://www.jewelerp.timeserasoftware.in/api/Scheme/GetSchemeMaxNumberInTable?tableName=SCHEME_END&column=RECNO"
-          );
-          const data = response.data;
-  
-          if (data && data.length > 0) {
-            const maxNo = data[0].Column1;
-            setVoucherNo(maxNo === null ? 1 : maxNo + 1);
-          } else {
-            setVoucherNo(1);
-          }
+            const response = await axios.get(
+                "http://www.jewelerp.timeserasoftware.in/api/Scheme/GetSchemeMaxNumberInTable?tableName=SCHEME_END&column=RECNO"
+            );
+            const data = response.data;
+
+            if (data && data.length > 0) {
+                const maxNo = data[0].Column1;
+                setVoucherNo(maxNo === null ? 1 : maxNo + 1);
+            } else {
+                setVoucherNo(1);
+            }
         } catch (error) {
-          console.error("Error fetching voucher number:", error);
-          setVoucherNo(1); // fallback
+            console.error("Error fetching voucher number:", error);
+            setVoucherNo(1); // fallback
         }
-      };
+    };
     useEffect(() => {
- 
-  
-      fetchVoucherNo();
+
+
+        fetchVoucherNo();
     }, []);
-  
+
     const fetchIncharges = async () => {
         try {
             const res = await axios.get(`${CREATE_jwel}/api/Master/GetDataFromGivenTableName`, {
@@ -148,6 +148,8 @@ const ShemeSettlement = () => {
                     MemberName: paymentData[0].SCHEMEMEMBER,
                     SchemeType: paymentData[0].SCHEMETYPE,
                     GroupName: paymentData[0].SCHEMEGROUP,
+                    SchemeDuration: paymentData[0].SCHEMEDURATION,
+
                     SchemeAmount: schemeAmt,
                     TotalPaid: totalPaid,
                     BalanceAmount: schemeAmt * duration - totalPaid,
@@ -198,69 +200,69 @@ const ShemeSettlement = () => {
         const now = new Date().toISOString();
 
         const safeDate = (val) => val ? new Date(val).toISOString() : now;
-        
-        const body = {
-          recNo: Number(voucherNo) || 0,
-          recDate: now,
-          rectime: now,
-          empCode: schemeCardData?.empCode ?? "",
-          schemeGroup: schemeCardData?.schemeGroup ?? "",
-          schemeName: schemeCardData?.schemeName ?? "",
-          goldRate: Number(schemeCardData?.goldRate) || 0,
-          cardNo: schemeCardData?.cardNo ?? "",
-          phno: schemeCardData?.mobile1 ?? "",
-          schemeMember: schemeCardData?.memberName ?? "",
-          add1: schemeCardData?.address ?? "",
-          add2: "",
-          add3: "",
-          schemeAmount: Number(schemeCardData?.amount) || 0,
-          schemeDuration: Number(schemeCardData?.noOfMonths) || 0,
-          bonusAmount: Number(schemeCardData?.bonusAmount) || 0,
-          amount: Number(schemeCardData?.paidAmount) || 0,
-          schemeValue: Number(schemeCardData?.schemeValue) || 0,
-          schemeJDate: safeDate(schemeCardData?.joinDate),
-          recAmount: Number(schemeCardData?.paidAmount) || 0,
-          goldWt: Number(schemeCardData?.goldWeight) || 0,
-          narr: schemeCardData?.narr ?? "",
-          uname: schemeCardData?.uname ?? "",
-          schemeType: schemeCardData?.schemeType ?? "",
-          schemeMode: schemeCardData?.schemeMode ?? "",
-          rBonusAmount: Number(schemeCardData?.rBonusAmount) || 0,
-          giftVoucher: Number(schemeCardData?.giftVoucher) || 0,
-          totSValue: Number(schemeCardData?.totalSchemeAmount) || 0,
-          mobile1: schemeCardData?.mobile1 ?? "",
-          mobile2: schemeCardData?.mobile2 ?? "",
-          billNo: Number(schemeCardData?.billNo) || 0,
-          billDate: now,
-          jewelType: schemeCardData?.jewelType ?? "",
-          saleCode: schemeCardData?.saleCode ?? "",
-          cancelled: "N",
-          incharger: schemeCardData?.incharge ?? "",
-          clouD_UPLOAD: true,
-          schemE_ENDDATE: now,
-        };
-        
-      
-        try {
-          await axios.post("http://www.jewelerp.timeserasoftware.in/api/Scheme/SchemeEndInsert", body);
-          message.success("Scheme saved successfully!");
-              await axios.post(`http://www.jewelerp.timeserasoftware.in/api/Scheme/UpdateSchemeMemberDropping?schemeDropping=true&cardNO=${cardNo}`, {
-                 
-                });
-            
-          fetchVoucherNo(); // Fetch new voucher number after saving
 
-          // Clear data after saving
-          setCardNo("");
-          setMemberData(null);
-          setSchemeCardData(null);
-          setTableData([]);
+        const body = {
+            recNo: Number(voucherNo) || 0,
+            recDate: now,
+            rectime: now,
+            empCode: schemeCardData?.empCode ?? "",
+            schemeGroup: schemeCardData?.schemeGroup ?? "",
+            schemeName: schemeCardData?.schemeName ?? "",
+            goldRate: Number(schemeCardData?.goldRate) || 0,
+            cardNo: schemeCardData?.cardNo ?? "",
+            phno: schemeCardData?.mobile1 ?? "",
+            schemeMember: schemeCardData?.memberName ?? "",
+            add1: schemeCardData?.address ?? "",
+            add2: "",
+            add3: "",
+            schemeAmount: Number(schemeCardData?.amount) || 0,
+            schemeDuration: Number(schemeCardData?.noOfMonths) || 0,
+            bonusAmount: Number(schemeCardData?.bonusAmount) || 0,
+            amount: Number(schemeCardData?.paidAmount) || 0,
+            schemeValue: Number(schemeCardData?.schemeValue) || 0,
+            schemeJDate: safeDate(schemeCardData?.joinDate),
+            recAmount: Number(schemeCardData?.paidAmount) || 0,
+            goldWt: Number(schemeCardData?.goldWeight) || 0,
+            narr: schemeCardData?.narr ?? "",
+            uname: schemeCardData?.uname ?? "",
+            schemeType: schemeCardData?.schemeType ?? "",
+            schemeMode: schemeCardData?.schemeMode ?? "",
+            rBonusAmount: Number(schemeCardData?.rBonusAmount) || 0,
+            giftVoucher: Number(schemeCardData?.giftVoucher) || 0,
+            totSValue: Number(schemeCardData?.totalSchemeAmount) || 0,
+            mobile1: schemeCardData?.mobile1 ?? "",
+            mobile2: schemeCardData?.mobile2 ?? "",
+            billNo: Number(schemeCardData?.billNo) || 0,
+            billDate: now,
+            jewelType: schemeCardData?.jewelType ?? "",
+            saleCode: schemeCardData?.saleCode ?? "",
+            cancelled: "N",
+            incharger: schemeCardData?.incharge ?? "",
+            clouD_UPLOAD: true,
+            schemE_ENDDATE: now,
+        };
+
+
+        try {
+            await axios.post("http://www.jewelerp.timeserasoftware.in/api/Scheme/SchemeEndInsert", body);
+            message.success("Scheme saved successfully!");
+            await axios.post(`http://www.jewelerp.timeserasoftware.in/api/Scheme/UpdateSchemeMemberDropping?schemeDropping=true&cardNO=${cardNo}`, {
+
+            });
+
+            fetchVoucherNo(); // Fetch new voucher number after saving
+
+            // Clear data after saving
+            setCardNo("");
+            setMemberData(null);
+            setSchemeCardData(null);
+            setTableData([]);
         } catch (error) {
-          console.error("Save failed:", error);
-          message.error("Failed to save scheme.");
+            console.error("Save failed:", error);
+            message.error("Failed to save scheme.");
         }
-      };
-      
+    };
+
 
     useEffect(() => {
         fetchRates1();
@@ -324,6 +326,7 @@ const ShemeSettlement = () => {
             title: "Rec No",
             dataIndex: "RECNO",
             key: "recNo",
+            align: "center",
             onHeaderCell: () => ({ style: { fontSize: "12px" } }),
             render: (text) => <span style={{ fontSize: "12px" }}>{text}</span>,
         },
@@ -343,6 +346,8 @@ const ShemeSettlement = () => {
             title: "Rec Amt",
             dataIndex: "SCHEMEAMOUNT",
             key: "recAmount",
+            align: "right",
+
             onHeaderCell: () => ({ style: { fontSize: "12px" } }),
             render: (text) => <span style={{ fontSize: "12px" }}>{text}</span>,
         },
@@ -373,11 +378,14 @@ const ShemeSettlement = () => {
             title: "Balance",
             dataIndex: "balance",
             key: "balance",
+            align: "right",
+
             onHeaderCell: () => ({ style: { fontSize: "12px" } }),
             render: (text) => <span style={{ fontSize: "12px" }}>{text}</span>,
         },
     ];
-    
+
+    const Paidmonths = tableData.filter(item => item.RECNO).length;
 
 
     return (
@@ -444,42 +452,40 @@ const ShemeSettlement = () => {
                             <ReloadOutlined style={{ fontSize: "20px" }} />
                         </Button>
                     </Col>
-                    {/* Gold Rates */}
-                    <Col>
-                        <Card
-                            style={{
-                                //   background: "rgba(255, 255, 255, 0.2)", // Semi-transparent white
-                                background: "linear-gradient(135deg,rgb(20, 54, 117),rgb(66, 110, 185))", // Blue and Grey Gradient
-
-                                position: "relative",
-                                zIndex: 1,
-                                borderRadius: "8px",
-                                color: "white",
-                            }}
-                            className="custometagnocard"
-
-                        >
-                            <div style={{ fontSize: "13px", fontWeight: "bold", marginBottom: "5px", color: "white" }}>
-                                Today's Gold Rates
-                            </div>
-                            {goldRates.length > 0 ? (
-                                <div style={{ fontSize: "12px", fontWeight: "bold", color: "yellow" }}>
-                                    {rates[index]?.MAINPRODUCT} - {goldRates[index]?.PREFIX} - ₹{goldRates[index]?.RATE}
-                                </div>
-                            ) : (
-                                <div style={{ fontSize: "12px", color: "white" }}>No Gold Rates Available</div>
-                            )}
-                        </Card>
-                    </Col>
+                  
+                    
                 </Row>
             </Card>
 
             <div style={{ marginTop: "6px" }}>
                 <Row gutter={16}>
                     <Col span={17}>
+                    
                         <Card className="customeproductcard" style={{ backgroundImage: "linear-gradient(to right, #cdcddf, #a8b1ff)" }}>
-                            {/* Colored Status Dots */}
-                            <div style={{ position: "absolute", top: "10px", right: "10px", display: "flex", gap: "5px" }}>
+  <Card
+                                className="customeproductcard"
+                                style={{
+                                    backgroundImage: "linear-gradient(to right,rgb(73, 73, 143),rgb(44, 55, 155))",
+                                    position: "relative",
+                                    color: "white"
+                                }}
+                            >
+                            <Row>
+                                <Col span={10} ><Text strong style={{color:"white"}}>Address</Text></Col>
+                                <Col span={2} ><Text strong style={{ textAlign: "center",color:'white' }}>:</Text></Col>
+                                <Col span={12} style={{color:"white"}}>{schemeCardData?.address}</Col>
+
+                                <Col span={10}><Text strong style={{color:"white"}}>Mobile No 1</Text></Col>
+                                <Col span={2}><Text strong  style={{ textAlign: "center",color:"white" }}>:</Text></Col>
+                                <Col span={12}>{schemeCardData?.mobile1}</Col>
+
+                                <Col span={10}><Text strong style={{color:"white"}}>Mobile No 2</Text></Col>
+                                <Col span={2} ><Text strong style={{ textAlign: "center" ,color:"white"}}>:</Text></Col>
+                                <Col span={12}>{schemeCardData?.mobile2}</Col>
+                            </Row>
+
+</Card>                            {/* Colored Status Dots */}
+                            <div style={{ position: "absolute", top: "14px", right: "10px", display: "flex", gap: "5px" }}>
                                 {/* Red Dot - Dropped */}
                                 <div
                                     style={{
@@ -503,7 +509,7 @@ const ShemeSettlement = () => {
                                 ></div>
                             </div>
 
-                            <div style={{ fontSize: "14px", fontWeight: "bold", marginBottom: "5px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <div style={{ fontSize: "14px", fontWeight: "bold", marginBottom: "5px", display: "flex", justifyContent: "space-between", alignItems: "center" ,marginTop:"10px"}}>
                                 <span>SCHEME SETTLEMENT</span>
 
                                 <div style={{ display: "flex", gap: "20px" }}>
@@ -533,10 +539,11 @@ const ShemeSettlement = () => {
                                 size="small"
                                 columns={columns}
                                 dataSource={tableData}
+                                className="custom-table"
                                 pagination={false}
                                 style={{ marginTop: "10px" }}
                                 rowKey="sno"
-                                scroll={{ y: 300 }}
+                                scroll={{ y: 250 }}
                             />
 
                             <Row gutter={[16, 8]} style={{ marginTop: "10px" }}>
@@ -587,22 +594,22 @@ const ShemeSettlement = () => {
                                     <Text strong style={{ marginLeft: "4px" }}>:</Text>
                                 </Col>
                                 <Col span={7}>
-                                <Input
-                                    ref={narrRef}
+                                    <Input
+                                        ref={narrRef}
 
-      placeholder="Enter Narr"
-      value={schemeCardData?.narr || ""}
-      onChange={(e) => {
-        const narrValue = e.target.value;
-        setSchemeCardData(prev => ({ ...prev, narr: narrValue }));
-      }}
-      onKeyDown={(e) => {
-        if (e.key === "Enter") {
-            handleSave();
-            setTimeout(() => cardNoRef.current?.focus(), 100);
-        }
-    }}
-    />
+                                        placeholder="Enter Narr"
+                                        value={schemeCardData?.narr || ""}
+                                        onChange={(e) => {
+                                            const narrValue = e.target.value;
+                                            setSchemeCardData(prev => ({ ...prev, narr: narrValue }));
+                                        }}
+                                        onKeyDown={(e) => {
+                                            if (e.key === "Enter") {
+                                                handleSave();
+                                                setTimeout(() => cardNoRef.current?.focus(), 100);
+                                            }
+                                        }}
+                                    />
                                 </Col>
                             </Row>
                         </Card>
@@ -611,24 +618,7 @@ const ShemeSettlement = () => {
 
                     </Col>
                     <Col span={7}>
-                        <Card className="customeproductcard" style={{ backgroundImage: "linear-gradient(to right, #cdcddf, #a8b1ff)" }}>
-                            <div style={{ fontSize: "14px", fontWeight: "bold", marginBottom: "5px" }}>VOUCHER DETAILS</div>
-                            <Row>
-
-
-                                <Col span={10}><Text strong>Address</Text></Col>
-                                <Col span={2} style={{ textAlign: "center" }}><Text strong>:</Text></Col>
-                                <Col span={12}>{schemeCardData?.address}</Col>
-
-                                <Col span={10}><Text strong>Mobile No 1</Text></Col>
-                                <Col span={2} style={{ textAlign: "center" }}><Text strong>:</Text></Col>
-                                <Col span={12}>{schemeCardData?.mobile1}</Col>
-
-                                <Col span={10}><Text strong>Mobile No 2</Text></Col>
-                                <Col span={2} style={{ textAlign: "center" }}><Text strong>:</Text></Col>
-                                <Col span={12}>{schemeCardData?.mobile2}</Col>
-                            </Row>
-                        </Card>
+                   
 
                         <Card className="customeproductcard" style={{ backgroundImage: "linear-gradient(to right, #cdcddf, #a8b1ff)", marginTop: "10px" }}>
                             <div style={{ fontSize: "14px", fontWeight: "bold", marginBottom: "5px" }}>SCHEME DETAILS</div>
@@ -637,9 +627,6 @@ const ShemeSettlement = () => {
                                 <Col span={2} style={{ textAlign: "center" }}><Text strong>:</Text></Col>
                                 <Col span={12}>{schemeCardData?.amount}</Col>
 
-                                <Col span={10}><Text strong>Join Date</Text></Col>
-                                <Col span={2} style={{ textAlign: "center" }}><Text strong>:</Text></Col>
-                                <Col span={12}>{schemeCardData?.joinDate}</Col>
 
                                 <Col span={10}><Text strong>Scheme Value</Text></Col>
                                 <Col span={2} style={{ textAlign: "center" }}><Text strong>:</Text></Col>
@@ -662,27 +649,49 @@ const ShemeSettlement = () => {
                                 <Col span={12}>{schemeCardData?.totalSchemeAmount}</Col>
                             </Row>
                         </Card>
-
-                        <Card className="customeproductcard" style={{ backgroundImage: "linear-gradient(to right, #cdcddf, #a8b1ff)", marginTop: "10px" }}>
-                            <div style={{ fontSize: "14px", fontWeight: "bold", marginBottom: "5px" }}>PAYMENT DETAILS</div>
+<Card className="customeproductcard" style={{
+                            backgroundImage: "linear-gradient(to right, #ff9a9e, #fad0c4)",
+                        }}>
                             <Row>
-                                <Col span={10}><Text strong>Paid Amount</Text></Col>
-                                <Col span={2} style={{ textAlign: "center" }}><Text strong>:</Text></Col>
-                                <Col span={12}>{schemeCardData?.paidAmount}</Col>
+                                <Col span={10}><Text strong style={{ fontSize: "12px", fontWeight: "bold" }}>Scheme Join Date</Text></Col>
+                                <Col span={2} style={{ textAlign: "center" }}><Text strong style={{ fontSize: "16px", fontWeight: "bold" }}>:</Text></Col>
+                                <Col span={12} style={{ fontSize: "12px", fontWeight: "bold" }}>{schemeCardData?.joinDate}</Col>
 
-                                <Col span={10}><Text strong>Bonus Amount</Text></Col>
-                                <Col span={2} style={{ textAlign: "center" }}><Text strong>:</Text></Col>
-                                <Col span={12}>{schemeCardData?.bonusAmount}</Col>
-
-                                <Col span={10}><Text strong>Total Amount</Text></Col>
-                                <Col span={2} style={{ textAlign: "center" }}><Text strong>:</Text></Col>
-                                <Col span={12}>{schemeCardData?.totalAmount}</Col>
-
-
+                                <Col span={10}><Text strong style={{ fontSize: "12px", fontWeight: "bold" }}>Scheme End Date</Text></Col>
+                                <Col span={2} style={{ textAlign: "center" }}><Text strong style={{ fontSize: "16px", fontWeight: "bold" }}>:</Text></Col>
+                                <Col span={12} style={{ fontSize: "12px", fontWeight: "bold" }}>na</Col>
                             </Row>
-                            <Button     ref={saveButtonRef}
-type="primary" style={{ marginTop: "10px", width: "100%" }}  onClick={handleSave}>Save</Button>
                         </Card>
+                       
+                         <Card className="customeproductcard" style={{ backgroundImage: "linear-gradient(to right, #cdcddf, #a8b1ff)" }}>
+                                                    <div style={{ fontSize: "14px", fontWeight: "bold", marginBottom: "5px" }}>PENDING DUES</div>
+                                                    <Row>
+                                                        <Col span={10}><Text strong style={{ fontSize: "12px", fontWeight: "bold" }}>Total Months</Text></Col>
+                                                        <Col span={2} style={{ textAlign: "center" }}><Text strong style={{ fontSize: "16px", fontWeight: "bold" }}>:</Text></Col>
+                                                        <Col span={12} style={{ fontSize: "12px", fontWeight: "bold" }}>{memberData ? memberData.SchemeDuration : ""}</Col>
+                                                        <Col span={10}><Text strong style={{ fontSize: "12px", fontWeight: "bold" }}>Paid Months</Text></Col>
+                                                        <Col span={2} style={{ textAlign: "center" }}><Text strong style={{ fontSize: "16px", fontWeight: "bold" }}>:</Text></Col>
+                                                        <Col span={12} style={{ fontSize: "12px", fontWeight: "bold" }}>{Paidmonths}</Col>
+                        
+                                                        <Col span={10}><Text strong style={{ fontSize: "12px", fontWeight: "bold" }}>Balance Months</Text></Col>
+                                                        <Col span={2} style={{ textAlign: "center" }}><Text strong style={{ fontSize: "16px", fontWeight: "bold" }}>:</Text></Col>
+                                                        <Col span={12} style={{ fontSize: "12px", fontWeight: "bold" }}> {memberData ? memberData.SchemeDuration - Paidmonths : ""}</Col>
+                                                        <Col span={10}><Text strong style={{ fontSize: "12px", fontWeight: "bold" }}>Paid Amount</Text></Col>
+                                                        <Col span={2} style={{ textAlign: "center" }}><Text strong style={{ fontSize: "16px", fontWeight: "bold" }}>:</Text></Col>
+                                                        <Col span={12} style={{ fontSize: "12px", fontWeight: "bold" }}>{memberData ? memberData?.SchemeAmount * Paidmonths : ""}</Col>
+                        
+                                                    </Row>
+                                                    {memberData?.SchemeDuration === Paidmonths && (
+        <Button
+            ref={saveButtonRef}
+            type="primary"
+            style={{ marginTop: "10px", width: "100%" }}
+            onClick={handleSave}
+        >
+            Save
+        </Button>
+    )}
+                                                </Card>
                     </Col>
                 </Row>
 

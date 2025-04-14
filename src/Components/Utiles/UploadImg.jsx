@@ -3,6 +3,7 @@ import { Upload, Modal, Button, message } from "antd";
 import { PlusOutlined, EyeOutlined, DeleteOutlined } from "@ant-design/icons";
 import axios from "axios";
 import { CREATE_jwel } from '../../Config/Config';
+import PhonePePayment from "./PhonePay";
 
 const AvatarUpload = () => {
   const [imageUrl, setImageUrl] = useState(null); // Preview URL
@@ -153,8 +154,7 @@ const AvatarUpload = () => {
       >
         Submit
       </Button>
-
-      {/* Image Preview Modal */}
+      <PhonePePayment/>
       <Modal
         open={previewVisible}
         footer={null}

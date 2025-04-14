@@ -341,6 +341,7 @@ console.log("schemeCardData",schemeCardData)
             title: "Rec No",
             dataIndex: "RECNO",
             key: "recNo",
+            align: "center",
             onHeaderCell: () => ({ style: { fontSize: "12px" } }),
             render: (text) => <span style={{ fontSize: "12px" }}>{text}</span>,
         },
@@ -360,6 +361,7 @@ console.log("schemeCardData",schemeCardData)
             title: "Rec Amt",
             dataIndex: "SCHEMEAMOUNT",
             key: "recAmount",
+            align: "right",
             onHeaderCell: () => ({ style: { fontSize: "12px" } }),
             render: (text) => <span style={{ fontSize: "12px" }}>{text}</span>,
         },
@@ -390,6 +392,8 @@ console.log("schemeCardData",schemeCardData)
             title: "Balance",
             dataIndex: "balance",
             key: "balance",
+            align: "right",
+
             onHeaderCell: () => ({ style: { fontSize: "12px" } }),
             render: (text) => <span style={{ fontSize: "12px" }}>{text}</span>,
         },
@@ -497,8 +501,31 @@ console.log("schemeCardData",schemeCardData)
                 <Row gutter={16}>
                     <Col span={17}>
                         <Card className="customeproductcard" style={{ backgroundImage: "linear-gradient(to right, #cdcddf, #a8b1ff)" }}>
+                          <Card
+                                                          className="customeproductcard"
+                                                          style={{
+                                                              backgroundImage: "linear-gradient(to right,rgb(73, 73, 143),rgb(44, 55, 155))",
+                                                              position: "relative",
+                                                              color: "white"
+                                                          }}
+                                                      >
+                                                      <Row>
+                                                          <Col span={10} ><Text strong style={{color:"white"}}>Address</Text></Col>
+                                                          <Col span={2} ><Text strong style={{ textAlign: "center",color:'white' }}>:</Text></Col>
+                                                          <Col span={12} style={{color:"white"}}>{schemeCardData?.address}</Col>
+                          
+                                                          <Col span={10}><Text strong style={{color:"white"}}>Mobile No 1</Text></Col>
+                                                          <Col span={2}><Text strong  style={{ textAlign: "center",color:"white" }}>:</Text></Col>
+                                                          <Col span={12}>{schemeCardData?.mobile1}</Col>
+                          
+                                                          <Col span={10}><Text strong style={{color:"white"}}>Mobile No 2</Text></Col>
+                                                          <Col span={2} ><Text strong style={{ textAlign: "center" ,color:"white"}}>:</Text></Col>
+                                                          <Col span={12}>{schemeCardData?.mobile2}</Col>
+                                                      </Row>
+                          
+                          </Card>       
                             {/* Colored Status Dots */}
-                            <div style={{ position: "absolute", top: "10px", right: "10px", display: "flex", gap: "5px" }}>
+                            <div style={{ position: "absolute", top: "14px", right: "10px", display: "flex", gap: "5px" }}>
                                 {/* Red Dot - Dropped */}
                                 <div
                                     style={{
@@ -522,7 +549,7 @@ console.log("schemeCardData",schemeCardData)
                                 ></div>
                             </div>
 
-                            <div style={{ fontSize: "14px", fontWeight: "bold", marginBottom: "5px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <div style={{ fontSize: "14px", fontWeight: "bold", marginBottom: "5px", display: "flex", justifyContent: "space-between", alignItems: "center" ,marginTop:"10px"}}>
                                 <span>MEMBER DISCONTINUE</span>
 
                                 <div style={{ display: "flex", gap: "20px" }}>
@@ -554,8 +581,9 @@ console.log("schemeCardData",schemeCardData)
                                 dataSource={tableData}
                                 pagination={false}
                                 style={{ marginTop: "10px" }}
+                                className="custom-table"
                                 rowKey="sno"
-                                scroll={{ y: 300 }}
+                                scroll={{ y: 250 }}
                             />
 
                             <Row gutter={[16, 8]} style={{ marginTop: "10px" }}>
@@ -608,24 +636,7 @@ console.log("schemeCardData",schemeCardData)
 
                     </Col>
                     <Col span={7}>
-                        <Card className="customeproductcard" style={{ backgroundImage: "linear-gradient(to right, #cdcddf, #a8b1ff)" }}>
-                            <div style={{ fontSize: "14px", fontWeight: "bold", marginBottom: "5px" }}>VOUCHER DETAILS</div>
-                            <Row>
-
-
-                                <Col span={10}><Text strong>Address</Text></Col>
-                                <Col span={2} style={{ textAlign: "center" }}><Text strong>:</Text></Col>
-                                <Col span={12}>{schemeCardData?.address}</Col>
-
-                                <Col span={10}><Text strong>Mobile No 1</Text></Col>
-                                <Col span={2} style={{ textAlign: "center" }}><Text strong>:</Text></Col>
-                                <Col span={12}>{schemeCardData?.mobile1}</Col>
-
-                                <Col span={10}><Text strong>Mobile No 2</Text></Col>
-                                <Col span={2} style={{ textAlign: "center" }}><Text strong>:</Text></Col>
-                                <Col span={12}>{schemeCardData?.mobile2}</Col>
-                            </Row>
-                        </Card>
+                       
 
                         <Card className="customeproductcard" style={{ backgroundImage: "linear-gradient(to right, #cdcddf, #a8b1ff)", marginTop: "10px" }}>
                             <div style={{ fontSize: "14px", fontWeight: "bold", marginBottom: "5px" }}>SCHEME DETAILS</div>
@@ -634,9 +645,9 @@ console.log("schemeCardData",schemeCardData)
                                 <Col span={2} style={{ textAlign: "center" }}><Text strong>:</Text></Col>
                                 <Col span={12}>{schemeCardData?.amount}</Col>
 
-                                <Col span={10}><Text strong>Join Date</Text></Col>
+                                {/* <Col span={10}><Text strong>Join Date</Text></Col>
                                 <Col span={2} style={{ textAlign: "center" }}><Text strong>:</Text></Col>
-                                <Col span={12}>{schemeCardData?.joinDate}</Col>
+                                <Col span={12}>{schemeCardData?.joinDate}</Col> */}
 
                                 <Col span={10}><Text strong>Scheme Value</Text></Col>
                                 <Col span={2} style={{ textAlign: "center" }}><Text strong>:</Text></Col>
@@ -659,7 +670,20 @@ console.log("schemeCardData",schemeCardData)
                                 <Col span={12}>{schemeCardData?.totalSchemeAmount}</Col>
                             </Row>
                         </Card>
+<Card className="customeproductcard" style={{
+                            backgroundImage: "linear-gradient(to right, #ff9a9e, #fad0c4)",
+                        }}>
+                            <Row>
+                                <Col span={10}><Text strong style={{ fontSize: "12px", fontWeight: "bold" }}>Scheme Join Date</Text></Col>
+                                <Col span={2} style={{ textAlign: "center" }}><Text strong style={{ fontSize: "16px", fontWeight: "bold" }}>:</Text></Col>
+                                <Col span={12} style={{ fontSize: "12px", fontWeight: "bold" }}>{schemeCardData?.joinDate}</Col>
 
+                                <Col span={10}><Text strong style={{ fontSize: "12px", fontWeight: "bold" }}>Scheme End Date</Text></Col>
+                                <Col span={2} style={{ textAlign: "center" }}><Text strong style={{ fontSize: "16px", fontWeight: "bold" }}>:</Text></Col>
+                                <Col span={12} style={{ fontSize: "12px", fontWeight: "bold" }}>na</Col>
+                            </Row>
+                        </Card>
+                       
                         <Card className="customeproductcard" style={{ backgroundImage: "linear-gradient(to right, #cdcddf, #a8b1ff)", marginTop: "10px" }}>
                             <div style={{ fontSize: "14px", fontWeight: "bold", marginBottom: "5px" }}>PAYMENT DETAILS</div>
                             <Row>

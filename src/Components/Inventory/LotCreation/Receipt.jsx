@@ -4,7 +4,7 @@ import axios from "axios";
 import { CREATE_jwel } from "../../../Config/Config";
 import Swal from 'sweetalert2';
 
-import { DeleteOutlined, InfoCircleOutlined, ReloadOutlined } from "@ant-design/icons";
+import { DeleteOutlined, InfoCircleOutlined, ReloadOutlined, CloseOutlined } from "@ant-design/icons";
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { FaCalendarAlt } from 'react-icons/fa';
@@ -28,13 +28,15 @@ const SchemeDetails = () => {
     const [checkInstalmentNo, setCheckInstalmentNo] = useState({});
     const [disableButton, setDisableButton] = useState(false);
     const [recpDisableButton, setRecpDisableButton] = useState(false);
-console.log("recpDisableButton", recpDisableButton);
+    console.log("recpDisableButton", recpDisableButton);
     const [loading, setLoading] = useState(false);
+    const [isTouched, setIsTouched] = useState(false);
+
 
     const [accountNumbers, setAccountNumbers] = useState([]);
     const paymentModes = ["UPI", "ONLINE", "CARD", "CHEQUE", "CASH"];
     const [, setTableData1] = useState([]);
-
+    const [paidAmountDisable, setPaidAmountDisable] = useState(false);
     const [selectedPaymentMode, setSelectedPaymentMode] = useState(null);
     const [selectedPayMode, setSelectedPayMode] = useState(null);
     // Input Refs for Keyboard Navigation
@@ -54,7 +56,30 @@ console.log("recpDisableButton", recpDisableButton);
     const inputRef = useRef(null);
     console.log("checkInstalmentNo", checkInstalmentNo);
     console.log("installmentNo", installmentNo);
+    const [isSchemeEnded, setIsSchemeEnded] = useState(false);
+    useEffect(() => {
+        // Function to handle Escape key press
+        const handleEscapeKey = (e) => {
+            if (e.key === 'Escape') {
+                handleResetAll();
+                setVisible(false); // Close the popover
+            }
+        };
 
+        // Add event listener when the popover is visible
+        if (visible) {
+            document.addEventListener('keydown', handleEscapeKey);
+            setTimeout(() => {
+                inputRef.current?.focus();
+                inputRef.current?.select();
+            }, 0);
+        }
+
+        // Cleanup the event listener when the component is unmounted or the popover is hidden
+        return () => {
+            document.removeEventListener('keydown', handleEscapeKey);
+        };
+    }, [visible]);
     useEffect(() => {
         fetchIncharges();
         if (checkInstalmentNo?.length > 0) {
@@ -68,13 +93,14 @@ console.log("recpDisableButton", recpDisableButton);
             }
             if (loading === false) {
                 setDisableButton(false);
-                
+
             }
-            
+
         }
 
 
-    }, [checkInstalmentNo, installmentNo]);
+    }, [checkInstalmentNo, installmentNo,]);
+
     const fetchIncharges = async () => {
         try {
             const res = await axios.get(`${CREATE_jwel}/api/Master/GetDataFromGivenTableName`, {
@@ -102,7 +128,7 @@ console.log("recpDisableButton", recpDisableButton);
 
 
     const handleSearch = async () => {
-                            setRecpDisableButton(true);
+        setRecpDisableButton(true);
 
         if (!searchValue.trim()) {
             message.warning("Please enter a Receipt Number");
@@ -110,7 +136,7 @@ console.log("recpDisableButton", recpDisableButton);
         }
 
         setLoading(true);
-        
+
         try {
             // Fetch receipt master
             const response = await axios.get(`${CREATE_jwel}/api/Master/GetDataFromGivenTableNameWithWhere?tableName=RECEIPT_MAST&where=RECNO%3D${searchValue}`);
@@ -142,9 +168,10 @@ console.log("recpDisableButton", recpDisableButton);
 
             setSchemeData(schemeInfo);
             setCardNo(schemeInfo?.cardNo || "");
-            getSchemecheckDetails(mappedData[0].cardNo);
-console.log("table",response.data.length)
-
+            // getSchemecheckDetails(mappedData[0].cardNo, mappedData[0]);
+            console.log("table", response.data.length)
+            setPaidAmountDisable(true);
+            setIsSchemeEnded(false);
             // Fetch payment details
             const paymentResponse = await axios.get(`${CREATE_jwel}/api/Master/GetDataFromGivenTableNameWithWhere?tableName=RECEIPT_PAYMENT&where=CARDNO%3D%27${schemeInfo?.cardNo}%27`);
             const paymentDetails = paymentResponse.data
@@ -162,20 +189,43 @@ console.log("table",response.data.length)
 
             // Fetch Member Card Detail
             const memberCardResponse = await axios.get(`${CREATE_jwel}/api/Master/GetDataFromGivenTableNameWithWhere?tableName=MEMBER_CARD_DET&where=CARDNO%3D%27${schemeInfo.cardNo}%27%20AND%20RECNO%3D%27${schemeInfo.RecNo}%27`);
+            // if (memberCardResponse.data?.length > 0) {
+            //     const memberCard = memberCardResponse.data[0];
+
+            //     setInstallmentNo(memberCard.sno); // Set installment number from MEMBER_CARD_DET
+                
+            // } else {
+            //     setInstallmentNo(1);
+            // }
             if (memberCardResponse.data?.length > 0) {
                 const memberCard = memberCardResponse.data[0];
-
+            
                 setInstallmentNo(memberCard.sno); // Set installment number from MEMBER_CARD_DET
+            
+                // Disable save button if sno is 1
+                if (memberCard.sno === 1) {
+                    setDisableButton(true);
+                } else {
+                    setDisableButton(false);
+                }
+            
+            } else {
+                setInstallmentNo(1);
+                setDisableButton(true); // Default behavior if no data
             }
+            
 
             // fetchSchemeDetails(schemeInfo?.cardNo); // Still fetch full scheme details
 
         } catch (error) {
             message.warning("no receipt data");
-                setTableData([]);
+            setTableData([]); setIsSchemeEnded(false);
+
 
         } finally {
             setLoading(false);
+            setIsSchemeEnded(false);
+
         }
     };
 
@@ -251,7 +301,7 @@ console.log("table",response.data.length)
     };
 
 
-    const getSchemecheckDetails = async (cardNo) => {
+    const getSchemecheckDetails = async (cardNo, mappedData) => {
         try {
             const encodedWhere = encodeURIComponent(`CARDNO='${cardNo}' AND RECNO IS NOT NULL`);
             const response = await axios.get(
@@ -272,9 +322,31 @@ console.log("table",response.data.length)
                     data: data
                 };
                 setCheckInstalmentNo(result);
+                if (result.length === mappedData.SchemeDuration) {
+
+                    setIsSchemeEnded(true);
+
+                }
+                if (result.length !== mappedData.SchemeDuration) {
+                    setIsSchemeEnded(false);
+                }
+              
+               
             } else {
-                setCheckInstalmentNo(null); // Or handle no data case
-            }
+
+                const result = {
+                    sno: 0,
+                    RECNO: 0,
+                    length: 0,
+                    data: []
+
+                };
+                  if(result.length === 0){
+                    setIsSchemeEnded(false);
+
+                }
+                setCheckInstalmentNo(result);
+                        }
 
         } catch (error) {
             console.error("Error fetching scheme details", error);
@@ -321,6 +393,7 @@ console.log("table",response.data.length)
                 message.warning("No scheme details found for the provided Card No.");
                 return;
             }
+            console.log("redata",response.data)
             const mappedData = response.data.map(item => ({
                 RecNo: item.RecNo,
                 RecDate: item.RecDate,
@@ -334,6 +407,7 @@ console.log("table",response.data.length)
                 add3: item?.add3,
                 installmentNo: item.INSTNO,
                 SchemeType: item.SchemeType,
+                SchemeGroup: item.SchemeGroup,
                 SchemeDuration: item.SchemeDuration,
                 BonusAmount: item.BonusAmount,
                 SchemeValue: item.SchemeValue,
@@ -343,8 +417,11 @@ console.log("table",response.data.length)
                 area: item.area,
                 SchemeEndDate: item.SchemeENDDate || item.schemeENDDate || item.SchemeEndDate, // Ensure all possible cases are handled
             }));
-            getSchemecheckDetails(mappedData[0].cardNo);
+            getSchemecheckDetails(mappedData[0].cardNo, mappedData[0]);
             setSchemeData(mappedData[0]);
+            setAmount(mappedData[0].SchemeAmount);
+
+
             console.log("mast", response.data);
 
             const firmConfigResponse = await axios.get(
@@ -457,9 +534,9 @@ console.log("table",response.data.length)
             setReceiptNo("Error");
         }
     };
-    // console.log("schemeData", schemeData);
+    console.log("schemeData", schemeData);
 
-console.log("disableButton",disableButton)
+    console.log("disableButton", disableButton)
     const handleSave = async () => {
         if (loading) return; // Avoid double call
         setLoading(true);
@@ -585,6 +662,7 @@ console.log("disableButton",disableButton)
                 payload
             );
             message.success("Data saved successfully!");
+            setPaidAmountDisable(false);
 
             // Save table data
             const tablePayloads = tableData.map((record, index) => ({
@@ -615,6 +693,7 @@ console.log("disableButton",disableButton)
                 const allSuccessful = response.every(
                     (response) => response.data?.[0]?.isInsert === true
                 );
+                setPaidAmountDisable(false);
 
                 if (allSuccessful) {
                     message.success("All payment records saved successfully!");
@@ -704,14 +783,14 @@ console.log("disableButton",disableButton)
             setInstallmentNo(1);
             setTimeout(() => document.getElementById("cardNoInput").focus(), 0);
             setDisableButton(false);
-                                        setRecpDisableButton(false);
+            setRecpDisableButton(false);
 
             console.log("Response:", response.data);
         } catch (error) {
             console.error("Error saving data:", error);
             message.error("Failed to save data.");
             setDisableButton(false);
-                                                    setRecpDisableButton(false);
+            setRecpDisableButton(false);
 
 
         }
@@ -725,7 +804,7 @@ console.log("disableButton",disableButton)
             title: "S.No",
             dataIndex: "key",
             key: "key",
-            render: (text, record, index) => index + 1, // Display serial number
+            render: (index) => index + 1, // Display serial number
         },
         {
             title: "Payment Mode",
@@ -764,49 +843,119 @@ console.log("disableButton",disableButton)
             ),
         },
     ];
+    // Reusable reset logic
+    const handleResetAll = () => {
+        setCardNo("");
+        setSchemeData(null);
+        setSelectedPaymentMode(null);
+        setSelectedPayMode(null);
+        setSelectedAccount(null);
+        setDescription("");
+        setAmount("");
+        setTableData([]);
+        setInstallmentNo(1);
+        fetchReceiptNo();
+        setDisableButton(false);
+        setCheckInstalmentNo({});
+        setRecpDisableButton(false);
+        setPaidAmountDisable(false);
+        setIsSchemeEnded(false);
+        setSearchValue("");
+
+        setTimeout(() => document.getElementById("cardNoInput")?.focus(), 0);
+    };
     console.log(tableData);
     const popoverContent = (
         <div style={{ width: 450 }}>
-            {/* Search Input with Label */}
-            <Form layout="inline">
-                <Form.Item label="Receipt No" style={{ flex: 1 }}>
-                    <Input
-                        ref={inputRef}
-                        placeholder="Enter Receipt No"
-                        value={searchValue}
-                        onChange={(e) => setSearchValue(e.target.value)}
-                        onPressEnter={() => {
-                            setReceiptNo(searchValue); // Update receiptNo with the entered value
-                            setVisible(false);
-                            handleSearch();
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <label style={{ fontWeight: 500, marginBottom: 8 }}>Search Receipt</label>
+                <Button
+                    icon={<CloseOutlined />}
+                    shape="circle"
+                    size="small"
+                    onClick={() => {
+                        handleResetAll();
+                        setSearchValue("");
+                        setVisible(false); // Close the popover
+                    }}
+                    
+                />
+            </div>
 
-                            setSearchValue(""); // Clear the search value after pressing Enter
-                            setTimeout(() => document.getElementById("paymentModeDropdown").focus(), 0); // Move cursor to Payment Mode
-                        }}
-                        allowClear
-                    />
+            {/* Label + Close icon row */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <label style={{ fontWeight: 500, marginBottom: 8 }}>Receipt No</label>
+
+            </div>
+
+            {/* Search Input with Validation */}
+            <Form layout="inline">
+                <Form.Item
+                    style={{ flex: 1 }}
+                    validateStatus={
+                        isTouched && (!searchValue || parseInt(searchValue, 10) > parseInt(receiptNo, 10))
+                            ? "error"
+                            : ""
+                    }
+                    help={
+                        isTouched && !searchValue
+                            ? "Please enter Receipt No"
+                            : isTouched && parseInt(searchValue, 10) > parseInt(receiptNo, 10)
+                            ? "Enter Correct Receipt No"
+                            : null
+                    }
+                >
+                    <Input
+    ref={inputRef}
+    placeholder="Enter Receipt No"
+    value={searchValue}
+    onChange={(e) => {
+        setSearchValue(e.target.value);
+        setIsTouched(true); // Mark input as touched
+    }}    onPressEnter={() => {
+        if (!searchValue || parseInt(searchValue, 10) > parseInt(receiptNo, 10)) {
+            return;
+        }
+        setVisible(false);
+        handleSearch();
+        setTimeout(() => document.getElementById("paymentModeDropdown")?.focus(), 0);
+    }}
+    allowClear
+/>
+
                 </Form.Item>
             </Form>
 
-            {/* Buttons */}
+            {/* Action Buttons */}
             <Space style={{ marginTop: 10, display: "flex", justifyContent: "flex-end" }}>
                 <Button onClick={handleClear}>Clear</Button>
                 <Button
                     type="primary"
+                    disabled={
+                        !searchValue || parseInt(searchValue, 10) > parseInt(receiptNo, 10)
+                    }
                     onClick={() => {
-                    setRecpDisableButton(true);
-                        setReceiptNo(searchValue); // Update receiptNo with the entered value
+                        if (!searchValue || parseInt(searchValue, 10) > parseInt(receiptNo, 10)) {
+                            return;
+                        }
+                        setRecpDisableButton(true);
                         setVisible(false);
                         handleSearch();
-                        setSearchValue(""); // Clear the search value after clicking OK
-                        setTimeout(() => document.getElementById("paymentModeDropdown").focus(), 0); // Move cursor to Payment Mode
+
+                        setTimeout(() => {
+                            document.getElementById("paymentModeDropdown")?.focus();
+                        }, 0); // small delay to prevent state conflict
                     }}
+
                 >
                     OK
                 </Button>
             </Space>
         </div>
     );
+    console.log("searchv", searchValue)
+    const Paidmonths = isSchemeEnded ? schemeData?.SchemeDuration : installmentNo - 1;
+    // const receiptNumber = (parseInt(searchValue) < parseInt(receiptNo)) ? parseInt(searchValue) : receiptNo;
     return (
         <div>
             <Card
@@ -862,6 +1011,7 @@ console.log("disableButton",disableButton)
                                 marginRight: "10px",
                                 fontWeight: "bold",
                                 fontSize: "16px",
+                                color: recpDisableButton === true ? "white" : "#000",
                             }}
                             disabled={recpDisableButton === true}
                             autoFocus
@@ -876,7 +1026,7 @@ console.log("disableButton",disableButton)
                             ref={cardnookRef}
                             type="primary"
                             disabled={recpDisableButton === true}
-                            style={{ width: "40px", height: "40px" ,color:"white"}}
+                            style={{ width: "40px", height: "40px", color: "white" }}
                             onClick={() => {
                                 fetchSchemeDetails(cardNo);
                                 setTimeout(() => document.getElementById("paymentModeDropdown")?.focus(), 0);
@@ -887,14 +1037,21 @@ console.log("disableButton",disableButton)
 
                         {/* Info Icon Button */}
                         <Popover
-                            content={popoverContent}
-                            title="Search Receipt"
-                            trigger="click"
-                            open={visible}
-                            onOpenChange={(newVisible) => setVisible(newVisible)}
-                        >
-                            <Button icon={<InfoCircleOutlined />} shape="circle" style={{ marginLeft: 8 }} />
-                        </Popover>
+    content={popoverContent}
+    trigger="click"
+    open={visible}
+    onOpenChange={(newVisible) => {
+        if (!newVisible) {
+            // When popover closes (e.g., click outside)
+            handleResetAll();
+            setSearchValue("");
+        }
+        setVisible(newVisible);
+    }}
+>
+    <Button icon={<InfoCircleOutlined />} shape="circle" style={{ marginLeft: 8 }} />
+</Popover>
+
 
                         {/* Refresh Icon Button */}
                         <Button
@@ -914,8 +1071,10 @@ console.log("disableButton",disableButton)
                                 fetchReceiptNo();
                                 setDisableButton(false);
                                 setCheckInstalmentNo({});
-                                                                        setRecpDisableButton(false);
-
+                                setRecpDisableButton(false);
+                                setPaidAmountDisable(false);
+                                setIsSchemeEnded(false);
+                                setSearchValue();
                                 setTimeout(() => document.getElementById("cardNoInput").focus(), 0);
                             }}
                         />
@@ -925,7 +1084,7 @@ console.log("disableButton",disableButton)
                     <Col>
 
                         <Text strong style={{ fontSize: "14px", fontWeight: "bold", color: "white" }}>
-                            Receipt No:  {receiptNo}
+                            Receipt No:  {searchValue && parseInt(searchValue, 10) <= parseInt(receiptNo, 10) ? searchValue : receiptNo}
                         </Text>
                     </Col>
 
@@ -982,9 +1141,34 @@ console.log("disableButton",disableButton)
                     {/* Member & Payment Details */}
                     <Col xs={24} lg={17}>
                         <Card className="customeproductcard" style={{ backgroundImage: "linear-gradient(to right, #cdcddf, #a8b1ff)" }}>
-                            <div style={{ fontSize: "14px", fontWeight: "bold", marginBottom: "5px" }}>
-                                PERSON DETAILS
+                            <div
+                                style={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
+                                }}
+                            >
+                                <div style={{ fontSize: "14px", fontWeight: "bold" }}>
+                                    PERSON DETAILS
+                                </div>
+                                {isSchemeEnded &&
+                                    <Text
+                                        style={{
+                                            fontSize: "16px",
+                                            fontWeight: "bold",
+                                            color: "#d4380d",
+                                            backgroundColor: "#fff1f0",
+                                            padding: "3px 12px",
+                                            borderRadius: "6px",
+                                            border: "1px solid #d4380d",
+                                            textAlign: "center",
+                                            minWidth: "50px",
+                                        }}
+                                    >
+                                        Scheme Ended
+                                    </Text>}
                             </div>
+
                             <Row gutter={[16, 8]}>
                                 <Col span={24}>
                                     <Row align="middle">
@@ -1030,6 +1214,14 @@ console.log("disableButton",disableButton)
                                     </Row>
                                 </Col>
                             </Row>
+                            <div
+    style={{
+        filter: isSchemeEnded ? "blur(3px)" : "none",
+        pointerEvents: isSchemeEnded ? "none" : "auto",
+        opacity: isSchemeEnded ? 0.6 : 1,
+        transition: "all 0.3s ease-in-out",
+    }}
+>
                             <div
                                 style={{
                                     backgroundColor: "#f0f5ff",
@@ -1277,7 +1469,7 @@ console.log("disableButton",disableButton)
                                     size="small"
                                 />
                             </div>
-
+    </div>
                             <div style={{ marginTop: "10px", textAlign: "right" }}>
                                 <Text strong style={{ fontSize: "16px", fontWeight: "bold" }}>
                                     Paid Amount:{" "}
@@ -1413,28 +1605,29 @@ console.log("disableButton",disableButton)
                             </Row>
                         </Card>
                         <Card className="customeproductcard" style={{ backgroundImage: "linear-gradient(to right, #cdcddf, #a8b1ff)" }}>
-                            <div style={{ fontSize: "12px", fontWeight: "bold", }}>
-                                SCHEME PAYMENT DETAILS
-                            </div>
-                            <Row>
-                                <Col span={10}><Text strong style={{ fontSize: "12px", fontWeight: "bold" }}>Total Months</Text></Col>
-                                <Col span={2} style={{ textAlign: "center" }}><Text strong style={{ fontSize: "16px", fontWeight: "bold" }}>:</Text></Col>
-                                <Col span={12} style={{ fontSize: "12px", fontWeight: "bold" }}>{schemeData ? schemeData.SchemeDuration : ""}</Col>
-                                <Col span={10}><Text strong style={{ fontSize: "12px", fontWeight: "bold" }}>Paid Months</Text></Col>
-                                <Col span={2} style={{ textAlign: "center" }}><Text strong style={{ fontSize: "16px", fontWeight: "bold" }}>:</Text></Col>
-                                <Col span={12} style={{ fontSize: "12px", fontWeight: "bold" }}>{schemeData ? schemeData.SchemeDuration : "" - schemeData ? schemeData.DUEMONTHS : ""}</Col>
+                            {paidAmountDisable === false && <>
+                                <div style={{ fontSize: "12px", fontWeight: "bold", }}>
+                                    SCHEME PAYMENT DETAILS
+                                </div>
+                                <Row>
+                                    <Col span={10}><Text strong style={{ fontSize: "12px", fontWeight: "bold" }}>Total Months</Text></Col>
+                                    <Col span={2} style={{ textAlign: "center" }}><Text strong style={{ fontSize: "16px", fontWeight: "bold" }}>:</Text></Col>
+                                    <Col span={12} style={{ fontSize: "12px", fontWeight: "bold" }}>{schemeData ? schemeData.SchemeDuration : ""}</Col>
+                                    <Col span={10}><Text strong style={{ fontSize: "12px", fontWeight: "bold" }}>Paid Months</Text></Col>
+                                    <Col span={2} style={{ textAlign: "center" }}><Text strong style={{ fontSize: "16px", fontWeight: "bold" }}>:</Text></Col>
+                                    <Col span={12} style={{ fontSize: "12px", fontWeight: "bold" }}>{Paidmonths}</Col>
 
-                                <Col span={10}><Text strong style={{ fontSize: "12px", fontWeight: "bold" }}>Balance Months</Text></Col>
-                                <Col span={2} style={{ textAlign: "center" }}><Text strong style={{ fontSize: "16px", fontWeight: "bold" }}>:</Text></Col>
-                                <Col span={12} style={{ fontSize: "12px", fontWeight: "bold" }}> {schemeData ? schemeData.DUEMONTHS : ""}</Col>
-                                <Col span={10}><Text strong style={{ fontSize: "12px", fontWeight: "bold" }}>Total Amount</Text></Col>
-                                <Col span={2} style={{ textAlign: "center" }}><Text strong style={{ fontSize: "16px", fontWeight: "bold" }}>:</Text></Col>
-                                <Col span={12} style={{ fontSize: "12px", fontWeight: "bold" }}>{schemeData ? schemeData.SchemeValue : ""}</Col>
+                                    <Col span={10}><Text strong style={{ fontSize: "12px", fontWeight: "bold" }}>Balance Months</Text></Col>
+                                    <Col span={2} style={{ textAlign: "center" }}><Text strong style={{ fontSize: "16px", fontWeight: "bold" }}>:</Text></Col>
+                                    <Col span={12} style={{ fontSize: "12px", fontWeight: "bold" }}> {schemeData ? schemeData.SchemeDuration - Paidmonths : ""}</Col>
+                                    <Col span={10}><Text strong style={{ fontSize: "12px", fontWeight: "bold" }}>Paid Amount</Text></Col>
+                                    <Col span={2} style={{ textAlign: "center" }}><Text strong style={{ fontSize: "16px", fontWeight: "bold" }}>:</Text></Col>
+                                    <Col span={12} style={{ fontSize: "12px", fontWeight: "bold" }}>{schemeData ? schemeData?.SchemeAmount * Paidmonths : ""}</Col>
 
-                            </Row>
+                                </Row></>}
                             <Row justify="end" style={{ marginTop: 5 }}>
                                 <Button ref={saveRef}
-                                    type="primary" onClick={handleSave} loading={loading} style={{ fontSize: "16px", fontWeight: "bold" }} disabled={disableButton === true}>SAVE</Button>
+                                    type="primary" onClick={handleSave} loading={loading} style={{ fontSize: "16px", fontWeight: "bold" }} disabled={disableButton === true || isSchemeEnded === true}>SAVE</Button>
                                 <Button
                                     style={{ marginLeft: 10, fontSize: "16px", fontWeight: "bold" }}
                                     onClick={() => {
@@ -1451,6 +1644,10 @@ console.log("disableButton",disableButton)
                                         setDisableButton(false);
                                         setRecpDisableButton(false);
                                         setCheckInstalmentNo({});
+                                        setPaidAmountDisable(false);
+                                        setIsSchemeEnded(false);
+                                        setSearchValue();
+
                                         setTimeout(() => document.getElementById("cardNoInput").focus(), 0);
                                     }}
                                 >

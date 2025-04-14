@@ -543,6 +543,12 @@
   text-align: center; /* Center align for text */
   font-weight: bold !important; /* Bold text */
 }
+.blue-background-fircolumn {
+  background-color: #4A90E2 !important; /* Blue color */
+  color: rgb(252, 250, 250) !important; /* White text for contrast */
+  text-align: center; /* Center align for text */
+  font-weight: bold !important; /* Bold text */
+}
 
 .blue-background-row .blue-background-column {
   background-color: #d5edf8; 
@@ -916,4 +922,54 @@ font-weight: bold;
   font-size: 11px !important;
   font-weight: bold !important;
   padding: 4px 8px; /* Reduce padding for a compact look */
+}
+/* member card */
+/* Custom Table Styles */
+.custom-small-table {
+  background-color: #f4f7fc; 
+  border-radius: 8px; /* Rounded corners for the table */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+  border: 1px solid #ddd; /* Light border around the table */
+}
+
+.custom-small-table .ant-table-thead > tr > th {
+  background-color: #4a90e2; /* Header background color */
+  color: #fff; /* White text color for header */
+  font-weight: 600; /* Bold font for header */
+  text-align: center; /* Center-align text in header */
+}
+
+.custom-small-table .ant-table-tbody > tr:nth-child(odd) {
+  background-color: #f9fafb; /* Light gray background for odd rows */
+}
+
+.custom-small-table .ant-table-tbody > tr:nth-child(even) {
+  background-color: #e0e7ff; /* Light blue background for even rows */
+}
+
+.custom-small-table .ant-table-tbody > tr:hover {
+  background-color: #d1d5db; /* Slightly darker background for hover effect */
+}
+
+.custom-small-table .ant-table-tbody > tr > td {
+  text-align: center; /* Center-align text in body cells */
+  padding: 12px; /* Add some padding inside table cells */
+}
+
+/* Alternating Text Colors for Columns */
+.custom-small-table .ant-table-tbody > tr > td:nth-child(odd) {
+  color: #333; /* Dark text color for odd columns */
+}
+
+.custom-small-table .ant-table-tbody > tr > td:nth-child(even) {
+  color: #4a90e2; /* Blue text color for even columns */
+}
+
+.custom-small-table .ant-table-bordered .ant-table-cell {
+  border-right: 1px solid #e8e8e8; /* Light border between cells */
+}
+
+.custom-small-table .ant-table-scroll .ant-table-body {
+  background-color: #fff; /* White background for the table body */
+  border-radius: 8px; /* Rounded corners for the table body */
 }
