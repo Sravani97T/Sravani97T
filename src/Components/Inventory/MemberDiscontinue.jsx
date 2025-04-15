@@ -1,5 +1,5 @@
 import React, { useState, useEffect, forwardRef, useRef } from "react";
-import { Input, Button, Row, Col, Card, Typography, Table, message, Select, Checkbox } from "antd";
+import { Input, Button, Row, Col, Card, Typography, Table, message, Select, Checkbox, Divider } from "antd";
 import axios from "axios";
 import { CREATE_jwel } from "../../Config/Config";
 import moment from "moment";
@@ -21,7 +21,7 @@ const MemeberDiscontinue = () => {
     const [memberData, setMemberData] = useState(null);
     const [tableData, setTableData] = useState([]);
     const [rates, setRates] = useState([]);
-    const [index, setIndex] = useState(0);
+    const [, setIndex] = useState(0);
     const [inchargeList, setInchargeList] = useState([]);
 
     const cardNoRef = useRef(null);
@@ -31,6 +31,8 @@ const MemeberDiscontinue = () => {
 
     const [isDiscontinued, setIsDiscontinued] = useState(false);
     const [schemeCardData, setSchemeCardData] = useState({});
+    const [isEligibleForDrop, setIsEligibleForDrop] = useState(false);
+
     const handleCheckboxChange = (e) => {
         const checked = e.target.checked;
         setIsDiscontinued(checked);
@@ -64,7 +66,7 @@ const MemeberDiscontinue = () => {
     const fetchVoucherNo = async () => {
         try {
             const response = await axios.get(
-                `${CREATE_jwel}/api/Scheme/GetSchemeMaxNumberInTable?tableName=SCHEME_MIDDLEDROP&column=smdRecno`
+                `${CREATE_jwel}/api/Scheme/GetSchemeMaxNumberInTable?tableName=SCHEME_MIDDLEDROP&column=SMDRECNO`
             );
             const data = response.data;
 
@@ -135,6 +137,8 @@ const MemeberDiscontinue = () => {
 
             // 2️⃣ Handle payment table and member metrics
             if (paymentData.length > 0) {
+                setIsEligibleForDrop(true); // ✅ Eligible for drop
+
                 const formattedData = paymentData.map((item, index) => ({
                     key: index,
                     sno: item.sno,
@@ -158,7 +162,6 @@ const MemeberDiscontinue = () => {
                 const duration = paymentData[0].SCHEMEDURATION;
 
                 setTableData(formattedData);
-
                 setMemberData({
                     MemberName: paymentData[0].SCHEMEMEMBER,
                     SchemeType: paymentData[0].SCHEMETYPE,
@@ -172,10 +175,12 @@ const MemeberDiscontinue = () => {
                     ExpiryDate: paymentData[0].SCHEMEENDDATE,
                 });
             } else {
+                setIsEligibleForDrop(false); // ❌ Not eligible
                 setTableData([]);
                 setMemberData(null);
-                message.error("No payment data found for the entered Card No.");
+                message.warning("No payment data found for the entered Card No.");
             }
+
 
             // 3️⃣ Handle scheme/voucher/payment detail card values
             if (schemeData) {
@@ -183,9 +188,17 @@ const MemeberDiscontinue = () => {
                     address: schemeData.add1,
                     mobile1: schemeData.Mobile1,
                     mobile2: schemeData.Mobile2,
-
+                    MemberName: schemeData.SchemeMember,
+                    SchemeType: schemeData.SchemeType,
+                    GroupName: schemeData.SchemeGroup,
+                    Address: `${schemeData.add1 || ""} ${schemeData.add2 || ""} ${schemeData.add3 || ""} ${schemeData.add4 || ""}`.trim(),
+                    Area: schemeData.area,
+                    cardNo: schemeData.CardNo,
+                    recNo: schemeData.RECNO,
                     amount: schemeData.SchemeAmount,
                     joinDate: moment(schemeData.SchemeJoinDate).format("DD-MM-YYYY"),
+                    SchemeEndDate: moment(schemeData.SchemeEndDate).format("DD-MM-YYYY"),
+
                     schemeValue: schemeData.SchemeValue,
                     noOfMonths: schemeData.SchemeDuration,
                     bonusAmount: schemeData.BonusAmount,
@@ -209,21 +222,95 @@ const MemeberDiscontinue = () => {
         }
     };
 
+    // const handleSave = async () => {
+    //     const now = new Date().toISOString();
+    //     const safeDate = (val) => val ? new Date(val).toISOString() : now;
+
+    //     const body = {
+    //         smdRecno: schemeCardData?.recNo || 0,
+    //         smdRecDate: now,
+    //         smdRecTime: now,
+    //         empCode: schemeCardData?.empCode ?? "",
+    //         schemeGroup: schemeCardData?.schemeGroup ?? "",
+    //         schemeName: schemeCardData?.schemeName ?? "",
+    //         goldRate: Number(schemeCardData?.goldRate) || 0,
+    //         cardNo: cardNo,
+    //         phno: schemeCardData?.mobile1 ?? "",
+    //         schemeMember: schemeCardData?.memberName ?? "",
+    //         add1: schemeCardData?.address ?? "",
+    //         add2: "",
+    //         add3: "",
+    //         schemeAmount: Number(schemeCardData?.amount) || 0,
+    //         schemeDuration: Number(schemeCardData?.noOfMonths) || 0,
+    //         bonusAmount: Number(schemeCardData?.bonusAmount) || 0,
+    //         amount: Number(schemeCardData?.paidAmount) || 0,
+    //         schemeValue: Number(schemeCardData?.schemeValue) || 0,
+    //         schemeJDate: safeDate(schemeCardData?.joinDate),
+    //         recAmount: Number(schemeCardData?.paidAmount) || 0,
+    //         goldWt: Number(schemeCardData?.goldWeight) || 0,
+    //         narr: schemeCardData?.narr ?? "",
+    //         giftVoucher: Number(voucherNo) || 0,
+
+    //         uname: schemeCardData?.uname ?? "",
+    //         schemeType: schemeCardData?.schemeType ?? "",
+    //         schemeMode: schemeCardData?.schemeMode ?? "",
+    //         mobile1: schemeCardData?.mobile1 ?? "",
+    //         mobile2: schemeCardData?.mobile2 ?? "",
+    //         cloud_upload: true,
+    //         schemE_ENDDATE: now,
+    //         incharge: schemeCardData?.incharge,
+
+
+    //     };
+    //     console.log("schemeCardData", schemeCardData)
+    //     try {
+    //         await axios.post("http://www.jewelerp.timeserasoftware.in/api/Scheme/SchemeMiddleDropInsert", body);
+    //         message.success("Scheme saved successfully!");
+    //         setTimeout(() => {
+    //             cardNoRef.current?.focus();
+    //         }, 0);
+    //         // Second: update member dropping
+    //         await axios.post(`http://www.jewelerp.timeserasoftware.in/api/Scheme/UpdateSchemeMemberDropping?schemeDropping=true&cardNO=${cardNo}`, {
+
+    //         });
+
+
+
+
+    //         fetchVoucherNo();
+
+    //         // Reset fields
+    //         setSchemeCardData(null);
+    //         setVoucherNo("");
+    //         setCardNo("");
+    //         setTableData([]);
+    //         setIsDiscontinued(false);
+    //         setMemberData(null);
+    //     } catch (error) {
+    //         console.error("Save failed:", error);
+    //         message.error("Failed to save scheme.");
+    //     }
+    // };
+
     const handleSave = async () => {
         const now = new Date().toISOString();
-        const safeDate = (val) => val ? new Date(val).toISOString() : now;
+        const safeDate = (val) => val ? new Date(val)?.toISOString() : now;
 
         const body = {
-            smdRecno: Number(voucherNo) || 0,
+            smdRecno: schemeCardData?.recNo || 0,
             smdRecDate: now,
             smdRecTime: now,
             empCode: schemeCardData?.empCode ?? "",
-            schemeGroup: schemeCardData?.schemeGroup ?? "",
-            schemeName: schemeCardData?.schemeName ?? "",
+            schemeName: schemeCardData?.SchemeName ?? "",
+
+            schemeMember: schemeCardData?.MemberName ?? "",
+            schemeType: schemeCardData?.SchemeType ?? "",
+            schemeGroup: schemeCardData?.GroupName ?? "",
             goldRate: Number(schemeCardData?.goldRate) || 0,
-            cardNo: schemeCardData?.cardNo ?? "",
+            cardNo: cardNo,
+            area: schemeCardData?.Area ?? "",
+
             phno: schemeCardData?.mobile1 ?? "",
-            schemeMember: schemeCardData?.memberName ?? "",
             add1: schemeCardData?.address ?? "",
             add2: "",
             add3: "",
@@ -236,47 +323,48 @@ const MemeberDiscontinue = () => {
             recAmount: Number(schemeCardData?.paidAmount) || 0,
             goldWt: Number(schemeCardData?.goldWeight) || 0,
             narr: schemeCardData?.narr ?? "",
+            giftVoucher: Number(voucherNo) || 0,
+
             uname: schemeCardData?.uname ?? "",
-            schemeType: schemeCardData?.schemeType ?? "",
             schemeMode: schemeCardData?.schemeMode ?? "",
             mobile1: schemeCardData?.mobile1 ?? "",
             mobile2: schemeCardData?.mobile2 ?? "",
             cloud_upload: true,
             schemE_ENDDATE: now,
             incharge: schemeCardData?.incharge,
-
-
         };
-console.log("schemeCardData",schemeCardData)
+
         try {
             await axios.post("http://www.jewelerp.timeserasoftware.in/api/Scheme/SchemeMiddleDropInsert", body);
+
+            if (isDiscontinued && cardNo) {
+                const droppingUrl = `http://www.jewelerp.timeserasoftware.in/api/Scheme/UpdateSchemeMemberDropping?schemeDropping=true&cardNO=${cardNo}`;
+                const res = await axios.post(droppingUrl);
+
+                if (res.data !== true) {
+                    throw new Error("Failed to update scheme dropping status");
+                }
+            }
+
             message.success("Scheme saved successfully!");
+
             setTimeout(() => {
                 cardNoRef.current?.focus();
-              }, 0);
-           // Second: update member dropping
-    await axios.post(`http://www.jewelerp.timeserasoftware.in/api/Scheme/UpdateSchemeMemberDropping?schemeDropping=true&cardNO=${cardNo}`, {
-       
-      });
-  
-  
-    
+            }, 0);
 
-      fetchVoucherNo();
-  
-      // Reset fields
-      setSchemeCardData(null);
-      setVoucherNo("");
-      setCardNo("");
-      setTableData([]);
-      setIsDiscontinued(false);
-      setMemberData(null);
-    } catch (error) {
-      console.error("Save failed:", error);
-      message.error("Failed to save scheme.");
-    }
-  };
+            fetchVoucherNo();
 
+            setSchemeCardData(null);
+            setVoucherNo("");
+            setCardNo("");
+            setTableData([]);
+            setIsDiscontinued(false);
+            setMemberData(null);
+        } catch (error) {
+            console.error("Save failed:", error);
+            message.error("Failed to save scheme.");
+        }
+    };
 
 
     useEffect(() => {
@@ -303,7 +391,7 @@ console.log("schemeCardData",schemeCardData)
 
     const columns = [
         {
-            title: "S.No",
+            title: "Inst.No",
             dataIndex: "sno",
             key: "sno",
             onHeaderCell: () => ({
@@ -324,7 +412,7 @@ console.log("schemeCardData",schemeCardData)
             ),
         },
         {
-            title: "Date",
+            title: "Inst.Date",
             dataIndex: "MONTH",
             width: 100,
             key: "month",
@@ -388,17 +476,8 @@ console.log("schemeCardData",schemeCardData)
             onHeaderCell: () => ({ style: { fontSize: "12px" } }),
             render: (text) => <span style={{ fontSize: "12px" }}>{text}</span>,
         },
-        {
-            title: "Balance",
-            dataIndex: "balance",
-            key: "balance",
-            align: "right",
 
-            onHeaderCell: () => ({ style: { fontSize: "12px" } }),
-            render: (text) => <span style={{ fontSize: "12px" }}>{text}</span>,
-        },
     ];
-
 
 
     return (
@@ -462,37 +541,43 @@ console.log("schemeCardData",schemeCardData)
                                 setMemberData(null);
                                 setSchemeCardData(null);
                                 setTableData([]);
+                                setTimeout(() => cardNoRef.current?.focus(), 100); // Focus after clearing
+
                             }}
                         >
                             <ReloadOutlined style={{ fontSize: "20px" }} />
                         </Button>
                     </Col>
-                    {/* Gold Rates */}
+                    {/* Right Side - Voucher No and Date Side by Side */}
                     <Col>
-                        <Card
-                            style={{
-                                //   background: "rgba(255, 255, 255, 0.2)", // Semi-transparent white
-                                background: "linear-gradient(135deg,rgb(20, 54, 117),rgb(66, 110, 185))", // Blue and Grey Gradient
+                        <Row gutter={16} align="middle">
+                            {/* Voucher No Section */}
+                            <Col style={{ display: "flex", alignItems: "center" }}>
+                                <Text strong style={{ fontSize: "12px", fontWeight: "bold", color: "white", marginRight: 4 }}>
+                                    Voucher No
+                                </Text>
+                                <Text style={{ fontSize: "14px", fontWeight: "bold", color: "white", margin: "0 6px" }}>:</Text>
+                                <Text style={{ fontSize: "12px", fontWeight: "bold", color: "white" }}>
+                                    {voucherNo !== null ? voucherNo : "Loading..."}
+                                </Text>
+                            </Col>
 
-                                position: "relative",
-                                zIndex: 1,
-                                borderRadius: "8px",
-                                color: "white",
-                            }}
-                            className="custometagnocard"
-
-                        >
-                            <div style={{ fontSize: "13px", fontWeight: "bold", marginBottom: "5px", color: "white" }}>
-                                Today's Gold Rates
-                            </div>
-                            {goldRates.length > 0 ? (
-                                <div style={{ fontSize: "12px", fontWeight: "bold", color: "yellow" }}>
-                                    {rates[index]?.MAINPRODUCT} - {goldRates[index]?.PREFIX} - ₹{goldRates[index]?.RATE}
-                                </div>
-                            ) : (
-                                <div style={{ fontSize: "12px", color: "white" }}>No Gold Rates Available</div>
-                            )}
-                        </Card>
+                            {/* Date Section */}
+                            <Col style={{ display: "flex", alignItems: "center" }}>
+                                <Text strong style={{ fontSize: "12px", fontWeight: "bold", color: "white", marginLeft: 15 }}>
+                                    Date
+                                </Text>
+                                <Text style={{ fontSize: "14px", fontWeight: "bold", color: "white", margin: "0 6px" }}>:</Text>
+                                <DatePicker
+                                    selected={new Date()} // Replace with your date state
+                                    dateFormat="dd MMM yyyy"
+                                    customInput={<CustomInput />}
+                                    popperPlacement="bottom"
+                                    portalId="root"
+                                    container="body"
+                                />
+                            </Col>
+                        </Row>
                     </Col>
                 </Row>
             </Card>
@@ -501,29 +586,95 @@ console.log("schemeCardData",schemeCardData)
                 <Row gutter={16}>
                     <Col span={17}>
                         <Card className="customeproductcard" style={{ backgroundImage: "linear-gradient(to right, #cdcddf, #a8b1ff)" }}>
-                          <Card
-                                                          className="customeproductcard"
-                                                          style={{
-                                                              backgroundImage: "linear-gradient(to right,rgb(73, 73, 143),rgb(44, 55, 155))",
-                                                              position: "relative",
-                                                              color: "white"
-                                                          }}
-                                                      >
-                                                      <Row>
-                                                          <Col span={10} ><Text strong style={{color:"white"}}>Address</Text></Col>
-                                                          <Col span={2} ><Text strong style={{ textAlign: "center",color:'white' }}>:</Text></Col>
-                                                          <Col span={12} style={{color:"white"}}>{schemeCardData?.address}</Col>
-                          
-                                                          <Col span={10}><Text strong style={{color:"white"}}>Mobile No 1</Text></Col>
-                                                          <Col span={2}><Text strong  style={{ textAlign: "center",color:"white" }}>:</Text></Col>
-                                                          <Col span={12}>{schemeCardData?.mobile1}</Col>
-                          
-                                                          <Col span={10}><Text strong style={{color:"white"}}>Mobile No 2</Text></Col>
-                                                          <Col span={2} ><Text strong style={{ textAlign: "center" ,color:"white"}}>:</Text></Col>
-                                                          <Col span={12}>{schemeCardData?.mobile2}</Col>
-                                                      </Row>
-                          
-                          </Card>       
+                            <Card
+                                className="customeproductcard"
+                                style={{
+                                    backgroundImage: "linear-gradient(to right,rgb(73, 73, 143),rgb(44, 55, 155))",
+                                    position: "relative",
+                                    color: "white"
+                                }}
+                            >
+
+                                <Row gutter={[16, 16]}>
+                                    {/* Left Side: 3 columns */}
+                                    <Col span={11}>
+                                        <Row>
+                                            {/* Member Name */}
+                                            <Col span={8}>
+                                                <Text strong style={{ fontSize: "12px", fontWeight: "bold", color: "white" }}>Member Name</Text>
+                                            </Col>
+                                            <Col span={2} style={{ textAlign: "center", fontSize: "14px", fontWeight: "bold", color: "white" }}>
+                                                :
+                                            </Col>
+                                            <Col span={14} style={{ fontSize: "11px", fontWeight: "bold", color: "white" }}>
+                                                {schemeCardData?.MemberName}
+                                            </Col>
+
+                                            {/* Scheme Type */}
+                                            <Col span={8}>
+                                                <Text strong style={{ fontSize: "12px", fontWeight: "bold", color: "white" }}>Scheme Type</Text>
+                                            </Col>
+                                            <Col span={2} style={{ textAlign: "center", fontSize: "14px", fontWeight: "bold", color: "white" }}>
+                                                :
+                                            </Col>
+                                            <Col span={14} style={{ fontSize: "11px", fontWeight: "bold", color: "white" }}>
+                                                {schemeCardData?.SchemeType}
+                                            </Col>
+
+                                            {/* Group Name */}
+                                            <Col span={8}>
+                                                <Text strong style={{ fontSize: "12px", fontWeight: "bold", color: "white" }}>Group Name</Text>
+                                            </Col>
+                                            <Col span={2} style={{ textAlign: "center", fontSize: "14px", fontWeight: "bold", color: "white" }}>
+                                                :
+                                            </Col>
+                                            <Col span={14} style={{ fontSize: "11px", fontWeight: "bold", color: "white" }}>
+                                                {schemeCardData?.GroupName}
+                                            </Col>
+                                        </Row>
+                                    </Col>
+
+                                    {/* Vertical Divider */}
+                                    <Col span={1} style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+                                        <Divider type="vertical" style={{ height: "100%", borderColor: "white", margin: "0" }} />
+                                    </Col>
+
+                                    {/* Right Side: 3 columns */}
+                                    <Col span={11}>
+                                        <Row>
+                                            {/* Area */}
+                                            <Col span={8}>
+                                                <Text strong style={{ fontSize: "12px", fontWeight: "bold", color: "white" }}>Area</Text>
+                                            </Col>
+                                            <Col span={2} style={{ textAlign: "center", fontSize: "14px", fontWeight: "bold", color: "white" }}>
+                                                :
+                                            </Col>
+                                            <Col span={14} style={{ fontSize: "11px", fontWeight: "bold", color: "white" }}>
+                                                {schemeCardData?.Area}
+                                            </Col>
+
+                                            {/* Address */}
+                                            <Col span={8}>
+                                                <Text strong style={{ fontSize: "12px", fontWeight: "bold", color: "white" }}>Address</Text>
+                                            </Col>
+                                            <Col span={2} style={{ textAlign: "center", fontSize: "14px", fontWeight: "bold", color: "white" }}>
+                                                :
+                                            </Col>
+                                            <Col span={14} style={{ fontSize: "11px", fontWeight: "bold", color: "white" }}>
+                                                {schemeCardData?.Address}
+                                            </Col>
+
+                                            <Col span={8}><Text strong style={{ fontSize: "12px", fontWeight: "bold", color: "white" }}>Mobile No </Text></Col>
+                                            <Col span={2} style={{ textAlign: "center", fontSize: "14px", fontWeight: "bold", color: "white" }}>
+                                                :</Col>
+                                            <Col span={14} style={{ fontSize: "11px", fontWeight: "bold", color: "white" }}>{schemeCardData?.mobile1}</Col>
+
+
+                                        </Row>
+                                    </Col>
+                                </Row>
+
+                            </Card>
                             {/* Colored Status Dots */}
                             <div style={{ position: "absolute", top: "14px", right: "10px", display: "flex", gap: "5px" }}>
                                 {/* Red Dot - Dropped */}
@@ -549,30 +700,10 @@ console.log("schemeCardData",schemeCardData)
                                 ></div>
                             </div>
 
-                            <div style={{ fontSize: "14px", fontWeight: "bold", marginBottom: "5px", display: "flex", justifyContent: "space-between", alignItems: "center" ,marginTop:"10px"}}>
+                            <div style={{ fontSize: "12px", fontWeight: "bold", display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "5px" }}>
                                 <span>MEMBER DISCONTINUE</span>
 
-                                <div style={{ display: "flex", gap: "20px" }}>
-                                    <div style={{ display: "flex", alignItems: "center" }}>
-                                        <Text strong style={{ fontSize: "16px", color: "#d10507" }}>Voucher No</Text>
-                                        <Text strong style={{ marginLeft: "4px", color: "#d10507" }}>:</Text>
-                                        <Text strong style={{ marginLeft: "6px", fontSize: "16px", color: "#d10507" }}> {voucherNo !== null ? voucherNo : "Loading..."}</Text>
-                                    </div>
 
-                                    <div style={{ display: "flex", alignItems: "center" }}>
-                                        <Text strong style={{ fontSize: "16px", color: "#060491" }}>Date</Text>
-                                        <Text strong style={{ marginRight: "10px", color: "#060491" }}>:</Text>
-
-                                        <DatePicker
-                                            selected={new Date()} // Sets the current date as default
-                                            dateFormat="dd MMM yyyy" // Formats date as "27 Mar 2025"
-                                            customInput={<CustomInput />}
-                                            popperPlacement="bottom"
-                                            portalId="root"
-                                            container="body"
-                                        />
-                                    </div>
-                                </div>
                             </div>
 
                             <Table
@@ -580,7 +711,7 @@ console.log("schemeCardData",schemeCardData)
                                 columns={columns}
                                 dataSource={tableData}
                                 pagination={false}
-                                style={{ marginTop: "10px" }}
+                                style={{ marginTop: "5px" }}
                                 className="custom-table"
                                 rowKey="sno"
                                 scroll={{ y: 250 }}
@@ -636,12 +767,12 @@ console.log("schemeCardData",schemeCardData)
 
                     </Col>
                     <Col span={7}>
-                       
+
 
                         <Card className="customeproductcard" style={{ backgroundImage: "linear-gradient(to right, #cdcddf, #a8b1ff)", marginTop: "10px" }}>
                             <div style={{ fontSize: "14px", fontWeight: "bold", marginBottom: "5px" }}>SCHEME DETAILS</div>
                             <Row>
-                                <Col span={10}><Text strong>Amount</Text></Col>
+                                <Col span={10}><Text strong>Monthly Amount</Text></Col>
                                 <Col span={2} style={{ textAlign: "center" }}><Text strong>:</Text></Col>
                                 <Col span={12}>{schemeCardData?.amount}</Col>
 
@@ -657,20 +788,13 @@ console.log("schemeCardData",schemeCardData)
                                 <Col span={2} style={{ textAlign: "center" }}><Text strong>:</Text></Col>
                                 <Col span={12}>{schemeCardData?.noOfMonths}</Col>
 
-                                <Col span={10}><Text strong>Bonus Amount</Text></Col>
-                                <Col span={2} style={{ textAlign: "center" }}><Text strong>:</Text></Col>
-                                <Col span={12}>{schemeCardData?.bonusAmount}</Col>
-
-                                <Col span={10}><Text strong>Bonus Months</Text></Col>
-                                <Col span={2} style={{ textAlign: "center" }}><Text strong>:</Text></Col>
-                                <Col span={12}>{schemeCardData?.bonusMonths}</Col>
 
                                 <Col span={10}><Text strong>Total Scheme Amt</Text></Col>
                                 <Col span={2} style={{ textAlign: "center" }}><Text strong>:</Text></Col>
                                 <Col span={12}>{schemeCardData?.totalSchemeAmount}</Col>
                             </Row>
                         </Card>
-<Card className="customeproductcard" style={{
+                        <Card className="customeproductcard" style={{
                             backgroundImage: "linear-gradient(to right, #ff9a9e, #fad0c4)",
                         }}>
                             <Row>
@@ -680,12 +804,21 @@ console.log("schemeCardData",schemeCardData)
 
                                 <Col span={10}><Text strong style={{ fontSize: "12px", fontWeight: "bold" }}>Scheme End Date</Text></Col>
                                 <Col span={2} style={{ textAlign: "center" }}><Text strong style={{ fontSize: "16px", fontWeight: "bold" }}>:</Text></Col>
-                                <Col span={12} style={{ fontSize: "12px", fontWeight: "bold" }}>na</Col>
+                                <Col span={12} style={{ fontSize: "12px", fontWeight: "bold" }}>{schemeCardData?.SchemeEndDate}</Col>
                             </Row>
                         </Card>
-                       
-                        <Card className="customeproductcard" style={{ backgroundImage: "linear-gradient(to right, #cdcddf, #a8b1ff)", marginTop: "10px" }}>
-                            <div style={{ fontSize: "14px", fontWeight: "bold", marginBottom: "5px" }}>PAYMENT DETAILS</div>
+                        <Card className="customeproductcard" style={{
+                            backgroundImage: "linear-gradient(to right,rgb(24, 9, 66),rgb(245, 167, 154))",
+                            color: "white"
+                        }}>
+                            <Row>
+                                <Col span={10}><Text strong style={{ color: "white" }}>Bonus Amount</Text></Col>
+                                <Col span={2} style={{ textAlign: "center", color: "white" }}><Text strong style={{ textAlign: "center", color: "white" }}>:</Text></Col>
+                                <Col span={12}>{schemeCardData?.bonusAmount}</Col>
+                            </Row>
+                        </Card>
+                        <Card className="customeproductcard" style={{ backgroundImage: "linear-gradient(to right, #cdcddf, #a8b1ff)", marginTop: "5px" }}>
+                            <div style={{ fontSize: "14px", fontWeight: "bold", }}>PAYMENT DETAILS</div>
                             <Row>
                                 <Col span={10}><Text strong>Pending Dues</Text></Col>
                                 <Col span={2} style={{ textAlign: "center" }}><Text strong>:</Text></Col>
@@ -730,8 +863,32 @@ console.log("schemeCardData",schemeCardData)
                                     </>
                                 )}
                             </Row>
-                            <Button type="primary" style={{ marginTop: "10px", width: "100%" }} ref={saveButtonRef}
-                                onClick={handleSave}>Save</Button>
+                            {isEligibleForDrop ? (
+                                <Button
+                                    type="primary"
+                                    style={{ marginTop: "10px", width: "100%" }}
+                                    ref={saveButtonRef}
+                                    onClick={handleSave}
+                                >
+                                    Save
+                                </Button>
+                            ) : (
+                                <Text
+                                    style={{
+                                        marginTop: "10px",
+                                        display: "block",
+                                        width: "100%",
+                                        textAlign: "center",
+                                        color: "red",
+                                        fontWeight: "bold",
+                                        fontSize: "16px",
+                                    }}
+                                >
+                                    Not eligible for drop
+                                </Text>
+                            )}
+
+
                         </Card>
                     </Col>
                 </Row>

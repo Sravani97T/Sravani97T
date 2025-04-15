@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect,useRef } from "react";
 import { Input, Button, Row, Col, Card, Typography, Table, message, Divider } from "antd";
 import axios from "axios";
 import { CREATE_jwel } from "../../Config/Config";
@@ -11,7 +11,10 @@ const MemberCard = () => {
     const [memberData, setMemberData] = useState(null);
     const [tableData, setTableData] = useState([]);
     const [rates, setRates] = useState([]);
-    const [index, setIndex] = useState(0);
+    const [, setIndex] = useState(0);  
+      const cardNoRef = useRef(null);
+    
+
     const formatDate = (dateString) => {
         const date = new Date(dateString);
         return new Intl.DateTimeFormat('en-GB', {
@@ -74,7 +77,7 @@ const MemberCard = () => {
             ),
         },
         {
-            title: "Month", dataIndex: "MONTH", width: 90, key: "month", render: (text) => (text ? formatDate(text) : "")
+            title: "Inst.Date", dataIndex: "MONTH", width: 90, key: "month", render: (text) => (text ? formatDate(text) : "")
         },
         { title: "Rec No", dataIndex: "RECNO", key: "recNo", align: "center" },
         { title: "Rec Date", dataIndex: "RECDATE", key: "receiptdate", render: (text) => (text ? formatDate(text) : "") },
@@ -190,6 +193,8 @@ const MemberCard = () => {
                             Card No:
                         </Text>
                         <Input
+                                                    ref={cardNoRef}
+
                             value={cardNo}
                             onChange={(e) => setCardNo(e.target.value)}
                             onKeyDown={(e) => {
@@ -219,6 +224,8 @@ const MemberCard = () => {
                                 setCardNo("");
                                 setMemberData(null);
                                 setTableData([]);
+                                setTimeout(() => cardNoRef.current?.focus(), 100); // Focus after clearing
+
                             }}
                         >
                             <ReloadOutlined style={{ fontSize: "20px" }} />
@@ -411,7 +418,7 @@ const MemberCard = () => {
                                 <Col span={2} style={{ textAlign: "center" }}><Text strong>:</Text></Col>
                                 <Col span={12}><Text strong>{memberData?.SchemeDuration}</Text></Col>
 
-                                <Col span={10}><Text strong style={{ fontSize: "14px" }}>Amount</Text></Col>
+                                <Col span={10}><Text strong style={{ fontSize: "14px" }}>Monthly Amount</Text></Col>
                                 <Col span={2} style={{ textAlign: "center" }}><Text strong>:</Text></Col>
                                 <Col span={12}><Text strong>{memberData?.SchemeAmount}</Text></Col>
 
