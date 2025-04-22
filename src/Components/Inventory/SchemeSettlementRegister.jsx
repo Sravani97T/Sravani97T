@@ -1,13 +1,13 @@
 import React, { useState, useEffect, forwardRef } from 'react';
-import { Table, Row, Col, Breadcrumb, Select, Pagination ,Button} from 'antd';
+import { Table, Row, Col, Breadcrumb, Select, Pagination, Button, Input } from 'antd';
 import axios from 'axios';
 import moment from 'moment';
-import PdfExcelPrint from '../../Utiles/PdfExcelPrint';
+import PdfExcelPrint from '../../Components/Utiles/PdfExcelPrint';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { FaCalendarAlt } from 'react-icons/fa';
-import TableHeaderStyles from '../../Pages/TableHeaderStyles';
-import { CREATE_jwel } from '../../../Config/Config';
+import TableHeaderStyles from '../Pages/TableHeaderStyles';
+import { CREATE_jwel } from '../../Config/Config';
 
 const CustomInput = forwardRef(({ value, onClick, placeholder }, ref) => {
     const formattedValue = value ? moment(value).format('DD MMM YYYY') : '';
@@ -21,77 +21,70 @@ const CustomInput = forwardRef(({ value, onClick, placeholder }, ref) => {
 
 const { Option } = Select;
 
-const DailyCollectionRegister = () => {
+const SchemeSettlementRegister = () => {
     const [filteredData, setFilteredData] = useState([]);
     const [dates, setDates] = useState([moment().startOf('day').toDate(), moment().endOf('day').toDate()]);
     const [schemeGroup, setSchemeGroup] = useState('');
     const [schemeName, setSchemeName] = useState('');
-    const [incharge, setIncharge] = useState('');
+    const [mobileNo, setMobileNo] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(20);
-
-    // useEffect(() => {
-    //     fetchData();
-    // }, [dates, schemeGroup, schemeName, incharge]);
 
     const fetchData = () => {
         setCurrentPage(1); // Reset to first page
         const fromDate = moment(dates[0]).format('MM/DD/YYYY');
         const toDate = moment(dates[1]).format('MM/DD/YYYY');
-    
-        axios.get(`${CREATE_jwel}/api/Master/GetDataFromGivenTableNameWithWhereandOrder?tableName=RECEIPT_MAST&where=RECDATE>='${fromDate}' AND RECDATE<='${toDate}'&order=RECNO`)
+
+        axios.get(`${CREATE_jwel}/api/Master/GetDataFromGivenTableNameWithWhereandOrder?tableName=SCHEME_END&where=RECDATE>='${fromDate}' AND RECDATE<='${toDate}'&order=RECNO`)
             .then(response => {
                 let data = response.data.map((item, index) => ({
                     ...item,
                     key: index + 1,
                     serialNo: index + 1,
-                    RecDate: moment(item.RecDate).format('DD/MMM/YYYY'),
+                    RecDate: moment(item.RecDate).toDate(),
+                    BillDate: item.BillDate ? moment(item.BillDate).toDate() : null,
+                    SCHEME_ENDDATE: item.SCHEME_ENDDATE ? moment(item.SCHEME_ENDDATE).toDate() : null,
                 }));
-    
+
                 if (schemeGroup) {
                     data = data.filter(item => item.SchemeGroup === schemeGroup);
                 }
                 if (schemeName) {
                     data = data.filter(item => item.SchemeName === schemeName);
                 }
-                if (incharge) {
-                    data = data.filter(item => item.Incharger === incharge);
+                if (mobileNo) {
+                    data = data.filter(item => item.Mobile1 && item.Mobile1.includes(mobileNo));
                 }
-    
+
                 setFilteredData(data);
             })
             .catch(error => {
                 console.error('Error fetching data:', error);
             });
     };
-    
-    
 
     const columnStyles = {
-
         8: { halign: 'right' },  // Net Wt
         9: { halign: 'right' },  // Total Amount
         10: { halign: 'right' },  // Discount
-
-
     };
+
     const columns = [
         { title: 'S.No', dataIndex: 'serialNo', key: 'serialNo', align: 'center', width: 50 },
-        { title: 'Rec/Vno', align: 'center', dataIndex: 'RecNo', key: 'RecNo' },
-        { title: 'Date', dataIndex: 'RecDate', key: 'RecDate', render: date => moment(date).format('DD MMM YYYY') },
-        { title: 'Group', dataIndex: 'SchemeGroup', key: 'SchemeGroup' },
-        { title: 'Name', dataIndex: 'SchemeName', key: 'SchemeName' },
-        { title: 'Card No', align: 'center', dataIndex: 'CardNo', key: 'CardNo' },
-        { title: 'Inst No', align: 'center', dataIndex: 'INSTNO', key: 'INSTNO' },
-        { title: 'Member', dataIndex: 'SchemeMember', key: 'SchemeMember' },
-        { title: 'Incharge', dataIndex: 'Incharger', key: 'Incharger' },
-        { title: 'Gold Rate', dataIndex: 'GoldRate', key: 'GoldRate', align: 'right', render: value => <b>{Number(value).toFixed(2)}</b> },
-        { title: 'Gold Wt', dataIndex: 'GoldWt', key: 'GoldWt', align: 'right', render: value => <b>{Number(value).toFixed(3)}</b> },
-        { title: 'Amount', dataIndex: 'RecAmount', key: 'RecAmount', align: 'right', render: value => <b>{Number(value).toFixed(2)}</b> },
-        { title: 'Cash', dataIndex: 'CASH', key: 'CASH', align: 'right', render: value => <b>{Number(value).toFixed(2)}</b> },
-        { title: 'Card', dataIndex: 'CARD', key: 'CARD', align: 'right', render: value => <b>{Number(value).toFixed(2)}</b> },
-        { title: 'UPI', dataIndex: 'UPI', key: 'UPI', align: 'right', render: value => <b>{Number(value).toFixed(2)}</b> },
-        { title: 'Online', dataIndex: 'ONLINE', key: 'ONLINE', align: 'right', render: value => <b>{Number(value).toFixed(2)}</b> },
+        { title: 'VNo', dataIndex: 'RecNo', key: 'RecNo', align: 'center' },
+        { title: 'VDate', dataIndex: 'RecDate', key: 'RecDate', render: date => moment(date).format('DD MMM YYYY') },
+        { title: 'Scheme Type', dataIndex: 'SchemeType', key: 'SchemeType' },
+        { title: 'Scheme Group', dataIndex: 'SchemeGroup', key: 'SchemeGroup' },
+        { title: 'Scheme Name', dataIndex: 'SchemeName', key: 'SchemeName' },
+        { title: 'Card No', dataIndex: 'CardNo', key: 'CardNo', align: 'center' },
+        { title: 'Member Name', dataIndex: 'SchemeMember', key: 'SchemeMember' },
+        { title: 'Gold Wt', dataIndex: 'GoldWt', key: 'GoldWt', align: 'right', render: val => <b>{Number(val).toFixed(3)}</b> },
+        { title: 'Mobile No', dataIndex: 'Mobile1', key: 'Mobile1' },
+        { title: 'Bill No', dataIndex: 'BillNo', key: 'BillNo', align: 'center' },
+        { title: 'Bill Date', dataIndex: 'BillDate', key: 'BillDate', render: date => date ? moment(date).format('DD MMM YYYY') : '' },
+        { title: 'Total Months', dataIndex: 'SchemeDuration', key: 'SchemeDuration', align: 'center' },
+        { title: 'Jewel Type', dataIndex: 'JewelType', key: 'JewelType' },
+        { title: 'End Date', dataIndex: 'SCHEME_ENDDATE', key: 'SCHEME_ENDDATE', render: date => date ? moment(date).format('DD MMM YYYY') : '' },
     ];
 
     const handlePageChange = (page, pageSize) => {
@@ -105,16 +98,22 @@ const DailyCollectionRegister = () => {
                 <Col>
                     <Breadcrumb style={{ fontSize: '18px', fontWeight: '600', color: '#0C1154' }}>
                         <Breadcrumb.Item>Inventory</Breadcrumb.Item>
-                        <Breadcrumb.Item>Daily Collection Register</Breadcrumb.Item>
+                        <Breadcrumb.Item>Scheme Settlement Register</Breadcrumb.Item>
                     </Breadcrumb>
                 </Col>
                 <Col>
-                    <PdfExcelPrint
-                        data={filteredData}
-                        columns={columns}
-                        fileName="DailyCollectionRegister"
-                        columnStyles={columnStyles}
-                    />
+                <PdfExcelPrint
+    data={filteredData.map(item => ({
+        ...item,
+        RecDate: item.RecDate ? moment(item.RecDate).format('DD MMM YYYY') : '',
+        BillDate: item.BillDate ? moment(item.BillDate).format('DD MMM YYYY') : '',
+        SCHEME_ENDDATE: item.SCHEME_ENDDATE ? moment(item.SCHEME_ENDDATE).format('DD MMM YYYY') : ''
+    }))}
+    columns={columns}
+    fileName="DailyCollectionRegister"
+    columnStyles={columnStyles}
+/>
+
                 </Col>
             </Row>
 
@@ -146,23 +145,43 @@ const DailyCollectionRegister = () => {
                     />
                 </Col>
                 <Col>
-        <Button
-            onClick={fetchData}
-            style={{
-                backgroundColor: '#0C1154',
-                color: '#fff',
-                padding: '6px 16px',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontWeight: 'bold'
-            }}
-        >
-            Show
-        </Button>
-    </Col>
+                    <Button
+                        onClick={fetchData}
+                        style={{
+                            backgroundColor: '#0C1154',
+                            color: '#fff',
+                            padding: '6px 16px',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            fontWeight: 'bold'
+                        }}
+                    >
+                        Show
+                    </Button>
+                </Col>
+                 <Button
+                                    onClick={() => {
+                                        setDates([moment().startOf('day').toDate(), moment().endOf('day').toDate()]);
+                                        setSchemeGroup('');
+                                        setSchemeName('');
+                                        setFilteredData([]);
+                                        setMobileNo('');
+                                    }}
+                                    style={{
+                                        backgroundColor: '#f0ad4e',
+                                        color: '#fff',
+                                        padding: '6px 16px',
+                                        border: 'none',
+                                        borderRadius: '4px',
+                                        cursor: 'pointer',
+                                        fontWeight: 'bold',
+                                    }}
+                                >
+                                    Refresh
+                                </Button>
+                
             </Row>
-
 
             <Row justify="space-between" align="middle" style={{ marginTop: 16 }}>
                 <Col>
@@ -192,19 +211,16 @@ const DailyCollectionRegister = () => {
                     </Select>
                 </Col>
                 <Col>
-                    <label style={{ marginRight: 8 }}>Incharge:</label>
-                    <Select
-                        placeholder="Select Incharge"
+                    <label style={{ marginRight: 8 }}>Mobile No:</label>
+                    <Input
+                        placeholder="Enter Mobile No"
                         style={{ width: 200 }}
-                        onChange={value => setIncharge(value)}
+                        onChange={e => setMobileNo(e.target.value)}
                         allowClear
-                    >
-                        {[...new Set(filteredData.map(item => item.Incharger))].map(incharge => (
-                            <Option key={incharge} value={incharge}>{incharge}</Option>
-                        ))}
-                    </Select>
+                    />
                 </Col>
             </Row>
+
             <Row gutter={8} style={{ marginTop: 10 }} align="middle">
                 <Col flex="auto" />
                 <Col>
@@ -232,10 +248,8 @@ const DailyCollectionRegister = () => {
                     />
                 </TableHeaderStyles>
             </div>
-
-
         </>
     );
 };
 
-export default DailyCollectionRegister;
+export default SchemeSettlementRegister;

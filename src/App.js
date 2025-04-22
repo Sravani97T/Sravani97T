@@ -62,6 +62,13 @@ import SchemeDetails from "./Components/Inventory/LotCreation/Receipt";
 import MemberCard from "./Components/Inventory/MemberCard";
 import SchemeSettlement from "./Components/Inventory/ShemeSettlement";
 import MemberDiscontinue from "./Components/Inventory/MemberDiscontinue";
+import SchemeSettlementRegister from "./Components/Inventory/SchemeSettlementRegister";
+import SchemeDiscontinueRegister from "./Components/Inventory/SchemeDiscontinueRegister";
+import MemberCardRegister from "./Components/Inventory/MemberCardRegister";
+import SchemeType from "./Components/Masters/SchemeType";
+import SchemeName from "./Components/Masters/SchemeName";
+import SchemeGroup from "./Components/Masters/SchemeGroup";
+import SchemeMember from "./Components/Masters/SchemeMember";
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(
     localStorage.getItem("isLoggedIn") === "true"
@@ -108,6 +115,14 @@ const App = () => {
                   <Route path="/state-master" element={<StateMaster />} />
                   <Route path="/diamond-rate-fix" element={<DaimondRate />} />
                   <Route path="/online-mode" element={<OnlineMode />} />
+                  <Route path="/scheme-type" element={<SchemeType/>} />
+                  <Route path="/scheme-name" element={<SchemeName/>} />
+                  <Route path="/scheme-group" element={<SchemeGroup/>} />
+                  <Route path="/scheme-member" element={<SchemeMember/>} />
+
+
+
+
                   {/* Estimation */}
                   <Route path="/daily-rates" element={<DailyRates />} />
                   <Route path="/dailycollection-register" element={<DailyCollectionRegister/>} />
@@ -115,7 +130,11 @@ const App = () => {
                                     <Route path="/Membercard" element={<MemberCard/>} />
                                     <Route path="/ShemeSettlement" element={<SchemeSettlement/>} />
                                     <Route path="/MemberDiscontinue" element={<MemberDiscontinue/>} />
-                  
+                                    <Route path="/schemesettlementregister" element={<SchemeSettlementRegister/>} />
+                                    <Route path="/schemediscontinueregister" element={<SchemeDiscontinueRegister/>} />
+                                    <Route path="/membercardregister" element={<MemberCardRegister/>} />
+
+
                   {/* Inventory */}
                   <Route path="/lot-creation" element={<LotCreation />} />
                   <Route path="/tag-generation" element={<TagGeneration />} />

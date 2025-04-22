@@ -23,7 +23,17 @@ const MemeberDiscontinue = () => {
     const [rates, setRates] = useState([]);
     const [, setIndex] = useState(0);
     const [inchargeList, setInchargeList] = useState([]);
-
+    const badgeStyle = {
+        marginLeft: 15,
+        backgroundColor: "#fa1414",
+        color: "#fff",
+        padding: "4px 12px",
+        borderRadius: "20px",
+        fontSize: "12px",
+        fontWeight: "bold",
+        boxShadow: "0 2px 6px rgba(0,0,0,0.15)",
+    };
+    
     const cardNoRef = useRef(null);
     const inchargeRef = useRef(null);
     const inputRef = useRef(null);
@@ -32,6 +42,7 @@ const MemeberDiscontinue = () => {
     const [isDiscontinued, setIsDiscontinued] = useState(false);
     const [schemeCardData, setSchemeCardData] = useState({});
     const [isEligibleForDrop, setIsEligibleForDrop] = useState(false);
+    const [schemeDropping, setSchemeDropping] = useState(false);
 
     const handleCheckboxChange = (e) => {
         const checked = e.target.checked;
@@ -163,6 +174,8 @@ const MemeberDiscontinue = () => {
 
                 setTableData(formattedData);
                 setMemberData({
+                    SchemeDuration: paymentData[0].SCHEMEDURATION,
+
                     MemberName: paymentData[0].SCHEMEMEMBER,
                     SchemeType: paymentData[0].SCHEMETYPE,
                     GroupName: paymentData[0].SCHEMEGROUP,
@@ -212,6 +225,8 @@ const MemeberDiscontinue = () => {
                     ),
                     totalAmount: schemeData.SchemeValue,
                 });
+                setSchemeDropping(schemeData.SchemeDropping === "true" || schemeData.SchemeDropping === true);
+
             } else {
                 message.warning("No scheme info found in SCHEME_MEMBER table.");
                 setSchemeCardData(null);
@@ -332,6 +347,7 @@ const MemeberDiscontinue = () => {
             cloud_upload: true,
             schemE_ENDDATE: now,
             incharge: schemeCardData?.incharge,
+            isDiscontinued: isDiscontinued ? true : false
         };
 
         try {
@@ -479,6 +495,7 @@ const MemeberDiscontinue = () => {
 
     ];
 
+    const Paidmonths = tableData.filter(item => item.RECNO).length;
 
     return (
         <div>
@@ -542,7 +559,7 @@ const MemeberDiscontinue = () => {
                                 setSchemeCardData(null);
                                 setTableData([]);
                                 setTimeout(() => cardNoRef.current?.focus(), 100); // Focus after clearing
-
+                                setSchemeDropping(false);
                             }}
                         >
                             <ReloadOutlined style={{ fontSize: "20px" }} />
@@ -820,13 +837,27 @@ const MemeberDiscontinue = () => {
                         <Card className="customeproductcard" style={{ backgroundImage: "linear-gradient(to right, #cdcddf, #a8b1ff)", marginTop: "5px" }}>
                             <div style={{ fontSize: "14px", fontWeight: "bold", }}>PAYMENT DETAILS</div>
                             <Row>
-                                <Col span={10}><Text strong>Pending Dues</Text></Col>
+                                {/* <Col span={10}><Text strong>Pending Dues</Text></Col>
                                 <Col span={2} style={{ textAlign: "center" }}><Text strong>:</Text></Col>
                                 <Col span={12}>{schemeCardData?.paidAmount}</Col>
 
                                 <Col span={10}><Text strong>Balence Months</Text></Col>
                                 <Col span={2} style={{ textAlign: "center" }}><Text strong>:</Text></Col>
-                                <Col span={12}>{schemeCardData?.bonusAmount}</Col>
+                                <Col span={12}>{schemeCardData?.bonusAmount}</Col> */}
+                                <Col span={10}><Text strong style={{ fontSize: "12px", fontWeight: "bold" }}>Total Months</Text></Col>
+                                <Col span={2} style={{ textAlign: "center" }}><Text strong style={{ fontSize: "16px", fontWeight: "bold" }}>:</Text></Col>
+                                <Col span={12} style={{ fontSize: "12px", fontWeight: "bold" }}>{memberData ? memberData.SchemeDuration : ""}</Col>
+                                <Col span={10}><Text strong style={{ fontSize: "12px", fontWeight: "bold" }}>Paid Months</Text></Col>
+                                <Col span={2} style={{ textAlign: "center" }}><Text strong style={{ fontSize: "16px", fontWeight: "bold" }}>:</Text></Col>
+                                <Col span={12} style={{ fontSize: "12px", fontWeight: "bold" }}>{Paidmonths}</Col>
+
+                                <Col span={10}><Text strong style={{ fontSize: "12px", fontWeight: "bold" }}>Balance Months</Text></Col>
+                                <Col span={2} style={{ textAlign: "center" }}><Text strong style={{ fontSize: "16px", fontWeight: "bold" }}>:</Text></Col>
+                                <Col span={12} style={{ fontSize: "12px", fontWeight: "bold" }}> {memberData ? memberData.SchemeDuration - Paidmonths : ""}</Col>
+                                <Col span={10}><Text strong style={{ fontSize: "12px", fontWeight: "bold" }}>Paid Amount</Text></Col>
+                                <Col span={2} style={{ textAlign: "center" }}><Text strong style={{ fontSize: "16px", fontWeight: "bold" }}>:</Text></Col>
+                                <Col span={12} style={{ fontSize: "12px", fontWeight: "bold" }}>{memberData ? memberData?.SchemeAmount * Paidmonths : ""}</Col>
+
 
                             </Row>
                             <Row>
@@ -863,30 +894,27 @@ const MemeberDiscontinue = () => {
                                     </>
                                 )}
                             </Row>
-                            {isEligibleForDrop ? (
-                                <Button
-                                    type="primary"
-                                    style={{ marginTop: "10px", width: "100%" }}
-                                    ref={saveButtonRef}
-                                    onClick={handleSave}
-                                >
-                                    Save
-                                </Button>
-                            ) : (
-                                <Text
-                                    style={{
-                                        marginTop: "10px",
-                                        display: "block",
-                                        width: "100%",
-                                        textAlign: "center",
-                                        color: "red",
-                                        fontWeight: "bold",
-                                        fontSize: "16px",
-                                    }}
-                                >
-                                    Not eligible for drop
-                                </Text>
-                            )}
+                            {schemeCardData && (
+    schemeDropping ? (
+        <div style={badgeStyle}>Dropped Scheme</div>
+    ) : isEligibleForDrop && memberData?.SchemeDuration !== Paidmonths ? (
+        <Button
+            type="primary"
+            style={{ marginTop: "10px", width: "100%" }}
+            ref={saveButtonRef}
+            onClick={handleSave}
+        >
+            Save
+        </Button>
+    ) : (
+        <div style={badgeStyle}>
+            {memberData?.SchemeDuration === Paidmonths
+                ? "All months paid"
+                : "Not eligible for drop"}
+        </div>
+    )
+)}
+
 
 
                         </Card>

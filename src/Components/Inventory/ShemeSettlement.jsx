@@ -161,7 +161,7 @@ const ShemeSettlement = () => {
             } else {
                 setTableData([]);
                 setMemberData(null);
-                message.error("No payment data found for the entered Card No.");
+                message.warning("No payment data found for the entered Card No.");
             }
 
             // 3️⃣ Handle scheme/voucher/payment detail card values
@@ -321,7 +321,7 @@ const ShemeSettlement = () => {
         try {
             await axios.post("http://www.jewelerp.timeserasoftware.in/api/Scheme/SchemeEndInsert", body);
 
-            await axios.post(`http://www.jewelerp.timeserasoftware.in/api/Scheme/UpdateSchemeMemberDropping?schemeDropping=true&cardNO=${cardNo}`);
+            // await axios.post(`http://www.jewelerp.timeserasoftware.in/api/Scheme/UpdateSchemeMemberDropping?schemeDropping=true&cardNO=${cardNo}`);
 
             await axios.post(`http://www.jewelerp.timeserasoftware.in/api/Scheme/UpdateSchemeMemberCompletion?schemeCompletion=true&cardNO=${cardNo}`);
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState ,useRef} from "react";
 import { Card, Tag, Popover, Table, Input, Button } from "antd";
 import axios from "axios";
 import { CREATE_jwel } from "../../Config/Config";
@@ -10,7 +10,7 @@ const TodaysRates = ({setRatesAvailable ,tagNoInputRef,fetchRates1}) => {
   const [ratesData, setRatesData] = useState([]);
   const [visible, setVisible] = useState(false);
   // const [ratesAvailable, setRatesAvailable] = useState(false);
-
+ const inputRefs = useRef([]);
 const prefixes = React.useMemo(() => {
     const goldPrefixes = ratesData
       .filter(item => item.MAINPRODUCT === "GOLD")
@@ -90,23 +90,42 @@ const prefixes = React.useMemo(() => {
     }
   }, [currentPrefixIndex, prefixes, ratesData]);
 
+  // const handleVisibleChange = visible => {
+  //   setVisible(visible);
+  // };
+
+  // const handleKeyDown = (e, index) => {
+  //   if (e.key === "Enter") {
+  //     e.preventDefault();
+  //     const inputs = document.querySelectorAll(".rate-input");
+
+  //     if (index < inputs.length - 1) {
+  //       inputs[index + 1].focus(); // Move to the next input
+  //     } else {
+  //       handleSubmit(); // Submit if it's the last input field
+  //     }
+  //   }
+  // };
   const handleVisibleChange = visible => {
     setVisible(visible);
+    if (visible) {
+      // Focus the first input field when the popover opens
+      setTimeout(() => {
+        inputRefs.current[0]?.focus();
+      }, 0);
+    }
   };
 
   const handleKeyDown = (e, index) => {
     if (e.key === "Enter") {
       e.preventDefault();
-      const inputs = document.querySelectorAll(".rate-input");
-
-      if (index < inputs.length - 1) {
-        inputs[index + 1].focus(); // Move to the next input
+      if (index < inputRefs.current.length - 1) {
+        inputRefs.current[index + 1]?.focus(); // Move to the next input
       } else {
         handleSubmit(); // Submit if it's the last input field
       }
     }
   };
-
   const columns = [
     {
       title: 'Main Product',
@@ -124,6 +143,8 @@ const prefixes = React.useMemo(() => {
       key: 'RATE',
       render: (text, record, index) => (
         <Input
+        ref={el => (inputRefs.current[index] = el)} // Assign ref to each input
+
           className="rate-input"
           defaultValue={text}
           onChange={e => {

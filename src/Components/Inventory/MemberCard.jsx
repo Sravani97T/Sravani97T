@@ -1,4 +1,4 @@
-import React, { useState, useEffect,useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Input, Button, Row, Col, Card, Typography, Table, message, Divider } from "antd";
 import axios from "axios";
 import { CREATE_jwel } from "../../Config/Config";
@@ -11,9 +11,9 @@ const MemberCard = () => {
     const [memberData, setMemberData] = useState(null);
     const [tableData, setTableData] = useState([]);
     const [rates, setRates] = useState([]);
-    const [, setIndex] = useState(0);  
-      const cardNoRef = useRef(null);
-    
+    const [, setIndex] = useState(0);
+    const cardNoRef = useRef(null);
+
 
     const formatDate = (dateString) => {
         const date = new Date(dateString);
@@ -88,6 +88,69 @@ const MemberCard = () => {
         { title: "Mode of Pay", dataIndex: "modeOfPay", key: "modeOfPay" },
     ];
 
+    // const fetchMemberData = async () => {
+    //     if (!cardNo) {
+    //         message.error("Please enter a valid Card No.");
+    //         return;
+    //     }
+
+    //     try {
+    //         const response = await axios.get(
+    //             `${CREATE_jwel}/api/Master/GetDataFromGivenTableNameWithWhere`,
+    //             {
+    //                 params: {
+    //                     tableName: "MEMBER_CARD_DET",
+    //                     where: `CARDNO=${cardNo}`,
+    //                 },
+    //             }
+    //         );
+
+    //         const data = response.data;
+
+    //         if (data && data.length > 0) {
+    //             setTableData(data);
+
+    //             const firstRecord = data[0];
+    //             const paidAmount = data.reduce((sum, item) => sum + (item.RECNO ? item.SCHEMEAMOUNT : 0), 0);
+    //             const totalAmount = firstRecord.SCHEMEAMOUNT * firstRecord.SCHEMEDURATION;
+    //             const balanceMonths = data.filter(item => !item.RECNO).length;
+
+    //             setMemberData({
+    //                 MemberName: firstRecord.SCHEMEMEMBER,
+    //                 SchemeType: firstRecord.SCHEMETYPE,
+    //                 GroupName: firstRecord.SCHEMEGROUP,
+    //                 SchemeAmount: firstRecord.SCHEMEAMOUNT,
+    //                 SchemeDuration: firstRecord.SCHEMEDURATION,
+
+    //                 TotalPaid: paidAmount,
+    //                 BalanceAmount: totalAmount - paidAmount,
+    //                 TotalGoldWeight: "N/A", // Update if you calculate from GOLDWT
+    //                 MembershipType: firstRecord.SCHEMENAME,
+    //                 JoinDate: firstRecord.SCHEMEJOINDATE,
+    //                 ExpiryDate: firstRecord.SCHEMEENDDATE,
+
+    //                 // Address and contact fields from ADD1-ADD4 and AREA
+    //                 Address: `${firstRecord.ADD1 || ""} ${firstRecord.ADD2 || ""} ${firstRecord.ADD3 || ""} ${firstRecord.ADD4 || ""}`.trim(),
+    //                 Area: firstRecord.AREA,
+    //                 Pincode: firstRecord.PINCODE || "", // Only if PINCODE exists
+    //                 Email: firstRecord.EMAIL || "",     // Only if EMAIL exists
+    //                 Phone: firstRecord.MOBILE1 || "",   // Only if MOBILE1 exists
+
+    //                 // Calculated fields
+    //                 RecentPaidDate: data.find(item => item.RECNO)?.RECDATE || "N/A",
+    //                 PendingDues: totalAmount - paidAmount,
+    //                 BalanceMonths: balanceMonths,
+    //             });
+    //         } else {
+    //             message.error("No data found for the entered Card No.");
+    //             setTableData([]);
+    //             setMemberData(null);
+    //         }
+    //     } catch (error) {
+    //         message.error("Failed to fetch data. Please try again.");
+    //         console.error(error);
+    //     }
+    // };
     const fetchMemberData = async () => {
         if (!cardNo) {
             message.error("Please enter a valid Card No.");
@@ -95,7 +158,8 @@ const MemberCard = () => {
         }
 
         try {
-            const response = await axios.get(
+            // First API: MEMBER_CARD_DET
+            const memberCardResponse = await axios.get(
                 `${CREATE_jwel}/api/Master/GetDataFromGivenTableNameWithWhere`,
                 {
                     params: {
@@ -105,15 +169,31 @@ const MemberCard = () => {
                 }
             );
 
-            const data = response.data;
+            const memberCardData = memberCardResponse.data;
 
-            if (data && data.length > 0) {
-                setTableData(data);
+            // Second API: SCHEME_MEMBER
+            const schemeMemberResponse = await axios.get(
+                `${CREATE_jwel}/api/Master/GetDataFromGivenTableNameWithWhere`,
+                {
+                    params: {
+                        tableName: "SCHEME_MEMBER",
+                        where: `CARDNO='${cardNo}'`,
+                    },
+                }
+            );
 
-                const firstRecord = data[0];
-                const paidAmount = data.reduce((sum, item) => sum + (item.RECNO ? item.SCHEMEAMOUNT : 0), 0);
+            const schemeMemberData = schemeMemberResponse.data?.[0] || {};
+
+            if (memberCardData && memberCardData.length > 0) {
+                setTableData(memberCardData);
+
+                const firstRecord = memberCardData[0];
+                const paidAmount = memberCardData.reduce(
+                    (sum, item) => sum + (item.RECNO ? item.SCHEMEAMOUNT : 0),
+                    0
+                );
                 const totalAmount = firstRecord.SCHEMEAMOUNT * firstRecord.SCHEMEDURATION;
-                const balanceMonths = data.filter(item => !item.RECNO).length;
+                const balanceMonths = memberCardData.filter(item => !item.RECNO).length;
 
                 setMemberData({
                     MemberName: firstRecord.SCHEMEMEMBER,
@@ -124,25 +204,26 @@ const MemberCard = () => {
 
                     TotalPaid: paidAmount,
                     BalanceAmount: totalAmount - paidAmount,
-                    TotalGoldWeight: "N/A", // Update if you calculate from GOLDWT
+                    TotalGoldWeight: "N/A", // Placeholder
                     MembershipType: firstRecord.SCHEMENAME,
                     JoinDate: firstRecord.SCHEMEJOINDATE,
                     ExpiryDate: firstRecord.SCHEMEENDDATE,
 
-                    // Address and contact fields from ADD1-ADD4 and AREA
                     Address: `${firstRecord.ADD1 || ""} ${firstRecord.ADD2 || ""} ${firstRecord.ADD3 || ""} ${firstRecord.ADD4 || ""}`.trim(),
                     Area: firstRecord.AREA,
-                    Pincode: firstRecord.PINCODE || "", // Only if PINCODE exists
-                    Email: firstRecord.EMAIL || "",     // Only if EMAIL exists
-                    Phone: firstRecord.MOBILE1 || "",   // Only if MOBILE1 exists
+                    Pincode: firstRecord.PINCODE || "",
+                    Email: firstRecord.EMAIL || "",
+                    Phone: firstRecord.MOBILE1 || "",
 
-                    // Calculated fields
-                    RecentPaidDate: data.find(item => item.RECNO)?.RECDATE || "N/A",
+                    RecentPaidDate: memberCardData.find(item => item.RECNO)?.RECDATE || "N/A",
                     PendingDues: totalAmount - paidAmount,
                     BalanceMonths: balanceMonths,
+
+                    // Added from SCHEME_MEMBER
+                    SchemeDropping: schemeMemberData.SchemeDropping || false,
                 });
             } else {
-                message.error("No data found for the entered Card No.");
+                message.warning("No data found for the entered Card No.");
                 setTableData([]);
                 setMemberData(null);
             }
@@ -151,6 +232,7 @@ const MemberCard = () => {
             console.error(error);
         }
     };
+
     const Paidmonths = tableData.filter(item => item.RECNO).length;
     return (
         <div>
@@ -193,7 +275,7 @@ const MemberCard = () => {
                             Card No:
                         </Text>
                         <Input
-                                                    ref={cardNoRef}
+                            ref={cardNoRef}
 
                             value={cardNo}
                             onChange={(e) => setCardNo(e.target.value)}
@@ -235,32 +317,32 @@ const MemberCard = () => {
                     {/* Middle Section: Bill Details */}
                     <Col xs={24} md={7}>
                         <div style={{ border: "1px solid lightgrey", borderRadius: "6px", padding: "5px" }}>
-                        <Row gutter={[16, 8]}>
-  {/* Bill No and Bill Date - Side by Side */}
-  <Col span={12}>
-    <Row gutter={[4, 4]}>
-      <Col span={10}><Text strong style={{ fontSize: "12px", color: "white" }}>Bill No</Text></Col>
-      <Col span={2}><Text strong style={{ color: "white" }}>:</Text></Col>
-      <Col span={12}><Text strong style={{ color: "white" }}>{memberData?.BillNo}</Text></Col>
-    </Row>
-  </Col>
-  <Col span={12}>
-    <Row gutter={[4, 4]}>
-      <Col span={10}><Text strong style={{ fontSize: "12px", color: "white" }}>Bill Date</Text></Col>
-      <Col span={2}><Text strong style={{ color: "white" }}>:</Text></Col>
-      <Col span={12}><Text strong style={{ color: "white" }}>{memberData?.BillDate}</Text></Col>
-    </Row>
-  </Col>
+                            <Row gutter={[16, 8]}>
+                                {/* Bill No and Bill Date - Side by Side */}
+                                <Col span={12}>
+                                    <Row gutter={[4, 4]}>
+                                        <Col span={10}><Text strong style={{ fontSize: "12px", color: "white" }}>Bill No</Text></Col>
+                                        <Col span={2}><Text strong style={{ color: "white" }}>:</Text></Col>
+                                        <Col span={12}><Text strong style={{ color: "white" }}>{memberData?.BillNo}</Text></Col>
+                                    </Row>
+                                </Col>
+                                <Col span={12}>
+                                    <Row gutter={[4, 4]}>
+                                        <Col span={10}><Text strong style={{ fontSize: "12px", color: "white" }}>Bill Date</Text></Col>
+                                        <Col span={2}><Text strong style={{ color: "white" }}>:</Text></Col>
+                                        <Col span={12}><Text strong style={{ color: "white" }}>{memberData?.BillDate}</Text></Col>
+                                    </Row>
+                                </Col>
 
-  {/* Jewel Type - Full Row */}
-  <Col span={24}>
-    <Row gutter={[4, 4]}>
-      <Col span={10}><Text strong style={{ fontSize: "12px", color: "white" }}>Jewel Type</Text></Col>
-      <Col span={2}><Text strong style={{ color: "white" }}>:</Text></Col>
-      <Col span={12}><Text strong style={{ color: "white" }}>{memberData?.JewelType}</Text></Col>
-    </Row>
-  </Col>
-</Row>
+                                {/* Jewel Type - Full Row */}
+                                <Col span={24}>
+                                    <Row gutter={[4, 4]}>
+                                        <Col span={10}><Text strong style={{ fontSize: "12px", color: "white" }}>Jewel Type</Text></Col>
+                                        <Col span={2}><Text strong style={{ color: "white" }}>:</Text></Col>
+                                        <Col span={12}><Text strong style={{ color: "white" }}>{memberData?.JewelType}</Text></Col>
+                                    </Row>
+                                </Col>
+                            </Row>
 
                         </div>
                     </Col>
@@ -288,23 +370,39 @@ const MemberCard = () => {
                     <Col span={17}>
                         <Card className="customeproductcard" style={{ backgroundImage: "linear-gradient(to right, #cdcddf, #a8b1ff)" }}>
                             <div style={{ fontSize: "12px", fontWeight: "bold", marginBottom: "5px" }}>MEMBER DETAILS</div>
-                                 {/* ✅ Top-Right Scheme Completed Tag */}
-                                 {memberData?.SchemeDuration === Paidmonths && (
+                            {/* ✅ Top-Right Scheme Completed Tag */}
+                            {memberData?.SchemeDropping ? (
+                                <div style={{
+                                    position: "absolute",
+                                    top: 10,
+                                    right: 10,
+                                    backgroundColor: "#fa1414",
+                                    color: "#fff",
+                                    padding: "4px 12px",
+                                    borderRadius: "20px",
+                                    fontSize: "12px",
+                                    fontWeight: "bold",
+                                    boxShadow: "0 2px 6px rgba(0,0,0,0.15)",
+                                }}>
+                                    Member Discontinued
+                                </div>
+                            ) : memberData?.SchemeDuration === Paidmonths && (
+                                <div style={{
+                                    position: "absolute",
+                                    top: 10,
+                                    right: 10,
+                                    backgroundColor: "#52c41a",
+                                    color: "#fff",
+                                    padding: "4px 12px",
+                                    borderRadius: "20px",
+                                    fontSize: "12px",
+                                    fontWeight: "bold",
+                                    boxShadow: "0 2px 6px rgba(0,0,0,0.15)",
+                                }}>
+                                    Scheme Completed
+                                </div>
+                            )}
 
-        <div style={{
-            position: "absolute",
-            top: 10,
-            right: 10,
-            backgroundColor: "#52c41a", // green color
-            color: "#fff",
-            padding: "4px 12px",
-            borderRadius: "20px",
-            fontSize: "12px",
-            fontWeight: "bold",
-            boxShadow: "0 2px 6px rgba(0,0,0,0.15)",
-        }}>
-            Scheme Completed
-        </div>)}
                             <Card
                                 className="customeproductcard"
                                 style={{
@@ -314,7 +412,7 @@ const MemberCard = () => {
                                     marginTop: "15px",
                                 }}
                             >
-                                
+
 
                                 <Row gutter={[16, 16]}>
                                     {/* Left Side: 3 columns */}

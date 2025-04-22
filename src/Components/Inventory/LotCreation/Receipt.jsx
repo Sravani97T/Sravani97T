@@ -31,6 +31,7 @@ const SchemeDetails = () => {
     console.log("recpDisableButton", recpDisableButton);
     const [loading, setLoading] = useState(false);
     const [isTouched, setIsTouched] = useState(false);
+    const [isSchemeDropping, setIsSchemeDropping] = useState(false);
 
 
     const [accountNumbers, setAccountNumbers] = useState([]);
@@ -415,11 +416,15 @@ const SchemeDetails = () => {
                 INCHARGE: item.INCHARGE,
                 narr: item.Narr, // Ensure narr is initialized to an empty string if both are undefined
                 area: item.area,
+                SchemeDropping: item.SchemeDropping === true || item.SchemeDropping === "true", // normalize to boolean
+
                 SchemeEndDate: item.SchemeENDDate || item.schemeENDDate || item.SchemeEndDate, // Ensure all possible cases are handled
             }));
+
             getSchemecheckDetails(mappedData[0].cardNo, mappedData[0]);
             setSchemeData(mappedData[0]);
             setAmount(mappedData[0].SchemeAmount);
+            setIsSchemeDropping(mappedData[0].SchemeDropping);
 
 
             console.log("mast", response.data);
@@ -804,8 +809,7 @@ const SchemeDetails = () => {
             title: "S.No",
             dataIndex: "key",
             key: "key",
-            render: (index) => index + 1, // Display serial number
-        },
+            render: (text, record, index) => index + 1,         },
         {
             title: "Payment Mode",
             dataIndex: "paymentMode",
@@ -1074,6 +1078,7 @@ const SchemeDetails = () => {
                                 setRecpDisableButton(false);
                                 setPaidAmountDisable(false);
                                 setIsSchemeEnded(false);
+                                setIsSchemeDropping(false);
                                 setSearchValue();
                                 setTimeout(() => document.getElementById("cardNoInput").focus(), 0);
                             }}
@@ -1151,22 +1156,44 @@ const SchemeDetails = () => {
                                 <div style={{ fontSize: "14px", fontWeight: "bold" }}>
                                     PERSON DETAILS
                                 </div>
-                                {isSchemeEnded &&
-                                    <Text
-                                        style={{
-                                            fontSize: "16px",
-                                            fontWeight: "bold",
-                                            color: "#d4380d",
-                                            backgroundColor: "#fff1f0",
-                                            padding: "3px 12px",
-                                            borderRadius: "6px",
-                                            border: "1px solid #d4380d",
-                                            textAlign: "center",
-                                            minWidth: "50px",
-                                        }}
-                                    >
-                                        Scheme Ended
-                                    </Text>}
+                                {(isSchemeEnded || isSchemeDropping) && (
+    <div style={{ margin: "10px 0", display: "flex", gap: "12px", flexWrap: "wrap" }}>
+        {isSchemeEnded && (
+            <Text
+                style={{
+                    fontSize: "16px",
+                    fontWeight: "bold",
+                    color: "#d4380d",
+                    backgroundColor: "#fff1f0",
+                    padding: "3px 12px",
+                    borderRadius: "6px",
+                    border: "1px solid #d4380d",
+                    textAlign: "center",
+                    minWidth: "50px",
+                }}
+            >
+                Scheme Ended
+            </Text>
+        )}
+        {isSchemeDropping && (
+            <Text
+                style={{
+                    fontSize: "16px",
+                    fontWeight: "bold",
+                    color: "#fff",
+                    backgroundColor: "#fa1414",
+                    padding: "3px 12px",
+                    borderRadius: "20px",
+                    textAlign: "center",
+                    minWidth: "50px",
+                }}
+            >
+                Member Discontinued
+            </Text>
+        )}
+    </div>
+)}
+
                             </div>
 
                             <Row gutter={[16, 8]}>
@@ -1214,14 +1241,13 @@ const SchemeDetails = () => {
                                     </Row>
                                 </Col>
                             </Row>
-                            <div
-    style={{
-        filter: isSchemeEnded ? "blur(3px)" : "none",
-        pointerEvents: isSchemeEnded ? "none" : "auto",
-        opacity: isSchemeEnded ? 0.6 : 1,
-        transition: "all 0.3s ease-in-out",
-    }}
->
+                            <div style={{
+    filter: (isSchemeEnded || isSchemeDropping) ? "blur(3px)" : "none",
+    pointerEvents: (isSchemeEnded || isSchemeDropping) ? "none" : "auto",
+    opacity: (isSchemeEnded || isSchemeDropping) ? 0.6 : 1,
+    transition: "all 0.3s ease-in-out",
+}}>
+
                             <div
                                 style={{
                                     backgroundColor: "#f0f5ff",
@@ -1626,8 +1652,19 @@ const SchemeDetails = () => {
 
                                 </Row></>}
                             <Row justify="end" style={{ marginTop: 5 }}>
-                                <Button ref={saveRef}
-                                    type="primary" onClick={handleSave} loading={loading} style={{ fontSize: "16px", fontWeight: "bold" }} disabled={disableButton === true || isSchemeEnded === true}>SAVE</Button>
+                            {!isSchemeDropping && (
+    <Button
+        ref={saveRef}
+        type="primary"
+        onClick={handleSave}
+        loading={loading}
+        style={{ fontSize: "16px", fontWeight: "bold" }}
+        disabled={disableButton === true || isSchemeEnded === true}
+    >
+        SAVE
+    </Button>
+)}
+
                                 <Button
                                     style={{ marginLeft: 10, fontSize: "16px", fontWeight: "bold" }}
                                     onClick={() => {
@@ -1646,6 +1683,8 @@ const SchemeDetails = () => {
                                         setCheckInstalmentNo({});
                                         setPaidAmountDisable(false);
                                         setIsSchemeEnded(false);
+                                        setIsSchemeDropping(false);
+
                                         setSearchValue();
 
                                         setTimeout(() => document.getElementById("cardNoInput").focus(), 0);
