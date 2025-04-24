@@ -221,6 +221,31 @@ const SchemeGroup = () => {
         },
     ];
 
+    const formRefs = {
+        SchemeGroup: React.createRef(),
+        SchemeType: React.createRef(),
+    };
+
+    const handleEnterPress = (e, currentField) => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            const fields = Object.keys(formRefs);
+            const currentIndex = fields.indexOf(currentField);
+            if (currentIndex !== -1) {
+                if (currentIndex < fields.length - 1) {
+                    const nextField = fields[currentIndex + 1];
+                    formRefs[nextField].current.focus();
+                } else {
+                    if (editingKey) {
+                        form.submit(); // Save the form when the last field is reached in edit mode
+                    } else {
+                        form.submit(); // Submit the form when the last field is reached in add mode
+                    }
+                }
+            }
+        }
+    };
+
     return (
         <div style={{ backgroundColor: "#f4f6f9" }}>
             <Row justify="start" style={{ marginBottom: "10px" }}>
@@ -244,17 +269,25 @@ const SchemeGroup = () => {
                                 label="Scheme Group"
                                 rules={[{ required: true, message: "Scheme Group is required" }]}
                             >
-                                <Input placeholder="Enter Scheme Group" />
+                                <Input
+                                    placeholder="Enter Scheme Group"
+                                    ref={formRefs.SchemeGroup}
+                                    onKeyDown={(e) => handleEnterPress(e, "SchemeGroup")}
+                                />
                             </Form.Item>
                         </Col>
                         <Col xs={24} sm={12} lg={12}>
                             <Form.Item
-                            
                                 name="SchemeType"
                                 label="Scheme Type"
                                 rules={[{ required: true, message: "Scheme Type is required" }]}
                             >
-                                <Select placeholder="Select Scheme Type">
+                                <Select
+                                showSearch
+                                    placeholder="Select Scheme Type"
+                                    ref={formRefs.SchemeType}
+                                    onKeyDown={(e) => handleEnterPress(e, "SchemeType")}
+                                >
                                     {schemeTypes.map((type) => (
                                         <Option key={type} value={type}>
                                             {type}

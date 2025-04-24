@@ -76,7 +76,7 @@ const SchemeName = () => {
 
     const handleAdd = async (values) => {
         if (loading) return;
-    
+
         setLoading(true);
         try {
             const response = await axios.post(
@@ -100,7 +100,7 @@ const SchemeName = () => {
                     clouD_UPLOAD: true,
                 }
             );
-    
+
             if (response.data) {
                 message.success("Scheme Name added successfully!");
                 fetchData();
@@ -115,10 +115,10 @@ const SchemeName = () => {
             setLoading(false);
         }
     };
-    
+
     const handleSave = async (values) => {
         if (loading) return;
-    
+
         setLoading(true);
         try {
             // Delete the old Scheme Name
@@ -129,7 +129,7 @@ const SchemeName = () => {
                     oldSchemeName.SchemeGroup
                 )}&schemeName=${encodeURIComponent(oldSchemeName.SchemeName)}`
             );
-    
+
             if (deleteResponse.data === true) {
                 // Insert the updated Scheme Name
                 const insertResponse = await axios.post(
@@ -153,7 +153,7 @@ const SchemeName = () => {
                         clouD_UPLOAD: true,
                     }
                 );
-    
+
                 if (insertResponse.data) {
                     message.success("Scheme Name updated successfully!");
                     fetchData();
@@ -174,7 +174,7 @@ const SchemeName = () => {
             setLoading(false);
         }
     };
-    
+
 
     const handleDelete = async (record) => {
         try {
@@ -205,29 +205,29 @@ const SchemeName = () => {
             SchemeName: record.SchemeName,
         }); // Store old values for deletion
         setEditingKey(record.key);
-    
+
         // Map SchemePersons to NoOfPersons
         form.setFieldsValue({
             ...record,
             NoOfPersons: record.SchemePersons || 0, // Map SchemePersons to NoOfPersons
         });
-    
+
         window.scrollTo(0, 0);
     };
-    
 
-  
+
+
 
     const handleCancel = useCallback(() => {
         form.resetFields();
         setEditingKey(null);
     }, [form]);
 
-    const handleEnterPress = (e) => {
-        if (e.key === "Enter") {
-            form.submit();
-        }
-    };
+    // const handleEnterPress = (e) => {
+    //     if (e.key === "Enter") {
+    //         form.submit();
+    //     }
+    // };
 
     const filteredData = data.filter((item) =>
         Object.values(item)
@@ -308,7 +308,39 @@ const SchemeName = () => {
             ),
         },
     ];
-    
+
+
+    const formRefs = {
+        SchemeGroup: React.createRef(),
+        SchemeType: React.createRef(),
+        SchemeName: React.createRef(),
+        SchemeAmount: React.createRef(),
+        SchemeDuration: React.createRef(),
+        NoOfPersons: React.createRef(),
+        BonusAmount: React.createRef(),
+        BonusMonth: React.createRef(),
+        SchemeValue: React.createRef(),
+    };
+
+    const handleEnterPress = (e, currentField) => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            const fields = Object.keys(formRefs);
+            const currentIndex = fields.indexOf(currentField);
+            if (currentIndex !== -1) {
+                if (currentIndex < fields.length - 1) {
+                    const nextField = fields[currentIndex + 1];
+                    formRefs[nextField].current.focus();
+                } else {
+                    if (editingKey) {
+                        form.submit(); // Save the form when the last field is reached in edit mode
+                    } else {
+                        form.submit(); // Submit the form when the last field is reached in add mode
+                    }
+                }
+            }
+        }
+    };
 
     return (
         <div style={{ backgroundColor: "#f4f6f9" }}>
@@ -325,135 +357,170 @@ const SchemeName = () => {
                 title={editingKey ? "Edit Scheme Name" : "Add Scheme Name"}
                 style={{ marginBottom: "20px", borderRadius: "8px", boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)" }}
             >
-      <Form
-    form={form}
-    layout="vertical"
-    onFinish={editingKey ? handleSave : handleAdd}
-    onKeyPress={handleEnterPress}
->
-    <Row gutter={16}>
-        <Col xs={24} sm={12} lg={12}>
-            <Form.Item
-                name="SchemeGroup"
-                label="Scheme Group"
-                rules={[{ required: true, message: "Scheme Group is required" }]}
-            >
-                <Select
-                    showSearch
-                    placeholder="Select Scheme Group"
-                    optionFilterProp="children"
+                <Form
+                    form={form}
+                    layout="vertical"
+                    onFinish={editingKey ? handleSave : handleAdd}
                 >
-                    {schemeGroups.map((group) => (
-                        <Option key={group.SchemeGroup} value={group.SchemeGroup}>
-                            {group.SchemeGroup}
-                        </Option>
-                    ))}
-                </Select>
-            </Form.Item>
-        </Col>
-        <Col xs={24} sm={12} lg={12}>
-            <Form.Item
-                name="SchemeType"
-                label="Scheme Type"
-                rules={[{ required: true, message: "Scheme Type is required" }]}
-            >
-                <Select
-                    showSearch
-                    placeholder="Select Scheme Type"
-                    optionFilterProp="children"
-                >
-                    {schemeTypes.map((type) => (
-                        <Option key={type.SchemeType} value={type.SchemeType}>
-                            {type.SchemeType}
-                        </Option>
-                    ))}
-                </Select>
-            </Form.Item>
-        </Col>
-        <Col xs={24} sm={12} lg={12}>
-            <Form.Item
-                name="SchemeName"
-                label="Scheme Name"
-                rules={[{ required: true, message: "Scheme Name is required" }]}
-            >
-                <Input placeholder="Enter Scheme Name" />
-            </Form.Item>
-        </Col>
-        <Col xs={24} sm={12} lg={12}>
-            <Form.Item
-                name="SchemeAmount"
-                label="Scheme Amount"
-                rules={[{ required: true, message: "Scheme Amount is required" }]}
-            >
-                <Input placeholder="Enter Scheme Amount" type="number" />
-            </Form.Item>
-        </Col>
-        <Col xs={24} sm={12} lg={12}>
-            <Form.Item
-                name="SchemeDuration"
-                label="Scheme Duration"
-                rules={[{ required: true, message: "Scheme Duration is required" }]}
-            >
-                <Input placeholder="Enter Scheme Duration (in months)" type="number" />
-            </Form.Item>
-        </Col>
-        <Col xs={24} sm={12} lg={12}>
-            <Form.Item
-                name="NoOfPersons"
-                label="No. of Persons"
-                rules={[{ required: true, message: "No. of Persons is required" }]}
-            >
-                <Input placeholder="Enter No. of Persons" type="number" />
-            </Form.Item>
-        </Col>
-        <Col xs={24} sm={12} lg={12}>
-            <Form.Item
-                name="BonusAmount"
-                label="Bonus Amount"
-                rules={[{ required: true, message: "Bonus Amount is required" }]}
-            >
-                <Input placeholder="Enter Bonus Amount" type="number" />
-            </Form.Item>
-        </Col>
-        <Col xs={24} sm={12} lg={12}>
-            <Form.Item
-                name="BonusMonth"
-                label="Bonus Month"
-                rules={[{ required: true, message: "Bonus Month is required" }]}
-            >
-                <Input placeholder="Enter Bonus Month" />
-            </Form.Item>
-        </Col>
-        <Col xs={24} sm={12} lg={12}>
-            <Form.Item
-                name="SchemeValue"
-                label="Scheme Value"
-                rules={[{ required: true, message: "Scheme Value is required" }]}
-            >
-                <Input placeholder="Enter Scheme Value" type="number" />
-            </Form.Item>
-        </Col>
-    </Row>
+                    <Row gutter={16}>
+                        <Col xs={24} sm={12} lg={12}>
+                            <Form.Item
+                                name="SchemeGroup"
+                                label="Scheme Group"
+                                rules={[{ required: true, message: "Scheme Group is required" }]}
+                            >
+                                <Select
+                                    ref={formRefs.SchemeGroup}
+                                    showSearch
+                                    placeholder="Select Scheme Group"
+                                    optionFilterProp="children"
+                                    onKeyDown={(e) => handleEnterPress(e, "SchemeGroup")}
+                                >
+                                    {[...new Set(schemeGroups.map((group) => group.SchemeGroup))].map((group) => (
+                                        <Option key={group} value={group}>
+                                            {group}
+                                        </Option>
+                                    ))}
+                                </Select>
+                            </Form.Item>
+                        </Col>
+                        <Col xs={24} sm={12} lg={12}>
+                            <Form.Item
+                                name="SchemeType"
+                                label="Scheme Type"
+                                rules={[{ required: true, message: "Scheme Type is required" }]}
+                            >
+                                <Select
+                                    ref={formRefs.SchemeType}
+                                    showSearch
+                                    placeholder="Select Scheme Type"
+                                    optionFilterProp="children"
+                                    onKeyDown={(e) => handleEnterPress(e, "SchemeType")}
+                                >
+                                    {[...new Set(schemeTypes.map((type) => type.SchemeType))].map((type) => (
+                                        <Option key={type} value={type}>
+                                            {type}
+                                        </Option>
+                                    ))}
+                                </Select>
+                            </Form.Item>
+                        </Col>
+                        <Col xs={24} sm={12} lg={12}>
+                            <Form.Item
+                                name="SchemeName"
+                                label="Scheme Name"
+                                rules={[{ required: true, message: "Scheme Name is required" }]}
+                            >
+                                <Input
+                                    ref={formRefs.SchemeName}
+                                    placeholder="Enter Scheme Name"
+                                    onKeyDown={(e) => handleEnterPress(e, "SchemeName")}
+                                />
+                            </Form.Item>
+                        </Col>
+                        <Col xs={24} sm={12} lg={12}>
+                            <Form.Item
+                                name="SchemeAmount"
+                                label="Scheme Amount"
+                                rules={[{ required: true, message: "Scheme Amount is required" }]}
+                            >
+                                <Input
+                                    ref={formRefs.SchemeAmount}
+                                    placeholder="Enter Scheme Amount"
+                                    type="number"
+                                    onKeyDown={(e) => handleEnterPress(e, "SchemeAmount")}
+                                />
+                            </Form.Item>
+                        </Col>
+                        <Col xs={24} sm={12} lg={12}>
+                            <Form.Item
+                                name="SchemeDuration"
+                                label="Scheme Duration"
+                                rules={[{ required: true, message: "Scheme Duration is required" }]}
+                            >
+                                <Input
+                                    ref={formRefs.SchemeDuration}
+                                    placeholder="Enter Scheme Duration (in months)"
+                                    type="number"
+                                    onKeyDown={(e) => handleEnterPress(e, "SchemeDuration")}
+                                />
+                            </Form.Item>
+                        </Col>
+                        <Col xs={24} sm={12} lg={12}>
+                            <Form.Item
+                                name="NoOfPersons"
+                                label="No. of Persons"
+                                rules={[{ required: true, message: "No. of Persons is required" }]}
+                            >
+                                <Input
+                                    ref={formRefs.NoOfPersons}
+                                    placeholder="Enter No. of Persons"
+                                    type="number"
+                                    onKeyDown={(e) => handleEnterPress(e, "NoOfPersons")}
+                                />
+                            </Form.Item>
+                        </Col>
+                        <Col xs={24} sm={12} lg={12}>
+                            <Form.Item
+                                name="BonusAmount"
+                                label="Bonus Amount"
+                                rules={[{ required: true, message: "Bonus Amount is required" }]}
+                            >
+                                <Input
+                                    ref={formRefs.BonusAmount}
+                                    placeholder="Enter Bonus Amount"
+                                    type="number"
+                                    onKeyDown={(e) => handleEnterPress(e, "BonusAmount")}
+                                />
+                            </Form.Item>
+                        </Col>
+                        <Col xs={24} sm={12} lg={12}>
+                            <Form.Item
+                                name="BonusMonth"
+                                label="Bonus Month"
+                                rules={[{ required: true, message: "Bonus Month is required" }]}
+                            >
+                                <Input
+                                    ref={formRefs.BonusMonth}
+                                    placeholder="Enter Bonus Month"
+                                    onKeyDown={(e) => handleEnterPress(e, "BonusMonth")}
+                                />
+                            </Form.Item>
+                        </Col>
+                        <Col xs={24} sm={12} lg={12}>
+                            <Form.Item
+                                name="SchemeValue"
+                                label="Scheme Value"
+                                rules={[{ required: true, message: "Scheme Value is required" }]}
+                            >
+                                <Input
+                                    ref={formRefs.SchemeValue}
+                                    placeholder="Enter Scheme Value"
+                                    type="number"
+                                    onKeyDown={(e) => handleEnterPress(e, "SchemeValue")}
+                                />
+                            </Form.Item>
+                        </Col>
+                    </Row>
 
-    <div style={{ textAlign: "left", marginTop: "16px", float: "right" }}>
-        <Button
-            type="primary"
-            htmlType="submit"
-            style={{
-                marginRight: 8,
-                backgroundColor: "#0C1154",
-                borderColor: "#0C1154",
-            }}
-            disabled={loading}
-        >
-            {editingKey ? "Save" : "Submit"}
-        </Button>
-        <Button htmlType="button" onClick={handleCancel} style={{ backgroundColor: "#f0f0f0" }}>
-            Cancel
-        </Button>
-    </div>
-</Form>
-
+                    <div style={{ textAlign: "left", marginTop: "16px", float: "right" }}>
+                        <Button
+                            type="primary"
+                            htmlType="submit"
+                            style={{
+                                marginRight: 8,
+                                backgroundColor: "#0C1154",
+                                borderColor: "#0C1154",
+                            }}
+                            disabled={loading}
+                        >
+                            {editingKey ? "Save" : "Submit"}
+                        </Button>
+                        <Button htmlType="button" onClick={handleCancel} style={{ backgroundColor: "#f0f0f0" }}>
+                            Cancel
+                        </Button>
+                    </div>
+                </Form>
             </Card>
 
             <div style={{ marginLeft: "5px", float: "right", marginBottom: "10px" }}>
