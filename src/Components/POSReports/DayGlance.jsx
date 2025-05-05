@@ -29,10 +29,10 @@ const DayGlance = () => {
     const handlePrint = () => {
         const printWindow = window.open('', '', 'height=700,width=900');
         const currentDate = new Date().toLocaleDateString();
-
+    
         printWindow.document.write('<html><head><title>Day Glance Report</title><style>');
-
-        // Your custom print styles
+    
+        // Custom print styles
         printWindow.document.write(`
             body {
                 font-family: Arial, sans-serif;
@@ -53,32 +53,23 @@ const DayGlance = () => {
             table {
                 width: 100%;
                 border-collapse: collapse;
-                overflow-x: auto;
             }
             th, td {
                 padding: 3px 3px;
-   text-align: right; 
-                   border: 1px solid #3b3b3b;
-                width: 100px;
+                text-align: right;
+                border: 1px solid #3b3b3b;
                 font-size: 10px;
+                background-color: white;
             }
             th {
-                background-color: #f4f4f4;
+                background-color: #f0f0f0; /* Light grey header */
                 font-weight: bold;
             }
-            td {
-                background-color: #f4f4f4;
-                font-weight: bold;
-                height: 10px;
+            td:first-child, th:first-child {
+                text-align: left;
             }
-                 th:first-child, td:first-child {
-            text-align: left; /* Keep first column left-aligned */
-        }
             td.description {
                 text-align: center;
-            }
-            td:last-child, th:last-child {
-                border-right: 1px solid #000;
             }
             .group-header {
                 text-align: center;
@@ -91,28 +82,25 @@ const DayGlance = () => {
                 margin-top: 10px;
             }
         `);
-
+    
         printWindow.document.write('</style></head><body>');
-
-        // Header with report title and date
+    
+        // Report header
         printWindow.document.write(`
             <div class="header">
                 <h1>Day Glance Report</h1>
                 <p class="date">Date: ${currentDate}</p>
             </div>
         `);
-
-        // Iterate over each key in groupedData (e.g., groupedData["DESCRIPTION-TRANSTYPE"])
+    
         Object.keys(groupedData).forEach((key) => {
-            const [DESCRIPTION, TRANSTYPE] = key.split('-');
-
-            // Create a header for each group
-            printWindow.document.write(`<div class="group-header">${DESCRIPTION} - ${TRANSTYPE}</div>`);
-
-            // Start the table for the current group
+            // Print group header directly without splitting
+            printWindow.document.write(`<div class="group-header">${key}</div>`);
+    
+            // Start group table
             printWindow.document.write('<div class="table-container"><table>');
-
-            // Add the table headers
+    
+            // Table headers
             printWindow.document.write(`
                 <thead>
                     <tr>
@@ -125,40 +113,37 @@ const DayGlance = () => {
                 </thead>
                 <tbody>
             `);
-
-            // Check if the grouped data has rows for this key
-            if (groupedData[key] && Array.isArray(groupedData[key])) {
-                // Iterate over the rows for the current group
-                groupedData[key].forEach(item => {
-                    printWindow.document.write(`
-                        <tr>
-                            <td>${item.BNO || ''}</td><td>${item.PCS || ''}</td>
-                             <td>${item.GWT ? parseFloat(item.GWT)?.toFixed(3) : ''}</td>
+    
+            // Table body rows
+            groupedData[key]?.forEach(item => {
+                printWindow.document.write(`
+                    <tr>
+                        <td>${item.BNO || ''}</td><td>${item.PCS || ''}</td>
+                        <td>${item.GWT ? parseFloat(item.GWT)?.toFixed(3) : ''}</td>
                         <td>${item.NWT ? parseFloat(item.NWT)?.toFixed(3) : ''}</td>
-                            <td>${item.TOTAMT || ''}</td>
-                            <td>${item.CGST || ''}</td><td>${item.SGST || ''}</td><td>${item.IGST || ''}</td><td>${item.NETAMT || ''}</td><td>${item.DIACTS || ''}</td>
-                            <td>${item.OLDGOLD || ''}</td><td>${item.OLDSILVER || ''}</td><td>${item.SALERTN || ''}</td><td>${item.UPI || ''}</td>
-                            <td>${item.CUSTADV || ''}</td><td>${item.CHEQUE || ''}</td><td>${item.CARD || ''}</td><td>${item.CASH || ''}</td><td>${item.SCHEME || ''}</td>
-                            <td>${item.BALANCE || ''}</td><td>${item.ONLINE || ''}</td>
-                        </tr>
-                        <tr>
-                            <td colSpan="1" className="empty-border">${item.DATE ? moment(item.DATE).format('MM/DD/YYYY') : ''}</td>
-                            <td colSpan="8" className="description">${item.PARTICULARS || ''}</td>
-                            <td colSpan="12" className="empty-border"></td>
-                        </tr>
-                    `);
-                });
-            }
-
-            // Close the table for the current group
+                        <td>${item.TOTAMT || ''}</td>
+                        <td>${item.CGST || ''}</td><td>${item.SGST || ''}</td><td>${item.IGST || ''}</td><td>${item.NETAMT || ''}</td><td>${item.DIACTS || ''}</td>
+                        <td>${item.OLDGOLD || ''}</td><td>${item.OLDSILVER || ''}</td><td>${item.SALERTN || ''}</td><td>${item.UPI || ''}</td>
+                        <td>${item.CUSTADV || ''}</td><td>${item.CHEQUE || ''}</td><td>${item.CARD || ''}</td><td>${item.CASH || ''}</td><td>${item.SCHEME || ''}</td>
+                        <td>${item.BALANCE || ''}</td><td>${item.ONLINE || ''}</td>
+                    </tr>
+                    <tr>
+                        <td style="border: 1px solid #3b3b3b;">${item.BDATE ? moment(item.BDATE).format('DD/MM/YYYY') : ''}</td>
+                        <td colspan="8" class="description" style="border: 1px solid #3b3b3b;">${item.PARTICULARS || ''}</td>
+                        <td colspan="12" style="border: 1px solid #3b3b3b;"></td>
+                    </tr>
+                `);
+            });
+    
             printWindow.document.write('</tbody></table></div><br>');
         });
-
+    
         printWindow.document.write('</body></html>');
         printWindow.document.close();
         printWindow.print();
     };
-
+    
+console.log(groupedData)
 
     useEffect(() => {
         if (dates[0] && dates[1]) {
@@ -198,14 +183,15 @@ const DayGlance = () => {
         let y = 25;
 
         Object.keys(groupedData).forEach((key) => {
-            const [DESCRIPTION, TRANSTYPE] = key.split('-');
-
             // Section Title
             doc.setFontSize(10);
-            doc.text(`${DESCRIPTION} - ${TRANSTYPE}`, 15, y);
+            doc.text(`${key}`, 15, y);
             y += 5;
 
-            const tableData = groupedData[key].map((item) => [
+            const tableData = [];
+            groupedData[key].forEach((item) => {
+            // Main row
+            tableData.push([
                 item.BNO || '',
                 item.PCS || '',
                 (item.GWT || 0)?.toFixed(3),  // 3 decimal places
@@ -229,18 +215,27 @@ const DayGlance = () => {
                 item.ONLINE || '',
             ]);
 
+            // Sub-row for BDATE and PARTICULARS
+            tableData.push([
+                item.BDATE ? moment(item.BDATE).format('DD/MM/YYYY') : '',
+                `${item.PARTICULARS || ''}`,
+                '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''
+            ]);
+            });
+
             doc.autoTable({
-                startY: y,
-                head: [[
-                    'BNO', 'PCS', 'G.WT', 'N.WT', 'TOT AMT', 'CGST', 'SGST', 'IGST', 'NET AMT',
-                    'DIA CTS', 'OLD GOLD', 'OLD SILVER', 'SALE RTN', 'UPI', 'CUST ADV', 'CHEQUE',
-                    'CARD', 'CASH', 'SCHEME', 'BALANCE', 'ONLINE'
-                ]],
-                body: tableData,
-                theme: 'grid',
-                styles: { fontSize: 7, halign: 'right' },
-                headStyles: { fontSize: 7, fillColor: [80, 80, 80] }, // Smaller header font size
-                margin: { top: 30 },
+            startY: y,
+            head: [[
+                'BNO', 'PCS', 'G.WT', 'N.WT', 'TOT AMT', 'CGST', 'SGST', 'IGST', 'NET AMT',
+                'DIA CTS', 'OLD GOLD', 'OLD SILVER', 'SALE RTN', 'UPI', 'CUST ADV', 'CHEQUE',
+                'CARD', 'CASH', 'SCHEME', 'BALANCE', 'ONLINE'
+            ]],
+            body: tableData,
+            theme: 'grid',
+            styles: { fontSize: 7, halign: 'right' },
+            headStyles: { fontSize: 7, fillColor: [80, 80, 80] }, // Smaller header font size
+            bodyStyles: { fontSize: 7 },
+            margin: { top: 30 },
             });
 
             y = doc.autoTable.previous.finalY + 10; // Adjust position for next table
@@ -254,8 +249,7 @@ const DayGlance = () => {
         workbook.created = new Date();
 
         Object.keys(groupedData).forEach((key) => {
-            const [DESCRIPTION, TRANSTYPE] = key.split("-");
-            const sheet = workbook.addWorksheet(`${DESCRIPTION} - ${TRANSTYPE}`);
+            const sheet = workbook.addWorksheet(`${key}`);
 
             // Define Columns
             sheet.columns = [
@@ -288,6 +282,7 @@ const DayGlance = () => {
 
             // Add Data Rows
             groupedData[key].forEach((item) => {
+                // Main row
                 sheet.addRow({
                     BNO: item.BNO || "",
                     PCS: item.PCS || "",
@@ -310,6 +305,12 @@ const DayGlance = () => {
                     SCHEME: item.SCHEME || "",
                     BALANCE: item.BALANCE || "",
                     ONLINE: item.ONLINE || "",
+                });
+
+                // Sub-row for BDATE and PARTICULARS
+                sheet.addRow({
+                    BNO: item.BDATE ? moment(item.BDATE).format('DD/MM/YYYY') : "",
+                    PCS: item.PARTICULARS || "",
                 });
             });
 
@@ -457,11 +458,10 @@ const DayGlance = () => {
             </Card>
 
             {Object.keys(groupedData).map((key, index) => {
-                const [DESCRIPTION, TRANSTYPE] = key.split('-');
-                return (
-                    <div key={index} className="table-container">
-                        <h3>{`${DESCRIPTION} - ${TRANSTYPE}`}</h3>
-                        <table className="responsive-table">
+// const [TCODE, DESCRIPTION, TRANSTYPE] = key.split('-');
+return (
+                     <div key={index} className="table-container">
+ <h3>{key}</h3>                        <table className="responsive-table">
                             <thead>
                                 <tr>
                                     <th>BNO</th>
@@ -514,8 +514,10 @@ const DayGlance = () => {
                                             <td style={{ textAlign: 'right' }}>{item.ONLINE}</td>
                                         </tr>
                                         <tr>
-                                            <td colSpan="1" className="empty-border">{moment(item.DATE).format('DD/MM/YYYY')}</td>
-                                            
+                                        <td colSpan="1" style={{ border: '1px solid #000' }}>
+  {moment(item.BDATE).format('DD/MM/YYYY')}
+</td>
+
                                             <td colSpan="8" className="description">{item.PARTICULARS}</td>
                                             <td colSpan="12" className="empty-border"></td>
                                         </tr>
@@ -527,6 +529,13 @@ const DayGlance = () => {
                 );
             })}
             <style jsx>{`
+            .empty-border {
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  border-bottom: 1px solid #000; /* Ensure bottom border is present */
+}
+
                 /* Basic table styling */
                 table {
                     width: 100%;
