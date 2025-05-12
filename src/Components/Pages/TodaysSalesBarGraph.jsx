@@ -1,11 +1,35 @@
 import React, { useEffect, useState } from "react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, 
+} from "recharts";
 import axios from "axios";
+import dayjs from "dayjs";
 import { CREATE_jwel } from "../../Config/Config";
 
 const TodaysSalesBarGraph = () => {
   const [data, setData] = useState([]);
+  const [salesGraph, setSalesGraph] = useState([]);
+  const [selectedChart, setSelectedChart] = useState("today"); // 'today' or 'last4days'
+  const colors = ["#FFBB28", "#FF8042", "#0088FE", "black"];
+  const dotColors = {
+    today: "#007BFF",
+    last4days: "#FF5733",
+  };
+  const getPath = (x, y, width, height) => {
+    return `M${x},${y + height}C${x + width / 3},${y + height} ${x + width / 2
+      },${y + height / 3}
+    ${x + width / 2}, ${y}
+    C${x + width / 2},${y + height / 3} ${x + (2 * width) / 3},${y + height} ${x + width
+      }, ${y + height}
+    Z`;
+  };
 
+  const TriangleBar = (props) => {
+    const { fill, x, y, width, height } = props;
+
+    return <path d={getPath(x, y, width, height)} stroke="none" fill={fill} />;
+  };
+  // Fetch Today's Sales Data
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -21,73 +45,135 @@ const TodaysSalesBarGraph = () => {
         }));
         setData(apiData);
       } catch (error) {
-        console.error("Error fetching data", error);
+        console.error("Error fetching today's data", error);
       }
     };
-
     fetchData();
   }, []);
 
-  const getBarColors = () => {
-    const dayOfWeek = new Date().getDay();
-    const colors = [
-      { totalSales: "#FF5733", amount: "#33FF57" }, // Sunday
-      { totalSales: "#33C1FF", amount: "#FF33A1" }, // Monday
-      { totalSales: "#FF33F6", amount: "#33FFBD" }, // Tuesday
-      { totalSales: "#FF8C33", amount: "#33FF8C" }, // Wednesday
-      { totalSales: "#8C33FF", amount: "#FF338C" }, // Thursday
-      { totalSales: "#33FFEC", amount: "#FFEC33" }, // Friday
-      { totalSales: "#FF3333", amount: "#33FF33" }  // Saturday
-    ];
-    return colors[dayOfWeek];
-  };
+  // Fetch Last 4 Days Sales Amounts
+  useEffect(() => {
+    const fetchTotalSaleAmt = async (date) => {
+      try {
+        const response = await axios.get(
+          `${CREATE_jwel}/api/Master/GetDataFromGivenTableNameWithWhere?tableName=BILL_MAST&where=BILLDATE='${dayjs(date).format("MM/DD/YYYY")}'`,
+          {
+            headers: {
+              tenantName: "PmlYjF0yAwEjNohFDKjzn/ExL/LMhjzbRDhwXlvos+0=",
+            },
+          }
+        );
+        const data = response.data;
+        return Array.isArray(data)
+          ? data.reduce((acc, item) => acc + (Number(item.BalanceAmt) || 0), 0)
+          : 0;
+      } catch (error) {
+        console.error("Error fetching sale amount:", date, error);
+        return 0;
+      }
+    };
 
-  const barColors = getBarColors();
+    const loadSalesData = async () => {
+      const dates = [0, 1, 2, 3].map((d) => dayjs().subtract(d, "day"));
+      const results = await Promise.all(
+        dates.map(date =>
+          fetchTotalSaleAmt(date).then(amt => ({
+            date: dayjs(date).format("DD-MMM"),
+            amt: amt
+          }))
+        )
+      );
+      setSalesGraph(results.reverse());
+    };
+
+    loadSalesData();
+  }, []);
 
   return (
-    <div
+    <div style={{ background: "#fff", borderRadius: "8px", padding: "10px", boxShadow: "0 2px 4px rgba(0,0,0,0.1)" ,marginTop:"25px"}}>
+     <div
+  style={{
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  }}
+>
+  <div style={{ fontWeight: 600 }}>
+    {selectedChart === "today" ? "Today's Sales Overview" : (
+      <>
+        Sales Over the Last <span style={{ color: "red" }}>4</span> Days
+      </>
+    )}
+  </div>
+  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+    <span
+      onClick={() => setSelectedChart("today")}
       style={{
-        background: "#ffffff",
-        borderRadius: "8px",
-        boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
-        padding: "10px",
-        display: "flex",
-        flexDirection: "column",
-        marginTop: "6px"
+        height: 12,
+        width: 12,
+        borderRadius: "50%",
+        backgroundColor: dotColors.today,
+        cursor: "pointer",
+        border: selectedChart === "today" ? "2px solid black" : "none"
       }}
-    >
-      {/* Chart Title */}
-      <div style={{ fontSize: "14px", fontWeight: "600", textAlign: "center", color: "#333" }}>
-        Today's Sales Overview
-      </div>
+    />
+    <span
+      onClick={() => setSelectedChart("last4days")}
+      style={{
+        height: 12,
+        width: 12,
+        borderRadius: "50%",
+        backgroundColor: dotColors.last4days,
+        cursor: "pointer",
+        border: selectedChart === "last4days" ? "2px solid black" : "none"
+      }}
+    />
+  </div>
+</div>
 
-      {/* Bar Chart */}
-      <ResponsiveContainer width="100%" height={205}>
-        <BarChart data={data} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="category" tick={{ fontSize: '12px' }} />
-          <YAxis />
-          <Tooltip 
-            content={({ payload }) => {
-              if (payload && payload.length) {
-                const item = payload[0].payload;
-                return (
-                  <div style={{ background: "#fff", padding: "5px", border: "1px solid #ccc" }}>
-                  <p>{` ${item.category}`}</p>
-                  <p>{`Total Pieces: ${item.totalSales}`}</p>
-                  <p>{`Amount: ₹${item.amount.toFixed(2)}`}</p>
-                  <p>{`Total Gross.Wt: ${item.TotGwt.toFixed(3)}`}</p>
-                  <p>{`Total Net.Wt: ${item.TotNwt.toFixed(3)}`}</p>
-                  </div>
-                );
-              }
-              return null;
-            }}
-          />
-          <Bar dataKey="totalSales" fill={barColors.totalSales} name="Total Sales" />
-          <Bar dataKey="amount" fill={barColors.amount} name="Amount (₹)" />
-        </BarChart>
-      </ResponsiveContainer>
+
+      {selectedChart === "today" ? (
+        <>
+          <ResponsiveContainer width="100%" height={190}>
+            <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }} barGap={10} barCategoryGap="30%">
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="category" />
+              <YAxis />
+              <Tooltip />
+              <Bar dataKey="amount">
+                {data.map((_, index) => (
+                  <Cell key={index} fill={index === 0 ? "#150A4E" : "#52BD91"} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </>
+      ) : (
+        <>
+        
+          <ResponsiveContainer width="100%" height={190}>
+            <BarChart data={salesGraph} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="date" />
+              <YAxis />
+              <Tooltip />
+              <Bar
+                dataKey="amt"
+                fill="#8884d8"
+                shape={<TriangleBar />}
+                label={{ position: "top" }}
+                barSize={60}
+              >                {salesGraph.map((_, index) => (
+                <Cell key={index}
+                  fill={colors[index % colors.length]}
+                />
+              ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </>
+      )}
     </div>
   );
 };

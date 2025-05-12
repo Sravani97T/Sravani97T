@@ -543,6 +543,12 @@
   text-align: center; /* Center align for text */
   font-weight: bold !important; /* Bold text */
 }
+.green-background-column {
+  background-color: #52BD91; /* green color */
+  color: rgb(63, 51, 51); /* White text for contrast */
+  text-align: center; /* Center align for text */
+  font-weight: bold !important; /* Bold text */
+}
 .blue-background-fircolumn {
   background-color: #4A90E2 !important; /* Blue color */
   color: rgb(252, 250, 250) !important; /* White text for contrast */
@@ -754,6 +760,13 @@ font-weight: bold;
 .react-datepicker__input-container {
   width: 78% !important;
 }
+/* Your custom CSS file or in a <style> block */
+.custom-date-input-container .react-datepicker__input-container {
+  width: 100% !important; /* or your desired width */
+  display: flex !important;
+  align-items: center !important;
+}
+
 .bgcolur {
   background: linear-gradient(90deg, rgba(52,71,204,0.7259278711484594) 0%, rgba(32,15,147,0.7875525210084033) 31%, rgba(110,189,165,0.8239670868347339) 100%);
 }
@@ -972,4 +985,21 @@ font-weight: bold;
 .custom-small-table .ant-table-scroll .ant-table-body {
   background-color: #fff; /* White background for the table body */
   border-radius: 8px; /* Rounded corners for the table body */
+}
+.custom-rates-table .ant-table-thead > tr > th {
+  background-color: #52BD91 !important; /* light green */
+  text-align: center;
+}
+.custom-popover .ant-popover-inner {
+  background: #12246a !important;
+  color: white !important;
+  border-radius: 8px;
+}
+/* Applies green background to entire first column and disables hover effect */
+.first-col-green {
+  background-color: #52BD91 !important;  /* Light green */
+}
+
+.ant-table-tbody > tr > td.first-col-green:hover {
+  background-color: #52BD91 !important;  /* Prevent hover effect */
 }

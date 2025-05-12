@@ -63,7 +63,7 @@ const PaymentOverview = () => {
   const cardStyle = {
     background: "#ffffff",
     borderRadius: "8px",
-    padding: "8px",
+    padding: "11px",
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
@@ -115,7 +115,7 @@ const PaymentOverview = () => {
   };
 
   return (
-    <div style={{  margin: "auto", marginTop: "10px",}}>
+    <div style={{  margin: "auto", marginTop: "25px",}}>
       {data.map((item, index) => (
         <div
           key={index}

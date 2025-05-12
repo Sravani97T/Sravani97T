@@ -29,9 +29,9 @@ const DayGlance = () => {
     const handlePrint = () => {
         const printWindow = window.open('', '', 'height=700,width=900');
         const currentDate = new Date().toLocaleDateString();
-    
+
         printWindow.document.write('<html><head><title>Day Glance Report</title><style>');
-    
+
         // Custom print styles
         printWindow.document.write(`
             body {
@@ -82,9 +82,9 @@ const DayGlance = () => {
                 margin-top: 10px;
             }
         `);
-    
+
         printWindow.document.write('</style></head><body>');
-    
+
         // Report header
         printWindow.document.write(`
             <div class="header">
@@ -92,14 +92,14 @@ const DayGlance = () => {
                 <p class="date">Date: ${currentDate}</p>
             </div>
         `);
-    
+
         Object.keys(groupedData).forEach((key) => {
             // Print group header directly without splitting
             printWindow.document.write(`<div class="group-header">${key}</div>`);
-    
+
             // Start group table
             printWindow.document.write('<div class="table-container"><table>');
-    
+
             // Table headers
             printWindow.document.write(`
                 <thead>
@@ -113,7 +113,7 @@ const DayGlance = () => {
                 </thead>
                 <tbody>
             `);
-    
+
             // Table body rows
             groupedData[key]?.forEach(item => {
                 printWindow.document.write(`
@@ -134,44 +134,134 @@ const DayGlance = () => {
                     </tr>
                 `);
             });
-    
+
             printWindow.document.write('</tbody></table></div><br>');
         });
-    
+
+        // Overall Totals
+        const overallTotals = Object.keys(groupedData).reduce((acc, key) => {
+            groupedData[key].forEach(item => {
+                acc.NETAMT += parseFloat(item.NETAMT || 0);
+                acc.CGST += parseFloat(item.CGST || 0);
+                acc.SGST += parseFloat(item.SGST || 0);
+                acc.IGST += parseFloat(item.IGST || 0);
+                acc.TOTAMT += parseFloat(item.TOTAMT || 0);
+                acc.PCS += parseFloat(item.PCS || 0);
+                acc.GWT += parseFloat(item.GWT || 0);
+                acc.NWT += parseFloat(item.NWT || 0);
+                acc.UPI += parseFloat(item.UPI || 0);
+                acc.CUSTADV += parseFloat(item.CUSTADV || 0);
+                acc.CHEQUE += parseFloat(item.CHEQUE || 0);
+                acc.CARD += parseFloat(item.CARD || 0);
+                acc.CASH += parseFloat(item.CASH || 0);
+                acc.SCHEME += parseFloat(item.SCHEME || 0);
+                acc.BALANCE += parseFloat(item.BALANCE || 0);
+                acc.ONLINE += parseFloat(item.ONLINE || 0);
+            });
+            return acc;
+        }, {
+            NETAMT: 0, CGST: 0, SGST: 0, IGST: 0, TOTAMT: 0, PCS: 0, GWT: 0, NWT: 0, UPI: 0,
+            CUSTADV: 0, CHEQUE: 0, CARD: 0, CASH: 0, SCHEME: 0, BALANCE: 0, ONLINE: 0
+        });
+
+        printWindow.document.write(`
+            <div class="group-header">Overall Totals</div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>BNO</th><th>PCS</th><th>G.WT</th><th>N.WT</th><th>TOT AMT</th>
+                            <th>CGST</th><th>SGST</th><th>IGST</th><th>NET AMT</th><th>DIA CTS</th>
+                            <th>OLD GOLD</th><th>OLD SILVER</th><th>SALE RTN</th><th>UPI</th>
+                            <th>CUST ADV</th><th>CHEQUE</th><th>CARD</th><th>CASH</th><th>SCHEME</th>
+                            <th>BALANCE</th><th>ONLINE</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td></td>
+                            <td>${overallTotals.PCS.toFixed(2)}</td>
+                            <td>${overallTotals.GWT.toFixed(3)}</td>
+                            <td>${overallTotals.NWT.toFixed(3)}</td>
+                            <td>${overallTotals.TOTAMT.toFixed(2)}</td>
+                            <td>${overallTotals.CGST.toFixed(2)}</td>
+                            <td>${overallTotals.SGST.toFixed(2)}</td>
+                            <td>${overallTotals.IGST.toFixed(2)}</td>
+                            <td>${overallTotals.NETAMT.toFixed(2)}</td>
+                            <td></td><td></td><td></td><td></td>
+                            <td>${overallTotals.UPI.toFixed(2)}</td>
+                            <td>${overallTotals.CUSTADV.toFixed(2)}</td>
+                            <td>${overallTotals.CHEQUE.toFixed(2)}</td>
+                            <td>${overallTotals.CARD.toFixed(2)}</td>
+                            <td>${overallTotals.CASH.toFixed(2)}</td>
+                            <td>${overallTotals.SCHEME.toFixed(2)}</td>
+                            <td>${overallTotals.BALANCE.toFixed(2)}</td>
+                            <td>${overallTotals.ONLINE.toFixed(2)}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        `);
+
         printWindow.document.write('</body></html>');
         printWindow.document.close();
         printWindow.print();
     };
-    
 console.log(groupedData)
+
+    // useEffect(() => {
+    //     if (dates[0] && dates[1]) {
+    //         const fromDate = moment(dates[0]).format('MM/DD/YYYY');
+    //         const toDate = moment(dates[1]).format('MM/DD/YYYY');
+    //         // const fromDate = moment(dates[0]).format("DD-MM-YYYY");
+    //         // const toDate = moment(dates[1]).format("DD-MM-YYYY");
+
+    //         axios.get(`${CREATE_jwel}/api/POSReports/GetdayGlance?fromDate=${fromDate}&toDate=${toDate}`)
+    //             .then(response => {
+    //                 const detailsData = response.data;
+    //                 const grouped = detailsData.reduce((acc, item) => {
+    //                     const key = `${item.TCODE}-${item.DESCRIPTION}-${item.TRANSTYPE}`;
+    //                     if (!acc[key]) {
+    //                         acc[key] = [];
+    //                     }
+    //                     acc[key].push(item);
+    //                     return acc;
+    //                 }, {});
+    //                 setGroupedData(grouped);
+    //             })
+    //             .catch(error => {
+    //                 console.error('Error fetching day glance details:', error);
+    //             });
+    //     }
+    // }, [dates]);
 
     useEffect(() => {
         if (dates[0] && dates[1]) {
             const fromDate = moment(dates[0]).format('MM/DD/YYYY');
             const toDate = moment(dates[1]).format('MM/DD/YYYY');
-            // const fromDate = moment(dates[0]).format("DD-MM-YYYY");
-            // const toDate = moment(dates[1]).format("DD-MM-YYYY");
-
+    
             axios.get(`${CREATE_jwel}/api/POSReports/GetdayGlance?fromDate=${fromDate}&toDate=${toDate}`)
                 .then(response => {
                     const detailsData = response.data;
+    
+                    // Your current group by TCODE-DESCRIPTION-TRANSTYPE
                     const grouped = detailsData.reduce((acc, item) => {
                         const key = `${item.TCODE}-${item.DESCRIPTION}-${item.TRANSTYPE}`;
-                        if (!acc[key]) {
-                            acc[key] = [];
-                        }
+                        if (!acc[key]) acc[key] = [];
                         acc[key].push(item);
                         return acc;
                     }, {});
+    
                     setGroupedData(grouped);
+    
+    
                 })
                 .catch(error => {
                     console.error('Error fetching day glance details:', error);
                 });
         }
     }, [dates]);
-
-
+    
     const handlePDFDownload = () => {
         const doc = new jsPDF('l', 'mm', 'a4'); // Landscape mode
 
@@ -190,55 +280,145 @@ console.log(groupedData)
 
             const tableData = [];
             groupedData[key].forEach((item) => {
-            // Main row
-            tableData.push([
-                item.BNO || '',
-                item.PCS || '',
-                (item.GWT || 0)?.toFixed(3),  // 3 decimal places
-                (item.NWT || 0)?.toFixed(3),
-                item.TOTAMT || '',
-                item.CGST || '',
-                item.SGST || '',
-                item.IGST || '',
-                item.NETAMT || '',
-                item.DIACTS || '',
-                item.OLDGOLD || '',
-                item.OLDSILVER || '',
-                item.SALERTN || '',
-                item.UPI || '',
-                item.CUSTADV || '',
-                item.CHEQUE || '',
-                item.CARD || '',
-                item.CASH || '',
-                item.SCHEME || '',
-                item.BALANCE || '',
-                item.ONLINE || '',
-            ]);
+                // Main row
+                tableData.push([
+                    item.BNO || '',
+                    item.PCS || '',
+                    (item.GWT || 0)?.toFixed(3),  // 3 decimal places
+                    (item.NWT || 0)?.toFixed(3),
+                    item.TOTAMT || '',
+                    item.CGST || '',
+                    item.SGST || '',
+                    item.IGST || '',
+                    item.NETAMT || '',
+                    item.DIACTS || '',
+                    item.OLDGOLD || '',
+                    item.OLDSILVER || '',
+                    item.SALERTN || '',
+                    item.UPI || '',
+                    item.CUSTADV || '',
+                    item.CHEQUE || '',
+                    item.CARD || '',
+                    item.CASH || '',
+                    item.SCHEME || '',
+                    item.BALANCE || '',
+                    item.ONLINE || '',
+                ]);
 
-            // Sub-row for BDATE and PARTICULARS
-            tableData.push([
-                item.BDATE ? moment(item.BDATE).format('DD/MM/YYYY') : '',
-                `${item.PARTICULARS || ''}`,
-                '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''
-            ]);
+                // Sub-row for BDATE and PARTICULARS
+                tableData.push([
+                    item.BDATE ? moment(item.BDATE).format('DD/MM/YYYY') : '',
+                    `${item.PARTICULARS || ''}`,
+                    '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''
+                ]);
             });
 
+            // Add totals for the group
+            const totals = groupedData[key].reduce((acc, item) => {
+                acc.NETAMT += parseFloat(item.NETAMT || 0);
+                acc.CGST += parseFloat(item.CGST || 0);
+                acc.SGST += parseFloat(item.SGST || 0);
+                acc.IGST += parseFloat(item.IGST || 0);
+                acc.TOTAMT += parseFloat(item.TOTAMT || 0);
+                acc.PCS += parseFloat(item.PCS || 0);
+                acc.GWT += parseFloat(item.GWT || 0);
+                acc.NWT += parseFloat(item.NWT || 0);
+                acc.UPI += parseFloat(item.UPI || 0);
+                acc.CUSTADV += parseFloat(item.CUSTADV || 0);
+                acc.CHEQUE += parseFloat(item.CHEQUE || 0);
+                acc.CARD += parseFloat(item.CARD || 0);
+                acc.CASH += parseFloat(item.CASH || 0);
+                acc.SCHEME += parseFloat(item.SCHEME || 0);
+                acc.BALANCE += parseFloat(item.BALANCE || 0);
+                acc.ONLINE += parseFloat(item.ONLINE || 0);
+                return acc;
+            }, { NETAMT: 0, CGST: 0, SGST: 0, IGST: 0, TOTAMT: 0, PCS: 0, GWT: 0, NWT: 0, UPI: 0, CUSTADV: 0, CHEQUE: 0, CARD: 0, CASH: 0, SCHEME: 0, BALANCE: 0, ONLINE: 0 });
+
+            tableData.push([
+                'Totals:',
+                totals.PCS.toFixed(2),
+                totals.GWT.toFixed(3),
+                totals.NWT.toFixed(3),
+                totals.TOTAMT.toFixed(2),
+                totals.CGST.toFixed(2),
+                totals.SGST.toFixed(2),
+                totals.IGST.toFixed(2),
+                totals.NETAMT.toFixed(2),
+                '', '', '', '', totals.UPI.toFixed(2),
+                totals.CUSTADV.toFixed(2),
+                totals.CHEQUE.toFixed(2),
+                totals.CARD.toFixed(2),
+                totals.CASH.toFixed(2),
+                totals.SCHEME.toFixed(2),
+                totals.BALANCE.toFixed(2),
+                totals.ONLINE.toFixed(2),
+            ]);
+
             doc.autoTable({
+                startY: y,
+                head: [[
+                    'BNO', 'PCS', 'G.WT', 'N.WT', 'TOT AMT', 'CGST', 'SGST', 'IGST', 'NET AMT',
+                    'DIA CTS', 'OLD GOLD', 'OLD SILVER', 'SALE RTN', 'UPI', 'CUST ADV', 'CHEQUE',
+                    'CARD', 'CASH', 'SCHEME', 'BALANCE', 'ONLINE'
+                ]],
+                body: tableData,
+                theme: 'grid',
+                styles: { fontSize: 7, halign: 'right' },
+                headStyles: { fontSize: 7, fillColor: [80, 80, 80] }, // Smaller header font size
+                bodyStyles: { fontSize: 7 },
+                margin: { top: 30 },
+            });
+
+            y = doc.autoTable.previous.finalY + 10; // Adjust position for next table
+        });
+
+        // Add overall totals
+        const overallTotals = Object.keys(groupedData).reduce((acc, key) => {
+            groupedData[key].forEach(item => {
+                acc.NETAMT += parseFloat(item.NETAMT || 0);
+                acc.CGST += parseFloat(item.CGST || 0);
+                acc.SGST += parseFloat(item.SGST || 0);
+                acc.IGST += parseFloat(item.IGST || 0);
+                acc.TOTAMT += parseFloat(item.TOTAMT || 0);
+                acc.PCS += parseFloat(item.PCS || 0);
+                acc.GWT += parseFloat(item.GWT || 0);
+                acc.NWT += parseFloat(item.NWT || 0);
+                acc.UPI += parseFloat(item.UPI || 0);
+                acc.CUSTADV += parseFloat(item.CUSTADV || 0);
+                acc.CHEQUE += parseFloat(item.CHEQUE || 0);
+                acc.CARD += parseFloat(item.CARD || 0);
+                acc.CASH += parseFloat(item.CASH || 0);
+                acc.SCHEME += parseFloat(item.SCHEME || 0);
+                acc.BALANCE += parseFloat(item.BALANCE || 0);
+                acc.ONLINE += parseFloat(item.ONLINE || 0);
+            });
+            return acc;
+        }, {
+            NETAMT: 0, CGST: 0, SGST: 0, IGST: 0, TOTAMT: 0, PCS: 0, GWT: 0, NWT: 0, UPI: 0,
+            CUSTADV: 0, CHEQUE: 0, CARD: 0, CASH: 0, SCHEME: 0, BALANCE: 0, ONLINE: 0
+        });
+
+        doc.text('Overall Totals:', 15, y);
+        y += 5;
+        doc.autoTable({
             startY: y,
             head: [[
                 'BNO', 'PCS', 'G.WT', 'N.WT', 'TOT AMT', 'CGST', 'SGST', 'IGST', 'NET AMT',
                 'DIA CTS', 'OLD GOLD', 'OLD SILVER', 'SALE RTN', 'UPI', 'CUST ADV', 'CHEQUE',
                 'CARD', 'CASH', 'SCHEME', 'BALANCE', 'ONLINE'
             ]],
-            body: tableData,
+            body: [[
+                '', overallTotals.PCS.toFixed(2), overallTotals.GWT.toFixed(3), overallTotals.NWT.toFixed(3),
+                overallTotals.TOTAMT.toFixed(2), overallTotals.CGST.toFixed(2), overallTotals.SGST.toFixed(2),
+                overallTotals.IGST.toFixed(2), overallTotals.NETAMT.toFixed(2), '', '', '', '',
+                overallTotals.UPI.toFixed(2), overallTotals.CUSTADV.toFixed(2), overallTotals.CHEQUE.toFixed(2),
+                overallTotals.CARD.toFixed(2), overallTotals.CASH.toFixed(2), overallTotals.SCHEME.toFixed(2),
+                overallTotals.BALANCE.toFixed(2), overallTotals.ONLINE.toFixed(2)
+            ]],
             theme: 'grid',
             styles: { fontSize: 7, halign: 'right' },
-            headStyles: { fontSize: 7, fillColor: [80, 80, 80] }, // Smaller header font size
+            headStyles: { fontSize: 7, fillColor: [80, 80, 80] },
             bodyStyles: { fontSize: 7 },
-            margin: { top: 30 },
-            });
-
-            y = doc.autoTable.previous.finalY + 10; // Adjust position for next table
         });
 
         doc.save(`Day_Glance_Report_${moment().format("DD-MM-YYYY")}.pdf`);
@@ -322,12 +502,122 @@ console.log(groupedData)
                     });
                 }
             });
+
+            // Add Totals Row for Each Group
+            const totals = groupedData[key].reduce((acc, item) => {
+                acc.NETAMT += parseFloat(item.NETAMT || 0);
+                acc.CGST += parseFloat(item.CGST || 0);
+                acc.SGST += parseFloat(item.SGST || 0);
+                acc.IGST += parseFloat(item.IGST || 0);
+                acc.TOTAMT += parseFloat(item.TOTAMT || 0);
+                acc.PCS += parseFloat(item.PCS || 0);
+                acc.GWT += parseFloat(item.GWT || 0);
+                acc.NWT += parseFloat(item.NWT || 0);
+                acc.UPI += parseFloat(item.UPI || 0);
+                acc.CUSTADV += parseFloat(item.CUSTADV || 0);
+                acc.CHEQUE += parseFloat(item.CHEQUE || 0);
+                acc.CARD += parseFloat(item.CARD || 0);
+                acc.CASH += parseFloat(item.CASH || 0);
+                acc.SCHEME += parseFloat(item.SCHEME || 0);
+                acc.BALANCE += parseFloat(item.BALANCE || 0);
+                acc.ONLINE += parseFloat(item.ONLINE || 0);
+                return acc;
+            }, { NETAMT: 0, CGST: 0, SGST: 0, IGST: 0, TOTAMT: 0, PCS: 0, GWT: 0, NWT: 0, UPI: 0, CUSTADV: 0, CHEQUE: 0, CARD: 0, CASH: 0, SCHEME: 0, BALANCE: 0, ONLINE: 0 });
+
+            sheet.addRow({
+                BNO: "Totals:",
+                PCS: totals.PCS.toFixed(2),
+                GWT: totals.GWT.toFixed(3),
+                NWT: totals.NWT.toFixed(3),
+                TOTAMT: totals.TOTAMT.toFixed(2),
+                CGST: totals.CGST.toFixed(2),
+                SGST: totals.SGST.toFixed(2),
+                IGST: totals.IGST.toFixed(2),
+                NETAMT: totals.NETAMT.toFixed(2),
+                UPI: totals.UPI.toFixed(2),
+                CUSTADV: totals.CUSTADV.toFixed(2),
+                CHEQUE: totals.CHEQUE.toFixed(2),
+                CARD: totals.CARD.toFixed(2),
+                CASH: totals.CASH.toFixed(2),
+                SCHEME: totals.SCHEME.toFixed(2),
+                BALANCE: totals.BALANCE.toFixed(2),
+                ONLINE: totals.ONLINE.toFixed(2),
+            });
+        });
+
+        // Add Overall Totals Sheet
+        const overallSheet = workbook.addWorksheet("Overall Totals");
+        overallSheet.columns = [
+            { header: "BNO", key: "BNO", width: 10 },
+            { header: "PCS", key: "PCS", width: 8 },
+            { header: "G.WT", key: "GWT", width: 10 },
+            { header: "N.WT", key: "NWT", width: 10 },
+            { header: "TOT AMT", key: "TOTAMT", width: 12 },
+            { header: "CGST", key: "CGST", width: 10 },
+            { header: "SGST", key: "SGST", width: 10 },
+            { header: "IGST", key: "IGST", width: 10 },
+            { header: "NET AMT", key: "NETAMT", width: 12 },
+            { header: "DIA CTS", key: "DIACTS", width: 10 },
+            { header: "OLD GOLD", key: "OLDGOLD", width: 12 },
+            { header: "OLD SILVER", key: "OLDSILVER", width: 12 },
+            { header: "SALE RTN", key: "SALERTN", width: 12 },
+            { header: "UPI", key: "UPI", width: 10 },
+            { header: "CUST ADV", key: "CUSTADV", width: 12 },
+            { header: "CHEQUE", key: "CHEQUE", width: 12 },
+            { header: "CARD", key: "CARD", width: 10 },
+            { header: "CASH", key: "CASH", width: 10 },
+            { header: "SCHEME", key: "SCHEME", width: 12 },
+            { header: "BALANCE", key: "BALANCE", width: 12 },
+            { header: "ONLINE", key: "ONLINE", width: 10 },
+        ];
+
+        const overallTotals = Object.keys(groupedData).reduce((acc, key) => {
+            groupedData[key].forEach(item => {
+                acc.NETAMT += parseFloat(item.NETAMT || 0);
+                acc.CGST += parseFloat(item.CGST || 0);
+                acc.SGST += parseFloat(item.SGST || 0);
+                acc.IGST += parseFloat(item.IGST || 0);
+                acc.TOTAMT += parseFloat(item.TOTAMT || 0);
+                acc.PCS += parseFloat(item.PCS || 0);
+                acc.GWT += parseFloat(item.GWT || 0);
+                acc.NWT += parseFloat(item.NWT || 0);
+                acc.UPI += parseFloat(item.UPI || 0);
+                acc.CUSTADV += parseFloat(item.CUSTADV || 0);
+                acc.CHEQUE += parseFloat(item.CHEQUE || 0);
+                acc.CARD += parseFloat(item.CARD || 0);
+                acc.CASH += parseFloat(item.CASH || 0);
+                acc.SCHEME += parseFloat(item.SCHEME || 0);
+                acc.BALANCE += parseFloat(item.BALANCE || 0);
+                acc.ONLINE += parseFloat(item.ONLINE || 0);
+            });
+            return acc;
+        }, { NETAMT: 0, CGST: 0, SGST: 0, IGST: 0, TOTAMT: 0, PCS: 0, GWT: 0, NWT: 0, UPI: 0, CUSTADV: 0, CHEQUE: 0, CARD: 0, CASH: 0, SCHEME: 0, BALANCE: 0, ONLINE: 0 });
+
+        overallSheet.addRow({
+            BNO: "Overall Totals:",
+            PCS: overallTotals.PCS.toFixed(2),
+            GWT: overallTotals.GWT.toFixed(3),
+            NWT: overallTotals.NWT.toFixed(3),
+            TOTAMT: overallTotals.TOTAMT.toFixed(2),
+            CGST: overallTotals.CGST.toFixed(2),
+            SGST: overallTotals.SGST.toFixed(2),
+            IGST: overallTotals.IGST.toFixed(2),
+            NETAMT: overallTotals.NETAMT.toFixed(2),
+            UPI: overallTotals.UPI.toFixed(2),
+            CUSTADV: overallTotals.CUSTADV.toFixed(2),
+            CHEQUE: overallTotals.CHEQUE.toFixed(2),
+            CARD: overallTotals.CARD.toFixed(2),
+            CASH: overallTotals.CASH.toFixed(2),
+            SCHEME: overallTotals.SCHEME.toFixed(2),
+            BALANCE: overallTotals.BALANCE.toFixed(2),
+            ONLINE: overallTotals.ONLINE.toFixed(2),
         });
 
         // Generate Excel File
         const buffer = await workbook.xlsx.writeBuffer();
         saveAs(new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }), `Day_Glance_Report_${moment().format("DD-MM-YYYY")}.xlsx`);
     };
+
 
     return (
         <div id="printableArea" style={{ backgroundColor: '#f9f9f9', borderRadius: '8px' }}>
@@ -338,63 +628,22 @@ console.log(groupedData)
                         <Breadcrumb.Item>Day Glance</Breadcrumb.Item>
                     </Breadcrumb>
                 </Col>
-
             </Row>
 
             <Card
                 className="day-glance-card"
                 style={{
-                    position: 'relative', // For positioning the triangular and diamond designs
-                    background: 'linear-gradient(135deg, #1E3C72 0%, #2A5298 100%)', // Blue gradient background
+                    position: 'relative',
+                    background: 'linear-gradient(135deg, #1E3C72 0%, #2A5298 100%)',
                     borderRadius: '12px',
                     boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
                     padding: '16px',
                     color: '#333',
                 }}
             >
-                {/* Triangular Design 1 */}
-                <div
-                    style={{
-                        position: 'absolute',
-
-                        width: '0',
-                        height: '0',
-                        borderLeft: '75px solid transparent',
-                        borderRight: '75px solid transparent',
-                        borderBottom: '150px solid rgba(255, 255, 255, 0.2)',
-                    }}
-                />
-                {/* Diamond Design */}
-                <div
-                    style={{
-                        position: 'absolute',
-                        bottom: '-77px',
-                        right: '15px',
-                        width: '150px',
-                        height: '150px',
-                        background: 'rgba(255, 255, 255, 0.15)',
-                        transform: 'rotate(45deg)',
-                    }}
-                />
-                {/* Triangular Design 2 */}
-                <div
-                    style={{
-                        position: 'absolute',
-                        bottom: '-50px',
-                        left: '-50px',
-                        width: '0',
-                        height: '0',
-                        borderLeft: '100px solid transparent',
-                        borderRight: '100px solid transparent',
-                        borderTop: '200px solid rgba(255, 255, 255, 0.15)',
-
-                    }}
-                />
-
                 <Row justify="center" gutter={16} style={{ marginBottom: 16 }}>
                     <Col>
                         <Form.Item label={<span style={{ color: "white" }}>From Date</span>}>
-
                             <DatePicker
                                 selected={dates[0]}
                                 dateFormat="dd MMM yyyy"
@@ -410,10 +659,9 @@ console.log(groupedData)
                     </Col>
                     <Col>
                         <Form.Item label={<span style={{ color: "white" }}>To Date</span>}>
-
                             <DatePicker
                                 selected={dates[1]}
-                                  dateFormat="dd MMM yyyy"
+                                dateFormat="dd MMM yyyy"
                                 onChange={(date) => setDates([dates[0], date])}
                                 selectsEnd
                                 startDate={dates[0]}
@@ -427,7 +675,7 @@ console.log(groupedData)
                 </Row>
                 <Row justify="center" style={{ marginBottom: 16 }}>
                     <Col>
-                        <Button onClick={handlePrint} style={{
+                        <Button onClick={() => handlePrint()} style={{
                             marginLeft: 8,
                             backgroundColor: '#0052cc',
                             color: '#fff',
@@ -436,7 +684,7 @@ console.log(groupedData)
                             Print
                         </Button>
                         <Button
-                            onClick={handlePDFDownload} style={{
+                            onClick={() => handlePDFDownload()} style={{
                                 marginLeft: 8,
                                 backgroundColor: '#0052cc',
                                 color: '#fff',
@@ -445,7 +693,7 @@ console.log(groupedData)
                         >
                             PDF
                         </Button>
-                        <Button onClick={handleExcelDownload} style={{
+                        <Button onClick={() => handleExcelDownload()} style={{
                             marginLeft: 8,
                             backgroundColor: '#0052cc',
                             color: '#fff',
@@ -458,10 +706,30 @@ console.log(groupedData)
             </Card>
 
             {Object.keys(groupedData).map((key, index) => {
-// const [TCODE, DESCRIPTION, TRANSTYPE] = key.split('-');
-return (
-                     <div key={index} className="table-container">
- <h3>{key}</h3>                        <table className="responsive-table">
+                const totals = groupedData[key].reduce((acc, item) => {
+                    acc.NETAMT += parseFloat(item.NETAMT || 0);
+                    acc.CGST += parseFloat(item.CGST || 0);
+                    acc.SGST += parseFloat(item.SGST || 0);
+                    acc.IGST += parseFloat(item.IGST || 0);
+                    acc.TOTAMT += parseFloat(item.TOTAMT || 0);
+                    acc.PCS += parseFloat(item.PCS || 0);
+                    acc.GWT += parseFloat(item.GWT || 0);
+                    acc.NWT += parseFloat(item.NWT || 0);
+                    acc.UPI += parseFloat(item.UPI || 0);
+                    acc.CUSTADV += parseFloat(item.CUSTADV || 0);
+                    acc.CHEQUE += parseFloat(item.CHEQUE || 0);
+                    acc.CARD += parseFloat(item.CARD || 0);
+                    acc.CASH += parseFloat(item.CASH || 0);
+                    acc.SCHEME += parseFloat(item.SCHEME || 0);
+                    acc.BALANCE += parseFloat(item.BALANCE || 0);
+                    acc.ONLINE += parseFloat(item.ONLINE || 0);
+                    return acc;
+                }, { NETAMT: 0, CGST: 0, SGST: 0, IGST: 0, TOTAMT: 0, PCS: 0, GWT: 0, NWT: 0, UPI: 0, CUSTADV: 0, CHEQUE: 0, CARD: 0, CASH: 0, SCHEME: 0, BALANCE: 0, ONLINE: 0 });
+
+                return (
+                    <div key={index} className="table-container">
+                        <h3>{key}</h3>
+                        <table className="responsive-table">
                             <thead>
                                 <tr>
                                     <th>BNO</th>
@@ -505,103 +773,184 @@ return (
                                             <td>{item.OLDSILVER}</td>
                                             <td>{item.SALERTN}</td>
                                             <td style={{ textAlign: 'right' }}>{item.UPI}</td>
-                                            <td>{item.CUSTADV}</td>
-                                            <td>{item.CHEQUE}</td>
-                                            <td>{item.CARD}</td>
+                                            <td style={{ textAlign: 'right' }}>{item.CUSTADV}</td>
+                                            <td style={{ textAlign: 'right' }}>{item.CHEQUE}</td>
+                                            <td style={{ textAlign: 'right' }}>{item.CARD}</td>
                                             <td style={{ textAlign: 'right' }}>{item.CASH}</td>
-                                            <td>{item.SCHEME}</td>
+                                            <td style={{ textAlign: 'right' }}>{item.SCHEME}</td>
                                             <td style={{ textAlign: 'right' }}>{item.BALANCE}</td>
                                             <td style={{ textAlign: 'right' }}>{item.ONLINE}</td>
                                         </tr>
                                         <tr>
-                                        <td colSpan="1" style={{ border: '1px solid #000' }}>
-  {moment(item.BDATE).format('DD/MM/YYYY')}
-</td>
-
+                                            <td colSpan="1" style={{ border: '1px solid #000' }}>
+                                                {moment(item.BDATE).format('DD/MM/YYYY')}
+                                            </td>
                                             <td colSpan="8" className="description">{item.PARTICULARS}</td>
                                             <td colSpan="12" className="empty-border"></td>
                                         </tr>
                                     </React.Fragment>
                                 ))}
+                                {/* TCODE Totals */}
+                                <tr>
+                                    <td colSpan="1" style={{ fontWeight: 'bold', textAlign: 'right', border: '1px solid #000' }}>Totals:</td>
+                                    <td style={{ textAlign: 'right', border: '1px solid #000' }}>{totals.PCS.toFixed(2)}</td>
+                                    <td style={{ textAlign: 'right', border: '1px solid #000' }}>{totals.GWT.toFixed(3)}</td>
+                                    <td style={{ textAlign: 'right', border: '1px solid #000' }}>{totals.NWT.toFixed(3)}</td>
+                                    <td style={{ textAlign: 'right', border: '1px solid #000' }}>{totals.TOTAMT.toFixed(2)}</td>
+                                    <td style={{ textAlign: 'right', border: '1px solid #000' }}>{totals.CGST.toFixed(2)}</td>
+                                    <td style={{ textAlign: 'right', border: '1px solid #000' }}>{totals.SGST.toFixed(2)}</td>
+                                    <td style={{ textAlign: 'right', border: '1px solid #000' }}>{totals.IGST.toFixed(2)}</td>
+                                    <td style={{ textAlign: 'right', border: '1px solid #000' }}>{totals.NETAMT.toFixed(2)}</td>
+                                    <td colSpan="4"></td>
+                                    <td style={{ textAlign: 'right', border: '1px solid #000' }}>{totals.UPI.toFixed(2)}</td>
+                                    <td style={{ textAlign: 'right', border: '1px solid #000' }}>{totals.CUSTADV.toFixed(2)}</td>
+                                    <td style={{ textAlign: 'right', border: '1px solid #000' }}>{totals.CHEQUE.toFixed(2)}</td>
+                                    <td style={{ textAlign: 'right', border: '1px solid #000' }}>{totals.CARD.toFixed(2)}</td>
+                                    <td style={{ textAlign: 'right', border: '1px solid #000' }}>{totals.CASH.toFixed(2)}</td>
+                                    <td style={{ textAlign: 'right', border: '1px solid #000' }}>{totals.SCHEME.toFixed(2)}</td>
+                                    <td style={{ textAlign: 'right', border: '1px solid #000' }}>{totals.ONLINE.toFixed(2)}</td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
                 );
             })}
-            <style jsx>{`
-            .empty-border {
-  border-top: none;
-  border-left: none;
-  border-right: none;
-  border-bottom: 1px solid #000; /* Ensure bottom border is present */
-}
 
-                /* Basic table styling */
+            {/* Overall Totals */}
+            <div className="table-container">
+                <h3>Totals</h3>
+                <table className="responsive-table">
+                    <thead>
+                        <tr>
+                            <th>BNO</th>
+                            <th>PCS</th>
+                            <th>G.WT</th>
+                            <th>N.WT</th>
+                            <th>TOT AMT</th>
+                            <th>CGST</th>
+                            <th>SGST</th>
+                            <th>IGST</th>
+                            <th>NET AMT</th>
+                            <th>DIA CTS</th>
+                            <th>OLD GOLD</th>
+                            <th>OLD SILVER</th>
+                            <th>SALE RTN</th>
+                            <th>UPI</th>
+                            <th>CUST ADV</th>
+                            <th>CHEQUE</th>
+                            <th>CARD</th>
+                            <th>CASH</th>
+                            <th>SCHEME</th>
+                            <th>BALANCE</th>
+                            <th>ONLINE</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {(() => {
+                            const overallTotals = Object.keys(groupedData).reduce((acc, key) => {
+                                groupedData[key].forEach(item => {
+                                    acc.NETAMT += parseFloat(item.NETAMT || 0);
+                                    acc.CGST += parseFloat(item.CGST || 0);
+                                    acc.SGST += parseFloat(item.SGST || 0);
+                                    acc.IGST += parseFloat(item.IGST || 0);
+                                    acc.TOTAMT += parseFloat(item.TOTAMT || 0);
+                                    acc.PCS += parseFloat(item.PCS || 0);
+                                    acc.GWT += parseFloat(item.GWT || 0);
+                                    acc.NWT += parseFloat(item.NWT || 0);
+                                    acc.UPI += parseFloat(item.UPI || 0);
+                                    acc.CUSTADV += parseFloat(item.CUSTADV || 0);
+                                    acc.CHEQUE += parseFloat(item.CHEQUE || 0);
+                                    acc.CARD += parseFloat(item.CARD || 0);
+                                    acc.CASH += parseFloat(item.CASH || 0);
+                                    acc.SCHEME += parseFloat(item.SCHEME || 0);
+                                    acc.BALANCE += parseFloat(item.BALANCE || 0);
+                                    acc.ONLINE += parseFloat(item.ONLINE || 0);
+                                });
+                                return acc;
+                            }, {
+                                NETAMT: 0, CGST: 0, SGST: 0, IGST: 0, TOTAMT: 0, PCS: 0, GWT: 0, NWT: 0, UPI: 0,
+                                CUSTADV: 0, CHEQUE: 0, CARD: 0, CASH: 0, SCHEME: 0, BALANCE: 0, ONLINE: 0
+                            });
+
+                            return (
+                                <tr>
+                                    <td colSpan="1" style={{ fontWeight: 'bold', textAlign: 'right' }}>Overall Totals:</td>
+                                    <td style={{ textAlign: 'right' }}>{overallTotals.PCS.toFixed(2)}</td>
+                                    <td style={{ textAlign: 'right' }}>{overallTotals.GWT.toFixed(3)}</td>
+                                    <td style={{ textAlign: 'right' }}>{overallTotals.NWT.toFixed(3)}</td>
+                                    <td style={{ textAlign: 'right' }}>{overallTotals.TOTAMT.toFixed(2)}</td>
+                                    <td style={{ textAlign: 'right' }}>{overallTotals.CGST.toFixed(2)}</td>
+                                    <td style={{ textAlign: 'right' }}>{overallTotals.SGST.toFixed(2)}</td>
+                                    <td style={{ textAlign: 'right' }}>{overallTotals.IGST.toFixed(2)}</td>
+                                    <td style={{ textAlign: 'right' }}>{overallTotals.NETAMT.toFixed(2)}</td>
+                                    <td colSpan="4"></td>
+                                    <td style={{ textAlign: 'right' }}>{overallTotals.UPI.toFixed(2)}</td>
+                                    <td style={{ textAlign: 'right' }}>{overallTotals.CUSTADV.toFixed(2)}</td>
+                                    <td style={{ textAlign: 'right' }}>{overallTotals.CHEQUE.toFixed(2)}</td>
+                                    <td style={{ textAlign: 'right' }}>{overallTotals.CARD.toFixed(2)}</td>
+                                    <td style={{ textAlign: 'right' }}>{overallTotals.CASH.toFixed(2)}</td>
+                                    <td style={{ textAlign: 'right' }}>{overallTotals.SCHEME.toFixed(2)}</td>
+                                    <td style={{ textAlign: 'right' }}>{overallTotals.BALANCE.toFixed(2)}</td>
+                                    <td style={{ textAlign: 'right' }}>{overallTotals.ONLINE.toFixed(2)}</td>
+                                </tr>
+                            );
+                        })()}
+                    </tbody>
+                </table>
+            </div>
+
+            <style jsx>{`
+                .empty-border {
+                    border-top: none;
+                    border-left: none;
+                    border-right: none;
+                    border-bottom: 1px solid #000;
+                }
                 table {
                     width: 100%;
                     border-collapse: collapse;
                     overflow-x: auto;
-                    display: block; 
+                    display: block;
                 }
-
-                /* Table headers and data cells */
                 th, td {
-                    padding: 3px 3px; 
+                    padding: 3px 3px;
                     text-align: left;
                     border: 1px solid #3b3b3b;
                     width: 100px;
                     font-size: 10px;
                 }
-
-                /* Table header styling */
                 th {
                     background-color: #f4f4f4;
                     font-weight: bold;
                 }
                 td {
-                  background-color: #f4f4f4;
-                  font-weight: bold;
-                  height: 10px; 
+                    background-color: #f4f4f4;
+                    font-weight: bold;
+                    height: 10px;
                 }
-                /* Remove left border for BNO column */
                 td:first-child, th:first-child {
-                    border-bottom: none; 
+                    border-bottom: none;
                 }
-
-                /* Add a left border to all columns except the first */
                 td:not(:first-child), th:not(:first-child) {
-                    border-left: 1px solid #2b2a2a; 
+                    border-left: 1px solid #2b2a2a;
                 }
-
-                /* Make the description row have no border */
-                /* td.empty-border {
-                    border: none;
-                } */
-
-                /* Styling for the description text */
                 td.description {
-                    border-left: 1px solid #151313; 
+                    border-left: 1px solid #151313;
                     text-align: center;
                 }
-
-                /* Optional: Add a right border for the last column */
                 td:last-child, th:last-child {
                     border-right: 1px solid #000;
                 }
-
-                /* Ensures horizontal scrolling if there are more columns */
                 .table-container {
-                    overflow-x: auto; 
+                    overflow-x: auto;
                     -webkit-overflow-scrolling: touch;
                 }
-
-                /* For responsive design: */a
                 @media (max-width: 768px) {
                     table {
-                        font-size: 12px; 
+                        font-size: 12px;
                     }
                     th, td {
-                        padding: 6px; 
+                        padding: 6px;
                     }
                     .table-container {
                         max-width: 100%;

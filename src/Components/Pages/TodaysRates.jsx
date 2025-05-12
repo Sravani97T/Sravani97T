@@ -8,14 +8,15 @@ const TodaysRates = () => {
   const [silverRate, setSilverRate] = useState(0);
   const [currentPrefixIndex, setCurrentPrefixIndex] = useState(0);
   const [ratesData, setRatesData] = useState([]);
+  const [tempRatesData, setTempRatesData] = useState([]); // Temporary data for editing
   const [visible, setVisible] = useState(false);
-  const inputRefs = useRef([]); // Array of refs for input fields
+  const inputRefs = useRef([]);
 
   const prefixes = React.useMemo(() => {
     const goldPrefixes = ratesData
       .filter(item => item.MAINPRODUCT === "GOLD")
       .map(item => item.PREFIX);
-    return [...new Set(goldPrefixes)]; // Remove duplicates
+    return [...new Set(goldPrefixes)];
   }, [ratesData]);
 
   const fetchRates = async () => {
@@ -39,6 +40,7 @@ const TodaysRates = () => {
         }
 
         setRatesData(todayRates);
+        setTempRatesData(todayRates); // Initialize temp data
       } else {
         const masterResponse = await axios.get(`${CREATE_jwel}/api/Master/MasterPrefixMasterList`);
         const masterData = masterResponse.data.map(item => ({
@@ -47,6 +49,7 @@ const TodaysRates = () => {
           ...item
         }));
         setRatesData(masterData);
+        setTempRatesData(masterData); // Initialize temp data
       }
     } catch (error) {
       console.error("Error fetching rates:", error);
@@ -71,11 +74,23 @@ const TodaysRates = () => {
       setGoldRate({ prefix: goldRates[0].PREFIX, rate: goldRates[0].RATE });
     }
   }, [currentPrefixIndex, prefixes, ratesData]);
-
+  useEffect(() => {
+    const handleEscKey = (e) => {
+      if (e.key === "Escape") {
+        setVisible(false);
+      }
+    };
+  
+    document.addEventListener("keydown", handleEscKey);
+    return () => {
+      document.removeEventListener("keydown", handleEscKey);
+    };
+  }, []);
+  
   const handleVisibleChange = visible => {
     setVisible(visible);
     if (visible) {
-      // Focus the first input field when the popover opens
+      setTempRatesData([...ratesData]); // Reset temp data when opening
       setTimeout(() => {
         inputRefs.current[0]?.focus();
       }, 0);
@@ -83,56 +98,21 @@ const TodaysRates = () => {
   };
 
   const handleKeyDown = (e, index) => {
-    if (e.key === "Enter") {
+    if (e.key === "Enter" || e.key === "Tab") {
       e.preventDefault();
       if (index < inputRefs.current.length - 1) {
-        inputRefs.current[index + 1]?.focus(); // Move to the next input
+        inputRefs.current[index + 1]?.focus();
       } else {
-        handleSubmit(); // Submit if it's the last input field
+        handleSubmit(); // Submit when Enter or Tab is pressed in the last input field
       }
     }
   };
-
-  const columns = [
-    {
-      title: 'Main Product',
-      dataIndex: 'MAINPRODUCT',
-      key: 'MAINPRODUCT',
-    },
-    {
-      title: 'Prefix',
-      dataIndex: 'PREFIX',
-      key: 'PREFIX',
-    },
-    {
-      title: 'Rate',
-      dataIndex: 'RATE',
-      key: 'RATE',
-      render: (text, record, index) => (
-        <Input
-          ref={el => (inputRefs.current[index] = el)} // Assign ref to each input
-          defaultValue={text}
-          onChange={e => {
-            const newRate = e.target.value || 0;
-            const newData = ratesData.map(item => {
-              if (item.PREFIX === record.PREFIX) {
-                return { ...item, RATE: newRate }; // Update all matching PREFIX values
-              }
-              return item;
-            });
-            setRatesData(newData);
-          }}
-          onKeyDown={e => handleKeyDown(e, index)}
-        />
-      ),
-    },
-  ];
 
   const handleSubmit = async () => {
     const today = new Date().toISOString().split("T")[0];
     try {
       await axios.post(`${CREATE_jwel}/api/Erp/DailyRatesDelete?rDate=${today}`);
-      for (const rate of ratesData) {
+      for (const rate of tempRatesData) {
         await axios.post(`${CREATE_jwel}/api/Erp/DailyRatesInsert`, {
           rdate: today,
           mainproduct: rate.MAINPRODUCT,
@@ -143,28 +123,93 @@ const TodaysRates = () => {
           cloud_upload: rate.cloud_upload,
         });
       }
+      setRatesData(tempRatesData); // Update ratesData with tempRatesData
       setVisible(false);
-      fetchRates(); // Refresh the rates after submission
+      fetchRates();
     } catch (error) {
       console.error("Error submitting rates:", error);
     }
   };
 
+  const handleCancel = () => {
+    setVisible(false); // Close the popover without saving changes
+  };
+
+  const columns = [
+    {
+      title: (
+        <div style={{  fontSize: '18px', textAlign: 'center', }}>Main Product</div>
+      ),
+      dataIndex: 'MAINPRODUCT',
+      key: 'MAINPRODUCT',
+      render: (text, record) => (
+        <div style={{ fontWeight: "bold", }}>{text}</div>
+      ),
+    },
+    {
+      title: (
+        <div style={{  fontSize: '18px',textAlign: 'center',  }}>Prefix</div>
+      ),
+      dataIndex: 'PREFIX',
+      key: 'PREFIX',
+      render: (text, record) => (
+        <div style={{ fontWeight: "bold",  textAlign: 'center',}}>{text}</div>
+      ),
+    },
+    {
+      title: (
+        <div style={{ fontSize: '18px', textAlign: 'center' }}>Rate</div>
+      ),
+      dataIndex: 'RATE',
+      key: 'RATE',
+      width: 160,
+      render: (text, record, index) => (
+        <Input
+          ref={el => (inputRefs.current[index] = el)}
+          defaultValue={text}
+          onFocus={e => e.target.select()} // Automatically select the value on focus
+          onChange={e => {
+            const newRate = e.target.value || 0;
+            const newData = tempRatesData.map(item => {
+              if (item.PREFIX === record.PREFIX) {
+                return { ...item, RATE: newRate };
+              }
+              return item;
+            });
+            setTempRatesData(newData);
+          }}
+          onKeyDown={e => handleKeyDown(e, index)}
+          style={{ fontWeight: "bold", alignItems: "center", textAlign: "center" }}
+        />
+      ),
+    }
+    
+  ];
+
   const popoverContent = (
     <div>
+      <div style={{color:"#fff" ,textAlign: 'center',padding:"5px",fontSize:"18px" }}>Daily Rates</div>
       <Table
-        dataSource={ratesData}
+        dataSource={tempRatesData}
         columns={columns}
-        style={{ width: '600px', backgroundColor: '#cdc9c9' }}
+       
         size="small"
         rowKey="PREFIX"
         pagination={false}
+        bordered
+        className="custom-rates-table"
       />
-      <Button type="primary" onClick={handleSubmit} style={{ marginTop: 10 }}>
-        Submit
-      </Button>
+      <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 10 }}>
+        <Button type="default" onClick={handleCancel} style={{ marginRight: 10 }}>
+          Cancel
+        </Button>
+        <Button type="primary" onClick={handleSubmit}>
+          Submit
+        </Button>
+      </div>
     </div>
   );
+  
 
   return (
     <div>
@@ -183,12 +228,15 @@ const TodaysRates = () => {
         <h3 style={{ margin: 0, fontSize: "16px", fontWeight: "bold", opacity: 0.8 }}>Today’s Rates</h3>
         <Popover
           content={popoverContent}
-          title="Rates"
           trigger="click"
           open={visible}
+          overlayClassName="custom-popover"
+
+
+          overlayStyle={{ width: "600px", backgroundColor: "#12246a", color: "white" }}
           onOpenChange={handleVisibleChange}
         >
-          <Tag color="#28a745" style={{ position: "absolute", top: "10px", right: "10px", cursor: "pointer" }}>Change</Tag>
+          <Tag color="#28a745" style={{ position: "absolute", top: "10px", right: "10px", cursor: "pointer",borderRadius:"10px",borderColor:"white" }}>Change</Tag>
         </Popover>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "10px" }}>
           <div style={{ textAlign: "center" }}>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, forwardRef } from "react";
-import { Row, Col, Table, Input, Select } from "antd";
+import { Row, Col, Table, Input, Select ,Tooltip} from "antd";
 import axios from "axios";
 import moment from "moment";
 import { FaCalendarAlt } from 'react-icons/fa';
@@ -12,17 +12,42 @@ import TodaysRates from "./TodaysRates";
 import TodaysSalesBarGraph from "./TodaysSalesBarGraph";
 import AdvanceDetails from "./AdvanceDetailes";
 import PaymentOverview from "./PaymentOverview";
-import TableHeaderStyles from "./TableHeaderStyles"; // Import the TableHeaderStyles component
 import { CREATE_jwel } from "../../Config/Config";
+import { ReloadOutlined, } from "@ant-design/icons";
 
 const { Option } = Select;
 
 const CustomInput = forwardRef(({ value, onClick, placeholder }, ref) => (
-  <div className="custom-date-input" onClick={onClick} ref={ref}>
-    <input value={value} placeholder={placeholder} readOnly />
-    <FaCalendarAlt className="calendar-icon" />
+  <div
+    className="custom-date-input"
+    onClick={onClick}
+    ref={ref}
+    style={{
+      display: "flex",
+      alignItems: "center",
+      border: "1px solid #d9d9d9",
+      borderRadius: 4,
+      padding: "2px 8px",
+      cursor: "pointer",
+      width: "100%",
+    }}
+  >
+    <input
+      value={value}
+      placeholder={placeholder}
+      readOnly
+      style={{
+        border: "none",
+        outline: "none",
+        width: "100%",
+        fontSize: "14px",
+        background: "transparent",
+      }}
+    />
+    <FaCalendarAlt className="calendar-icon" style={{ marginLeft: 4, fontSize: 14 }} />
   </div>
 ));
+
 
 const Dashboard = () => {
   const [filters, setFilters] = useState({
@@ -33,51 +58,55 @@ const Dashboard = () => {
   });
 
   const [tableData, setTableData] = useState([]);
+  const [allJewelTypes, setAllJewelTypes] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const fromDate = moment(filters.fromDate).format('YYYY-MM-DD');
         const toDate = moment(filters.toDate).format('YYYY-MM-DD');
-        
-        // Log filters for debugging
-        console.log("Fetching data with filters:", { fromDate, toDate, ...filters });
   
         const response = await axios.get(`${CREATE_jwel}/api/Erp/GetBillMast`, {
           params: {
             fromDate,
             toDate,
-            billNo: filters.billNo || "", // Ensure empty strings are sent instead of undefined
-            jewelType: filters.jewelType || "",
           },
         });
   
-        // Ensure response is valid
         if (response.data) {
-          const data = response.data
-            .map(item => ({
-              ...item,
-              BillDate: moment(item.BillDate).format('YYYY-MM-DD'),
-            }))
-            .filter(item => {
-              const billDate = moment(item.BillDate);
-              return billDate.isBetween(fromDate, toDate, null, '[]');
-            });
-          setTableData(data);
+          let rawData = response.data.map(item => ({
+            ...item,
+            BillDate: moment(item.BillDate).format('YYYY-MM-DD'),
+          }));
+  
+          // Save all jewel types for dropdown
+          const jewelTypes = [...new Set(rawData.map(item => item.JewelType))];
+          setAllJewelTypes(jewelTypes);
+  
+          // Apply filtering based on current filters
+          const filteredData = rawData.filter(item => {
+            const billDate = moment(item.BillDate);
+            const isInRange = billDate.isBetween(fromDate, toDate, null, '[]');
+            const matchesBillNo = filters.billNo === "" || (item.BillNo && item.BillNo.toString().toLowerCase().includes(filters.billNo.toLowerCase()));
+            const matchesJewelType = filters.jewelType === "" || item.JewelType === filters.jewelType;
+          
+            return isInRange && matchesBillNo && matchesJewelType;
+          });
+  
+          setTableData(filteredData);
         } else {
-          console.error("No data returned from API");
-          setTableData([]); // Reset table data if no data
+          setTableData([]);
         }
       } catch (error) {
         console.error("Error fetching data:", error);
-        setTableData([]); // Reset table data on error
+        setTableData([]);
       }
     };
   
-    fetchData(); // Call the function immediately
+    fetchData();
+  }, [filters]);
   
-  }, [filters]); // Fetch data when filters change
-
+  
   const handleFilterChange = (key, value) => {
     setFilters(prevFilters => ({
       ...prevFilters,
@@ -89,9 +118,12 @@ const Dashboard = () => {
     {
       title: "S.No",
       key: "sno",
-      className: 'blue-background-column', 
+      // className: 'blue-background-column', 
       render: (text, record, index) => index + 1,
       width: 50,
+      align:"center",
+
+    className: 'first-col-green',
     },
     {
       title: "Inv Date",
@@ -105,7 +137,7 @@ const Dashboard = () => {
       key: "BillNo",
       align: 'center',
       render: (text, record, index) => (
-        <span style={{ fontSize: '16px', fontWeight: 'bold' }}>{index + 1}</span>
+        <span style={{ fontSize: '16px', fontWeight: 'bold' }}>{record.BillNo}</span>
       ),
     },
     
@@ -127,22 +159,47 @@ const Dashboard = () => {
       align: 'right',
     },
     {
-      title: "Weight",
+      title: "GWT | NWT"      ,
       key: "Weight",
-      align: 'right',
+      align: "right",
       render: (text, record) => (
         <>
-          <div>Gwt: {record.TotGwt.toFixed(3)}</div>
-          <div>Nwt: {record.TotNwt.toFixed(3)}</div>
+          <div
+            style={{
+              marginBottom: "6px",
+              backgroundColor: "#e6f7ff",
+              padding: "4px 8px",
+              borderRadius: "6px",
+              display: "inline-block",
+              fontWeight: "bold",
+              color: "#0050b3",
+            }}
+          >
+            Gwt: {record.TotGwt.toFixed(3)}
+          </div>
+          <br />
+          <div
+            style={{
+              backgroundColor: "#f6ffed",
+              padding: "4px 8px",
+              borderRadius: "6px",
+              display: "inline-block",
+              fontWeight: "bold",
+              color: "#389e0d",
+            }}
+          >
+            Nwt: {record.TotNwt.toFixed(3)}
+          </div>
         </>
       ),
     },
+    
     {
       title: "Gross Amt",
       dataIndex: "BillAmt",
       key: "BillAmt",
       align: 'right',
-      render: (value) => value.toFixed(2),
+      render: (value) => <b>{value.toFixed(2)}</b>,
     },
     {
       title: "Tax",
@@ -162,95 +219,131 @@ const Dashboard = () => {
       dataIndex: "NetAmt",
       key: "NetAmt",
       align: 'right',
-      render: (value) => value.toFixed(2),
+      // render: (value) => value.toFixed(2),
+      render: (value) => <b>{value.toFixed(2)}</b>,
+  
     },
   ];
 
   return (
     <div style={{ backgroundColor: "#f0f2f5" }}>
       <Row gutter={[16, 16]}>
-        {/* First Row */}
-        <Col xs={24} lg={9}>
-          <FirstColumn />
-        </Col>
+          <Col xs={24} lg={9}>
+            <FirstColumn />
+          </Col>
 
-        <Col xs={24} lg={15}>
+          <Col xs={24} lg={15}>
+            <Row gutter={[16, 16]}>
+              <Col xs={24} md={8} lg={8}>
+                <BirthdayAnniversaryCard />
+              </Col>
+              <Col xs={24} md={8} lg={8}>
+                <LatestDues />
+              </Col>
+              <Col xs={24} md={8} lg={8}>
+                <TodaysRates />
+              </Col>
+            </Row>
+          </Col>
+              </Row>
+
           <Row gutter={[16, 16]}>
-            <Col xs={24} md={8} lg={8}>
-              <BirthdayAnniversaryCard />
+            <Col xs={24} md={12} lg={9}>
+              <TodaysSalesBarGraph />
             </Col>
-            <Col xs={24} md={8} lg={8}>
-              <LatestDues />
+            <Col xs={24} md={12} lg={9}>
+              <AdvanceDetails />
             </Col>
-            <Col xs={24} md={8} lg={8}>
-              <TodaysRates />
+            <Col xs={24} md={24} lg={6}>
+              <PaymentOverview />
             </Col>
           </Row>
-        </Col>
-      </Row>
 
-      {/* Second Row */}
-      <Row gutter={[16, 16]}>
-        <Col xs={24} md={12} lg={9}>
-          <TodaysSalesBarGraph />
-        </Col>
-        <Col xs={24} md={12} lg={9}>
-          <AdvanceDetails />
-        </Col>
-        <Col xs={24} md={24} lg={6}>
-          <PaymentOverview />
-        </Col>
-      </Row>
+          <Row gutter={[8, 16]} style={{ marginTop: "25px" }}>
+          <Col xs={24} sm={12} md={6} lg={6}>
+            <div style={{ display: "flex", alignItems: "center" }}>
+          <label style={{ marginRight: 4, fontSize: "16px", whiteSpace: "nowrap" }}>
+          From Date 
+          </label>
+          <div className="custom-date-input-container">
 
-      {/* Filter Row */}
-      <Row gutter={[16, 16]} style={{ marginTop: "15px" }}>
-  <Col xs={24} sm={12} md={6} lg={6}>
-    <div style={{ display: "flex", alignItems: "center" }}>
-      <label style={{ marginRight: 8, fontSize: "16px", whiteSpace: "nowrap" }}>
-        Start Date:
-      </label>
-      <DatePicker
-        selected={filters.fromDate}
-        onChange={(date) => handleFilterChange("fromDate", date)}
-        customInput={<CustomInput placeholder="From Date" />}
-        dateFormat="dd/MM/yyyy"
-      />
-    </div>
-  </Col>
-  <Col xs={24} sm={12} md={6} lg={6}>
-    <div style={{ display: "flex", alignItems: "center" }}>
-      <label style={{ marginRight: 8, fontSize: "16px", whiteSpace: "nowrap" }}>
-        End Date:
-      </label>
-      <DatePicker
-        selected={filters.toDate}
-        onChange={(date) => handleFilterChange("toDate", date)}
-        customInput={<CustomInput placeholder="To Date" />}
-        dateFormat="dd/MM/yyyy"
-      />
-    </div>
-  </Col>
-  <Col xs={24} sm={12} md={6} lg={6}>
+          <DatePicker
+            selected={filters.fromDate}
+            onChange={(date) => handleFilterChange("fromDate", date)}
+            customInput={<CustomInput placeholder="From Date" />}
+            dateFormat="dd MMM yyyy"
+          />
+          </div>
+            </div>
+          </Col>
+          <Col xs={24} sm={12} md={6} lg={6}>
+            <div style={{ display: "flex", alignItems: "center" }}>
+          <label style={{ marginRight: 4, fontSize: "16px", whiteSpace: "nowrap" }}>
+          To Date
+          </label>
+          <div className="custom-date-input-container">
+
+          <DatePicker
+            selected={filters.toDate}
+            onChange={(date) => handleFilterChange("toDate", date)}
+            customInput={<CustomInput placeholder="To Date" />}
+            dateFormat="dd MMM yyyy"
+          />
+          </div>
+          <button
+            onClick={() => handleFilterChange("fromDate", new Date()) || handleFilterChange("toDate", new Date())}
+            style={{
+              
+              // backgroundColor: "#1890ff",
+              color: "blue",
+              border: "none",
+              cursor: "pointer",
+              borderRadius:"50%"
+            }}
+          >
+                        <Tooltip title="reset">  <ReloadOutlined /> </Tooltip>
+
+          </button>
+            </div>
+          </Col>
+          <Col xs={24} sm={12} md={6} lg={6}>
+  <div style={{ display: "flex", alignItems: "center" }}>
+    <label style={{ marginRight: 4, fontSize: "16px", whiteSpace: "nowrap" }}>
+      Bill No
+    </label>
     <Input
       placeholder="Search Bill No"
+      value={filters.billNo}
       onChange={(e) => handleFilterChange("billNo", e.target.value)}
       style={{ width: "100%" }}
     />
-  </Col>
-  <Col xs={24} sm={12} md={6} lg={6}>
+  </div>
+</Col>
+
+<Col xs={24} sm={12} md={6} lg={6}>
+  <div style={{ display: "flex", alignItems: "center" }}>
+    <label style={{ marginRight: 4, fontSize: "16px", whiteSpace: "nowrap" }}>
+      Jewel Type
+    </label>
     <Select
       placeholder="Select Jewel Type"
-      onChange={(value) => handleFilterChange("jewelType", value)}
+      onChange={(value) => handleFilterChange("jewelType", value || "")}
       style={{ width: "100%" }}
+      allowClear
+      value={filters.jewelType || undefined}
     >
-      <Option value="Gold">Gold</Option>
-      <Option value="Silver">Silver</Option>
+      {allJewelTypes.map((type) => (
+        <Option key={type} value={type}>
+          {type}
+        </Option>
+      ))}
     </Select>
-  </Col>
-</Row>
+  </div>
+</Col>
 
+              </Row>
 
-      {/* Ant Design Table */}
+              {/* Ant Design Table */}
       <Row gutter={[16, 16]} style={{ marginTop: "5px" }}>
         <Col span={24}>
           <div
@@ -264,44 +357,68 @@ const Dashboard = () => {
               borderRadius: '8px'
             }}
           >
-            <TableHeaderStyles>
               <Table
                 columns={columns}
                 dataSource={tableData}
                 pagination={false}
+                // rowClassName="table-row"
                 size="small"
                 rowClassName={(record, index) =>
                   index % 2 === 0 ? "table-row-light" : "table-row-dark"
                 }
               />
-            </TableHeaderStyles>
           </div>
         </Col>
       </Row>
 
       <style jsx>{`
-        .table-row-light {
-          background-color: #fafafa;
-        }
-        .table-row-dark {
-          background-color: rgb(223, 230, 246);
-        }
-        .ant-table-tbody > tr:hover > td {
-          background: unset !important;
-        }
-        .custom-date-input {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          border: 1px solid #d9d9d9;
-          padding: 4px 11px;
-          border-radius: 4px;
-          cursor: pointer;
-        }
-        .calendar-icon {
-          margin-left: 8px;
-        }
-      `}</style>
+  .table-row-light {
+    background-color: #fafafa;
+  }
+  .table-row-dark {
+    background-color: rgb(223, 230, 246);
+  }
+
+  .ant-table-thead > tr > th {
+    background-color: #52BD91 !important; /* Light green header */
+    color: #000;
+    font-weight: bold;
+    text-align: center;
+  }
+
+  .ant-table-tbody > tr > td:first-child {
+    transition: background-color 0.3s;
+  }
+
+  .ant-table-tbody > tr:hover > td:first-child {
+    background-color: #52BD91 !important; /* Green on hover only for 1st column */
+    color: #000;
+    font-weight: bold;
+  }
+/* Prevent hover background color when table is empty */
+.ant-table-empty .ant-table-tbody > tr:hover > td {
+  background: unset !important;
+}
+
+  .ant-table-tbody > tr:hover > td {
+    background: unset !important; /* Prevent full-row hover background */
+  }
+
+  .custom-date-input {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border: 1px solid #d9d9d9;
+    padding: 4px 11px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  .calendar-icon {
+    margin-left: 8px;
+  }
+`}</style>
+
     </div>
   );
 };

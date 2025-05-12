@@ -131,6 +131,7 @@ const AdvancedDetailsCard = () => {
         borderRadius: "10px",
         maxWidth: "750px",
         margin: "auto",
+        marginTop: "25px",
       }}
     >
       <Row gutter={[16, 16]}>

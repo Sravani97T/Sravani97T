@@ -92,16 +92,7 @@ const LatestDues = () => {
                     borderRadius: "50%",
                 }}
             ></div>
-            <div
-                style={{
-                    margin: 0,
-                    fontSize: "16px",
-                    fontWeight: "bold",
-                    opacity: 0.8,
-                }}
-            >
-                Latest Dues
-            </div>
+         
 
             <div
                 style={{
@@ -110,8 +101,9 @@ const LatestDues = () => {
                     alignItems: "center",
                 }}
             >
-                <div style={{ fontSize: "14px", opacity: 0.8 }}>Today's Dues</div>
-                <MoneyCollectOutlined style={{ fontSize: "20px", color: "#ffd700" }} />
+
+                <div style={{ fontSize: "14px", opacity: 0.8 }}>                                <MoneyCollectOutlined style={{ fontSize: "20px", color: "#ffd700",paddingRight:"5px" }} />
+                Today's Dues</div>
             </div>
             <div
                 style={{
@@ -121,7 +113,7 @@ const LatestDues = () => {
                 }}
             >
                 <div style={{
-                    fontSize: "11px", fontWeight: "bold", marginTop: "5px"
+                    fontSize: "18px", fontWeight: "bold", marginTop: "5px"
                 }}>₹{totalTodayDues}</div>
                 <Popover
                     content={todayDuesContent}
@@ -152,12 +144,13 @@ const LatestDues = () => {
                     alignItems: "center",
                 }}
             >
+                 
                 <div style={{
-                    fontSize: "14px", opacity: 0.8, marginTop: "5px"
-                }}>Total Dues</div>
-                <WalletOutlined style={{
-                    fontSize: "13px", color: "#ffd700", marginTop: "5px"
-                }} />
+                    fontSize: "14px", opacity: 0.8, marginTop: "5px",
+                }}><WalletOutlined style={{
+                    fontSize: "14px", color: "#ffd700", marginTop: "5px",paddingRight:"5px"
+                }} />Total Dues</div>
+               
             </div>
             <div
                 style={{
@@ -168,7 +161,7 @@ const LatestDues = () => {
                 }}
             >
                 <div style={{
-                    fontSize: "11px", fontWeight: "bold", marginTop: "5px"
+                    fontSize: "18px", fontWeight: "bold", marginTop: "5px"
                 }}>₹{totalDues}</div>
                 <Popover
                     content={totalDuesContent}

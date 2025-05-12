@@ -59,95 +59,120 @@ const FirstColumn = () => {
 
   return (
     <div
-      style={{
-        borderRadius: "6px",
-        boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
-        padding: "16px",
-        backgroundColor: "#f9f9f9",
-        border: "1px solid #ddd",
-      }}
-    >
-      <div style={{ textAlign: "left", marginBottom: "20px" }}>
-        <h3
-          style={{
-            fontSize: "16px",
-            fontWeight: "bold",
-            color: "#5a9",
-            margin: "0",
-          }}
-        >
-          {firmData?.FIRMNAME || "Firm Name"}
-        </h3>
-        <div style={{ fontSize: "14px", color: "#7d8a99", margin: "0" }}>
-          CITY : {firmData?.CITY || "City"}
-        </div>
-        <div style={{ fontSize: "16px", color: "#12246A", margin: "0" }}>
-          {firmData?.TINNO || "TIN No"}
-        </div>
-      </div>
-      <div
+    style={{
+      position: "relative", // Make parent relative for absolute positioning
+      borderRadius: "6px",
+      boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+      padding: "16px",
+      backgroundColor: "#11083E",
+      border: "1px solid #ddd",
+    }}
+  >
+    {/* Avatar in top-right corner */}
+    {firmData?.EPASS2 && (
+      <img
+        src={firmData.EPASS2}
+        alt="Firm Avatar"
         style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(80px, 1fr))",
-          gap: "8px",
+          position: "absolute",
+          top: "12px",
+          right: "12px",
+          width: "60px",
+          height: "60px",
+          borderRadius: "50%",
+          objectFit: "cover",
+          border: "2px solid green",
+          backgroundColor: "#fff",
+        }}
+      />
+    )}
+  
+    {/* Firm Info */}
+    <div style={{ textAlign: "left", marginBottom: "20px" }}>
+      <h3
+        style={{
+          fontSize: "16px",
+          fontWeight: "bold",
+          color: "#5a9",
+          margin: "0",
         }}
       >
-        {cards.map((card, index) => (
-          <div
-            key={index}
-            style={{
-              position: "relative",
-              padding: "12px 5px 12px",
-              borderRadius: "6px",
-              backgroundColor: "#fff",
-              textAlign: "center",
-              boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
-              transition: "transform 0.3s, box-shadow 0.3s",
-              border: `1px solid ${card.borderColor}`,
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = "translateY(-2px)";
-              e.currentTarget.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.2)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = "translateY(0)";
-              e.currentTarget.style.boxShadow = "0 2px 4px rgba(0, 0, 0, 0.1)";
-            }}
-          >
-            <div
-              style={{
-                position: "absolute",
-                top: "-17px",
-                left: "50%",
-                transform: "translateX(-50%)",
-                width: "30px",
-                height: "30px",
-                borderRadius: "50%",
-                backgroundColor: "#f8f9f9",
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                color: card.borderColor,
-                fontSize: "14px",
-                boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
-              }}
-            >
-              {card.icon}
-            </div>
-            <div
-              style={{
-                fontSize: "12px",
-                color: "#333",
-                marginTop: "16px", // Adjust margin to center content
-              }}
-            >
-              {card.title}
-            </div>
-            <div style={{ fontSize: "12px", color: "#666" }}>{card.value}</div>
-          </div>
-        ))}
+        {firmData?.FIRMNAME || "Firm Name"}
+      </h3>
+      <div style={{ fontSize: "14px", color: "#fff", margin: "0" }}>
+        CITY : {firmData?.CITY || "City"}
+      </div>
+      <div style={{ fontSize: "16px", color: "#fff", margin: "0" }}>
+        {firmData?.TINNO || "TIN No"}
       </div>
     </div>
+  
+    {/* Cards Grid */}
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fit, minmax(80px, 1fr))",
+        gap: "8px",
+      }}
+    >
+      {cards.map((card, index) => (
+        <div
+          key={index}
+          style={{
+            position: "relative",
+            padding: "12px 5px 12px",
+            borderRadius: "6px",
+            backgroundColor: "#fff",
+            textAlign: "center",
+            boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+            transition: "transform 0.3s, box-shadow 0.3s",
+            border: `1px solid ${card.borderColor}`,
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = "translateY(-2px)";
+            e.currentTarget.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.2)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = "translateY(0)";
+            e.currentTarget.style.boxShadow = "0 2px 4px rgba(0, 0, 0, 0.1)";
+          }}
+        >
+          <div
+            style={{
+              position: "absolute",
+              top: "-17px",
+              left: "50%",
+              transform: "translateX(-50%)",
+              width: "30px",
+              height: "30px",
+              borderRadius: "50%",
+              backgroundColor: "#203570",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              color: "white",
+              fontSize: "14px",
+              boxShadow: "0 5px 7px rgba(231, 226, 226, 0.1)",
+            }}
+          >
+            {card.icon}
+          </div>
+          <div
+            style={{
+              fontSize: "12px",
+              color: "#000",
+              marginTop: "16px",
+            }}
+          >
+            {card.title}
+          </div>
+          <div style={{ fontSize: "13px", color: "#666" ,              fontWeight: "bold",
+}}>{card.value}</div>
+        </div>
+      ))}
+    </div>
+  </div>
+  
   );
 };
 

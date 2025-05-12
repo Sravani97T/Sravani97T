@@ -1,13 +1,14 @@
 import React, { useState, useEffect, forwardRef, useCallback } from 'react';
-import { Table, Row, Col, Breadcrumb, Input, Select, Pagination,  } from 'antd';
+import { Table,Tooltip ,Row, Col, Breadcrumb, Input, Select, Pagination,  } from 'antd';
 import axios from 'axios';
 import moment from 'moment';
 import PdfExcelPrint from '../Utiles/PdfExcelPrint'; // Adjust the import path as necessary
-import TableHeaderStyles from '../Pages/TableHeaderStyles';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { FaCalendarAlt } from 'react-icons/fa';
 import { CREATE_jwel } from '../../Config/Config';
+import { ReloadOutlined, } from "@ant-design/icons";
+
 const { Option } = Select;
 
 const CustomInput = forwardRef(({ value, onClick, placeholder }, ref) => (
@@ -134,23 +135,23 @@ const BillMasterReport = () => {
 
     };
     const columns = [
-        { title: 'S.No', dataIndex: 'serialNo', align: "center", key: 'serialNo', width: 50, className: 'blue-background-column' },
+        { title: 'S.No', dataIndex: 'serialNo', align: "center", key: 'serialNo', width: 50,     className: 'first-col-green',
+            render: (text, record, index) => (currentPage - 1) * pageSize + index + 1 },
         { title: 'Bill Date', dataIndex: 'BillDate', key: 'BillDate', render: (text) => moment(text).format('DD/MM/YYYY') },
         { title: 'Bill No', dataIndex: 'BillNo', key: 'BillNo' },
         { title: 'Jewel Type', dataIndex: 'JewelType', key: 'JewelType' },
 
         { title: 'Customer Name', dataIndex: 'CustName', key: 'CustName' },
         { title: 'Pieces', dataIndex: 'TotPieces', key: 'TotPieces', align: 'right' },
-        { title: 'Gross WT', dataIndex: 'TotGwt', key: 'TotGwt', align: 'right', render: (value) => value ?<b>
-            {value.toFixed(3)}</b> : '' },
+        { title: 'Gross WT', dataIndex: 'TotGwt', key: 'TotGwt', align: 'right', render: (value) => value ? <b>{value.toFixed(3)}</b> : '' },
         { title: 'Net WT', dataIndex: 'TotNwt', key: 'TotNwt', align: 'right', render: (value) => value ? <b>{value.toFixed(3)}</b> : '' },
         { title: 'Total Amount', dataIndex: 'TotAmt', key: 'TotAmt', align: 'right', className: 'blue-background-column', render: (value) => value ? <b>{value.toFixed(2)}</b> : '' },
         { title: 'Discount', dataIndex: 'DisAmt', key: 'DisAmt', align: 'right', render: (value) => value ? <b>{value.toFixed(2)}</b> : '' },
-        { title: 'Gross Amount', dataIndex: 'BillAmt', key: 'BillAmt', align: 'right', className: 'blue-background-column', render: (value) => value ? <b>{value.toFixed(2) }</b>: '' },
+        { title: 'Gross Amount', dataIndex: 'BillAmt', key: 'BillAmt', align: 'right', className: 'blue-background-column', render: (value) => value ? <b>{value.toFixed(2)}</b> : '' },
         { title: 'CGST', dataIndex: 'CGST', key: 'CGST', align: 'right', render: (value) => value ? value.toFixed(2) : '' },
         { title: 'SGST', dataIndex: 'SGST', key: 'SGST', align: 'right', render: (value) => value ? value.toFixed(2) : '' },
         { title: 'IGST', dataIndex: 'IGST', key: 'IGST', align: 'right', render: (value) => value ? value.toFixed(2) : '' },
-        { title: 'Net Amount', dataIndex: 'NetAmt', key: 'NetAmt', align: 'right',  className: 'blue-background-column',render: (value) => value ? <b>{value.toFixed(2)}</b>  : '' }
+        { title: 'Net Amount', dataIndex: 'NetAmt', key: 'NetAmt', align: 'right', className: 'blue-background-column', render: (value) => value ? <b>{value.toFixed(2)}</b> : '' }
     ];
 
     const formattedData = [
@@ -189,15 +190,62 @@ const BillMasterReport = () => {
 
     const filterContent = (
         <Row gutter={[8, 8]}>
-            <Col xs={24} sm={12} md={4}>
-                <Input
+          <Col xs={24} sm={12} md={6} lg={6}>
+            <div style={{ display: "flex", alignItems: "center" }}>
+          <label style={{ marginRight: 4, fontSize: "16px", whiteSpace: "nowrap" }}>
+          From Date 
+          </label>
+          <div className="custom-date-input-container">
+
+            <DatePicker
+        selected={tempFilters.dateFrom ? moment(tempFilters.dateFrom, 'YYYY-MM-DD').toDate() : null}
+        onChange={(date) => handleTempFilterChange('dateFrom', date ? moment(date).format('YYYY-MM-DD') : null)}
+        customInput={<CustomInput placeholder="From Date" />}
+        dateFormat="dd MMM yyyy"
+        placeholderText="From Date"
+    />
+     </div>
+     </div>
+</Col>
+          <Col xs={24} sm={12} md={6} lg={6}>
+<div style={{ display: "flex", alignItems: "center" }}>
+          <label style={{ marginRight: 4, fontSize: "16px", whiteSpace: "nowrap" }}>
+          To Date
+          </label>
+          <div className="custom-date-input-container">
+
+    <DatePicker
+        selected={tempFilters.dateTo ? moment(tempFilters.dateTo, 'YYYY-MM-DD').toDate() : null}
+        onChange={(date) => handleTempFilterChange('dateTo', date ? moment(date).format('YYYY-MM-DD') : null)}
+        customInput={<CustomInput placeholder="To Date" />}
+        dateFormat="dd MMM yyyy"
+        placeholderText="To Date"
+    />
+      </div>
+              <button
+                onClick={() => {
+                    handleTempFilterChange("dateFrom", moment().startOf('day').format('YYYY-MM-DD'));
+                    handleTempFilterChange("dateTo", moment().endOf('day').format('YYYY-MM-DD'));
+                }}
+                style={{
+                  color: "blue",
+                  border: "none",
+                  cursor: "pointer",
+                  borderRadius: "50%"
+                }}
+              >
+                            <Tooltip title="reset">  <ReloadOutlined /> </Tooltip>
+    
+              </button>
+                </div>
+</Col>
+<Col xs={24} sm={12} md={6} lg={6}>                <Input
                     placeholder="Bill No"
                     value={tempFilters.billNo}
                     onChange={(e) => handleTempFilterChange('billNo', e.target.value)}
                 />
             </Col>
-            <Col xs={24} sm={12} md={4}>
-                <Select
+            <Col xs={24} sm={12} md={6} lg={6}>                <Select
                     placeholder="Jewel Type"
                     allowClear
                     style={{ width: '100%' }}
@@ -209,8 +257,7 @@ const BillMasterReport = () => {
                     ))}
                 </Select>
             </Col>
-            <Col xs={24} sm={12} md={4}>
-                <Select
+            <Col xs={24} sm={12} md={6} lg={6}>                <Select
                     showSearch
                     allowClear
                     placeholder="Customer Name"
@@ -223,8 +270,7 @@ const BillMasterReport = () => {
                     ))}
                 </Select>
             </Col>
-            <Col xs={24} sm={12} md={4}>
-                <Select
+            <Col xs={24} sm={12} md={6} lg={6}>                <Select
                     showSearch
                     allowClear
                     placeholder="Mobile Number"
@@ -237,24 +283,7 @@ const BillMasterReport = () => {
                     ))}
                 </Select>
             </Col>
-            <Col xs={24} sm={12} md={4}>
-                <DatePicker
-                    selected={tempFilters.dateFrom ? moment(tempFilters.dateFrom, 'YYYY-MM-DD').toDate() : null}
-                    onChange={(date) => handleTempFilterChange('dateFrom', date ? moment(date).format('YYYY-MM-DD') : null)}
-                    customInput={<CustomInput placeholder="From Date" />}
-                    dateFormat="dd MMM yyyy"
-                    placeholderText="From Date"
-                />
-            </Col>
-            <Col xs={24} sm={12} md={4}>
-                <DatePicker
-                    selected={tempFilters.dateTo ? moment(tempFilters.dateTo, 'YYYY-MM-DD').toDate() : null}
-                    onChange={(date) => handleTempFilterChange('dateTo', date ? moment(date).format('YYYY-MM-DD') : null)}
-                    customInput={<CustomInput placeholder="To Date" />}
-                    dateFormat="dd MMM yyyy"
-                    placeholderText="To Date"
-                />
-            </Col>
+          
         </Row>
     );
 
@@ -264,7 +293,7 @@ const BillMasterReport = () => {
                 <Col>
                     <Breadcrumb style={{ fontSize: '16px', fontWeight: '600', color: '#0C1154' }}>
                         <Breadcrumb.Item>Reports</Breadcrumb.Item>
-                        <Breadcrumb.Item>Bill Master Report</Breadcrumb.Item>
+                        <Breadcrumb.Item>Sale Register</Breadcrumb.Item>
                     </Breadcrumb>
                 </Col>
                 <Col>
@@ -305,7 +334,7 @@ const BillMasterReport = () => {
                         borderRadius: '8px'
                     }}
                 >
-                    <TableHeaderStyles>
+                    {/* <TableHeaderStyles> */}
                         <Table
                             size="small"
                             columns={columns}
@@ -314,7 +343,7 @@ const BillMasterReport = () => {
                             pagination={false}
                             rowClassName="table-row"
                             summary={() => (
-                                <Table.Summary.Row style={{ backgroundColor: '#f5f5f5', fontWeight: 'bold' }}>
+                                <Table.Summary.Row style={{ backgroundColor: '#49937870', fontWeight: 'bold' }}>
                                     <Table.Summary.Cell index={0} colSpan={5}>Total</Table.Summary.Cell>
                                     <Table.Summary.Cell index={1} align="right">{totals.TotPieces}</Table.Summary.Cell>
                                     <Table.Summary.Cell index={2} align="right">{totals.TotGwt.toFixed(3)}</Table.Summary.Cell>
@@ -329,7 +358,54 @@ const BillMasterReport = () => {
                                 </Table.Summary.Row>
                             )}
                         />
-                    </TableHeaderStyles>
+                    {/* </TableHeaderStyles> */}
+                    <style jsx>{`
+  .table-row-light {
+    background-color: #fafafa;
+  }
+  .table-row-dark {
+    background-color: rgb(223, 230, 246);
+  }
+
+  .ant-table-thead > tr > th {
+    background-color: #52BD91 !important; /* Light green header */
+    color: #000;
+    font-weight: bold;
+    text-align: center;
+  }
+
+  .ant-table-tbody > tr > td:first-child {
+    transition: background-color 0.3s;
+  }
+/* Prevent hover background color when table is empty */
+.ant-table-empty .ant-table-tbody > tr:hover > td {
+  background: unset !important;
+}
+
+  .ant-table-tbody > tr:hover > td:first-child {
+    background-color: #52BD91 !important; /* Green on hover only for 1st column */
+    color: #000;
+    font-weight: bold;
+  }
+
+  .ant-table-tbody > tr:hover > td {
+    background: unset !important; /* Prevent full-row hover background */
+  }
+
+  .custom-date-input {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border: 1px solid #d9d9d9;
+    padding: 4px 11px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  .calendar-icon {
+    margin-left: 8px;
+  }
+`}</style>
                 </div>
             </div>
         </>
