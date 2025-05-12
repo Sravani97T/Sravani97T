@@ -818,6 +818,39 @@ console.log(groupedData)
 
             {/* Overall Totals */}
             <div className="table-container">
+    {(() => {
+        const overallTotals = Object.keys(groupedData).reduce((acc, key) => {
+            groupedData[key].forEach(item => {
+                acc.NETAMT += parseFloat(item.NETAMT || 0);
+                acc.CGST += parseFloat(item.CGST || 0);
+                acc.SGST += parseFloat(item.SGST || 0);
+                acc.IGST += parseFloat(item.IGST || 0);
+                acc.TOTAMT += parseFloat(item.TOTAMT || 0);
+                acc.PCS += parseFloat(item.PCS || 0);
+                acc.GWT += parseFloat(item.GWT || 0);
+                acc.NWT += parseFloat(item.NWT || 0);
+                acc.UPI += parseFloat(item.UPI || 0);
+                acc.CUSTADV += parseFloat(item.CUSTADV || 0);
+                acc.CHEQUE += parseFloat(item.CHEQUE || 0);
+                acc.CARD += parseFloat(item.CARD || 0);
+                acc.CASH += parseFloat(item.CASH || 0);
+                acc.SCHEME += parseFloat(item.SCHEME || 0);
+                acc.BALANCE += parseFloat(item.BALANCE || 0);
+                acc.ONLINE += parseFloat(item.ONLINE || 0);
+            });
+            return acc;
+        }, {
+            NETAMT: 0, CGST: 0, SGST: 0, IGST: 0, TOTAMT: 0, PCS: 0, GWT: 0, NWT: 0, UPI: 0,
+            CUSTADV: 0, CHEQUE: 0, CARD: 0, CASH: 0, SCHEME: 0, BALANCE: 0, ONLINE: 0
+        });
+
+        // Check if all values are zero
+        const hasNonZero = Object.values(overallTotals).some(value => value !== 0);
+
+        if (!hasNonZero) return null;
+
+        return (
+            <>
                 <h3>Totals</h3>
                 <table className="responsive-table">
                     <thead>
@@ -846,58 +879,37 @@ console.log(groupedData)
                         </tr>
                     </thead>
                     <tbody>
-                        {(() => {
-                            const overallTotals = Object.keys(groupedData).reduce((acc, key) => {
-                                groupedData[key].forEach(item => {
-                                    acc.NETAMT += parseFloat(item.NETAMT || 0);
-                                    acc.CGST += parseFloat(item.CGST || 0);
-                                    acc.SGST += parseFloat(item.SGST || 0);
-                                    acc.IGST += parseFloat(item.IGST || 0);
-                                    acc.TOTAMT += parseFloat(item.TOTAMT || 0);
-                                    acc.PCS += parseFloat(item.PCS || 0);
-                                    acc.GWT += parseFloat(item.GWT || 0);
-                                    acc.NWT += parseFloat(item.NWT || 0);
-                                    acc.UPI += parseFloat(item.UPI || 0);
-                                    acc.CUSTADV += parseFloat(item.CUSTADV || 0);
-                                    acc.CHEQUE += parseFloat(item.CHEQUE || 0);
-                                    acc.CARD += parseFloat(item.CARD || 0);
-                                    acc.CASH += parseFloat(item.CASH || 0);
-                                    acc.SCHEME += parseFloat(item.SCHEME || 0);
-                                    acc.BALANCE += parseFloat(item.BALANCE || 0);
-                                    acc.ONLINE += parseFloat(item.ONLINE || 0);
-                                });
-                                return acc;
-                            }, {
-                                NETAMT: 0, CGST: 0, SGST: 0, IGST: 0, TOTAMT: 0, PCS: 0, GWT: 0, NWT: 0, UPI: 0,
-                                CUSTADV: 0, CHEQUE: 0, CARD: 0, CASH: 0, SCHEME: 0, BALANCE: 0, ONLINE: 0
-                            });
+                    <tr>
+  <td style={{ fontWeight: 'bold', textAlign: 'left', border: '1px solid #000' }}>Overall Totals:</td>
+  <td style={{ textAlign: 'right' }}>{overallTotals.PCS.toFixed(2)}</td>
+  <td style={{ textAlign: 'right' }}>{overallTotals.GWT.toFixed(3)}</td>
+  <td style={{ textAlign: 'right' }}>{overallTotals.NWT.toFixed(3)}</td>
+  <td style={{ textAlign: 'right' }}>{overallTotals.TOTAMT.toFixed(2)}</td>
+  <td style={{ textAlign: 'right' }}>{overallTotals.CGST.toFixed(2)}</td>
+  <td style={{ textAlign: 'right' }}>{overallTotals.SGST.toFixed(2)}</td>
+  <td style={{ textAlign: 'right' }}>{overallTotals.IGST.toFixed(2)}</td>
+  <td style={{ textAlign: 'right' }}>{overallTotals.NETAMT.toFixed(2)}</td>
+  <td></td> {/* DIA CTS */}
+  <td></td> {/* OLD GOLD */}
+  <td></td> {/* OLD SILVER */}
+  <td></td> {/* SALE RTN */}
+  <td style={{ textAlign: 'right' }}>{overallTotals.UPI.toFixed(2)}</td>
+  <td style={{ textAlign: 'right' }}>{overallTotals.CUSTADV.toFixed(2)}</td>
+  <td style={{ textAlign: 'right' }}>{overallTotals.CHEQUE.toFixed(2)}</td>
+  <td style={{ textAlign: 'right' }}>{overallTotals.CARD.toFixed(2)}</td>
+  <td style={{ textAlign: 'right' }}>{overallTotals.CASH.toFixed(2)}</td>
+  <td style={{ textAlign: 'right' }}>{overallTotals.SCHEME.toFixed(2)}</td>
+  <td style={{ textAlign: 'right' }}>{overallTotals.BALANCE.toFixed(2)}</td>
+  <td style={{ textAlign: 'right' }}>{overallTotals.ONLINE.toFixed(2)}</td>
+</tr>
 
-                            return (
-                                <tr>
-                                    <td colSpan="1" style={{ fontWeight: 'bold', textAlign: 'right' }}>Overall Totals:</td>
-                                    <td style={{ textAlign: 'right' }}>{overallTotals.PCS.toFixed(2)}</td>
-                                    <td style={{ textAlign: 'right' }}>{overallTotals.GWT.toFixed(3)}</td>
-                                    <td style={{ textAlign: 'right' }}>{overallTotals.NWT.toFixed(3)}</td>
-                                    <td style={{ textAlign: 'right' }}>{overallTotals.TOTAMT.toFixed(2)}</td>
-                                    <td style={{ textAlign: 'right' }}>{overallTotals.CGST.toFixed(2)}</td>
-                                    <td style={{ textAlign: 'right' }}>{overallTotals.SGST.toFixed(2)}</td>
-                                    <td style={{ textAlign: 'right' }}>{overallTotals.IGST.toFixed(2)}</td>
-                                    <td style={{ textAlign: 'right' }}>{overallTotals.NETAMT.toFixed(2)}</td>
-                                    <td colSpan="4"></td>
-                                    <td style={{ textAlign: 'right' }}>{overallTotals.UPI.toFixed(2)}</td>
-                                    <td style={{ textAlign: 'right' }}>{overallTotals.CUSTADV.toFixed(2)}</td>
-                                    <td style={{ textAlign: 'right' }}>{overallTotals.CHEQUE.toFixed(2)}</td>
-                                    <td style={{ textAlign: 'right' }}>{overallTotals.CARD.toFixed(2)}</td>
-                                    <td style={{ textAlign: 'right' }}>{overallTotals.CASH.toFixed(2)}</td>
-                                    <td style={{ textAlign: 'right' }}>{overallTotals.SCHEME.toFixed(2)}</td>
-                                    <td style={{ textAlign: 'right' }}>{overallTotals.BALANCE.toFixed(2)}</td>
-                                    <td style={{ textAlign: 'right' }}>{overallTotals.ONLINE.toFixed(2)}</td>
-                                </tr>
-                            );
-                        })()}
                     </tbody>
                 </table>
-            </div>
+            </>
+        );
+    })()}
+</div>
+
 
             <style jsx>{`
                 .empty-border {
