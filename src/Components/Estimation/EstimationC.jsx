@@ -662,177 +662,288 @@ const EstimationTable = () => {
     const [pdfUrl, setPdfUrl] = useState(null);
   
 
+    // const generatePDF = () => {
+    //     const doc = new jsPDF({
+    //       orientation: "portrait",
+    //       unit: "mm",
+    //       format: [80, 1000],
+    //     });
+      
+    //     const lineHeight = 5;
+    //     let y = 10;
+      
+    //     const labelX = 7;
+    //     const valueX = 75;
+      
+    //     doc.setFont("Courier", "normal");
+    //     doc.setFontSize(14);
+    //     doc.text("ESTIMATION", 25, y);
+    //     y += lineHeight;
+      
+    //     doc.setLineDashPattern([1, 1], 0);
+    //     doc.line(5, y, 75, y);
+    //     y += lineHeight;
+      
+    //     doc.setFontSize(10);
+    //     doc.setLineDashPattern([], 0);
+    //     doc.text(`EST NO : ${estimationNo} `, 5, y);
+    //     doc.text(`Rate: ${rates[0]?.RATE || 0}/-`, 50, y);
+    //     y += lineHeight;
+      
+    //     doc.setLineDashPattern([1, 1], 0);
+    //     doc.line(5, y, 75, y);
+    //     doc.setLineDashPattern([], 0);
+    //     y += lineHeight;
+      
+    //     doc.setFontSize(10);
+    //     doc.text("Description", 5, y);
+    //     doc.text("Value", valueX, y, { align: "right" });
+    //     y += lineHeight;
+      
+    //     doc.setLineDashPattern([1, 1], 0);
+    //     doc.line(5, y, 75, y);
+    //     doc.setLineDashPattern([], 0);
+    //     y += lineHeight;
+      
+    //     doc.setFontSize(9);
+    //     data?.forEach((item) => {
+    //       doc.text(`${item?.tagNo}/${item?.productName || ''} - ${item?.purity || ''}`, 5, y);
+    //       y += lineHeight;
+      
+    //       const infoRows = [
+    //         ["Gross Wt", item?.grossWeight?.toFixed(3)],
+    //         ["Net Wt", item?.netWeight?.toFixed(3)],
+    //         ["Wastage", item?.totalWastage?.toFixed(3)],
+    //         ["Total Wt", item?.netWeight?.toFixed(3)],
+    //         ["Amount", parseFloat(item?.amount).toFixed(2)],
+    //         ["Making Chg", parseFloat(item?.totalMC || 0).toFixed(2)],
+    //         ["Stone Cost", parseFloat(item?.stoneCost || 0).toFixed(2)],
+    //       ];
+      
+    //       const stoneCostIndex = infoRows.findIndex(row => row[0] === "Stone Cost");
+    //       const stoneDataRows = item?.stoneData?.length > 0
+    //         ? item.stoneData.map(stone => [
+    //             `${stone?.stoneItem || 'Stone'}`, 
+    //             parseFloat(stone?.grams || 0).toFixed(3)
+    //           ])
+    //         : [["Stone Less", "0.000"]];
+      
+    //       infoRows.splice(stoneCostIndex + 1, 0, ...stoneDataRows);
+      
+    //       infoRows.forEach(([label, val]) => {
+    //         doc.text(label, labelX, y);
+    //         doc.text(val.toString(), valueX, y, { align: "right" });
+    //         y += lineHeight;
+    //       });
+      
+    //       if (item?.tagItemDetails?.length > 0) {
+    //         doc.setFontSize(9);
+    //         doc.text("Stones:", 5, y);
+    //         y += lineHeight;
+      
+    //         item.tagItemDetails.forEach((stone) => {
+    //           const pcs = parseFloat(stone.PIECES || 0);
+    //           const rate = parseFloat(stone.RATE || 0);
+    //           const calcAmount = (pcs * rate).toFixed(2);
+    //           const stoneName = stone.ITEMNAME || "Stone";
+      
+    //           const label = `${stoneName} (${pcs} pcs * ${rate})`;
+    //           doc.text(label, labelX, y);
+    //           doc.text(calcAmount, valueX, y, { align: "right" });
+    //           y += lineHeight;
+    //         });
+    //       }
+      
+    //       doc.setLineDashPattern([1, 1], 0);
+    //       doc.line(5, y, 75, y);
+    //       doc.setLineDashPattern([], 0);
+    //       y += lineHeight;
+    //     });
+      
+    //     // Summary Section
+    //     doc.setFontSize(9);
+    //     const leftLabelX = 5;
+    //     const leftValueX = 37;
+    //     const rightLabelX = 40;
+    //     const rightValueX = 75;
+      
+    //     const summaryPairs = [
+    //       [`Tot Pcs`, totals.totalPcs, `Amount`, Math.ceil(totals.totalAmount)],
+    //       [`TotG.Wt`, totals.totalGrossWeight.toFixed(3), `GST@${vat}%`, Math.ceil(gstAmount)],
+    //       [`TotN.Wt`, totals.totalNetWeight.toFixed(3), `TOTAL`, `${Math.ceil(netAmount)}`],
+    //     ];
+      
+    //     summaryPairs.forEach(([leftLabel, leftVal, rightLabel, rightVal]) => {
+    //       doc.text(`${leftLabel} :`, leftLabelX, y);
+    //       doc.text(leftVal.toString(), leftValueX, y, { align: "right" });
+      
+    //       doc.text(`${rightLabel} :`, rightLabelX, y);
+    //       doc.text(rightVal.toString(), rightValueX, y, { align: "right" });
+      
+    //       y += lineHeight;
+    //     });
+      
+    //     doc.setLineDashPattern([1, 1], 0);
+    //     doc.line(5, y, 75, y);
+    //     doc.setLineDashPattern([], 0);
+    //     y += lineHeight;
+      
+    //     doc.setFontSize(10);
+    //     doc.text("*** Settlement Amount ***", 20, y);
+    //     y += lineHeight;
+      
+    //     const settlementFields = [
+    //       "Cash", "Card/Online", "Upi/Qr", "OG/SR", "RB/Due", "Advance", "Scheme"
+    //     ];
+    //     settlementFields.forEach(field => {
+    //       doc.text(`${field} :`, 5, y);
+    //       y += lineHeight;
+    //     });
+      
+    //     doc.text("Total :", 5, y);
+    //     y += lineHeight;
+      
+    //     doc.setLineDashPattern([1, 1], 0);
+    //     doc.line(5, y, 75, y);
+    //     doc.setLineDashPattern([], 0);
+    //     y += lineHeight;
+      
+    //     // Footer
+    //     doc.setFontSize(9);
+    //     doc.text("*** VALID FOR ONE HOUR ONLY ***", 15, y);
+    //     y += lineHeight;
+      
+    //     doc.text("New Customer {   }   Existing Customer {   }", 5, y);
+    //     y += lineHeight;
+      
+    //     const customerInfo = ["Mobile No", "Name", "City"];
+    //     customerInfo.forEach(field => {
+    //       doc.text(`${field} :`, 5, y);
+    //       y += lineHeight;
+    //     });
+      
+    //     doc.text(`Date : ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`, 5, y);
+    //     y += lineHeight;
+      
+    //     doc.text(`User ID : ${data[0]?.counterName || "N/A"}`, 5, y);
+      
+    //     const blob = doc.output("blob");
+    //     const blobUrl = URL.createObjectURL(blob);
+    //     setPdfUrl(blobUrl);
+    //     setIsModalVisible(true);
+    //   };
+   
     const generatePDF = () => {
         const doc = new jsPDF({
           orientation: "portrait",
           unit: "mm",
-          format: [80, 1000],
+          format: [80, 1000], // Receipt-style format
         });
       
-        const lineHeight = 5;
         let y = 10;
+        const lineHeight = 5;
       
-        const labelX = 7;
-        const valueX = 75;
+        doc.setFont("Courier", "bold");
+        doc.setFontSize(12);
+        doc.text("SRI ADITYA JEWELLERS", 40, y, { align: "center" });
       
+        y += lineHeight;
         doc.setFont("Courier", "normal");
-        doc.setFontSize(14);
-        doc.text("ESTIMATION", 25, y);
-        y += lineHeight;
-      
-        doc.setLineDashPattern([1, 1], 0);
-        doc.line(5, y, 75, y);
-        y += lineHeight;
-      
         doc.setFontSize(10);
-        doc.setLineDashPattern([], 0);
-        doc.text(`EST NO : ${estimationNo} `, 5, y);
-        doc.text(`Rate: ${rates[0]?.RATE || 0}/-`, 50, y);
-        y += lineHeight;
+        doc.text("ESTIMATION", 40, y, { align: "center" });
       
-        doc.setLineDashPattern([1, 1], 0);
-        doc.line(5, y, 75, y);
-        doc.setLineDashPattern([], 0);
-        y += lineHeight;
-      
-        doc.setFontSize(10);
-        doc.text("Description", 5, y);
-        doc.text("Value", valueX, y, { align: "right" });
-        y += lineHeight;
-      
-        doc.setLineDashPattern([1, 1], 0);
-        doc.line(5, y, 75, y);
-        doc.setLineDashPattern([], 0);
-        y += lineHeight;
-      
+        y += lineHeight * 1.5;
         doc.setFontSize(9);
+        doc.text(`EST NO : ${estimationNo}`, 5, y);
+        y += lineHeight;
+      
         data?.forEach((item) => {
-          doc.text(`${item?.tagNo}/${item?.productName || ''} - ${item?.purity || ''}`, 5, y);
+          // Section heading
+          doc.setFont("Courier", "bold");
+          doc.text("Product Details", 5, y);
           y += lineHeight;
       
-          const infoRows = [
-            ["Gross Wt", item?.grossWeight?.toFixed(3)],
-            ["Net Wt", item?.netWeight?.toFixed(3)],
-            ["Wastage", item?.totalWastage?.toFixed(3)],
-            ["Total Wt", item?.netWeight?.toFixed(3)],
-            ["Amount", parseFloat(item?.amount).toFixed(2)],
-            ["Making Chg", parseFloat(item?.totalMC || 0).toFixed(2)],
-            ["Stone Cost", parseFloat(item?.stoneCost || 0).toFixed(2)],
+          // Product + Purity - Rate
+          const productLine = `${item.productName?.toUpperCase() || ""} ${item.purity || ""} - ${rates[0]?.RATE || 0}/-`;
+          doc.setFont("Courier", "normal");
+          doc.text(productLine, 5, y);
+          y += lineHeight;
+      
+          // Table-like rows with boxes and aligned content
+          const rows = [
+            ["Gross Weight", item.grossWeight?.toFixed(3) ?? "0.000"],
+            ["Stone Less", item.stoneLess?.toFixed(3) ?? "0.000"],
+            ["Net Weight", item.netWeight?.toFixed(3) ?? "0.000"],
+            [
+              item.wastage?.includes("%") ? "Wastage" : "Wastage Wt",
+              item.wastage?.includes("%") ? item.wastage : item.totalWastage?.toFixed(3) ?? "0.000",
+            ],
+            ["Total Weight", item.totalWeight?.toFixed(3) ?? "0.000"],
+            ["Making Charges", parseFloat(item.totalMC || 0).toFixed(2)],
           ];
       
-          const stoneCostIndex = infoRows.findIndex(row => row[0] === "Stone Cost");
-          const stoneDataRows = item?.stoneData?.length > 0
-            ? item.stoneData.map(stone => [
-                `${stone?.stoneItem || 'Stone'}`, 
-                parseFloat(stone?.grams || 0).toFixed(3)
-              ])
-            : [["Stone Less", "0.000"]];
-      
-          infoRows.splice(stoneCostIndex + 1, 0, ...stoneDataRows);
-      
-          infoRows.forEach(([label, val]) => {
-            doc.text(label, labelX, y);
-            doc.text(val.toString(), valueX, y, { align: "right" });
+          rows.forEach(([label, val]) => {
+            doc.rect(5, y, 70, lineHeight, "S");
+            doc.text(label, 6, y + 3.5);
+            doc.text(":", 42, y + 3.5, { align: "center" });
+            doc.text(val, 72, y + 3.5, { align: "right" });
             y += lineHeight;
           });
       
-          if (item?.tagItemDetails?.length > 0) {
-            doc.setFontSize(9);
-            doc.text("Stones:", 5, y);
+          // Stones in a single row
+          if (item.tagItemDetails?.length) {
+            const stoneSummary = item.tagItemDetails
+              .map((stone) => `${stone.ITEMNAME || "Stone"} ${stone.WEIGHT || "0.000"}${stone.UNIT || ""}`)
+              .join(", ");
+      
+            const totalStoneAmt = item.tagItemDetails
+              .reduce((sum, stone) => sum + (parseFloat(stone.RATE || 0) * parseFloat(stone.PIECES || 0)), 0)
+              .toFixed(2);
+      
+            doc.rect(5, y, 70, lineHeight, "S");
+            doc.text(stoneSummary, 6, y + 3.5);
+            doc.text(":", 42, y + 3.5, { align: "center" });
+            doc.text(totalStoneAmt, 72, y + 3.5, { align: "right" });
             y += lineHeight;
-      
-            item.tagItemDetails.forEach((stone) => {
-              const pcs = parseFloat(stone.PIECES || 0);
-              const rate = parseFloat(stone.RATE || 0);
-              const calcAmount = (pcs * rate).toFixed(2);
-              const stoneName = stone.ITEMNAME || "Stone";
-      
-              const label = `${stoneName} (${pcs} pcs * ${rate})`;
-              doc.text(label, labelX, y);
-              doc.text(calcAmount, valueX, y, { align: "right" });
-              y += lineHeight;
-            });
           }
       
+          // Amount
+          const amountVal = parseFloat(item.amount || 0).toFixed(2);
+          doc.rect(5, y, 70, lineHeight, "S");
+          doc.text("Amount", 6, y + 3.5);
+          doc.text(":", 42, y + 3.5, { align: "center" });
+          doc.text(amountVal, 72, y + 3.5, { align: "right" });
+          y += lineHeight;
+      
+          // Total Value (Bold)
+          const totalVal = (
+            parseFloat(item.amount || 0) +
+            parseFloat(item.totalMC || 0) +
+            parseFloat(item.stoneCost || 0)
+          ).toFixed(2);
+          doc.setFont("Courier", "bold");
+          doc.rect(5, y, 70, lineHeight, "S");
+          doc.text("TOTAL", 6, y + 3.5);
+          doc.text(":", 42, y + 3.5, { align: "center" });
+          doc.text(totalVal, 72, y + 3.5, { align: "right" });
+          y += lineHeight;
+      
+          // Dashed line separator
           doc.setLineDashPattern([1, 1], 0);
           doc.line(5, y, 75, y);
           doc.setLineDashPattern([], 0);
           y += lineHeight;
         });
       
-        // Summary Section
-        doc.setFontSize(9);
-        const leftLabelX = 5;
-        const leftValueX = 37;
-        const rightLabelX = 40;
-        const rightValueX = 75;
-      
-        const summaryPairs = [
-          [`Tot Pcs`, totals.totalPcs, `Amount`, Math.ceil(totals.totalAmount)],
-          [`TotG.Wt`, totals.totalGrossWeight.toFixed(3), `GST@${vat}%`, Math.ceil(gstAmount)],
-          [`TotN.Wt`, totals.totalNetWeight.toFixed(3), `TOTAL`, `${Math.ceil(netAmount)}`],
-        ];
-      
-        summaryPairs.forEach(([leftLabel, leftVal, rightLabel, rightVal]) => {
-          doc.text(`${leftLabel} :`, leftLabelX, y);
-          doc.text(leftVal.toString(), leftValueX, y, { align: "right" });
-      
-          doc.text(`${rightLabel} :`, rightLabelX, y);
-          doc.text(rightVal.toString(), rightValueX, y, { align: "right" });
-      
-          y += lineHeight;
-        });
-      
-        doc.setLineDashPattern([1, 1], 0);
-        doc.line(5, y, 75, y);
-        doc.setLineDashPattern([], 0);
-        y += lineHeight;
-      
-        doc.setFontSize(10);
-        doc.text("*** Settlement Amount ***", 20, y);
-        y += lineHeight;
-      
-        const settlementFields = [
-          "Cash", "Card/Online", "Upi/Qr", "OG/SR", "RB/Due", "Advance", "Scheme"
-        ];
-        settlementFields.forEach(field => {
-          doc.text(`${field} :`, 5, y);
-          y += lineHeight;
-        });
-      
-        doc.text("Total :", 5, y);
-        y += lineHeight;
-      
-        doc.setLineDashPattern([1, 1], 0);
-        doc.line(5, y, 75, y);
-        doc.setLineDashPattern([], 0);
-        y += lineHeight;
-      
-        // Footer
-        doc.setFontSize(9);
-        doc.text("*** VALID FOR ONE HOUR ONLY ***", 15, y);
-        y += lineHeight;
-      
-        doc.text("New Customer {   }   Existing Customer {   }", 5, y);
-        y += lineHeight;
-      
-        const customerInfo = ["Mobile No", "Name", "City"];
-        customerInfo.forEach(field => {
-          doc.text(`${field} :`, 5, y);
-          y += lineHeight;
-        });
-      
-        doc.text(`Date : ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`, 5, y);
-        y += lineHeight;
-      
-        doc.text(`User ID : ${data[0]?.counterName || "N/A"}`, 5, y);
-      
+        // Show in modal
         const blob = doc.output("blob");
         const blobUrl = URL.createObjectURL(blob);
         setPdfUrl(blobUrl);
         setIsModalVisible(true);
       };
-   
+      
+      
+      
       
       
       
