@@ -26,7 +26,7 @@ const TagGeneration = () => {
     const lotNoRef = useRef(null);
     const productNameRef = useRef(null);
     useEffect(() => {
-        axios.get('${CREATE_jwel}/api/Erp/GetLotCreationList')
+        axios.get(`${CREATE_jwel}/api/Erp/GetLotCreationList`)
             .then(response => {
                 const formattedData = response.data.map(item => ({
                     ...item,

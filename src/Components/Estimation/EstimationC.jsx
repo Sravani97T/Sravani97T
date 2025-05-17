@@ -1,10 +1,11 @@
 import React, { useCallback, useRef, useState, useEffect } from "react";
-import { Form, Table, Button, Col, Row, Input, Card, Typography, Tag, message, Popover, Popconfirm, Modal, Select, Checkbox, } from "antd";
+import { Form, Table, Button, Col, Row, Input, Card, Typography, Tag, message, Popover, Popconfirm, Modal, Select, Checkbox } from "antd";
 import { DeleteOutlined, InfoCircleOutlined, FolderAddOutlined, PlusOutlined, ReloadOutlined, CloseOutlined, EditOutlined, LoadingOutlined } from "@ant-design/icons";
 import TodaysRates1 from "./TodaysRate1";
 import axios from 'axios';
 import { CREATE_jwel } from "../../Config/Config";
-
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 const loadingIcon = <LoadingOutlined style={{ color: "red", fontSize: 16 }} spin />; // Customize color and size
 
 const { Option } = Select;
@@ -223,7 +224,7 @@ const EstimationTable = () => {
         }
     };
     useEffect(() => {
-        axios.get("${CREATE_jwel}/api/Master/MasterItemMasterList")
+        axios.get(`${CREATE_jwel}/api/Master/MasterItemMasterList`)
             .then(response => {
                 setStoneItems(response.data);
             })
@@ -657,7 +658,185 @@ const EstimationTable = () => {
     useEffect(() => {
         fetchRates1();
     }, []);
+    const [isModalVisible, setIsModalVisible] = useState(false);
+    const [pdfUrl, setPdfUrl] = useState(null);
+  
 
+    const generatePDF = () => {
+        const doc = new jsPDF({
+          orientation: "portrait",
+          unit: "mm",
+          format: [80, 1000],
+        });
+      
+        const lineHeight = 5;
+        let y = 10;
+      
+        const labelX = 7;
+        const valueX = 75;
+      
+        doc.setFont("Courier", "normal");
+        doc.setFontSize(14);
+        doc.text("ESTIMATION", 25, y);
+        y += lineHeight;
+      
+        doc.setLineDashPattern([1, 1], 0);
+        doc.line(5, y, 75, y);
+        y += lineHeight;
+      
+        doc.setFontSize(10);
+        doc.setLineDashPattern([], 0);
+        doc.text(`EST NO : ${estimationNo} `, 5, y);
+        doc.text(`Rate: ${rates[0]?.RATE || 0}/-`, 50, y);
+        y += lineHeight;
+      
+        doc.setLineDashPattern([1, 1], 0);
+        doc.line(5, y, 75, y);
+        doc.setLineDashPattern([], 0);
+        y += lineHeight;
+      
+        doc.setFontSize(10);
+        doc.text("Description", 5, y);
+        doc.text("Value", valueX, y, { align: "right" });
+        y += lineHeight;
+      
+        doc.setLineDashPattern([1, 1], 0);
+        doc.line(5, y, 75, y);
+        doc.setLineDashPattern([], 0);
+        y += lineHeight;
+      
+        doc.setFontSize(9);
+        data?.forEach((item) => {
+          doc.text(`${item?.tagNo}/${item?.productName || ''} - ${item?.purity || ''}`, 5, y);
+          y += lineHeight;
+      
+          const infoRows = [
+            ["Gross Wt", item?.grossWeight?.toFixed(3)],
+            ["Net Wt", item?.netWeight?.toFixed(3)],
+            ["Wastage", item?.totalWastage?.toFixed(3)],
+            ["Total Wt", item?.netWeight?.toFixed(3)],
+            ["Amount", parseFloat(item?.amount).toFixed(2)],
+            ["Making Chg", parseFloat(item?.totalMC || 0).toFixed(2)],
+            ["Stone Cost", parseFloat(item?.stoneCost || 0).toFixed(2)],
+          ];
+      
+          const stoneCostIndex = infoRows.findIndex(row => row[0] === "Stone Cost");
+          const stoneDataRows = item?.stoneData?.length > 0
+            ? item.stoneData.map(stone => [
+                `${stone?.stoneItem || 'Stone'}`, 
+                parseFloat(stone?.grams || 0).toFixed(3)
+              ])
+            : [["Stone Less", "0.000"]];
+      
+          infoRows.splice(stoneCostIndex + 1, 0, ...stoneDataRows);
+      
+          infoRows.forEach(([label, val]) => {
+            doc.text(label, labelX, y);
+            doc.text(val.toString(), valueX, y, { align: "right" });
+            y += lineHeight;
+          });
+      
+          if (item?.tagItemDetails?.length > 0) {
+            doc.setFontSize(9);
+            doc.text("Stones:", 5, y);
+            y += lineHeight;
+      
+            item.tagItemDetails.forEach((stone) => {
+              const pcs = parseFloat(stone.PIECES || 0);
+              const rate = parseFloat(stone.RATE || 0);
+              const calcAmount = (pcs * rate).toFixed(2);
+              const stoneName = stone.ITEMNAME || "Stone";
+      
+              const label = `${stoneName} (${pcs} pcs * ${rate})`;
+              doc.text(label, labelX, y);
+              doc.text(calcAmount, valueX, y, { align: "right" });
+              y += lineHeight;
+            });
+          }
+      
+          doc.setLineDashPattern([1, 1], 0);
+          doc.line(5, y, 75, y);
+          doc.setLineDashPattern([], 0);
+          y += lineHeight;
+        });
+      
+        // Summary Section
+        doc.setFontSize(9);
+        const leftLabelX = 5;
+        const leftValueX = 37;
+        const rightLabelX = 40;
+        const rightValueX = 75;
+      
+        const summaryPairs = [
+          [`Tot Pcs`, totals.totalPcs, `Amount`, Math.ceil(totals.totalAmount)],
+          [`TotG.Wt`, totals.totalGrossWeight.toFixed(3), `GST@${vat}%`, Math.ceil(gstAmount)],
+          [`TotN.Wt`, totals.totalNetWeight.toFixed(3), `TOTAL`, `${Math.ceil(netAmount)}`],
+        ];
+      
+        summaryPairs.forEach(([leftLabel, leftVal, rightLabel, rightVal]) => {
+          doc.text(`${leftLabel} :`, leftLabelX, y);
+          doc.text(leftVal.toString(), leftValueX, y, { align: "right" });
+      
+          doc.text(`${rightLabel} :`, rightLabelX, y);
+          doc.text(rightVal.toString(), rightValueX, y, { align: "right" });
+      
+          y += lineHeight;
+        });
+      
+        doc.setLineDashPattern([1, 1], 0);
+        doc.line(5, y, 75, y);
+        doc.setLineDashPattern([], 0);
+        y += lineHeight;
+      
+        doc.setFontSize(10);
+        doc.text("*** Settlement Amount ***", 20, y);
+        y += lineHeight;
+      
+        const settlementFields = [
+          "Cash", "Card/Online", "Upi/Qr", "OG/SR", "RB/Due", "Advance", "Scheme"
+        ];
+        settlementFields.forEach(field => {
+          doc.text(`${field} :`, 5, y);
+          y += lineHeight;
+        });
+      
+        doc.text("Total :", 5, y);
+        y += lineHeight;
+      
+        doc.setLineDashPattern([1, 1], 0);
+        doc.line(5, y, 75, y);
+        doc.setLineDashPattern([], 0);
+        y += lineHeight;
+      
+        // Footer
+        doc.setFontSize(9);
+        doc.text("*** VALID FOR ONE HOUR ONLY ***", 15, y);
+        y += lineHeight;
+      
+        doc.text("New Customer {   }   Existing Customer {   }", 5, y);
+        y += lineHeight;
+      
+        const customerInfo = ["Mobile No", "Name", "City"];
+        customerInfo.forEach(field => {
+          doc.text(`${field} :`, 5, y);
+          y += lineHeight;
+        });
+      
+        doc.text(`Date : ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`, 5, y);
+        y += lineHeight;
+      
+        doc.text(`User ID : ${data[0]?.counterName || "N/A"}`, 5, y);
+      
+        const blob = doc.output("blob");
+        const blobUrl = URL.createObjectURL(blob);
+        setPdfUrl(blobUrl);
+        setIsModalVisible(true);
+      };
+   
+      
+      
+      
+      
     const fetchRates1 = async () => {
         try {
             const currentDate = new Date();
@@ -1376,7 +1555,7 @@ const EstimationTable = () => {
         { title: "Rate", dataIndex: "rate", align: 'right', key: "rate" },
         // { title: "Total Wastage", dataIndex: "totalWastage", align: 'right', key: "totalWastage", render: (text) => Number(text)?.toFixed(3) },
         // { title: "ACT W.T", dataIndex: "actWt", align: 'right', key: "actWt", render: (text) => Number(text)?.toFixed(3) },
-        { title: "Metal Value", dataIndex: "metalValue", align: 'right', key: "metalValue" },
+        { title: "Metal Value", dataIndex: "metalValue", align: 'right', key: "metalValue", render: (text) => Math?.round(text) },
         // { title: "Total MC", dataIndex: "totalMC", align: 'right', key: "totalMC", render: (text) => Math.round(text) },
         { title: "Stone Cost", dataIndex: "stoneCost", align: 'right', key: "stoneCost" },
         {
@@ -2214,83 +2393,106 @@ const EstimationTable = () => {
                 </Col>
 
                 {/* Right Card - Amount Details (Aligned to right corner) */}
-                <Col xs={24} sm={12} md={6} lg={8} xl={8} style={{ marginLeft: "auto" }}>
-                    <Card style={cardStyle}>
-                        {[
-                            {
-                                label: "Total Amount",
-                                value: Math.ceil(Number(totals.totalAmount)),
-                            },
-                            {
-                                label: `GST Amount @ ${vat}%`,
-                                value: Math.ceil(Number(gstAmount)),
-                            },
-                            {
-                                label: "Gross Amount",
-                                value: Math.ceil(Number(grossAmount)),
-                            },
-                            {
-                                label: "Discount (%)",
-                                value: (
-                                    <Input
-                                        style={{ width: "80px", textAlign: "right" }}
-                                        value={discount}
-                                        onChange={(e) => setDiscount(e.target.value)}
-                                    />
-                                ),
-                            },
-                            {
-                                label: "Net Amount",
-                                value: (
-                                    <Typography.Text strong style={{ fontSize: 25 }}>
-                                        {Math.ceil(Number(netAmount))}
-                                    </Typography.Text>
-                                ),
-                            },
-                        ].map((item, index) => (
-                            <Row key={index} style={rowStyle} align="middle">
-                                <Col span={14}>
-                                    <Text strong style={{ fontSize: 16 }}>{item.label}</Text>
-                                </Col>
-                                <Col span={1} style={{ textAlign: "center" }}>
-                                    <Text strong style={{ fontSize: 16 }}>:</Text>
-                                </Col>
-                                <Col span={9} style={{ textAlign: "right" }}>
-                                    {typeof item.value === "number" ? (
-                                        <Typography.Text strong style={{ fontSize: 16 }}>
-                                            {item.value}
-                                        </Typography.Text>
-                                    ) : (
-                                        item.value
-                                    )}
+                                <Col xs={24} sm={12} md={6} lg={8} xl={8} style={{ marginLeft: "auto" }}>
+                                    <Card style={cardStyle}>
+                                        {[
+                                            {
+                                                label: "Total Amount",
+                                                value: Math.ceil(Number(totals.totalAmount)),
+                                            },
+                                            {
+                                                label: `GST Amount @ ${vat}%`,
+                                                value: Math.ceil(Number(gstAmount)),
+                                            },
+                                            {
+                                                label: "Gross Amount",
+                                                value: Math.ceil(Number(grossAmount)),
+                                            },
+                                            {
+                                                label: "Discount (%)",
+                                                value: (
+                                                    <Input
+                                                        style={{ width: "80px", textAlign: "right" }}
+                                                        value={discount}
+                                                        onChange={(e) => setDiscount(e.target.value)}
+                                                    />
+                                                ),
+                                            },
+                                            {
+                                                label: "Net Amount",
+                                                value: (
+                                                    <Typography.Text strong style={{ fontSize: 25 }}>
+                                                        {Math.ceil(Number(netAmount))}
+                                                    </Typography.Text>
+                                                ),
+                                            },
+                                        ].map((item, index) => (
+                                            <Row key={index} style={rowStyle} align="middle">
+                                                <Col span={14}>
+                                                    <Text strong style={{ fontSize: 16 }}>{item.label}</Text>
+                                                </Col>
+                                                <Col span={1} style={{ textAlign: "center" }}>
+                                                    <Text strong style={{ fontSize: 16 }}>:</Text>
+                                                </Col>
+                                                <Col span={9} style={{ textAlign: "right" }}>
+                                                    {typeof item.value === "number" ? (
+                                                        <Typography.Text strong style={{ fontSize: 16 }}>
+                                                            {item.value}
+                                                        </Typography.Text>
+                                                    ) : (
+                                                        item.value
+                                                    )}
+                                                </Col>
+                                            </Row>
+                                        ))}
+                                    </Card>
+
                                 </Col>
                             </Row>
-                        ))}
-                    </Card>
-
-                </Col>
-            </Row>
 
 
-            <Row justify="end" style={{ marginTop: "1rem" }}>
-                <Button
-                    type="primary"
-                    style={{ marginRight: "8px" }}
-                    disabled={isSaving}
-                    loading={isSaving ? { indicator: loadingIcon } : false} onClick={handleSave}
-                >
-                    Save
-                </Button>
-                <Button type="default">Print</Button>
-            </Row>
+                            <Row justify="end" style={{ marginTop: "1rem" }}>
+                                <Button
+                                    type="primary"
+                                    style={{ marginRight: "8px" }}
+                                    disabled={isSaving}
+                                    loading={isSaving ? { indicator: loadingIcon } : false} onClick={handleSave}
+                                >
+                                    Save
+                                </Button>
+                                <Button
+                                    type="default"
+                                    onClick={generatePDF}
+                                >
+                                    Print
+                                </Button>
+                                <Modal
+        title="Estimation Preview"
+        visible={isModalVisible}
+        onCancel={() => setIsModalVisible(false)}
+        footer={null}
+        width={800}
+        bodyStyle={{ height: "80vh" }}
+      >
+        {pdfUrl && (
+          <iframe
+            src={pdfUrl}
+            title="PDF Preview"
+            width="100%"
+            height="100%"
+            style={{ border: "none" }}
+          />
+        )}
+      </Modal>
+                            </Row>
 
-            <Modal
-                open={isProductModalOpen}
-                onCancel={() => setIsProductModalOpen(false)}
-                footer={null}
-                centered
-                width="90%"
-                onKeyDown={(e) => {
+                            <Modal
+                                open={isProductModalOpen}
+                                onCancel={() => setIsProductModalOpen(false)}
+                                footer={null}
+                                centered
+                                width="90%"
+                                onKeyDown={(e) => {
                     if (e.key === "Escape") {
                         setIsProductModalOpen(false);
                     }
